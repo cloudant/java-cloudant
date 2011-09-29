@@ -1,0 +1,87 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.lightcouch</groupId>
+	<artifactId>lightcouch</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>LightCouch</name>
+	<description>Java Persistence API for CouchDB</description>
+	<inceptionYear>2011</inceptionYear>
+	<url>http://www.lightcouch.org</url>
+
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+    <scm>
+        <connection>scm:git:git://github.com/ahmedyha/LightCouch.git</connection>
+        <developerConnection>scm:git:git@github.com:ahmedyha/LightCouch.git</developerConnection>
+        <url>https://ahmedyha@github.com/ahmedyha/LightCouch.git</url>
+    </scm>
+
+	<developers>
+		<developer>
+			<id>ahmedyha</id>
+			<name>Ahmed Yehia</name>
+			<email>ahmed.yehia.m@gmail.com</email>
+		</developer>
+	</developers>
+	
+	<distributionManagement>
+        <repository>
+            <id>nexus-releases</id>
+            <name>Nexus Release Repository</name>
+            <url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement> 
+
+	<properties>
+		<httpclient.version>4.1.2</httpclient.version>
+		<junit.version>4.8.2</junit.version> 
+		<gson.version>1.7.1</gson.version>
+	</properties>
+
+	<dependencies>
+		<!-- Apache HttpComponents -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>${httpclient.version}</version>
+		</dependency>
+
+		<!-- Gson -->
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>${gson.version}</version>
+		</dependency>
+
+		<!-- Testing -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.5</source>
+					<target>1.5</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
