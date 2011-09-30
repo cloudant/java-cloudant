@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2011 Ahmed Yehia
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.lightcouch;
 
 import static java.lang.String.format;
@@ -65,7 +81,7 @@ import com.google.gson.JsonParser;
  * @see CouchDbClient
  * @author Ahmed Yehia
  */
-public abstract class CouchDbClientBase {
+abstract class CouchDbClientBase {
 
 	private static final Log log = LogFactory.getLog(CouchDbClientBase.class);
 	
@@ -92,7 +108,10 @@ public abstract class CouchDbClientBase {
 	
 	// ---------------------------------------------- Getters
 	
-	public URI getDBUri() {
+	/**
+	 * @return The database URI.
+	 */
+	protected URI getDBUri() {
 		return dbURI;
 	}
 	
@@ -357,7 +376,7 @@ public abstract class CouchDbClientBase {
 	/**
 	 * Shuts down the connection manager used by this client instance.
 	 */
-	public void shutdown() {
+	protected void shutdown() {
 		this.httpClient.getConnectionManager().shutdown();
 	}
 }
