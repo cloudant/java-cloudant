@@ -9,6 +9,6 @@ It offers a reliable and lightweight persistence interface for your applications
 
 Getting started
 ---------------
-A getting started guide is available on the web site: <http://www.lightcouch.org/getstarted.html/>
+A getting started guide is available on the web site: <http://www.lightcouch.org/getstarted.html>
 
 
