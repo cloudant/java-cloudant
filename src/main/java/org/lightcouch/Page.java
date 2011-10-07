@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Holds data of a page as result of a view pagination query. 
  * @see View#queryPage(int, String, Class)
- * @param <T> Object type T
+ * @param <T> Object type T 
  * 
  * @author Ahmed Yehia
  */
