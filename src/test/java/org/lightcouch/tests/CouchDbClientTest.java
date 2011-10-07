@@ -35,6 +35,7 @@ import org.lightcouch.CouchDbInfo;
 import org.lightcouch.DesignDocument;
 import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
+import org.lightcouch.Page;
 import org.lightcouch.ReplicationResult;
 import org.lightcouch.ReplicatorDocument;
 import org.lightcouch.Response;
@@ -430,6 +431,49 @@ public class CouchDbClientTest {
 		
 		DesignDocument documentFromDb2 = dbClient.design().getFromDb(documentFromDb.getId(), documentFromDb.getRevision());
 		assertEquals(documentFromDb.getRevision(), documentFromDb2.getRevision());
+	}
+	
+	// ------------------------------------------------------- Pagination
+	@Test
+	public void testPagination() {
+		System.out.println("------------------------------- Testing Pagination");
+		// DB may already contains records, insert few for safety
+		for (int i = 0; i < 10; i++) {
+			dbClient.save(new Foo(UUID.randomUUID().toString(), "paging title", 1));
+		}
+		final int rowsPerPage = 3;
+		// first page, page #1, rows: 1 - 3
+		Page<Foo> page = dbClient.view("example/foo").queryPage(rowsPerPage, null, Foo.class);
+		assertFalse(page.isHasPrevious());
+		assertTrue(page.isHasNext());
+		assertThat(page.getResultFrom(), is(1));
+		assertThat(page.getResultTo(), is(3));
+		assertThat(page.getPageNumber(), is(1));
+		assertThat(page.getResultList().size(), is(3));
+		//-----------------------------------------
+		
+		// prepare to go next
+		String param = page.getNextParam();
+		// next page, page #2, rows: 4 - 6
+		page = dbClient.view("example/foo").queryPage(rowsPerPage, param, Foo.class);
+		assertTrue(page.isHasPrevious());
+		assertTrue(page.isHasNext());
+		assertThat(page.getResultFrom(), is(4));
+		assertThat(page.getResultTo(), is(6));
+		assertThat(page.getPageNumber(), is(2));
+		assertThat(page.getResultList().size(), is(3));
+		//-----------------------------------------
+		
+		// prepare to go previous
+		param = page.getPreviousParam();
+		// previous page, page #1, rows: 1 - 3
+		page = dbClient.view("example/foo").queryPage(rowsPerPage, param, Foo.class);
+		assertFalse(page.isHasPrevious());
+		assertTrue(page.isHasNext());
+		assertThat(page.getResultFrom(), is(1));
+		assertThat(page.getResultTo(), is(3));
+		assertThat(page.getPageNumber(), is(1));
+		assertThat(page.getResultList().size(), is(3));
 	}
 
 }
