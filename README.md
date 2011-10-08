@@ -2,6 +2,7 @@ Java Persistence API for CouchDB
 ================================
 
 * Website:   <http://www.lightcouch.org/>
+* Forum: <http://groups.google.com/group/lightcouch>
 
 LightCouch aims at providing a simple and easy-to-use API for interacting with CouchDB REST JSON APIs. 
 
