@@ -49,12 +49,12 @@ import com.google.gson.JsonParser;
  *  
  *  int count = dbClient.view("example/by_tag").queryForInt(); // query for scalar values
  *  
- *  ViewResult<int[], String, Foo> result =  dbClient.view() // query for the view entries
- * 	.viewName("example/by_date")
- * 	.key(2011, 10, 15) // complex key 
- * 	.reduce(false)
- * 	.includeDocs(true)
- * 	.queryView(int[].class, String.class, Foo.class);
+ * // query for view entries
+ * View view = dbClient.view("example/by_date")
+ *	.key(2011, 10, 15) // complex key example
+ *	.reduce(false)
+ *	.includeDocs(true);
+ * ViewResult&lt;int[], String, Foo> result = view.queryView(int[].class, String.class, Foo.class);
  * 
  *  // pagination
  *  Page<Foo> page = dbClient.view("example/foo").queryPage(15, param, Foo.class);

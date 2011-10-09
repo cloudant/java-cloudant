@@ -39,6 +39,7 @@ import org.lightcouch.DesignDocument.MapReduce;
  * Response response = dbClient.design().synchronizeWithDb(exampleDoc);
  * DesignDocument documentFromDb = dbClient.design().getFromDb("_design/example");
  * </pre>
+ * @see DesignDocument
  * @author Ahmed Yehia
  */
 public class CouchDbDesign {
@@ -56,7 +57,7 @@ public class CouchDbDesign {
 	 * <p>This method will first try to find a document in the database with the same id
 	 * as the given document, if it is not found then the given document will be saved to the database.
 	 * <p>If the document was found in the database, it will be compared with the given document using
-	 *  {@code equals()}. If both documents are not equal, then the the given document will be saved to the 
+	 *  {@code equals()}. If both documents are not equal, then the given document will be saved to the 
 	 *  database and updates the existing document.
 	 * @param document The design document to synchronize
 	 * @return {@link Response} as a result of a document save or update, or returns {@code null} if no 

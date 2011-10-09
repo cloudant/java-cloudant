@@ -20,6 +20,11 @@ import java.util.Map;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Represents a design document.
+ * @see CouchDbDesign
+ * @author Ahmed Yehia
+ */
 public class DesignDocument extends Document {
 	
 	private String language;
@@ -92,6 +97,9 @@ public class DesignDocument extends Document {
 		return result;
 	}
 
+	/**
+	 * Indicates whether some other design document is equals to this one. 
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
