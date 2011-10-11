@@ -327,12 +327,10 @@ abstract class CouchDbClientBase {
 		String msg = format("<< Status: %s (%s) ", code, response.getStatusLine().getReasonPhrase());
 		switch (code) {
 		case HttpStatus.SC_NOT_FOUND: {
-			close(response);
 			log.info(msg); 
 			throw new NoDocumentException(msg);
 		}
 		case HttpStatus.SC_CONFLICT: {
-			close(response);
 			log.warn(msg);
 			throw new DocumentConflictException(msg);
 		}
