@@ -42,6 +42,9 @@ import org.lightcouch.Response;
 import org.lightcouch.View;
 import org.lightcouch.ViewResult;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
 /**
  * Database integration tests.
  * @author Ahmed Yehia
@@ -98,6 +101,16 @@ public class CouchDbClientTest {
 		inputStream = dbClient.find(resp.getId(), resp.getRev());
 		assertTrue(inputStream.read() != -1);
 		inputStream.close();
+	}
+	
+	@Test
+	public void testFindJSON() throws IOException {
+		System.out.println("------------------------------- Testing find JSON");
+		final String TITLE = "Json Title";
+		Foo foo = new Foo(UUID.randomUUID().toString(), TITLE, 1);
+		Response response = dbClient.save(foo);
+		JsonObject json = dbClient.find(JsonObject.class, response.getId());
+		assertEquals(json.get("title").getAsString(), TITLE);
 	}
 	
 	@Test
@@ -166,6 +179,7 @@ public class CouchDbClientTest {
 	
 	@Test
 	public void testSaveMap() {
+		System.out.println("------------------------------- Testing Save Map");
     	final String ID = UUID.randomUUID().toString();
     	final String KEY = "title";
     	final String VALUE = "title-value";
@@ -176,6 +190,15 @@ public class CouchDbClientTest {
     	
     	Response resp = dbClient.save(map);  // save the Map
     	assertNotNull(resp.getRev()); // check we got back a rev after save
+	}
+	
+	@Test
+	public void testSaveJSON() {
+		System.out.println("------------------------------- Testing Save JSON");
+		JsonObject json = new JsonObject();
+		json.addProperty("_id", UUID.randomUUID().toString());
+		json.add("an-array", new JsonArray());
+		dbClient.save(json); 
 	}
 	
 	// ----------------------------------------------------------------- Remove 
