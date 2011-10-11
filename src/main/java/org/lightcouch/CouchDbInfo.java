@@ -31,7 +31,7 @@ public class CouchDbInfo {
 	@SerializedName("doc_del_count")
 	private String docDelCount;
 	@SerializedName("update_seq")
-	private long updateSeq;
+	private String updateSeq;
 	@SerializedName("purge_seq")
 	private long purgeSeq;
 	@SerializedName("compact_running")
@@ -55,7 +55,7 @@ public class CouchDbInfo {
 		return docDelCount;
 	}
 
-	public long getUpdateSeq() {
+	public String getUpdateSeq() {
 		return updateSeq;
 	}
 
@@ -91,7 +91,7 @@ public class CouchDbInfo {
 		this.docDelCount = docDelCount;
 	}
 
-	public void setUpdateSeq(long updateSeq) {
+	public void setUpdateSeq(String updateSeq) {
 		this.updateSeq = updateSeq;
 	}
 
