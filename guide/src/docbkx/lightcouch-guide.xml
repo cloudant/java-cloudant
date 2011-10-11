@@ -22,13 +22,13 @@
    under the License.
  -->                                
 <article>
-	<title>LightCouch User Guide 0.0.2</title>
+	<title>LightCouch User Guide 0.0.3</title>
 	
 	<articleinfo>
 		<author>
 			<firstname>Author: Ahmed Yehia</firstname>
 		</author>
-		<date>Oct 11, 2011</date>
+		<date>Oct 12, 2011</date>
 	</articleinfo>
 	
 	<section>
@@ -92,7 +92,7 @@
 <dependency>
   <groupId>org.lightcouch</groupId>
   <artifactId>lightcouch</artifactId> 
-  <version>0.0.2</version>
+  <version>0.0.3</version>
 </dependency> 
 		]]></programlisting>
 		<para>
@@ -101,8 +101,8 @@
 		<itemizedlist>
 			<listitem>
 				<para>
-					<ulink url="https://github.com/downloads/ahmedyha/LightCouch/lightcouch-0.0.2.jar">
-						<citetitle>LightCouch 0.0.2</citetitle>
+					<ulink url="https://github.com/downloads/ahmedyha/LightCouch/lightcouch-0.0.3.jar">
+						<citetitle>LightCouch 0.0.3</citetitle>
 					</ulink>
 				</para>
 			</listitem>
@@ -494,28 +494,27 @@ request.setAttribute("page", page);
 		<programlisting><![CDATA[ 
 <%-- iterate over documents --%>		
 <c:forEach items="${page.resultList}" var="r"> 
-${r.title} - ${r.address} <br> 
+<p>${r.title} - ${r.address}  
 </c:forEach> 
 
 <%-- show paging status --%>
-Showing:  ${page.resultFrom} - ${page.resultTo} of total ${page.totalResults} 
-<br>
+<p>Showing:  ${page.resultFrom} - ${page.resultTo} of total ${page.totalResults} 
 
 <%-- handle navigation --%>
 <c:choose> 
-<c:when test="${page.hasPrevious}"> 
-<a href="/getpage?param=${page.previousParam}"><<Previous</a>
-</c:when> 
-<c:otherwise> <<Previous </c:otherwise>
+ <c:when test="${page.hasPrevious}"> 
+  <a href="/getpage?param=${page.previousParam}"> <<Previous </a>
+ </c:when> 
+ <c:otherwise> <<Previous </c:otherwise>
 </c:choose>  
 
 ${page.pageNumber} 
  
 <c:choose> 
-<c:when test="${page.hasNext}"> 
-<a href="/getpage?param=${page.nextParam}">Next>></a> 
-</c:when>
-<c:otherwise> Next>> </c:otherwise> 
+ <c:when test="${page.hasNext}"> 
+  <a href="/getpage?param=${page.nextParam}"> Next>> </a> 
+ </c:when>
+ <c:otherwise> Next>> </c:otherwise> 
 </c:choose> 
 		]]></programlisting>
 		<para>Finally a Servlet for handling paging navigation:</para>

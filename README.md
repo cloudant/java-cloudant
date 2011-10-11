@@ -11,6 +11,6 @@ It offers a powerful and lightweight persistence interface for your applications
 Getting started
 ---------------
 A getting started guide is available on the web site: <http://www.lightcouch.org/getstarted.html>
-And a [User Guide](http://www.lightcouch.org/lightcouch-user-guide.html)
+And a [User Guide](http://www.lightcouch.org/lightcouch-guide.html)
 
 
