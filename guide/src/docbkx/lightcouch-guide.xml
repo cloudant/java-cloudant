@@ -31,7 +31,7 @@
 		<date>Oct 12, 2011</date>
 	</articleinfo>
 	
-	<section>
+	<section id="preface">
 		<title>Preface</title>
 		<para>
 		LightCouch provides a Java persistence interface for communicating with CouchDB databases.
@@ -54,7 +54,7 @@
 		with minimal code base and dependency.
 		</para>
 	</section>
-	<section>
+	<section id="overview">
 		<title>Overview</title>
 		<para> 
 		LightCouch API is presented by establishing a client to a database server instance.
@@ -80,7 +80,7 @@
 		The API was tested against CouchDB up to version 1.1.0
 		</para>
 	</section>
-	<section>
+	<section id="setup">
 		<title>Setup</title>
 		<para>
 		To setup LightCouch for use in your application, you need to have the
@@ -95,7 +95,7 @@
   <version>0.0.3</version>
 </dependency> 
 		]]></programlisting>
-		<para>
+		<para id="dependencies">
 		Alternatively download the following binary Jar files:
 		</para>
 		<itemizedlist>
@@ -142,7 +142,7 @@
 				</para>
 			</listitem>
 		</itemizedlist>
-		<section>
+		<section id="configuration">
 			<title>Configuration</title>
 			<para>
 			To configure a LightCouch client, you may use a <literal>.properties</literal>
@@ -176,7 +176,7 @@ couchdb.http.connection.timeout=
 			]]></programlisting>
 		</section>
 	</section>
-	<section>
+	<section id="using-lightCouch">
 		<title>Using LightCouch</title>
 		<para>
 		As mentioned earlier, you have to create a client to start using the API.
@@ -222,7 +222,7 @@ CouchDbClient dbClient3 = new CouchDbClient(...);
 		<programlisting><![CDATA[ 
 dbClient.shutdown();
             ]]></programlisting>
-		<section>
+		<section id="spring">
 			<title>Spring Integration</title>
 			<para>
 			If you use Spring in your environment, it may be useful to define
@@ -244,7 +244,7 @@ private CouchDbClient dbClient;
 			]]></programlisting>
 		</section>
 	</section>
-	<section>
+	<section id="docs-api">
 		<title>Documents API</title>
 		<para>
 		Document persistence API is accessible under a client instance directly. A
@@ -286,7 +286,7 @@ private CouchDbClient dbClient;
 		persistence.
 		</para>
 		
-		<section>
+		<section id="docs-api-save">
 			<title>Saving/Updating Documents</title>
 			<para>
 			Documents could be saved and updated by using methods conventiently 
@@ -334,7 +334,7 @@ dbClient.save(json);
 			</para>
 		</section> <!-- end save/update documents -->
 		
-		<section>
+		<section id="docs-api-find">
 			<title>Finding Documents</title>
 			<para>
 			Retrieving documents API is offered by a convenient method 
@@ -365,7 +365,7 @@ JsonObject json = dbClient.find(JsonObject.class, "some-id");
 				]]></programlisting>
 		</section><!-- end find documents -->
 		
-		<section>
+		<section id="docs-api-delete">
 			<title>Deleting Documents</title>
 			<para>
 			Following with the API, the respective method for deleting documents
@@ -381,13 +381,13 @@ resp = dbClient.remove("some-id", "some-rev");
 		</section><!-- end delete documents -->
 	</section><!-- end docs api -->
 	
-	<section>
+	<section id="logging-error-handling">
 		<title>Logging and Error Handling</title>
 		<para>
 		Logging may be useful during development, LightCouch is designed to provide 
 		concise logging messages and report errors as you work with the API.
 		</para>
-		<section>
+		<section id="logging">
 			<title>Logging</title>
 			<para>
 			By enabling a more verbose logging level 
@@ -407,7 +407,7 @@ log4j.logger.org.lightcouch=INFO
 log4j.logger.org.apache.http=ERROR 
 				]]></programlisting>
 		</section>
-		<section>
+		<section id="error-handling">
 			<title>Error Handling</title>
 			<para>
 			In the event of failure, the API will throw specific exceptions
@@ -425,7 +425,8 @@ log4j.logger.org.apache.http=ERROR
 			</para>
 		</section>
 	</section> <!-- end logging and error handling -->
-	<section>
+	
+	<section id="views-api">
 		<title>Views API</title>
 		<para>
 		The API for CouchDB views is accessible via a client instance under a 
@@ -469,7 +470,7 @@ View view = dbClient.view("example/by_date")
 ViewResult<int[], String, Foo> result = 
              view.queryView(int[].class, String.class, Foo.class); 
 		]]></programlisting>
-		<para>
+		<para id="pagination">
 		The Pagination API provides means for displaying an effective paging supporting
 		previous and next	navigation, which is the recommended method for implementing 
 		efficient pagination for CouchDB views.
@@ -528,7 +529,7 @@ request.setAttribute("page", page);
             ]]></programlisting>
 	</section><!-- end of views -->
 	
-	<section>
+	<section id="design-docs">
 		<title>Design Documents</title>
 		<para>
 		The API for Design documents is accessible via a client instance under 
@@ -571,9 +572,11 @@ design-docs
 		]]></programlisting>
 		<para>Usage Example:</para>
 		<programlisting><![CDATA[ 
-DesignDocument designDoc = dbClient.design().getFromDesk("example"); // find by document dir name 
+// find by document dir name		
+DesignDocument designDoc = dbClient.design().getFromDesk("example");  
 Response response = dbClient.design().synchronizeWithDb(designDoc); 
-DesignDocument documentFromDb = dbClient.design().getFromDb("_design/example"); // find by document id
+// find by document id
+DesignDocument documentFromDb = dbClient.design().getFromDb("_design/example"); 
 		]]></programlisting>
 		<para>
 		You may refer to the Javadocs to see all supported operations:
@@ -586,7 +589,7 @@ DesignDocument documentFromDb = dbClient.design().getFromDb("_design/example"); 
 		updates to a design document in the database that is up-to-date.
 		</para>
 	</section> <!-- end design docs -->
-	<section>
+	<section id="db-api">
 		<title>Database API</title>
 		<para>
 		The final set of APIs is database specific, it provide various tasks to
@@ -601,7 +604,7 @@ dbClient.context().compact();
 dbClient.context().ensureFullCommit(); 
 dbClient.context().createDB("new-db");
 		]]></programlisting>
-		<section>
+		<section id="replication">
 			<title>Replication</title>
 			<para>
 			LightCouch provides two subset of APIs for handling database replication, 
