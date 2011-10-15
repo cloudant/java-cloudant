@@ -420,7 +420,8 @@ log4j.logger.org.apache.http=ERROR
 			<literallayout>
 			1. <literal>NoDocumentException</literal> when a request document could not be found (or a view with no result).
 			2. <literal>DocumentConflictException</literal>	when a conflict is detected during a save or update. 
-			3. <literal>CouchDbException</literal> is the super class for the former two exception classes, for bravity, it is thrown in every other failure events, i.e in cases of HTTP error (<literal>400</literal>) for instance. 
+			3. <literal>CouchDbException</literal> is the super class for the former two exception classes, for bravity, 
+			it is thrown in every other failure events, i.e in cases of HTTP error (<literal>400</literal>) for instance. 
 			</literallayout>	
 			</para>
 		</section>
@@ -470,29 +471,32 @@ View view = dbClient.view("example/by_date")
 ViewResult<int[], String, Foo> result = 
              view.queryView(int[].class, String.class, Foo.class); 
 		]]></programlisting>
-		<para id="pagination">
-		The Pagination API provides means for displaying an effective paging supporting
-		previous and next	navigation, which is the recommended method for implementing 
-		efficient pagination for CouchDB views.
-		</para>
-		<para>
-		A <literal><![CDATA[Page<T>]]></literal> object holds useful information for 
-		displaying a featured pagination with lowest effort possible from your part.
-		</para>
-		<para>
-		Following is an example of using the API in a web application, 
-		first a Servlet for initializing pagination of 15 results per page:
-		</para>
-		<programlisting><![CDATA[ 
+		
+		<section id="pagination">
+			<title>Pagination</title>
+			<para>
+			The Pagination API provides means for displaying an effective paging that supports
+			previous and next navigation handlers, it is the recommended method for implementing 
+			an efficient pagination for CouchDB views.
+			</para>
+			<para>
+			A <literal><![CDATA[Page<T>]]></literal> object holds useful information for 
+			displaying a featured pagination with lowest effort possible from your part.
+			</para>
+			<para>
+			Following is an example of using the API in a web application, 
+			first a Servlet for initializing pagination of 15 results per page:
+			</para>
+			<programlisting><![CDATA[ 
 public void doGet(HttpServletRequest request, HttpServletResponse resp) { 
 // request first page 
 Page<Foo> page = dbClient.view("example/foo").queryPage(15, null, Foo.class);
 request.setAttribute("page", page); 
 // .. forward to a jsp for display
 } 
-		]]></programlisting>
-		<para>Second, a JSP page for display:</para>
-		<programlisting><![CDATA[ 
+			]]></programlisting>
+			<para>Second, a JSP page for display:</para>
+			<programlisting><![CDATA[ 
 <%-- iterate over documents --%>		
 <c:forEach items="${page.resultList}" var="r"> 
   <p>${r.title} - ${r.address}  
@@ -517,16 +521,17 @@ ${page.pageNumber}
   </c:when>
   <c:otherwise> Next>> </c:otherwise> 
 </c:choose> 
-		]]></programlisting>
-		<para>Finally a Servlet for handling paging navigation:</para>
-		<programlisting><![CDATA[ 
+			]]></programlisting>
+			<para>Finally a Servlet for handling paging navigation:</para>
+			<programlisting><![CDATA[ 
 public void doGet(HttpServletRequest request, HttpServletResponse resp) { 
 String param = request.getParameter("param");
 Page<Foo> page = dbClient.view("example/foo").queryPage(15, param, Foo.class); 
 request.setAttribute("page", page); 
 // .. forward to the same jsp page for displaying sub-sequent pages
 } 
-            ]]></programlisting>
+	            ]]></programlisting>
+	            </section>
 	</section><!-- end of views -->
 	
 	<section id="design-docs">
