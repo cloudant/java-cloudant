@@ -494,7 +494,7 @@ request.setAttribute("page", page);
 		<programlisting><![CDATA[ 
 <%-- iterate over documents --%>		
 <c:forEach items="${page.resultList}" var="r"> 
-<p>${r.title} - ${r.address}  
+  <p>${r.title} - ${r.address}  
 </c:forEach> 
 
 <%-- show paging status --%>
@@ -502,19 +502,19 @@ request.setAttribute("page", page);
 
 <%-- handle navigation --%>
 <c:choose> 
- <c:when test="${page.hasPrevious}"> 
-   <a href="/getpage?param=${page.previousParam}"> <<Previous </a>
- </c:when> 
- <c:otherwise> <<Previous </c:otherwise>
+  <c:when test="${page.hasPrevious}"> 
+  <a href="/getpage?param=${page.previousParam}"> <<Previous </a>
+  </c:when> 
+  <c:otherwise> <<Previous </c:otherwise>
 </c:choose>  
 
 ${page.pageNumber} 
  
 <c:choose> 
- <c:when test="${page.hasNext}"> 
+  <c:when test="${page.hasNext}"> 
   <a href="/getpage?param=${page.nextParam}"> Next>> </a> 
- </c:when>
- <c:otherwise> Next>> </c:otherwise> 
+  </c:when>
+  <c:otherwise> Next>> </c:otherwise> 
 </c:choose> 
 		]]></programlisting>
 		<para>Finally a Servlet for handling paging navigation:</para>
@@ -549,16 +549,17 @@ request.setAttribute("page", page);
 design-docs
     |- example
         |- filters
-            |- myfilter1.js
-            |- myfilter2.js
+            |- filter1.js
+            |- filter2.js
+            |- ..
         |- lists
-            |- mylist1.js    
-            |- mylist2.js
+            |- list1.js    
+            |- list2.js
         |- shows    
-            |- myshow1.js
-            |- myshow2.js
+            |- show1.js
+            |- show2.js
         |- validate_doc_update
-            |- myvalidate.js 
+            |- validate.js 
         |- view
             |- by_date
                 |- map.js
@@ -580,9 +581,9 @@ DesignDocument documentFromDb = dbClient.design().getFromDb("_design/example"); 
 		A <literal>DesignDocument</literal> object that is used to carry a design document, 
 		properly implements <literal>equals()</literal>.
 		This may come in handy for comparing documents that are loaded from either 
-		desk files or the database, this what is practically used when 
-		<literal>synchronizeWithDb()</literal> is invoked, which avoids 
-		updating a design document in the database that you do not wish to.
+		desk files or the database, this is what practically is used when 
+		<literal>synchronizeWithDb()</literal> is invoked, to avoid un-necessary
+		updates to a design document in the database that is up-to-date.
 		</para>
 	</section> <!-- end design docs -->
 	<section>
