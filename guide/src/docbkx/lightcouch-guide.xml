@@ -190,7 +190,7 @@ couchdb.http.connection.timeout=
 		<para>
 		The easiest way to instantiate a new client is by using it's default 
 		constructor, it will search your application default classpath for the file you
-		have created earlier, i.e <literal>classpath:couchdb.properties</literal>
+		have created earlier, i.e <literal>couchdb.properties</literal>
 		</para>
 		<programlisting><![CDATA[ 
 CouchDbClient dbClient = new CouchDbClient();
@@ -420,7 +420,7 @@ log4j.logger.org.apache.http=ERROR
 			<literallayout>
 			1. <literal>NoDocumentException</literal> when a request document could not be found (or a view with no result).
 			2. <literal>DocumentConflictException</literal>	when a conflict is detected during a save or update. 
-			3. <literal>CouchDbException</literal> For bravity, this exception is thrown in other failure events, i.e when error (<literal>400</literal>) occurs. 
+			3. <literal>CouchDbException</literal> is the super class for the former two exception classes, for bravity, it is thrown in every other failure events, i.e in cases of HTTP error (<literal>400</literal>) for instance. 
 			</literallayout>	
 			</para>
 		</section>
@@ -430,7 +430,7 @@ log4j.logger.org.apache.http=ERROR
 		<para>
 		The API for CouchDB views is accessible via a client instance under a 
 		special context <literal>view(String)</literal> which accepts a view name,
-		consisting of the design document id and the view
+		consisting of the design document name and the view name
 		(i.e <literal>example/foo</literal> for example)
 		this results in requesting a view with the full URI of <literal>_design/example/_view/foo</literal>
 		</para>
@@ -503,7 +503,7 @@ request.setAttribute("page", page);
 <%-- handle navigation --%>
 <c:choose> 
  <c:when test="${page.hasPrevious}"> 
-  <a href="/getpage?param=${page.previousParam}"> <<Previous </a>
+   <a href="/getpage?param=${page.previousParam}"> <<Previous </a>
  </c:when> 
  <c:otherwise> <<Previous </c:otherwise>
 </c:choose>  
@@ -541,11 +541,38 @@ request.setAttribute("page", page);
 		If you have downloaded LightCouch source code, you can see a working example 
 		in the test	package.
 		</para>
+		<para>
+		Design documents may be maintained on disk files and saved on your application
+		classpath, with the following directory structure:
+		</para>
+		<programlisting><![CDATA[ 
+design-docs
+    |- example
+        |- filters
+            |- myfilter1.js
+            |- myfilter2.js
+        |- lists
+            |- mylist1.js    
+            |- mylist2.js
+        |- shows    
+            |- myshow1.js
+            |- myshow2.js
+        |- validate_doc_update
+            |- myvalidate.js 
+        |- view
+            |- by_date
+                |- map.js
+            |- by_tag
+                |- map.js
+                |- reduce.js            
+    |- example2
+        ...
+		]]></programlisting>
 		<para>Usage Example:</para>
 		<programlisting><![CDATA[ 
-DesignDocument designDoc = dbClient.design().getFromDesk("example");  
+DesignDocument designDoc = dbClient.design().getFromDesk("example"); // find by document dir name 
 Response response = dbClient.design().synchronizeWithDb(designDoc); 
-DesignDocument documentFromDb = dbClient.design().getFromDb("_design/example");
+DesignDocument documentFromDb = dbClient.design().getFromDb("_design/example"); // find by document id
 		]]></programlisting>
 		<para>
 		You may refer to the Javadocs to see all supported operations:
