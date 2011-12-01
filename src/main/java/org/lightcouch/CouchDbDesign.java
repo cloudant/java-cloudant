@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia
+ * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package org.lightcouch;
 
 import static org.lightcouch.CouchDbUtil.*;
-import static org.lightcouch.URIBuilder.*;
+import static org.lightcouch.URIBuilder.builder;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -32,7 +32,7 @@ import java.util.Map;
 import org.lightcouch.DesignDocument.MapReduce;
 
 /**
- * Provides access for the creation and saving of CouchDB design documents. 
+ * Provides methods to create and save CouchDB design documents. 
  * <h3>Usage Example:</h3>
  * <pre>
  * DesignDocument exampleDoc = dbClient.design().getFromDesk("example");

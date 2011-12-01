@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia
+ * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package org.lightcouch;
 import static org.lightcouch.CouchDbUtil.*;
 
 import java.io.InputStream;
-import java.net.URL;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
@@ -142,10 +141,8 @@ class CouchDbConfig {
 	private Properties properties = new Properties();
 
 	private void readConfigFile(String configFile) {
-		URL url = Thread.currentThread().getContextClassLoader()
-				.getResource(configFile);
 		try {
-			InputStream inStream = url.openStream();
+			InputStream inStream = getURL(configFile).openStream();
 			properties.load(inStream);
 		} catch (Exception e) {
 			String msg = "Could not read configuration file from the classpath: " + configFile;

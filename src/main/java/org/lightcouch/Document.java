@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia
+ * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,14 @@
 
 package org.lightcouch;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Convenient base class for CouchDB documents, defines the basic id and revision properties.
+ * Convenient base class for CouchDB documents, defines the basic 
+ * id and revision properties and attachments.
  * @author Ahmed Yehia
  *
  */
@@ -27,9 +31,11 @@ public class Document {
 	
 	@SerializedName("_id")
 	private String id;
-	
 	@SerializedName("_rev")
 	private String revision;
+	@SerializedName("_attachments")
+	private Map<String, Attachment> attachments 
+		= new HashMap<String, Attachment>(); 
 
 	public String getId() {
 		return id;
@@ -38,6 +44,10 @@ public class Document {
 	public String getRevision() {
 		return revision;
 	}
+	
+	public Map<String, Attachment> getAttachments() {
+		return attachments;
+	}
 
 	public void setId(String id) {
 		this.id = id;
@@ -45,6 +55,14 @@ public class Document {
 
 	public void setRevision(String revision) {
 		this.revision = revision;
+	}
+	
+	public void setAttachments(Map<String, Attachment> attachments) {
+		this.attachments = attachments;
+	}
+	
+	public void addAttachment(String name, Attachment attachment) {
+		this.attachments.put(name, attachment);
 	}
 
 	@Override

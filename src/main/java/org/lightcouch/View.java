@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia
+ * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package org.lightcouch;
 
 import static org.lightcouch.CouchDbUtil.*;
-import static org.lightcouch.URIBuilder.*;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -47,18 +46,19 @@ import com.google.gson.JsonParser;
  *  List<Foo> list = dbClient.view("example/foo")
  *	.includeDocs(true).startKey("start-key").endKey("end-key").limit(10).query(Foo.class);
  *  
- *  int count = dbClient.view("example/by_tag").queryForInt(); // query for scalar values
+ * int count = dbClient.view("example/by_tag").key("couchdb").queryForInt(); // query for scalar values
  *  
  * // query for view entries
  * View view = dbClient.view("example/by_date")
  *	.key(2011, 10, 15) // complex key example
  *	.reduce(false)
  *	.includeDocs(true);
- * ViewResult&lt;int[], String, Foo> result = view.queryView(int[].class, String.class, Foo.class);
+ * ViewResult<int[], String, Foo> result = 
+ *	view.queryView(int[].class, String.class, Foo.class);
  * 
- *  // pagination
- *  Page<Foo> page = dbClient.view("example/foo").queryPage(15, param, Foo.class);
- *  // page.get*Param() contains the param to query subsequent pages
+ * // pagination
+ * Page<Foo> page = dbClient.view("example/foo").queryPage(15, param, Foo.class);
+ * // page.get*Param() contains the param to query subsequent pages, {@code null} param queries the first page
  * }
  * </pre>
  * 
@@ -94,16 +94,18 @@ public class View {
 	private Boolean inclusiveEnd;
 	private Boolean updateSeq;
 	
-	private String viewId;
 	private CouchDbClient dbc;
 	private Gson gson;
+	
+	private URIBuilder uriBuilder;
 	
 	View(CouchDbClient dbc, String viewId) {
 		this.dbc = dbc;
 		this.gson = dbc.getGson();
 		try {
 			String[] v = viewId.split("/");
-			this.viewId = String.format("_design/%s/_view/%s", v[0], v[1]);
+			String view = String.format("_design/%s/_view/%s", v[0], v[1]);
+			this.uriBuilder = URIBuilder.builder(dbc.getDBUri()).path(view);
 		} catch (Exception e) {
 			String msg = "Invalid View URI. Expecting a format: design_doc_name/view_name";
 			log.warn(msg);
@@ -119,8 +121,7 @@ public class View {
 	 * @return The result as an {@link InputStream}.
 	 */
 	public InputStream queryForStream() {
-		String viewParams = getViewParams();
-		URI uri = builder(dbc.getDBUri()).path(viewId).query(viewParams).build();
+		URI uri = uriBuilder.build();
 		return dbc.get(uri);
 	}
 	
@@ -284,7 +285,6 @@ public class View {
 		// set view query params
 		limit(rowsPerPage + 1);
 		includeDocs(true);
-		reduce(false);
 		if(startKey != null) { 
 			startKey(startKey);
 			startKeyDocId(startKeyDocId);
@@ -345,7 +345,6 @@ public class View {
 		// set view query params
 		limit(rowsPerPage + 1);
 		includeDocs(true);
-		reduce(false);
 		descending(true); // read backward
 		startKey(currentStartKey); 
 		startKeyDocId(currentStartKeyDocId); 
@@ -405,6 +404,7 @@ public class View {
 	 */
 	public View key(Object... key) {
 		this.key = getKeyAsJson(key);
+		uriBuilder.query("key", this.key);
 		return this;
 	}
 	
@@ -413,11 +413,13 @@ public class View {
 	 */
 	public View startKey(Object... startKey) {
 		this.startKey = getKeyAsJson(startKey);
+		uriBuilder.query("startkey", this.startKey);
 		return this;
 	}
 	
 	public View startKeyDocId(String startKeyDocId) {
 		this.startKeyDocId = startKeyDocId;
+		uriBuilder.query("startkey_docid", this.startKeyDocId);
 		return this;
 	}
 	
@@ -426,16 +428,19 @@ public class View {
 	 */
 	public View endKey(Object... endKey) {
 		this.endKey = getKeyAsJson(endKey);
+		uriBuilder.query("endkey", this.endKey);
 		return this;
 	}
 	
 	public View endKeyDocId(String endKeyDocId) {
 		this.endKeyDocId = endKeyDocId;
+		uriBuilder.query("endkey_docid", this.endKeyDocId);
 		return this;
 	}
 	
 	public View limit(Integer limit) {
 		this.limit = limit;
+		uriBuilder.query("limit", this.limit);
 		return this;
 	}
 	
@@ -444,6 +449,7 @@ public class View {
 	 */
 	public View stale(String stale) {
 		this.stale = stale;
+		uriBuilder.query("stale", this.stale);
 		return this;
 	}
 	
@@ -452,6 +458,7 @@ public class View {
 	 */
 	public View descending(Boolean descending) {
 		this.descending = Boolean.valueOf(gson.toJson(descending));
+		uriBuilder.query("descending", this.descending);
 		return this;
 	}
 	
@@ -460,6 +467,7 @@ public class View {
 	 */
 	public View skip(Integer skip) {
 		this.skip = skip;
+		uriBuilder.query("skip", this.skip);
 		return this;
 	}
 	
@@ -469,11 +477,13 @@ public class View {
 	 */
 	public View group(Boolean group) {
 		this.group = group;
+		uriBuilder.query("group", this.group);
 		return this;
 	}
 	
 	public View groupLevel(Integer groupLevel) {
 		this.groupLevel = groupLevel;
+		uriBuilder.query("group_level", this.groupLevel);
 		return this;
 	}
 	
@@ -483,11 +493,13 @@ public class View {
 	 */
 	public View reduce(Boolean reduce) {
 		this.reduce = reduce;
+		uriBuilder.query("reduce", this.reduce);
 		return this;
 	}
 	
 	public View includeDocs(Boolean includeDocs) {
 		this.includeDocs = includeDocs;
+		uriBuilder.query("include_docs", this.includeDocs);
 		return this;
 	}
 	
@@ -497,43 +509,17 @@ public class View {
 	 */
 	public View inclusiveEnd(Boolean inclusiveEnd) {
 		this.inclusiveEnd = inclusiveEnd;
+		uriBuilder.query("inclusive_end", this.inclusiveEnd);
 		return this;
 	}
 	
 	public View updateSeq(Boolean updateSeq) {
 		this.updateSeq = updateSeq;
+		uriBuilder.query("update_seq", this.updateSeq);
 		return this;
 	}
 	
 	// --------------------------------------------------- Helper
-	/**
-	 * @return The view query parameters as a String.
-	 */
-	private String getViewParams() {
-		StringBuilder builder = new StringBuilder();
-		setParam(builder, "key", key);
-		setParam(builder, "startkey", startKey);
-		setParam(builder, "startkey_docid", startKeyDocId);
-		setParam(builder, "endkey", endKey);
-		setParam(builder, "endkey_docid", endKeyDocId);
-		setParam(builder, "limit", limit);
-		setParam(builder, "stale", stale);
-		setParam(builder, "descending", descending);
-		setParam(builder, "skip", skip);
-		setParam(builder, "group", group);
-		setParam(builder, "group_level", groupLevel);
-		setParam(builder, "reduce", reduce);
-		setParam(builder, "include_docs", includeDocs);
-		setParam(builder, "inclusive_end", inclusiveEnd);
-		setParam(builder, "update_seq", updateSeq);
-		return builder.toString();
-	}
-	
-	private void setParam(StringBuilder builder, String name, Object value) {
-		if(name != null && value != null)
-			builder.append(String.format("%s=%s&", name, value));
-	}
-	
 	private String getKeyAsJson(Object... key) {
 		return (key.length == 1) ? gson.toJson(key[0]) : gson.toJson(key); // single or complex key
 	}

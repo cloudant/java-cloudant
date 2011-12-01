@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia
+ * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
 
 package org.lightcouch;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.Scanner;
 import java.util.UUID;
@@ -127,13 +127,13 @@ final class CouchDbUtil {
 	}
 	
 	/**
-	 * Closes an input stream.
+	 * Closes a resource.
 	 * 
-	 * @param instream The {@link InputStream}
+	 * @param c The {@link Closeable} resource.
 	 */
-	public static void close(InputStream instream) {
+	public static void close(Closeable c) {
 		try {
-			instream.close();
+			c.close();
 		} catch (Exception e) {}
 	}
 }

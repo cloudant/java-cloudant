@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia
+ * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package org.lightcouch;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Helper class for construction of HTTP request URIs.
@@ -29,7 +31,8 @@ class URIBuilder {
 	private String host;
 	private int port;
 	private String path = "";
-	private String query;
+	private final StringBuilder query = new StringBuilder();
+	private final List<String> queries = new ArrayList<String>();
 	
 	public static URIBuilder builder() {
 		return new URIBuilder();
@@ -46,7 +49,13 @@ class URIBuilder {
 	
 	public URI build() {
 		try {
-			return new URI(scheme, null, host, port, path, query, null);
+			for (int i = 0; i < queries.size(); i++) {
+				query.append(queries.get(i));
+				if(i != queries.size() - 1) 
+					query.append("&");
+			}
+			String q = (query.length() == 0) ? null : query.toString();
+			return new URI(scheme, null, host, port, path, q, null);
 		} catch (URISyntaxException e) {
 			throw new IllegalArgumentException(e);
 		}
@@ -72,13 +81,15 @@ class URIBuilder {
 		return this;
 	}
 	
-	public URIBuilder query(String key, String value) {
-		this.query = (value != null) ? String.format("%s=%s", key, value) : null;
+	public URIBuilder query(String name, Object value) {
+		if(name != null && value != null) {
+			queries.add(String.format("%s=%s", name, value));
+		}
 		return this;
 	}
 	
 	public URIBuilder query(String query) {
-		this.query = query;
+		this.query.append(query);
 		return this;
 	}
 }

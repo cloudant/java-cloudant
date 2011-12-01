@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia
+ * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,14 @@ package org.lightcouch;
 
 import static java.lang.String.format;
 import static org.lightcouch.CouchDbUtil.*;
-import static org.lightcouch.URIBuilder.*;
+import static org.lightcouch.URIBuilder.builder;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -60,6 +61,7 @@ import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.scheme.SchemeSocketFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
@@ -72,8 +74,12 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.JsonParseException;
 
 /**
  * Base client class to be extended by a concrete subclass, responsible for establishing
@@ -100,7 +106,7 @@ abstract class CouchDbClientBase {
 	
 	protected CouchDbClientBase(CouchDbConfig config) {
 		this.httpClient = createHttpClient(config);
-		this.gson = new Gson();
+		this.gson = initGson(new GsonBuilder());
 		this.config = config;
 		baseURI = builder().scheme(config.getProtocol()).host(config.getHost()).port(config.getPort()).path("/").build();
 		dbURI   = builder(baseURI).path(config.getDbName()).path("/").build();
@@ -132,9 +138,8 @@ abstract class CouchDbClientBase {
 	 * Performs a HTTP GET request. 
 	 * @return {@link InputStream} 
 	 */
-	InputStream get(URI uri) {
-		HttpGet get = new HttpGet(uri);
-		HttpResponse response = executeRequest(get); 
+	InputStream get(HttpGet httpGet) {
+		HttpResponse response = executeRequest(httpGet); 
 		try { 
 			return response.getEntity().getContent();
 		} catch (Exception e) {
@@ -145,17 +150,20 @@ abstract class CouchDbClientBase {
 	
 	/**
 	 * Performs a HTTP GET request. 
+	 * @return {@link InputStream} 
+	 */
+	InputStream get(URI uri) {
+		return get(new HttpGet(uri));
+	}
+	
+	/**
+	 * Performs a HTTP GET request. 
 	 * @return An object of type T
 	 */
 	<T> T get(URI uri, Class<T> classType) {
 		InputStream instream = null;
 		try {
 			Reader reader = new InputStreamReader(instream = get(uri));
-			if(classType == JsonObject.class) {
-				@SuppressWarnings("unchecked")
-				T t = (T) new JsonParser().parse(reader).getAsJsonObject();
-				return t;
-			}
 			return getGson().fromJson(reader, classType);
 		} finally {
 			close(instream);
@@ -191,6 +199,24 @@ abstract class CouchDbClientBase {
 			HttpPut put = new HttpPut(builder(uri).path(id).build());
 			setEntity(put, json.toString());
 			response = executeRequest(put); 
+			return getResponse(response);
+		} finally {
+			close(response);
+		}
+	}
+	
+	/**
+	 * Performs a HTTP PUT request, saves an attachment.
+	 * @return {@link Response}
+	 */
+	Response put(URI uri, InputStream instream, String contentType) {
+		HttpResponse response = null;
+		try {
+			HttpPut httpPut = new HttpPut(uri);
+			InputStreamEntity entity = new InputStreamEntity(instream, -1);
+			entity.setContentType(contentType);
+			httpPut.setEntity(entity);
+			response = executeRequest(httpPut);
 			return getResponse(response);
 		} finally {
 			close(response);
@@ -369,6 +395,29 @@ abstract class CouchDbClientBase {
 			log.error("Error setting request data. " + e.getMessage());
 			throw new IllegalArgumentException(e);
 		}
+	}
+	
+	/**
+	 * <p>The supplied {@link GsonBuilder} is used to create a new {@link Gson} instance.
+	 * Useful for registering custom serializers/deserializers, for example JodaTime DateTime class.
+	 */
+	protected void setGsonBuilder(GsonBuilder gsonBuilder) {
+		this.gson = initGson(gsonBuilder);
+	}
+	
+	/**
+	 * Builds {@link Gson} and registers any required serializer/deserializer.
+	 * @return {@link Gson} instance
+	 */
+	private Gson initGson(GsonBuilder gsonBuilder) {
+		gsonBuilder.registerTypeAdapter(JsonObject.class, new JsonDeserializer<JsonObject>() {
+			public JsonObject deserialize(JsonElement json,
+					Type typeOfT, JsonDeserializationContext context)
+					throws JsonParseException {
+				return json.getAsJsonObject();
+			}
+		});
+		return gsonBuilder.create();
 	}
 	
 	/**

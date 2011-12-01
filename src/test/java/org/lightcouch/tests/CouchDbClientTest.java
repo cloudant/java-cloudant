@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia
+ * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ package org.lightcouch.tests;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -27,9 +29,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.codec.binary.Base64;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.lightcouch.Attachment;
+import org.lightcouch.Changes;
+import org.lightcouch.ChangesResult;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbInfo;
 import org.lightcouch.DesignDocument;
@@ -201,6 +207,59 @@ public class CouchDbClientTest {
 		dbClient.save(json); 
 	}
 	
+	@Test
+	public void testSaveAttachmentInline() {
+		System.out.println("------------------------------- Testing Save Attachment - Inline");
+		// init 2 attachments
+		Attachment attachment1 = new Attachment();
+		attachment1.setContentType("text/plain");
+		attachment1.setData("VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=");
+		
+		Attachment attachment2 = new Attachment();
+		attachment2.setContentType("text/plain");
+		byte[] bytes = new byte[] {65, 32, 100, 101, 109, 111, 32, 46, 116, 120, 116, 32, 97, 116, 116, 97, 99, 104, 109, 101, 110, 116, 46, 10};
+		attachment2.setData(Base64.encodeBase64String(bytes)); // binary to base64 encoding using Apache Codec
+		
+		Foo foo = new Foo();
+		Map<String, Attachment> attachments = new HashMap<String, Attachment>();
+		attachments.put("foo.txt", attachment1);
+		attachments.put("foo2.txt", attachment2);
+		foo.set_attachments(attachments);
+		
+		dbClient.save(foo);
+		
+		Bar bar = new Bar(); // Bar extends Document
+		bar.addAttachment("bar.txt", attachment1);
+		bar.addAttachment("bar2.txt", attachment2);
+		
+		dbClient.save(bar);
+	}
+	
+	@Test
+	public void testSaveAttachmenStandalone() throws IOException {
+		System.out.println("------------------------------- Testing Save Attachment - Standalone");
+		final String fileName = "foo.txt";
+		// represents a text file containing: "A demo .txt attachment."
+		byte[] bytesToDB = new byte[] {65, 32, 100, 101, 109, 111, 32, 46, 116, 120, 116, 32, 97, 116, 116, 97, 99, 104, 109, 101, 110, 116, 46, 10};
+		
+		// save the file as document attachment 
+		ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+		Response resp = dbClient.saveAttachment(bytesIn, fileName, "text/plain"); // creates a new document, and saves the attachment
+		
+		// retrieve the saved attachment, extract bytes for comparison
+		InputStream in = dbClient.find(String.format("%s/%s", resp.getId(), fileName));
+		ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+		int n;
+		while ((n = in.read()) != -1) {
+			bytesOut.write(n);
+		}
+		bytesOut.flush();
+		in.close();
+		
+		byte[] bytesFromDB = bytesOut.toByteArray();
+		assertArrayEquals(bytesToDB, bytesFromDB); // ensure we got the exact bytes we just saved
+	}
+	
 	// ----------------------------------------------------------------- Remove 
 	@Test(expected=IllegalArgumentException.class)
 	public void testRemoveThrowsIllegalArgumentException() {
@@ -271,7 +330,7 @@ public class CouchDbClientTest {
 	public void testViewIncludeDocs() {
 		initView();
 		System.out.println("------------------------------- Test View with include docs");
-		View view = dbClient.view("example/foo").includeDocs(true).key("hello-world-1").reduce(false);
+		View view = dbClient.view("example/foo").includeDocs(true).key("hello-world-1");
 		List<Foo> foos = view.query(Foo.class);
 		assertThat(foos.size(), is(not(0)));
 	}
@@ -281,7 +340,7 @@ public class CouchDbClientTest {
 		initView();
 		System.out.println("------------------------------- Test View by key range");
 		List<Foo> foos = dbClient.view("example/foo")
-		.includeDocs(true).startKey("hello-world-1").endKey("hello-world-2").reduce(false).query(Foo.class);
+		.includeDocs(true).startKey("hello-world-1").endKey("hello-world-2").query(Foo.class);
 		assertThat("Only 2 docs should be returned.", foos.size(), is(2));
 	}
 	
@@ -343,28 +402,32 @@ public class CouchDbClientTest {
 	
 	@Test
 	public void testReplicatorDB() throws InterruptedException {
+		String version = dbClient.context().serverVersion();
+		if(version.startsWith("0") || version.startsWith("1.0")) { 
+			return; // skip test for older CouchDB releases not supporting the replicator db.
+		}
 		System.out.println("------------------------------- Testing Replicator DB");
 		Response saveResponse = dbClient.replicator()
-			.source(dbClient.getDBUri().toString())
-			.target(dbClient2.getDBUri().toString())
-			.continuous(true)
-			.createTarget(true)
-			.save(); 
-		
+				.source(dbClient.getDBUri().toString())
+				.target(dbClient2.getDBUri().toString())
+				.continuous(true)
+				.createTarget(true)
+				.save(); 
+
 		Thread.sleep(300L); // allow some time for the document to update itself in the DB
 
 		ReplicatorDocument findDocument = dbClient.replicator()
-			.replicatorDocId(saveResponse.getId())
-			.find();
+				.replicatorDocId(saveResponse.getId())
+				.find();
 		assertThat(saveResponse.getId(), is(findDocument.getId())); // ensure we found the same doc we just created
 
 		List<ReplicatorDocument> docs = dbClient.replicator().findAll();
 		assertThat(docs.size(), is(not(0)));
 
 		Response removeResponse = dbClient.replicator()
-			.replicatorDocId(findDocument.getId())
-			.replicatorDocRev(findDocument.getRevision())
-			.remove();
+				.replicatorDocId(findDocument.getId())
+				.replicatorDocRev(findDocument.getRevision())
+				.remove();
 		assertThat(removeResponse.getId(), is(saveResponse.getId())); // ensure we deleted the same doc we created
 	}
 	
@@ -464,6 +527,7 @@ public class CouchDbClientTest {
 		for (int i = 0; i < 10; i++) {
 			dbClient.save(new Foo(UUID.randomUUID().toString(), "paging title", 1));
 		}
+		
 		final int rowsPerPage = 3;
 		// first page, page #1, rows: 1 - 3
 		Page<Foo> page = dbClient.view("example/foo").queryPage(rowsPerPage, null, Foo.class);
@@ -474,7 +538,7 @@ public class CouchDbClientTest {
 		assertThat(page.getPageNumber(), is(1));
 		assertThat(page.getResultList().size(), is(3));
 		//-----------------------------------------
-		
+
 		// prepare to go next
 		String param = page.getNextParam();
 		// next page, page #2, rows: 4 - 6
@@ -486,7 +550,7 @@ public class CouchDbClientTest {
 		assertThat(page.getPageNumber(), is(2));
 		assertThat(page.getResultList().size(), is(3));
 		//-----------------------------------------
-		
+
 		// prepare to go previous
 		param = page.getPreviousParam();
 		// previous page, page #1, rows: 1 - 3
@@ -499,5 +563,37 @@ public class CouchDbClientTest {
 		assertThat(page.getResultList().size(), is(3));
 	}
 
+	// ------------------------------------------------------- Changes
+	@Test
+	public void testChanges() {
+		System.out.println("------------------------------- Testing Change Notifications");
+		dbClient.save(new Foo(UUID.randomUUID().toString(), "title", 1)); // save a document
+		
+		// feed type normal
+		ChangesResult result = dbClient.changes()
+				.includeDocs(true)
+				.limit(1)
+				.getChanges();
+		assertThat(result.getResults().size(), is(1)); 
+		
+		CouchDbInfo dbInfo = dbClient.context().info();
+		String since = dbInfo.getUpdateSeq();
+		
+		// feed type continuous
+		Changes changes = dbClient.changes()
+				.includeDocs(true)
+				.since(since)
+				.heartBeat(30000)
+				.continuousChanges();
+		
+		Response resp = dbClient.save(new Foo(UUID.randomUUID().toString(), "title", 1));
+		
+		while (changes.hasNext()) {
+			ChangesResult.Row feed = changes.next();
+			String docId = feed.getId();
+			assertEquals(resp.getId(), docId);
+			changes.stop();
+		}
+	}
 }
 

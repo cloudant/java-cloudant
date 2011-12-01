@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia
+ * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ public class ViewResult<K, V, T> {
 	@SerializedName("update_seq")
 	private long updateSeq; 
 	private int offset;
-	private List<Rows> rows = new ArrayList<ViewResult<K, V, T>.Rows>();
+	private List<Rows> rows = new ArrayList<Rows>();
 	
 	public long getTotalRows() {
 		return totalRows;

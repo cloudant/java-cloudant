@@ -2,7 +2,7 @@
 <!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
                  "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"> 
 <!-- 
-   Copyright (C) 2011 Ahmed Yehia
+   Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
    
    Licensed to the Apache Software Foundation (ASF) under one
    or more contributor license agreements.  See the NOTICE file
@@ -22,7 +22,7 @@
    under the License.
  -->                                
 <article>
-	<title>LightCouch User Guide 0.0.3</title>
+	<title>LightCouch User Guide 0.0.4</title>
 	
 	<articleinfo>
 		<author>
@@ -34,16 +34,9 @@
 	<section id="preface">
 		<title>Preface</title>
 		<para>
-		LightCouch provides a Java persistence interface for communicating with CouchDB databases.
-		</para>
-		<para> 
-		It defines a set of APIs for communicating with the RESTful JSON APIs
+		LightCouch provides a Java persistence interface for CouchDB databases, 
+		it defines a set of APIs for communicating with the RESTful JSON APIs
 		provided by CouchDB.
-		</para>
-		<para> 
-		CouchDB offers its APIs in REST over HTTP and internally stores documents 
-		in a schema-free JSON format, this provides flexibility in 
-		presenting and manipulating persistent data.
 		</para>
 		<para>
 		Through it's API, LightCouch offers a simple yet powerful persistence 
@@ -64,7 +57,7 @@
 		of the available APIs.
 		</para>
 		<para>
-		The API in LightCouch is organized, grouped by functionality under different
+		The API in LightCouch is organized and grouped by functionality under different
 		contexts, that is accessible via a client instance.
 		</para>
 		<para>
@@ -77,7 +70,7 @@
 		Note: The API is covered by an integration unit tests packaged with the
 		source code, see
 		<ulink url="http://www.lightcouch.org/download.html">Download</ulink>.
-		The API was tested against CouchDB up to version 1.1.0
+		The API was tested against CouchDB up to version 1.1.1
 		</para>
 	</section>
 	<section id="setup">
@@ -92,7 +85,7 @@
 <dependency>
   <groupId>org.lightcouch</groupId>
   <artifactId>lightcouch</artifactId> 
-  <version>0.0.3</version>
+  <version>0.0.4</version>
 </dependency> 
 		]]></programlisting>
 		<para id="dependencies">
@@ -101,8 +94,8 @@
 		<itemizedlist>
 			<listitem>
 				<para>
-					<ulink url="https://github.com/downloads/ahmedyha/LightCouch/lightcouch-0.0.3.jar">
-						<citetitle>LightCouch 0.0.3</citetitle>
+					<ulink url="https://github.com/downloads/ahmedyha/LightCouch/lightcouch-0.0.4.jar">
+						<citetitle>LightCouch 0.0.4</citetitle>
 					</ulink>
 				</para>
 			</listitem>
@@ -137,7 +130,7 @@
 			<listitem>
 				<para>
 					<ulink url="http://code.google.com/p/google-gson/downloads/list">
-						<citetitle>Gson 1.7.1</citetitle>
+						<citetitle>Gson 2.0</citetitle>
 					</ulink>
 				</para>
 			</listitem>
@@ -146,7 +139,7 @@
 			<title>Configuration</title>
 			<para>
 			To configure a LightCouch client, you may use a <literal>.properties</literal>
-			file containing all the parameters required to successfuly connect to a running
+			file containing all the parameters required to successfully connect to a running
 			database instance.
 			</para>
 			<para>
@@ -169,9 +162,9 @@ couchdb.username=
 couchdb.password= 
 
 ### Optional/Advanced 
-# Timeout to wait for a response, in milliseconds. Defaults to no timeout. 
+# Timeout to wait for a response, in milliseconds. Defaults to 0 (no timeout). 
 couchdb.http.socket.timeout= 
-# Timeout to establish a connection, in milliseconds. Defaults to no timeout.
+# Timeout to establish a connection, in milliseconds. Defaults to 0 (no timeout).
 couchdb.http.connection.timeout=
 			]]></programlisting>
 		</section>
@@ -211,7 +204,7 @@ CouchDbClient dbClient2 = new CouchDbClient("couchdb-2.properties");
 CouchDbClient dbClient3 = new CouchDbClient(...);
             ]]></programlisting>
 		<para>
-		Note: A client instance is thread-safe, typically you	would create one 
+		Note: A client instance is thread-safe, typically you would create one 
 		at the beginning of your application startup and re-use it throughout 
 		your code.
 		</para>
@@ -253,7 +246,7 @@ private CouchDbClient dbClient;
 		</para>
 		<para> 
             The API supports <literal>CRUD</literal> operations to be performed on documents.
-            </para>
+        </para>
 		<para>
 		Documents in a CouchDB are mainly identified by declaring two fields, 
 		an id and a revision (i.e <literal>_id</literal> and <literal>_rev</literal>).
@@ -264,7 +257,7 @@ private CouchDbClient dbClient;
 		</para>
 		<para>
 		LightCouch provides a convenient base class which you may choose to extend by
-		your model objects, this class is called <literal>org.lightcouch.Document</literal>.
+		your model classes, this class is called <literal>org.lightcouch.Document</literal>.
 		If it's not your flavor, or if you want your objects not to depend on LightCouch
 		(this may be preferable as to promote models portability across different domains),
 		you may use JSON mapping annotations 
@@ -279,7 +272,8 @@ private CouchDbClient dbClient;
 		</para>
 		<para>
 		LightCouch has a dependency on Google <literal>Gson</literal> library which it 
-		relies on for handling JSON/Java mapping.
+		relies on for handling JSON/Java mapping. During serialization <literal>Gson</literal>
+		by default will not serialize <literal>null</literal> fields.
 		</para>
 		<para>
 		The following sections explores what LightCouch API offers for handling document 
@@ -313,8 +307,8 @@ private CouchDbClient dbClient;
 // initialize a client 'dbClient' here .. 
 Foo foo = new Foo(); 
 Response resp = dbClient.save(foo); 
-dbClient.save(foo);    // or save and ignore response 
-//dbClient.batch(foo); // saves as batch
+// dbClient.save(foo);   // or save and ignore response 
+// dbClient.batch(foo);  // saves as batch
 Response resp2 = dbClient.update(foo);
 
 Map<String, Object> map = new HashMap<String, Object>();
@@ -358,7 +352,7 @@ foo = dbClient.find(Foo.class, "some-id", "some-rev");
 boolean b = dbClient.contains("some-id"); 
 
 InputStream in = dbClient.find("some-id"); // find as stream 
-// do something useful
+// do something useful, close stream
 in.close();
 
 JsonObject json = dbClient.find(JsonObject.class, "some-id");
@@ -381,6 +375,101 @@ resp = dbClient.remove("some-id", "some-rev");
 		</section><!-- end delete documents -->
 	</section><!-- end docs api -->
 	
+	<section id="docs-api-attachments">
+		<title>Attachments API</title>
+		<para>
+		Documents in CouchDB may have attachments, either inline  
+		or standalone. The following sections illustrates both features.
+		</para>
+	<section id="docs-api-attachment-inline">
+		<title>Inline Attachments</title>
+		<para>
+		To save an inline attachment, the class <literal>org.lightcouch.Attachment</literal> 
+		exposes	properties for setting a base64 encoded string, and a content type of the attachment. 
+		A document may have one or more inline attachments which get saved along with 
+		the enclosing document during the usual save operation described above.
+		</para>
+		<para>
+		To enable inline attachments in a domain model, one may extend 
+		<literal>org.lightcouch.Document</literal> which provides 
+		means for adding attachments, or if a domain does not 
+		extend <literal>Document</literal>, see the example below.
+		</para>
+		<para>
+		Retrieving a document that has an attachment does not also retrieve 
+		the attachment itself, instead it returns metadata. 
+		</para>
+		<para>
+		Note: For encoding base64 strings, 
+		<literal>Base64.encodeBase64String(bytes)</literal> may be used, thats included in 
+		Apache Codec.
+		</para>
+		<programlisting><![CDATA[ 
+public class Foo { 
+// .. define id & rev
+@SerializedName("_attachments")
+private Map<String, Attachment> attachments;
+// .. setters & getters
+}		
+	
+// init an attachment		
+Attachment attachment = new Attachment();
+attachment.setData("VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=");
+attachment.setContentType("text/plain");
+
+Foo foo = new Foo();
+Map<String, Attachment> attachments = new HashMap<String, Attachment>();
+attachments.put("foo.txt", attachment); 
+foo.setAttachments(attachments);
+dbClient.save(foo);
+
+Bar bar = new Bar(); // Bar extends Document
+bar.addAttachment("bar.txt", attachment); 
+dbClient.save(bar);
+	]]></programlisting>
+	</section><!-- end attachments inline -->
+				
+	<section id="docs-api-attachment-standalone">
+		<title>Standalone Attachments</title>
+		<para>
+		Standalone attachments may be saved to an existing, or to 
+		a new document. The supporting method expects an attachment in
+		an <literal>InputStream</literal> format holding binary data, 
+		and a "Content-Type" to be provided. The corresponding APIs for 
+		saving attachments is available under a client instance.
+		</para>
+		<para>
+		In the following example, the first statement saves an attachment under
+		a newly created document (with a generated UUID as the document id).
+		</para>
+		<para>
+		The second statement, saves an attachment under a document given a 
+		document id	and revision. 
+		However, revision may be <literal>null</literal>, in which case 
+		a new document will be created using the specified id. 
+		</para>
+		<programlisting><![CDATA[ 
+InputStream in =  // .. init input stream
+Response resp = dbClient.saveAttachment(in, "foo.txt", "text/plain");
+resp = dbClient.saveAttachment(in, "foo.txt", "text/plain", "doc-id", "doc-rev");
+		]]></programlisting>
+	</section><!-- end attachments standalone -->
+				
+	<section id="docs-api-attachment-find">
+		<title>Finding Attachments</title>
+		<para>
+		To retrieve an attachment, use the <literal>find()</literal> that
+		returns an input stream: 
+		</para>
+		<programlisting><![CDATA[ 
+InputStream in = dbClient.find("doc-id/foo.txt");
+// do something useful, close stream
+in.close();
+		]]></programlisting>
+	</section><!-- end attachments find -->
+				
+	</section> <!-- end attachments -->
+	
 	<section id="logging-error-handling">
 		<title>Logging and Error Handling</title>
 		<para>
@@ -392,9 +481,9 @@ resp = dbClient.remove("some-id", "some-rev");
 			<para>
 			By enabling a more verbose logging level 
 			(i.e <literal>INFO</literal> for example), 
-			LightCouch will log events as	they occure. 
+			LightCouch will log events as they occure. 
 			You can get hold of useful information during development like what
-			API calls is made and how a request actually look like, and what reply 
+			API calls is made, how a request URI and parameters look like, and what reply 
 			the database has responsed as a result to your request.
 			</para>
 			<para> 
@@ -418,7 +507,7 @@ log4j.logger.org.apache.http=ERROR
 			<para>
 			LightCouch provides three convenient runtime exception classes for that purpose.
 			<literallayout>
-			1. <literal>NoDocumentException</literal> when a request document could not be found (or a view with no result).
+			1. <literal>NoDocumentException</literal> when a requested document could not be found (or a view with no result).
 			2. <literal>DocumentConflictException</literal>	when a conflict is detected during a save or update. 
 			3. <literal>CouchDbException</literal> is the super class for the former two exception classes, for bravity, 
 			it is thrown in every other failure events, i.e in cases of HTTP error (<literal>400</literal>) for instance. 
@@ -468,7 +557,7 @@ View view = dbClient.view("example/by_date")
 .reduce(false) 
 .includeDocs(true); 
 
-ViewResult<int[], String, Foo> result = 
+ViewResult<int[], String, Foo> entries = // View entries (keys/values) & documents 
              view.queryView(int[].class, String.class, Foo.class); 
 		]]></programlisting>
 		
@@ -490,7 +579,7 @@ ViewResult<int[], String, Foo> result =
 			<programlisting><![CDATA[ 
 public void doGet(HttpServletRequest request, HttpServletResponse resp) { 
 // request first page 
-Page<Foo> page = dbClient.view("example/foo").queryPage(15, null, Foo.class);
+Page<Foo> page = dbClient.view("example/foo").reduce(false).queryPage(15, null, Foo.class);
 request.setAttribute("page", page); 
 // .. forward to a jsp for display
 } 
@@ -526,7 +615,7 @@ ${page.pageNumber}
 			<programlisting><![CDATA[ 
 public void doGet(HttpServletRequest request, HttpServletResponse resp) { 
 String param = request.getParameter("param");
-Page<Foo> page = dbClient.view("example/foo").queryPage(15, param, Foo.class); 
+Page<Foo> page = dbClient.view("example/foo").reduce(false).queryPage(15, param, Foo.class); 
 request.setAttribute("page", page); 
 // .. forward to the same jsp page for displaying sub-sequent pages
 } 
@@ -590,10 +679,47 @@ DesignDocument documentFromDb = dbClient.design().getFromDb("_design/example");
 		properly implements <literal>equals()</literal>.
 		This may come in handy for comparing documents that are loaded from either 
 		desk files or the database, this is what practically is used when 
-		<literal>synchronizeWithDb()</literal> is invoked, to avoid un-necessary
+		<literal>synchronizeWithDb()</literal> is invoked, as to avoid un-necessary
 		updates to a design document in the database that is up-to-date.
 		</para>
 	</section> <!-- end design docs -->
+	
+	<section id="changes">
+		<title>Change Notifications</title>
+		<para>Change notifications API is accessible under the context 
+		<acronym>changes()</acronym>. The API supports change feeds of both types 
+		<acronym>normal</acronym> and <acronym>continuous</acronym>. 
+		Documents in the changes result are returned as <acronym>JsonObject</acronym>s.
+		</para>
+		<para>Usage Example:</para>
+		<programlisting><![CDATA[
+// feed type normal
+ChangesResult change = dbClient.changes()
+.includeDocs(true)
+.limit(20)
+.getChanges();
+
+List<ChangesResult.Row> rows = change.getResults(); 
+
+CouchDbInfo dbInfo = dbClient.context().info();
+String since = dbInfo.getUpdateSeq(); // get latest update seq
+
+// feed type continuous
+Changes changes = dbClient.changes()
+.includeDocs(true)
+.since(since)
+.heartBeat(30000)
+.filter("example/filter")
+.continuousChanges();
+
+// access live continuous feeds in an iterator style
+while (changes.hasNext()) { // blocks until a feed is received
+ChangesResult.Row feed = changes.next();
+// changes.stop(); // stop a running feed
+}
+		]]></programlisting>
+	</section> <!-- end changes api -->
+	
 	<section id="db-api">
 		<title>Database API</title>
 		<para>
@@ -649,7 +775,7 @@ List<ReplicatorDocument> docs = dbClient.replicator().findAll();
 Response removeResponse = dbClient.replicator() 
 .replicatorDocId("doc-id")
 .replicatorDocRev("doc-rev")
-.remove(); // cancels an on going replication
+.remove(); // cancels an ongoing replication
 			]]></programlisting>
 		</section>
 	</section> <!-- end database api -->

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia
+ * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,7 +95,7 @@ public class CouchDbClientLoadTest {
 		public void run() {
 			for (int i = 0; i < NUM_DOCS; i++) {
 				foo.set_id(foo.get_id() + i);
-				client.batch(foo);
+				client.save(foo);
 			}
 		}
 	}

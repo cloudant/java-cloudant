@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia
+ * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,18 @@
 package org.lightcouch;
 
 import static org.lightcouch.CouchDbUtil.*;
-import static org.lightcouch.URIBuilder.*;
+import static org.lightcouch.URIBuilder.builder;
 
 import java.io.InputStream;
 import java.net.URI;
 
 import org.apache.http.HttpResponse;
 
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 /**
- * <p>Presents a client to a CouchDB database instanse.
+ * <p>Presents a client to a CouchDB database instance.
  * <p>This is the main class to use to gain access to the various APIs defined by this client.
  * 
  * <h3>Usage Example:</h3> 
@@ -42,8 +43,8 @@ import com.google.gson.JsonObject;
  * couchdb.protocol=http
  * couchdb.host=127.0.0.1
  * couchdb.port=5984
- * couchdb.username=myuser
- * couchdb.password=secret
+ * couchdb.username=
+ * couchdb.password=
  * </pre>
  * 
  * <p>Then construct a new instance using the default constructor: 
@@ -54,7 +55,7 @@ import com.google.gson.JsonObject;
  * <p>Multiple client instances could be created to handle multiple database instances simultaneously in a thread-safe manner, 
  * typically one client for each database. 
  * 
- * <p>A client instance provides access to various APIs, accessible under four locations or contexts.
+ * <p>A client instance provides access to various APIs, accessible under several locations or contexts.
  * <p>Document APIs are available directly under this instance:
  * <pre>
  *  Foo foo = dbClient.find(Foo.class, "some-id");
@@ -64,8 +65,10 @@ import com.google.gson.JsonObject;
  * 
  * <p>View APIs under the context <tt>view()</tt> {@link View} contains usage examples.
  * 
+ * <p>Change Notifications API under the context <tt>changes()</tt> see {@link Changes} for usage example.
+ * 
  * <p>Replication APIs under two contexts: <tt>replication()</tt> and <tt>replicator()</tt>, 
- * the latters supports the replicator database introduced with CouchDB v 1.1.0 
+ * the latter supports the replicator database introduced with CouchDB v 1.1.0 
  * {@link Replication} and {@link Replicator} provide usage examples.
  * 
  * <p>Database APIs under the context <tt>context()</tt>
@@ -120,6 +123,14 @@ public final class CouchDbClient extends CouchDbClientBase {
 	}
 	
 	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void setGsonBuilder(GsonBuilder gsonBuilder) {
+		super.setGsonBuilder(gsonBuilder);
+	}
+	
+	/**
 	 * Provides access to the database APIs.
 	 */
 	public CouchDbContext context() {
@@ -152,6 +163,13 @@ public final class CouchDbClient extends CouchDbClientBase {
 	 */
 	public Replicator replicator() {
 		return new Replicator(this);
+	}
+	
+	/**
+	 * Provides access to the Change Notifications API.
+	 */
+	public Changes changes() {
+		return new Changes(this);
 	}
 	
 	/**
@@ -191,6 +209,7 @@ public final class CouchDbClient extends CouchDbClientBase {
 	 * @param id The document id.
 	 * @return The result of the request as an {@link InputStream}
 	 * @throws NoDocumentException If the document is not found in the database.
+	 * @see #find(String, String)
 	 */
 	public InputStream find(String id) {
 		assertNotEmpty(id, "id");
@@ -201,6 +220,7 @@ public final class CouchDbClient extends CouchDbClientBase {
 	 * <p>Finds a document given an id and revision, returns the result as {@link InputStream}.</p>
 	 * The stream should be properly closed after usage, as to avoid connection leaks.
 	 * @param id The document id.
+	 * @param rev The document revision.
 	 * @return The result of the request as an {@link InputStream}
 	 * @throws NoDocumentException If the document is not found in the database.
 	 */
@@ -215,15 +235,15 @@ public final class CouchDbClient extends CouchDbClientBase {
 	 * @param id The document id.
 	 * @return true If the document is found, false otherwise.
 	 */
-	public boolean contains(String id) {
+	public boolean contains(String id) { 
 		assertNotEmpty(id, "id");
-		InputStream instream = null;
+		HttpResponse response = null;
 		try {
-			instream = find(id);
+			response = head(builder(getDBUri()).path(id).build());
 		} catch (NoDocumentException e) {
 			return false;
 		} finally {
-			close(instream);
+			close(response);
 		}
 		return true;
 	}
@@ -250,6 +270,43 @@ public final class CouchDbClient extends CouchDbClientBase {
 		} finally {
 			close(response);
 		}
+	}
+	
+	/**
+	 * <p>Saves an attachment under a new document with a generated UUID as the document id.
+	 * <p>To retrieve an attachment, see {@link #find(String)}.
+	 * @param instream The {@link InputStream} holding the binary data.
+	 * @param name The attachment name.
+	 * @param contentType The attachment "Content-Type".
+	 * @return {@link Response}
+	 */
+	public Response saveAttachment(InputStream instream, String name, String contentType) {
+		assertNotEmpty(instream, "Input Stream");
+		assertNotEmpty(name, "Attachment Name");
+		assertNotEmpty(contentType, "Content-Type");
+		URI uri = builder(getDBUri()).path(generateUUID()).path("/").path(name).build();
+		return put(uri, instream, contentType);
+	}
+	
+	/**
+	 * <p>Saves an attachment under an existing document given both a document id
+	 * and revision, or under a new document given only the document id.
+	 * <p>To retrieve an attachment, see {@link #find(String)}.
+	 * @param instream The {@link InputStream} holding the binary data.
+	 * @param name The attachment name.
+	 * @param contentType The attachment "Content-Type".
+	 * @param docId The document id to save the attachment under, or {@code null} to save under a new document.
+	 * @param docRev The document revision to save the attachment under, or {@code null} when saving to a new document.
+	 * @throws DocumentConflictException 
+	 * @return {@link Response}
+	 */
+	public Response saveAttachment(InputStream instream, String name, String contentType, String docId, String docRev) {
+		assertNotEmpty(instream, "Input Stream");
+		assertNotEmpty(name, "Attachment Name");
+		assertNotEmpty(contentType, "Content-Type");
+		assertNotEmpty(docId, "Document id");
+		URI uri = builder(getDBUri()).path(docId).path("/").path(name).query("rev", docRev).build();
+		return put(uri, instream, contentType);
 	}
 	
 	/**
