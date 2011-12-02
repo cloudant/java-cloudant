@@ -655,7 +655,7 @@ design-docs
             |- show2.js
         |- validate_doc_update
             |- validate.js 
-        |- view
+        |- views
             |- by_date
                 |- map.js
             |- by_tag
