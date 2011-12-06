@@ -373,6 +373,37 @@ Response resp = dbClient.remove(object); // object contains both an id and rev
 resp = dbClient.remove("some-id", "some-rev");
             ]]></programlisting>
 		</section><!-- end delete documents -->
+		
+		<section id="docs-api-custom-serializer">
+			<title>Custom Serializers</title>
+			<para>
+			Gson by default does not know how to handle serialization/deserialization of 
+			some third party classes, for example JodaTime <literal>DateTime</literal> class.
+			To workaround this limitation, you may register a custom serializer/deserializer
+			via <literal>GsonBuilder</literal> then supply it to a CouchDbClient instance.
+			</para>
+			<para>Usage Example:</para>
+			<programlisting><![CDATA[ 
+GsonBuilder gsonBuilder = new GsonBuilder();
+gsonBuilder.registerTypeAdapter(DateTime.class, new JsonSerializer<DateTime>() {
+public JsonElement serialize(DateTime src, Type typeOfSrc, 
+JsonSerializationContext context) {
+return new JsonPrimitive(src.toString());
+}
+});
+		
+gsonBuilder.registerTypeAdapter(DateTime.class, new JsonDeserializer<DateTime>() {
+public DateTime deserialize(JsonElement json, Type typeOfT, 
+JsonDeserializationContext context) throws JsonParseException {
+return new DateTime(json.getAsJsonPrimitive().getAsString());
+}
+});
+
+CouchDbClient dbClient = new CouchDbClient();		
+dbClient.setGsonBuilder(gsonBuilder);
+// .. use the client normally as you would
+            ]]></programlisting>
+		</section><!-- end delete documents -->
 	</section><!-- end docs api -->
 	
 	<section id="docs-api-attachments">
