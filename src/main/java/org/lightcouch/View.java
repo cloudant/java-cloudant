@@ -179,7 +179,7 @@ public class View {
 				row.setId(JsonToObject(gson, e, "id", String.class));
 				row.setKey(JsonToObject(gson, e, "key", classOfK));
 				row.setValue(JsonToObject(gson, e, "value", classOfV));
-				if(includeDocs == Boolean.TRUE) {
+				if(Boolean.TRUE.equals(this.includeDocs)) {
 					row.setDoc(JsonToObject(gson, e, "doc", classOfT));
 				}
 				vr.getRows().add(row);
