@@ -34,8 +34,7 @@ public class Document {
 	@SerializedName("_rev")
 	private String revision;
 	@SerializedName("_attachments")
-	private Map<String, Attachment> attachments 
-		= new HashMap<String, Attachment>(); 
+	private Map<String, Attachment> attachments; 
 
 	public String getId() {
 		return id;
@@ -62,7 +61,9 @@ public class Document {
 	}
 	
 	public void addAttachment(String name, Attachment attachment) {
-		this.attachments.put(name, attachment);
+		if(attachments == null)
+			attachments = new HashMap<String, Attachment>(); 
+		attachments.put(name, attachment);
 	}
 
 	@Override
