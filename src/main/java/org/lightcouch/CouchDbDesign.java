@@ -45,6 +45,15 @@ import org.lightcouch.DesignDocument.MapReduce;
 public class CouchDbDesign {
 	
 	private static final String DESIGN_DOCS_DIR = "design-docs";
+	private static final String JAVASCRIPT      = "javascript";
+	private static final String DESIGN_PREFIX   = "_design/";
+	private static final String VALIDATE_DOC    = "validate_doc_update";
+	private static final String VIEWS           = "views";
+	private static final String FILTERS         = "filters";
+	private static final String SHOWS           = "shows";
+	private static final String LISTS           = "lists";
+	private static final String MAP_JS          = "map.js";
+	private static final String REDUCE_JS       = "reduce.js";
 	
 	private CouchDbClient dbc;
 	
@@ -64,7 +73,7 @@ public class CouchDbDesign {
 	 * action was taken and the document in the database is up-to-date with the given document.
 	 */
 	public Response synchronizeWithDb(DesignDocument document) {
-		assertNotEmpty(document, "Design Document");
+		assertNotEmpty(document, "Document");
 		DesignDocument documentFromDb = null;
 		try {
 			documentFromDb = getFromDb(document.getId());
@@ -80,7 +89,7 @@ public class CouchDbDesign {
 	
 	/**
 	 * Synchronize all design documents from desk to the database.
-	 * @see #synchronizeDesignDocWithDb
+	 * @see #synchronizeWithDb(DesignDocument)
 	 */
 	public void synchronizeAllWithDb() {
 		List<DesignDocument> documents = getAllFromDesk();
@@ -95,7 +104,7 @@ public class CouchDbDesign {
 	 * @return {@link DesignDocument}
 	 */
 	public DesignDocument getFromDb(String id) {
-		assertNotEmpty(id, "Document id");
+		assertNotEmpty(id, "id");
 		URI uri = builder(dbc.getDBUri()).path(id).build();
 		return dbc.get(uri, DesignDocument.class);
 	}
@@ -107,14 +116,15 @@ public class CouchDbDesign {
 	 * @return {@link DesignDocument}
 	 */
 	public DesignDocument getFromDb(String id, String rev) {
-		assertNotEmpty(id, "Document id");
-		assertNotEmpty(id, "Document rev");
+		assertNotEmpty(id, "id");
+		assertNotEmpty(id, "rev");
 		URI uri = builder(dbc.getDBUri()).path(id).query("rev", rev).build();
 		return dbc.get(uri, DesignDocument.class);
 	}
 	
 	/**
 	 * Gets all design documents from desk.
+	 * @see #getFromDesk(String)
 	 */
 	public List<DesignDocument> getAllFromDesk() {
 		File rootDir = null;
@@ -141,23 +151,15 @@ public class CouchDbDesign {
 		try {
 			designDoc = new File(new File(getURL(DESIGN_DOCS_DIR).toURI()), id);
 			if(!designDoc.exists()) {
-				throw new FileNotFoundException();
+				throw new FileNotFoundException("Design docs directory not found");
 			}
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e);
 		}
 		DesignDocument dd = new DesignDocument();
-		Map<String, String> filters = null;
-		Map<String, String> lists = null;
-		Map<String, String> shows = null;
-		Map<String, MapReduce> views = null;
-		String[] elements = designDoc.list();
-		lists   = populateFunctions(lists, designDoc, elements, "lists");
-		filters = populateFunctions(lists, designDoc, elements, "filters");
-		shows   = populateFunctions(lists, designDoc, elements, "shows");
-		// validate_doc_update functions
-		if(Arrays.asList(elements).contains("validate_doc_update")) {
-			File validateDir = new File(designDoc, "validate_doc_update");
+		List<String> elements = Arrays.asList(designDoc.list());
+		if(elements.contains(VALIDATE_DOC)) { // validate_doc_update
+			File validateDir = new File(designDoc, VALIDATE_DOC);
 			String[] validateFunctions = validateDir.list();
 			if(validateFunctions.length != 1) {
 				throw new IllegalArgumentException("Expecting exactly one validate_doc_update function file");
@@ -165,38 +167,35 @@ public class CouchDbDesign {
 			File validateFile = new File(validateDir, validateFunctions[0]);
 			dd.setValidateDocUpdate(readFile(validateFile));
 		} // /validate_doc_update
-		if(Arrays.asList(elements).contains("views")) { // view functions
-			File viewsRootDir = new File(designDoc, "views");
+		Map<String, MapReduce> views = null;
+		if(elements.contains(VIEWS)) { // views
+			File viewsRootDir = new File(designDoc, VIEWS);
 			views = new HashMap<String, MapReduce>();
-			for (String viewDirName : viewsRootDir.list()) { // view dirs
+			for (String viewDirName : viewsRootDir.list()) { // views sub-dirs
 				MapReduce mr = dd.new MapReduce();
 				File viewDir = new File(viewsRootDir, viewDirName);
-				String map = null;
-				String reduce = null;
-				for (String mapReduceFileName : viewDir.list()) { // view sub dirs
-					if(mapReduceFileName.equals("map.js")) {
-						map = readFile(new File(viewDir, mapReduceFileName));
-						mr.setMap(map);
-					} else if(mapReduceFileName.equals("reduce.js")) {
-						reduce = readFile(new File(viewDir, mapReduceFileName));
-						mr.setReduce(reduce);
-					}
-				} // /foreach view sub dirs
+				for (String fileName : viewDir.list()) { // view files
+					String def = readFile(new File(viewDir, fileName));
+					if(MAP_JS.equals(fileName))
+						mr.setMap(def);
+					else if(REDUCE_JS.equals(fileName))
+						mr.setReduce(def);
+				} // /foreach view files
 				views.put(viewDirName, mr);
-			} // /foreach view dirs
-		} // /view functions
-		dd.setId("_design/" + id); 
-		dd.setLanguage("javascript");
+			} // /foreach views sub-dirs
+		} // /views
+		dd.setId(DESIGN_PREFIX + id); 
+		dd.setLanguage(JAVASCRIPT);
 		dd.setViews(views);
-		dd.setFilters(filters);
-		dd.setShows(shows);
-		dd.setLists(lists);
+		dd.setFilters(populateMap(designDoc, elements, FILTERS));
+		dd.setShows(populateMap(designDoc, elements, SHOWS));
+		dd.setLists(populateMap(designDoc, elements, LISTS));
 		return dd;
 	}
 	
-	private Map<String, String> populateFunctions(Map<String, String> functionsMap,
-			File designDoc, String[] elements, String element) {
-		if(Arrays.asList(elements).contains(element)) {
+	private Map<String, String> populateMap(File designDoc, List<String> elements, String element) {
+		Map<String, String> functionsMap = null;
+		if(elements.contains(element)) {
 			File functionsDir = new File(designDoc, element);
 			functionsMap = new HashMap<String, String>();
 			for (String functionFileName : functionsDir.list()) {
