@@ -16,9 +16,9 @@
 
 package org.lightcouch;
 
-import java.util.List;
-
 import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
 
 /**
  * Holds the result of a replication request, along with previous sessions history.
@@ -79,11 +79,11 @@ public class ReplicationResult {
 		@SerializedName("end_time")
 		private String endTime;
 		@SerializedName("start_last_seq")
-		private long startLastSeq;
+		private String startLastSeq;
 		@SerializedName("end_last_seq")
-		private long endLastSeq;
+		private String endLastSeq;
 		@SerializedName("recorded_seq")
-		private long recordedSeq;
+		private String recordedSeq;
 		@SerializedName("missing_checked")
 		private long missingChecked;
 		@SerializedName("missing_found")
@@ -107,15 +107,15 @@ public class ReplicationResult {
 			return endTime;
 		}
 
-		public long getStartLastSeq() {
+		public String getStartLastSeq() {
 			return startLastSeq;
 		}
 
-		public long getEndLastSeq() {
+		public String getEndLastSeq() {
 			return endLastSeq;
 		}
 
-		public long getRecordedSeq() {
+		public String getRecordedSeq() {
 			return recordedSeq;
 		}
 
@@ -151,15 +151,15 @@ public class ReplicationResult {
 			this.endTime = endTime;
 		}
 
-		public void setStartLastSeq(long startLastSeq) {
+		public void setStartLastSeq(String startLastSeq) {
 			this.startLastSeq = startLastSeq;
 		}
 
-		public void setEndLastSeq(long endLastSeq) {
+		public void setEndLastSeq(String endLastSeq) {
 			this.endLastSeq = endLastSeq;
 		}
 
-		public void setRecordedSeq(long recordedSeq) {
+		public void setRecordedSeq(String recordedSeq) {
 			this.recordedSeq = recordedSeq;
 		}
 
