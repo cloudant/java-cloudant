@@ -27,6 +27,10 @@ import org.lightcouch.CouchDbClient;
 
 /**
  * Clients load test.
+ * 
+ * <p> Run test:  
+ * <p> <tt>$ mvn test -Dtest=org.lightcouch.tests.CouchDbClientLoadTest</tt>
+ * 
  * @author Ahmed Yehia
  *
  */
@@ -56,8 +60,8 @@ public class CouchDbClientLoadTest {
     	ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
     	final MyRunnable[] runnables = new MyRunnable[NUM_THREADS];
     	for (int i = 0; i < NUM_THREADS; i += 2) {
-    		runnables[i] = new MyRunnable(dbClient, new Foo(UUID.randomUUID().toString()));
-    		runnables[i+1] = new MyRunnable(dbClient2, new Foo(UUID.randomUUID().toString()));
+    		runnables[i] = new MyRunnable(dbClient, new Foo(UUID.randomUUID().toString().replace("-", "")));
+    		runnables[i+1] = new MyRunnable(dbClient2, new Foo(UUID.randomUUID().toString().replace("-", "")));
     	}
     	
     	// start

@@ -80,12 +80,14 @@ public class CouchDbClientTest {
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testFindThrowsIllegalArgumentException() {
-		dbClient.find(Foo.class, ""); // empty or null arguments
+		// empty or null arguments
+		dbClient.find(Foo.class, ""); 
 	}
 	
 	@Test(expected=NoDocumentException.class)
 	public void testFindThrowsNoDocumentException() {
-		dbClient.find(Foo.class, UUID.randomUUID().toString()); // id value of a new UUID should never be found
+		// id value of a new UUID should never be found
+		dbClient.find(Foo.class, generateUUID()); 
 	}
 	
 	@Test
@@ -94,13 +96,25 @@ public class CouchDbClientTest {
 
 		// save a new doc and obtain the response
 		Response resp = dbClient.save(new Foo()); 
-		Foo foo = dbClient.find(Foo.class, resp.getId()); // find by id
+		
+		// find by id
+		Foo foo = dbClient.find(Foo.class, resp.getId()); 
 		assertNotNull(foo);
 		
-		foo = dbClient.find(Foo.class, resp.getId(), resp.getRev()); // find by id & rev
+		// find by id & rev
+		foo = dbClient.find(Foo.class, resp.getId(), resp.getRev()); 
 		assertNotNull(foo);
 		
-		InputStream inputStream = dbClient.find(resp.getId()); // find by id, get input stream
+		// find Json
+		JsonObject json = dbClient.find(JsonObject.class, resp.getId());
+		assertNotNull(json);
+		
+		// find any
+		json = dbClient.findAny(JsonObject.class, dbClient.getDBUri().toString());
+		assertNotNull(json);
+		
+		// find stream
+		InputStream inputStream = dbClient.find(resp.getId()); 
 		assertTrue(inputStream.read() != -1); // check the stream is not empty
 		inputStream.close();
 		
@@ -110,19 +124,10 @@ public class CouchDbClientTest {
 	}
 	
 	@Test
-	public void testFindJSON() throws IOException {
-		System.out.println("------------------------------- Testing find JSON");
-		final String TITLE = "Json Title";
-		Foo foo = new Foo(UUID.randomUUID().toString(), TITLE, 1);
-		Response response = dbClient.save(foo);
-		JsonObject json = dbClient.find(JsonObject.class, response.getId());
-		assertEquals(json.get("title").getAsString(), TITLE);
-	}
-	
-	@Test
 	public void testContains() {
 		System.out.println("------------------------------- Testing contains()");
-		String id = UUID.randomUUID().toString(); // new UUID
+		
+		String id = generateUUID(); 
 		boolean found = dbClient.contains(id);
 		assertFalse(found);
 		
@@ -135,74 +140,62 @@ public class CouchDbClientTest {
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testSaveThrowsIllegalArgumentException() {
-		dbClient.save(null); // trying to save an invalid object
+		// invalid object
+		dbClient.save(null); 
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testSaveThrowsIllegalArgumentException_2() {
+		// saving a new doc with a revision
 		Foo foo = new Foo();
-		foo.set_rev("some-rev"); // new docs should not have a revision value assigned
+		foo.set_rev("some-rev"); 
 		dbClient.save(foo); 
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testUpdateThrowsIllegalArgumentException_3() {
+		// updating a document without id and revision
 		Foo foo = new Foo();
-		dbClient.update(foo); // updating docs should have both id and revision values assigned
+		dbClient.update(foo); 
 	}
 	
 	@Test(expected=DocumentConflictException.class)
 	public void testSaveThrowsDocumentConflictException() {
-		Foo foodb1 = new Foo(UUID.randomUUID().toString(), "a title", 0);
-		dbClient.save(foodb1); 
-		dbClient.save(foodb1); // saving the same doc twice (i.e with the same _id), gives 409 conflict
+		// saving the same doc twice (i.e with the same _id), gives 409 conflict
+		Foo foo = new Foo(generateUUID());
+		dbClient.save(foo); // OK
+		dbClient.save(foo); // Fail
 	}
 	
 	@Test(expected=DocumentConflictException.class)
 	public void testUpdateThrowsDocumentConflictException() {
-		Response resp = dbClient.save(new Foo());         // save a new doc
-		Foo foo = dbClient.find(Foo.class, resp.getId()); // find it, by id
-		dbClient.update(foo); // should be ok, foo rev is the latest
-		dbClient.update(foo); // should fail with 409, foo rev is out of date
+		Response resp = dbClient.save(new Foo());         
+		Foo foo = dbClient.find(Foo.class, resp.getId()); 
+		dbClient.update(foo); // OK, foo rev is the latest
+		dbClient.update(foo); // Fail, foo rev is out of date
 	}
 	
 	@Test
 	public void testSaveAndUpdate() throws IOException {
 		System.out.println("------------------------------- Testing Save/Update");
     	
-    	final String TITLE = "new title";
-    	Response resp = dbClient.save(new Foo());         // save a new doc
-    	Foo foo = dbClient.find(Foo.class, resp.getId()); // find it, by id
-    	foo.setTitle(TITLE);                              // modify with some value 
-    	foo.set_rev(resp.getRev());						  // assign it the correct _rev
-    	dbClient.update(foo); 							  // update should be ok
+		// save
+    	Response resp = dbClient.save(new Foo());         
+    	Foo foo = dbClient.find(Foo.class, resp.getId()); 
+
+    	// update, update rev first
+    	foo.set_rev(resp.getRev());
+    	dbClient.update(foo);
     	
-    	foo = dbClient.find(Foo.class, resp.getId());     // find it again after update, by id
-    	assertThat(foo.getTitle(), is(TITLE));                  // check it has the correct value assigned
-    	assertThat(foo.getTitle(), is(not("different title"))); // check it doesn't have incorrect values assigned
-    	
-	}
-	
-	@Test
-	public void testSaveMap() {
-		System.out.println("------------------------------- Testing Save Map");
-    	final String ID = UUID.randomUUID().toString();
-    	final String KEY = "title";
-    	final String VALUE = "title-value";
-    	
+    	// save map
     	Map<String, Object> map = new HashMap<String, Object>();
-    	map.put("_id", ID);
-    	map.put(KEY, VALUE);
+    	map.put("_id", generateUUID());
+    	map.put("some-key", "some-value");
+    	dbClient.save(map); 
     	
-    	Response resp = dbClient.save(map);  // save the Map
-    	assertNotNull(resp.getRev()); // check we got back a rev after save
-	}
-	
-	@Test
-	public void testSaveJSON() {
-		System.out.println("------------------------------- Testing Save JSON");
-		JsonObject json = new JsonObject();
-		json.addProperty("_id", UUID.randomUUID().toString());
+    	// save json
+    	JsonObject json = new JsonObject();
+		json.addProperty("_id", generateUUID());
 		json.add("an-array", new JsonArray());
 		dbClient.save(json); 
 	}
@@ -210,6 +203,7 @@ public class CouchDbClientTest {
 	@Test
 	public void testSaveAttachmentInline() {
 		System.out.println("------------------------------- Testing Save Attachment - Inline");
+		
 		// init 2 attachments
 		Attachment attachment1 = new Attachment();
 		attachment1.setContentType("text/plain");
@@ -217,8 +211,9 @@ public class CouchDbClientTest {
 		
 		Attachment attachment2 = new Attachment();
 		attachment2.setContentType("text/plain");
-		byte[] bytes = new byte[] {65, 32, 100, 101, 109, 111, 32, 46, 116, 120, 116, 32, 97, 116, 116, 97, 99, 104, 109, 101, 110, 116, 46, 10};
-		attachment2.setData(Base64.encodeBase64String(bytes)); // binary to base64 encoding using Apache Codec
+		// binary to base64 encoding using the included Apache Codec
+		String data = Base64.encodeBase64String("some text contents".getBytes());
+		attachment2.setData(data); 
 		
 		Foo foo = new Foo();
 		Map<String, Attachment> attachments = new HashMap<String, Attachment>();
@@ -236,18 +231,17 @@ public class CouchDbClientTest {
 	}
 	
 	@Test
-	public void testSaveAttachmenStandalone() throws IOException {
+	public void testSaveAttachmentStandalone() throws IOException {
 		System.out.println("------------------------------- Testing Save Attachment - Standalone");
-		final String fileName = "foo.txt";
-		// represents a text file containing: "A demo .txt attachment."
-		byte[] bytesToDB = new byte[] {65, 32, 100, 101, 109, 111, 32, 46, 116, 120, 116, 32, 97, 116, 116, 97, 99, 104, 109, 101, 110, 116, 46, 10};
 		
-		// save the file as document attachment 
+		byte[] bytesToDB = "some text contents".getBytes();
+		
+		// save a file as document attachment 
 		ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
-		Response resp = dbClient.saveAttachment(bytesIn, fileName, "text/plain"); // creates a new document, and saves the attachment
+		Response resp = dbClient.saveAttachment(bytesIn, "foo.txt", "text/plain"); 
 		
-		// retrieve the saved attachment, extract bytes for comparison
-		InputStream in = dbClient.find(String.format("%s/%s", resp.getId(), fileName));
+		// read attachment, extract bytes for comparison
+		InputStream in = dbClient.find(String.format("%s/%s", resp.getId(), "foo.txt"));
 		ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
 		int n;
 		while ((n = in.read()) != -1) {
@@ -257,33 +251,40 @@ public class CouchDbClientTest {
 		in.close();
 		
 		byte[] bytesFromDB = bytesOut.toByteArray();
-		assertArrayEquals(bytesToDB, bytesFromDB); // ensure we got the exact bytes we just saved
+		
+		// ensure we got the exact bytes we just saved
+		assertArrayEquals(bytesToDB, bytesFromDB); 
 	}
 	
 	// ----------------------------------------------------------------- Remove 
 	@Test(expected=IllegalArgumentException.class)
 	public void testRemoveThrowsIllegalArgumentException() {
-		dbClient.remove(null); // invalid args
+		// invalid args
+		dbClient.remove(null); 
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testRemoveThrowsIllegalArgumentException_2() {
-		dbClient.remove("some-id", null); // on delete, must specify both id rev
+		// on delete, must specify both id & rev
+		dbClient.remove("some-id", null); 
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testRemoveThrowsIllegalArgumentException_3() {
+		// on delete, object must contain both id & rev
 		Foo foo = new Foo();
-		foo.set_id("some-id"); // on delete, must specify both id rev
+		foo.set_id("some-id"); 
 		dbClient.remove(foo); 
 	}
 	
 	@Test(expected=NoDocumentException.class)
 	public void testRemoveThrowsNoDocumentException() {
-		Foo foo = new Foo();
-		foo.set_id(UUID.randomUUID().toString());  // set a new _id
-		foo.set_rev(UUID.randomUUID().toString()); // set a new _rev
+		
 		// trying to delete a document that does not exist, CouchDB returns error 404.
+		Foo foo = new Foo();
+		foo.set_id(generateUUID());  
+		foo.set_rev(generateUUID()); 
+		
 		dbClient.remove(foo);
 	}
 	
@@ -291,13 +292,13 @@ public class CouchDbClientTest {
 	public void testRemove() {
 		System.out.println("------------------------------- Testing remove()");
 		
-		Response responseSave = dbClient.save(new Foo());         // save a fresh object
-		Foo foo = dbClient.find(Foo.class, responseSave.getId()); // find the saved doc, by id
-		Response responseRemove = dbClient.remove(foo);           // remove the doc
+		Response responseSave = dbClient.save(new Foo());        
+		Foo foo = dbClient.find(Foo.class, responseSave.getId()); 
+		
+		Response responseRemove = dbClient.remove(foo);           
 
 		// saved doc rev should not equal deleted doc rev (of the same doc)
-    	assertThat(responseSave.getRev(), is(not(responseRemove.getRev()))); 
-    	
+    	assertThat(responseSave.getRev(), not(responseRemove.getRev())); 
 	}
 	
 	// ------------------------------------------------------------------------- Views
@@ -330,15 +331,17 @@ public class CouchDbClientTest {
 	public void testViewIncludeDocs() {
 		initView();
 		System.out.println("------------------------------- Test View with include docs");
+		
 		View view = dbClient.view("example/foo").includeDocs(true).key("hello-world-1");
 		List<Foo> foos = view.query(Foo.class);
-		assertThat(foos.size(), is(not(0)));
+		assertThat(foos.size(), not(0));
 	}
 	
 	@Test()
 	public void testViewByKeyRange() {
 		initView();
 		System.out.println("------------------------------- Test View by key range");
+		
 		List<Foo> foos = dbClient.view("example/foo")
 		.includeDocs(true).startKey("hello-world-1").endKey("hello-world-2").query(Foo.class);
 		assertThat("Only 2 docs should be returned.", foos.size(), is(2));
@@ -353,7 +356,8 @@ public class CouchDbClientTest {
 		ViewResult<int[], String, Foo> viewResult = dbClient.view("example/by_date").key(requestComplexKey).updateSeq(true).reduce(false).queryView(int[].class, String.class, Foo.class);
 		int[] resultComplexKey = viewResult.getRows().get(0).getKey();
 		
-		assertThat(viewResult.getRows().size(), is(2)); // we have 2 docs with this complex key
+		// we have 2 docs with this complex key
+		assertThat(viewResult.getRows().size(), is(2)); 
 		assertTrue("Result key should match that of the request key.", Arrays.equals(requestComplexKey, resultComplexKey));
 	}
 	
@@ -366,24 +370,29 @@ public class CouchDbClientTest {
 		assertThat(allTags, is(4));     // we have 4 tags defined
 		
 		long couchDbTags = dbClient.view("example/by_tag").key("couchdb").queryForLong();
-		assertThat(couchDbTags, is(2L)); // we have 2 occurances of couchdb tag
+		assertThat(couchDbTags, is(2L)); // we have 2 occurrence of couchdb tag
 		
 		String javaTags = dbClient.view("example/by_tag").key("java").queryForString();
-		assertThat(javaTags, is("1")); // we have 1 occurance of java tag
+		assertThat(javaTags, is("1")); // we have 1 occurrence of java tag
 	}
 	
 	@Test(expected=NoDocumentException.class)
 	public void testViewThrowsNoDocumentException() {
 		System.out.println("------------------------------- Test View throws exception");
+		
 		dbClient.view("example/by_tag").key("javax").queryForInt();
 	}
 	
 	@Test
 	public void testViewByGroupLevel() {
 		System.out.println("------------------------------- Test View by group level");
+		
+		// yields two rows: (key:value) [2011,10]:2 and [2013,12]:1
 		ViewResult<int[], Integer, Foo> viewResult = dbClient.view("example/by_date").groupLevel(2).queryView(int[].class, Integer.class, Foo.class);
-		assertThat(viewResult.getRows().size(), is(2)); // yields two rows: (key:value) [2011,10]:2 and [2013,12]:1
-		assertThat(viewResult.getRows().get(0).getKey(), is(new int[] {2011, 10})); // check 1st row
+		assertThat(viewResult.getRows().size(), is(2)); 
+		
+		// check 1st row 
+		assertThat(viewResult.getRows().get(0).getKey(), is(new int[] {2011, 10})); 
 		assertThat(viewResult.getRows().get(0).getValue(), is(2));
 	}
 	
@@ -392,12 +401,13 @@ public class CouchDbClientTest {
 	@Test
 	public void testReplicate() {
 		System.out.println("------------------------------- Testing Replication");
+		
 		ReplicationResult result = dbClient.replication()
 			.createTarget(true)
 			.source(dbClient.getDBUri().toString())
 			.target(dbClient2.getDBUri().toString())
 			.trigger();
-    	assertThat(result.getHistories().size(), is(not(0)));
+    	assertThat(result.getHistories().size(), not(0));
 	}
 	
 	@Test
@@ -407,6 +417,8 @@ public class CouchDbClientTest {
 			return; // skip test for older CouchDB releases not supporting the replicator db.
 		}
 		System.out.println("------------------------------- Testing Replicator DB");
+		
+		// save replicator doc
 		Response saveResponse = dbClient.replicator()
 				.source(dbClient.getDBUri().toString())
 				.target(dbClient2.getDBUri().toString())
@@ -414,21 +426,25 @@ public class CouchDbClientTest {
 				.createTarget(true)
 				.save(); 
 
-		Thread.sleep(300L); // allow some time for the document to update itself in the DB
+		// allow some time for the document to update itself in the DB
+		Thread.sleep(300L); 
 
+		// find replicator doc
 		ReplicatorDocument findDocument = dbClient.replicator()
 				.replicatorDocId(saveResponse.getId())
 				.find();
-		assertThat(saveResponse.getId(), is(findDocument.getId())); // ensure we found the same doc we just created
+		assertThat(saveResponse.getId(), is(findDocument.getId())); 
 
+		// find all replicator docs
 		List<ReplicatorDocument> docs = dbClient.replicator().findAll();
 		assertThat(docs.size(), is(not(0)));
 
+		// remove replicator doc
 		Response removeResponse = dbClient.replicator()
 				.replicatorDocId(findDocument.getId())
 				.replicatorDocRev(findDocument.getRevision())
 				.remove();
-		assertThat(removeResponse.getId(), is(saveResponse.getId())); // ensure we deleted the same doc we created
+		assertThat(removeResponse.getId(), is(saveResponse.getId())); 
 	}
 	
 	@Test
@@ -438,7 +454,7 @@ public class CouchDbClientTest {
 		DesignDocument conflictsDoc = dbClient.design().getFromDesk("conflicts");
 		dbClient2.design().synchronizeWithDb(conflictsDoc);
     	
-		String anId = UUID.randomUUID().toString();
+		String anId = generateUUID();
 		Foo foodb1 = new Foo(anId, "title", 0);
 		dbClient.save(foodb1); // save to db 1
 		
@@ -464,7 +480,7 @@ public class CouchDbClientTest {
 	// --------------------------------------------------------------- context API
 	@Test
 	public void testDbInfo() {
-		System.out.println("------------------------------- Testing info()");
+		System.out.println("------------------------------- Testing DB info()");
 		CouchDbInfo dbInfo = dbClient.context().info();
 		assertNotNull(dbInfo);
 	}
@@ -513,7 +529,7 @@ public class CouchDbClientTest {
 		assertFalse(exampleDoc.equals(documentFromDb));
 		
 		List<DesignDocument> designDocuments =  dbClient.design().getAllFromDesk();
-		assertThat(designDocuments.size(), is(not(0)));
+		assertThat(designDocuments.size(), not(0));
 		
 		DesignDocument documentFromDb2 = dbClient.design().getFromDb(documentFromDb.getId(), documentFromDb.getRevision());
 		assertEquals(documentFromDb.getRevision(), documentFromDb2.getRevision());
@@ -524,8 +540,8 @@ public class CouchDbClientTest {
 	public void testPagination() {
 		System.out.println("------------------------------- Testing Pagination");
 		// DB may already contains records, insert few for safety
-		for (int i = 0; i < 10; i++) {
-			dbClient.save(new Foo(UUID.randomUUID().toString(), "paging title", 1));
+		for (int i = 0; i < 7; i++) {
+			dbClient.save(new Foo(generateUUID(), "paging title", 1));
 		}
 		
 		final int rowsPerPage = 3;
@@ -567,7 +583,7 @@ public class CouchDbClientTest {
 	@Test
 	public void testChanges() {
 		System.out.println("------------------------------- Testing Change Notifications");
-		dbClient.save(new Foo(UUID.randomUUID().toString(), "title", 1)); // save a document
+		dbClient.save(new Foo(generateUUID(), "title", 1)); // save a document
 		
 		// feed type normal
 		ChangesResult result = dbClient.changes()
@@ -586,7 +602,7 @@ public class CouchDbClientTest {
 				.heartBeat(30000)
 				.continuousChanges();
 		
-		Response resp = dbClient.save(new Foo(UUID.randomUUID().toString(), "title", 1));
+		Response resp = dbClient.save(new Foo(generateUUID(), "title", 1));
 		
 		while (changes.hasNext()) {
 			ChangesResult.Row feed = changes.next();
@@ -594,6 +610,12 @@ public class CouchDbClientTest {
 			assertEquals(resp.getId(), docId);
 			changes.stop();
 		}
+	}
+	
+	// util
+	
+	private static String generateUUID() {
+		return UUID.randomUUID().toString().replace("-", "");
 	}
 }
 
