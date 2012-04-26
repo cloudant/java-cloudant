@@ -344,7 +344,7 @@ dbClient.save(json);
 			<para>
 			An additional finder method <literal>findAny()</literal> is provided as to give more control over the query,
 			typically use it to retrieve any kind of document when there is no equivalent API already supported by the client.
-			Unlike other finder methods, this method expects a fully formated and encoded URI to be supplied. 
+			Unlike other finder methods, this method expects a fully formatted and encoded URI to be supplied. 
 			</para>
 			<para>
 			When working with streams, it is important to close it after usage to release the connection.
