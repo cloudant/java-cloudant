@@ -231,6 +231,19 @@ public final class CouchDbClient extends CouchDbClientBase {
 	}
 	
 	/**
+	 * A General purpose find, that gives more control over the query.
+	 * <p>Unlike other finders, this method expects a fully formated and encoded URI to be supplied.
+	 * @param classType The class of type T.
+	 * @param uri The URI.
+	 * @return An object of type T.
+	 */
+	public <T> T findAny(Class<T> classType, String uri) {
+		assertNotEmpty(classType, "Class Type");
+		assertNotEmpty(uri, "uri");
+		return get(URI.create(uri), classType);
+	}
+	
+	/**
 	 * Checks if the database contains a document given an id.
 	 * @param id The document id.
 	 * @return true If the document is found, false otherwise.
