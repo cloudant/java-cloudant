@@ -204,6 +204,19 @@ public final class CouchDbClient extends CouchDbClientBase {
 	}
 	
 	/**
+	 * A General purpose find, that gives more control over the query.
+	 * <p>Unlike other finders, this method expects a fully formated and encoded URI to be supplied.
+	 * @param classType The class of type T.
+	 * @param uri The URI.
+	 * @return An object of type T.
+	 */
+	public <T> T findAny(Class<T> classType, String uri) {
+		assertNotEmpty(classType, "Class Type");
+		assertNotEmpty(uri, "uri");
+		return get(URI.create(uri), classType);
+	}
+	
+	/**
 	 * <p>Finds a document and returns the result as an {@link InputStream}.</p>
 	 * The stream should be properly closed after usage, as to avoid connection leaks.
 	 * @param id The document id.
@@ -228,19 +241,6 @@ public final class CouchDbClient extends CouchDbClientBase {
 		assertNotEmpty(id, "id");
 		assertNotEmpty(rev, "rev");
 		return get(builder(getDBUri()).path(id).query("rev", rev).build());
-	}
-	
-	/**
-	 * A General purpose find, that gives more control over the query.
-	 * <p>Unlike other finders, this method expects a fully formated and encoded URI to be supplied.
-	 * @param classType The class of type T.
-	 * @param uri The URI.
-	 * @return An object of type T.
-	 */
-	public <T> T findAny(Class<T> classType, String uri) {
-		assertNotEmpty(classType, "Class Type");
-		assertNotEmpty(uri, "uri");
-		return get(URI.create(uri), classType);
 	}
 	
 	/**
