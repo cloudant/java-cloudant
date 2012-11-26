@@ -19,12 +19,8 @@ package org.lightcouch;
 import static org.lightcouch.CouchDbUtil.*;
 import static org.lightcouch.URIBuilder.builder;
 
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URI;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 
 import com.google.gson.JsonObject;
@@ -48,8 +44,6 @@ import com.google.gson.JsonObject;
  */
 public class Replication {
 
-	private static final Log log = LogFactory.getLog(Replication.class);
-
 	private String source;
 	private String target;
 	private Boolean cancel;
@@ -59,6 +53,14 @@ public class Replication {
 	private String[] docIds;      
 	private String proxy;       
 	private Boolean createTarget;
+	private Integer sinceSeq;
+	
+	// OAuth
+	private JsonObject targetOauth;
+	private String consumerSecret;
+	private String consumerKey; 
+	private String tokenSecret; 
+	private String token;
 
 	private CouchDbClient dbc;
 			
@@ -66,18 +68,36 @@ public class Replication {
 		this.dbc = dbc;
 	}
 
-	// ------------------------------------------------------------- Field setters
+	/**
+	 * Triggers a replication request. 
+	 */
+	public ReplicationResult trigger() {
+		assertNotEmpty(source, "Source");
+		assertNotEmpty(target, "Target");
+		HttpResponse response = null;
+		try {
+			JsonObject json = createJson();
+			
+			URI uri = builder(dbc.getBaseUri()).path("_replicate").build();
+			response = dbc.post(uri, json.toString());
+			return dbc.deserialize(dbc.getStream(response), ReplicationResult.class);
+		} finally {
+			close(response);
+		}
+	}
+
+	// fields
 
 	public Replication source(String source) {
 		this.source = source;
 		return this;
 	}
-	
+
 	public Replication target(String target) {
 		this.target = target;
 		return this;
 	}
-	
+
 	public Replication continuous(Boolean continuous) {
 		this.continuous = continuous;
 		return this;
@@ -112,51 +132,68 @@ public class Replication {
 		this.createTarget = createTarget;
 		return this;
 	}
-
-	// --------------------------------------------------------------- Requests
 	
 	/**
-	 * Triggers a replication request. 
+	 * Starts a replication since an update sequence.  
 	 */
-	public ReplicationResult trigger() {
-		assertNotEmpty(source, "Source database");
-		assertNotEmpty(target, "Target database");
-		HttpResponse response = null;
-		try {
-			URI uri = builder(dbc.getBaseUri()).path("_replicate").build();
-			response = dbc.post(uri, getReplicationDoc().toString());
-			Reader reader = new InputStreamReader(response.getEntity().getContent());
-			return dbc.getGson().fromJson(reader, ReplicationResult.class); 
-		} catch (Exception e) {
-			log.error("Error performing replication. " + e.getMessage());
-			throw new CouchDbException(e);
-		} finally {
-			close(response);
-		}
+	public Replication sinceSeq(Integer sinceSeq) {
+		this.sinceSeq = sinceSeq;
+		return this;
 	}
-
-	private JsonObject getReplicationDoc() {
+	
+	public Replication targetOauth(String consumerSecret, String consumerKey, String tokenSecret, String token) {
+		targetOauth = new JsonObject();
+		this.consumerSecret = consumerKey;
+		this.consumerKey = consumerKey;
+		this.tokenSecret = tokenSecret;
+		this.token = token;
+		return this;
+	}
+	
+	// helper
+	
+	private JsonObject createJson() {
 		JsonObject json = new JsonObject();
 		addProperty(json, "source", source);
-		addProperty(json, "target", target);
 		addProperty(json, "cancel", cancel);
 		addProperty(json, "continuous", continuous);
 		addProperty(json, "filter", filter);
 		addProperty(json, "query_params", queryParams);
+		
 		if(docIds != null) {
 			json.add("doc_ids", dbc.getGson().toJsonTree(docIds, String[].class));
 		}
 		addProperty(json, "proxy", proxy);
+		addProperty(json, "since_seq", sinceSeq);
 		addProperty(json, "create_target", createTarget);
+		
+		if(targetOauth != null) {
+			JsonObject auth = new JsonObject();
+			JsonObject oauth = new JsonObject();
+			addProperty(oauth, "consumer_secret", consumerSecret);
+			addProperty(oauth, "consumer_key", consumerKey);
+			addProperty(oauth, "token_secret", tokenSecret);
+			addProperty(oauth, "token", token);
+			
+			addProperty(targetOauth, "url", target);
+			auth.add("oauth", oauth);
+			
+			targetOauth.add("auth", auth);
+			json.add("target", targetOauth);
+		} else {
+			addProperty(json, "target", target);
+		}
 		return json;
 	}
-	
+
 	private void addProperty(JsonObject json, String name, Object value) {
 		if(value != null) {
 			if(value instanceof Boolean)
 				json.addProperty(name, (Boolean)value);
 			else if (value instanceof String)
 				json.addProperty(name, (String)value);
+			else if (value instanceof Integer)
+				json.addProperty(name, (Integer)value);
 		}
 	}
 }

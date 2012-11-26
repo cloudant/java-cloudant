@@ -32,6 +32,8 @@ public class ReplicationResult {
 	private String sessionId;
 	@SerializedName("source_last_seq")
 	private String sourceLastSeq;
+	@SerializedName("_local_id")
+	private String localId;
 	@SerializedName("history")
 	private List<ReplicationHistory> histories;
 
@@ -46,29 +48,17 @@ public class ReplicationResult {
 	public String getSourceLastSeq() {
 		return sourceLastSeq;
 	}
+	
+	public String getLocalId() {
+		return localId;
+	}
 
 	public List<ReplicationHistory> getHistories() {
 		return histories;
 	}
 
-	public void setOk(boolean ok) {
-		this.ok = ok;
-	}
-
-	public void setSessionId(String sessionId) {
-		this.sessionId = sessionId;
-	}
-
-	public void setSourceLastSeq(String sourceLastSeq) {
-		this.sourceLastSeq = sourceLastSeq;
-	}
-
-	public void setHistories(List<ReplicationHistory> histories) {
-		this.histories = histories;
-	}
-
 	/**
-	 * Respresents a replication session history.
+	 * Represents a replication session history.
 	 * @author Ahmed Yehia
 	 */
 	public static class ReplicationHistory {
@@ -138,50 +128,6 @@ public class ReplicationResult {
 		public long getDocWriteFailures() {
 			return docWriteFailures;
 		}
+	} // /class ReplicationHistory
 
-		public void setSessionId(String sessionId) {
-			this.sessionId = sessionId;
-		}
-
-		public void setStartTime(String startTime) {
-			this.startTime = startTime;
-		}
-
-		public void setEndTime(String endTime) {
-			this.endTime = endTime;
-		}
-
-		public void setStartLastSeq(String startLastSeq) {
-			this.startLastSeq = startLastSeq;
-		}
-
-		public void setEndLastSeq(String endLastSeq) {
-			this.endLastSeq = endLastSeq;
-		}
-
-		public void setRecordedSeq(String recordedSeq) {
-			this.recordedSeq = recordedSeq;
-		}
-
-		public void setMissingChecked(long missingChecked) {
-			this.missingChecked = missingChecked;
-		}
-
-		public void setMissingFound(long missingFound) {
-			this.missingFound = missingFound;
-		}
-
-		public void setDocsRead(long docsRead) {
-			this.docsRead = docsRead;
-		}
-
-		public void setDocsWritten(long docsWritten) {
-			this.docsWritten = docsWritten;
-		}
-
-		public void setDocWriteFailures(long docWriteFailures) {
-			this.docWriteFailures = docWriteFailures;
-		}
-
-	}
-}
+} 

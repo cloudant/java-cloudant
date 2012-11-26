@@ -21,6 +21,7 @@ import static org.lightcouch.URIBuilder.builder;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.util.List;
 
 import org.apache.http.HttpResponse;
 
@@ -111,14 +112,23 @@ public final class CouchDbClient extends CouchDbClientBase {
 	 */
 	public CouchDbClient(String dbName, boolean createDbIfNotExist, 
 			String protocol, String host, int port, String username, String password) { 
-		super(new CouchDbConfig(dbName, createDbIfNotExist, protocol, host, port, username, password));
+		super(new CouchDbConfig(new CouchDbProperties(dbName, createDbIfNotExist, protocol, host, port, username, password)));
+	}
+	
+	/**
+	 * Constructs a new instance of this class.
+	 * @param properties An object containing configuration properties.
+	 * @see {@link CouchDbProperties}
+	 */
+	public CouchDbClient(CouchDbProperties properties) {
+		super(new CouchDbConfig(properties));
 	}
 	
 	private CouchDbContext context;
 	private CouchDbDesign design;
 	
 	{ 
-		context = new CouchDbContext(this, getConfig()); 
+		context = new CouchDbContext(this); 
 		design = new CouchDbDesign(this);
 	}
 	
@@ -150,7 +160,7 @@ public final class CouchDbClient extends CouchDbClientBase {
 	public View view(String viewId) {
 		return new View(this, viewId);
 	}
-	
+
 	/**
 	 * Provides access to the replication APIs.
 	 */
@@ -170,6 +180,15 @@ public final class CouchDbClient extends CouchDbClientBase {
 	 */
 	public Changes changes() {
 		return new Changes(this);
+	}
+	
+	/**
+	 * Synchronize all design documents on desk with the database.
+	 * <p>Shorthand for {@link CouchDbDesign#synchronizeAllWithDb()}
+	 * <p>This method might be used to sync design documents upon a client creation, eg. a Spring bean init-method.
+	 */
+	public void syncDesignDocsWithDb() {
+		design().synchronizeAllWithDb();
 	}
 	
 	/**
@@ -211,7 +230,7 @@ public final class CouchDbClient extends CouchDbClientBase {
 	 * @return An object of type T.
 	 */
 	public <T> T findAny(Class<T> classType, String uri) {
-		assertNotEmpty(classType, "Class Type");
+		assertNotEmpty(classType, "Class");
 		assertNotEmpty(uri, "uri");
 		return get(URI.create(uri), classType);
 	}
@@ -276,10 +295,31 @@ public final class CouchDbClient extends CouchDbClientBase {
 	 * @param object The object to save.
 	 */
 	public void batch(Object object) {
+		assertNotEmpty(object, "object");
 		HttpResponse response = null;
 		try { 
 			URI uri = builder(getDBUri()).query("batch", "ok").build();
 			response = post(uri, getGson().toJson(object));
+		} finally {
+			close(response);
+		}
+	}
+	
+	/**
+	 * Performs a Bulk Documents request.
+	 * @param objects The {@link List} of objects.
+	 * @param allOrNothing Indicated whether the request has all-or-nothing semantics.
+	 * @return {@code List<Response>} Containing the resulted entries.
+	 */
+	public List<Response> bulk(List<?> objects, boolean allOrNothing) {
+		assertNotEmpty(objects, "objects");
+		HttpResponse response = null;
+		try { 
+			String allOrNothingVal = allOrNothing ? "\"all_or_nothing\": true, " : "";
+			URI uri = builder(getDBUri()).path("_bulk_docs").build();
+			String json = String.format("{%s%s%s}", allOrNothingVal, "\"docs\": ", getGson().toJson(objects));
+			response = post(uri, json);
+			return getResponseList(response);
 		} finally {
 			close(response);
 		}
@@ -339,8 +379,8 @@ public final class CouchDbClient extends CouchDbClientBase {
 	 * @return {@link Response}
 	 */
 	public Response remove(Object object) {
-		assertNotEmpty(object, "Entity");
-		JsonObject jsonObject = objectToJson(getGson(), object);
+		assertNotEmpty(object, "Object");
+		JsonObject jsonObject = getGson().toJsonTree(object).getAsJsonObject();
 		String id = getElement(jsonObject, "_id");
 		String rev = getElement(jsonObject, "_rev");
 		return remove(id, rev);
@@ -365,6 +405,14 @@ public final class CouchDbClient extends CouchDbClientBase {
 	@Override
 	public URI getDBUri() {
 		return super.getDBUri();
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public URI getBaseUri() {
+		return super.getBaseUri();
 	}
 	
 	/**

@@ -20,10 +20,19 @@ import static java.lang.String.format;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.UUID;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import org.apache.http.HttpResponse;
 
@@ -59,18 +68,7 @@ final class CouchDbUtil {
 		return UUID.randomUUID().toString().replace("-", "");
 	}
 	
-	public static String removeExtension(String fileName) {
-		return fileName.substring(0, fileName.lastIndexOf('.'));
-	}
-	
-	// ------------------------------------------------------- JSON
-
-	public static JsonObject objectToJson(Gson gson, Object object) {
-		if(object instanceof JsonObject) {
-			return (JsonObject) object;
-		}
-		return gson.toJsonTree(object).getAsJsonObject();
-	}
+	// JSON
 	
 	public static <T> T JsonToObject(Gson gson, JsonElement elem, String key, Class<T> classType) {
 		return gson.fromJson(elem.getAsJsonObject().get(key), classType);
@@ -91,38 +89,80 @@ final class CouchDbUtil {
 		return (j.get(e) == null) ? 0 : j.get(e).getAsInt();
 	}
 	
-	// ----------------------------------------------------- Streams
+	// Files
 	
 	private static final String LINE_SEP = System.getProperty("line.separator");
-
-	public static String readFile(File file) {
-		StringBuilder content = new StringBuilder((int)file.length());
+	
+	/**
+	 * List directory contents for a resource folder. Not recursive.
+	 * This is basically a brute-force implementation.
+	 * Works for regular files and also JARs.
+	 * 
+	 * @author Greg Briggs
+	 * @param clazz Any java class that lives in the same place as the resources you want.
+	 * @param path Should end with "/", but not start with one.
+	 * @return Just the name of each member item, not the full paths.
+	 */
+	public static List<String> listResources(String path)  {
+		try {
+			Class<CouchDbUtil> clazz = CouchDbUtil.class;
+			URL dirURL = clazz.getClassLoader().getResource(path);
+			if (dirURL != null && dirURL.getProtocol().equals("file")) {
+				return Arrays.asList(new File(dirURL.toURI()).list());
+			}
+			if (dirURL != null && dirURL.getProtocol().equals("jar")) {
+				String jarPath = dirURL.getPath().substring(5, dirURL.getPath().indexOf("!")); 
+				JarFile jar = new JarFile(URLDecoder.decode(jarPath, "UTF-8"));
+				Enumeration<JarEntry> entries = jar.entries(); 
+				Set<String> result = new HashSet<String>(); 
+				while(entries.hasMoreElements()) {
+					String name = entries.nextElement().getName();
+					if (name.startsWith(path)) { 
+						String entry = name.substring(path.length());
+						int checkSubdir = entry.indexOf("/");
+						if (checkSubdir >= 0) {
+							entry = entry.substring(0, checkSubdir);
+						}
+						if(entry.length() > 0) {
+							result.add(entry);
+						}
+					}
+				}
+				return new ArrayList<String>(result);
+			} 
+			return null;
+		} catch (Exception e) {
+			throw new CouchDbException(e);
+		}
+	}
+	
+	public static String readFile(String path) {
+		InputStream instream = CouchDbUtil.class.getResourceAsStream(path);
+		StringBuilder content = new StringBuilder();
 		Scanner scanner = null;
 		try {
-			scanner = new Scanner(file);
+			scanner = new Scanner(instream);
 			while(scanner.hasNextLine()) {        
 				content.append(scanner.nextLine() + LINE_SEP);
 			}
-		} catch (FileNotFoundException e) {
-			throw new IllegalArgumentException(e);
 		} finally {
 			scanner.close();
 		}
 		return content.toString();
 	}
 	
-	public static URL getURL(String resource) {
-		return Thread.currentThread().getContextClassLoader().getResource(resource);
+	public static String removeExtension(String fileName) {
+		return fileName.substring(0, fileName.lastIndexOf('.'));
 	}
 	
-	  /**
+	/**
 	 * Closes the response input stream.
 	 * 
 	 * @param response The {@link HttpResponse}
 	 */
 	public static void close(HttpResponse response) {
 		try {
-			response.getEntity().getContent().close();
+			close(response.getEntity().getContent());
 		} catch (Exception e) {}
 	}
 	

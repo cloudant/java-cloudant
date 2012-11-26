@@ -17,14 +17,11 @@
 package org.lightcouch;
 
 import static org.lightcouch.CouchDbUtil.*;
+import static java.lang.String.format;
 import static org.lightcouch.URIBuilder.builder;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,8 +85,9 @@ public class CouchDbDesign {
 	}
 	
 	/**
-	 * Synchronize all design documents from desk to the database.
+	 * Synchronize all design documents on desk to the database.
 	 * @see #synchronizeWithDb(DesignDocument)
+	 * @see CouchDbClient#syncDesignDocsWithDb()
 	 */
 	public void synchronizeAllWithDb() {
 		List<DesignDocument> documents = getAllFromDesk();
@@ -127,14 +125,8 @@ public class CouchDbDesign {
 	 * @see #getFromDesk(String)
 	 */
 	public List<DesignDocument> getAllFromDesk() {
-		File rootDir = null;
-		try {
-			rootDir = new File(getURL(DESIGN_DOCS_DIR).toURI());
-		} catch (URISyntaxException e) {
-			throw new IllegalArgumentException(e);
-		}
 		List<DesignDocument> designDocsList = new ArrayList<DesignDocument>();
-		for (String docName : rootDir.list()) {
+		for (String docName : listResources(format("%s/", DESIGN_DOCS_DIR))) {
 			designDocsList.add(getFromDesk(docName));
 		} 
 		return designDocsList;
@@ -147,35 +139,32 @@ public class CouchDbDesign {
 	 */
 	public DesignDocument getFromDesk(String id) {
 		assertNotEmpty(id, "id");
-		File designDoc = null;
-		try {
-			designDoc = new File(new File(getURL(DESIGN_DOCS_DIR).toURI()), id);
-			if(!designDoc.exists()) {
-				throw new FileNotFoundException("Design docs directory not found");
-			}
-		} catch (Exception e) {
-			throw new IllegalArgumentException(e);
-		}
 		DesignDocument dd = new DesignDocument();
-		List<String> elements = Arrays.asList(designDoc.list());
+		String rootPath = format("%s/%s/", DESIGN_DOCS_DIR, id);
+		List<String> elements = listResources(rootPath);
+		if(elements == null) {
+			throw new IllegalArgumentException("Design docs directory cannot be empty.");
+		}
+		
 		if(elements.contains(VALIDATE_DOC)) { // validate_doc_update
-			File validateDir = new File(designDoc, VALIDATE_DOC);
-			String[] validateFunctions = validateDir.list();
-			if(validateFunctions.length != 1) {
-				throw new IllegalArgumentException("Expecting exactly one validate_doc_update function file");
+			String validateDocPath = format("%s%s/", rootPath, VALIDATE_DOC);
+			List<String> dirList = listResources(validateDocPath);
+			for (String file : dirList) {
+				String contents = readFile(format("/%s%s", validateDocPath, file));
+				dd.setValidateDocUpdate(contents);
+				break; // only one validate_doc_update file
 			}
-			File validateFile = new File(validateDir, validateFunctions[0]);
-			dd.setValidateDocUpdate(readFile(validateFile));
 		} // /validate_doc_update
 		Map<String, MapReduce> views = null;
 		if(elements.contains(VIEWS)) { // views
-			File viewsRootDir = new File(designDoc, VIEWS);
+			String viewsPath = format("%s%s/", rootPath, VIEWS);
 			views = new HashMap<String, MapReduce>();
-			for (String viewDirName : viewsRootDir.list()) { // views sub-dirs
-				MapReduce mr = dd.new MapReduce();
-				File viewDir = new File(viewsRootDir, viewDirName);
-				for (String fileName : viewDir.list()) { // view files
-					String def = readFile(new File(viewDir, fileName));
+			for (String viewDirName : listResources(viewsPath)) { // views sub-dirs
+				MapReduce mr = new MapReduce();
+				String viewPath = format("%s%s/", viewsPath, viewDirName);
+				List<String> dirList = listResources(viewPath);
+				for (String fileName : dirList) { // view files
+					String def = readFile(format("/%s%s", viewPath, fileName));
 					if(MAP_JS.equals(fileName))
 						mr.setMap(def);
 					else if(REDUCE_JS.equals(fileName))
@@ -187,20 +176,20 @@ public class CouchDbDesign {
 		dd.setId(DESIGN_PREFIX + id); 
 		dd.setLanguage(JAVASCRIPT);
 		dd.setViews(views);
-		dd.setFilters(populateMap(designDoc, elements, FILTERS));
-		dd.setShows(populateMap(designDoc, elements, SHOWS));
-		dd.setLists(populateMap(designDoc, elements, LISTS));
+		dd.setFilters(populateMap(rootPath, elements, FILTERS));
+		dd.setShows(populateMap(rootPath, elements, SHOWS));
+		dd.setLists(populateMap(rootPath, elements, LISTS));
 		return dd;
 	}
 	
-	private Map<String, String> populateMap(File designDoc, List<String> elements, String element) {
+	private Map<String, String> populateMap(String rootPath, List<String> elements, String element) {
 		Map<String, String> functionsMap = null;
 		if(elements.contains(element)) {
-			File functionsDir = new File(designDoc, element);
 			functionsMap = new HashMap<String, String>();
-			for (String functionFileName : functionsDir.list()) {
-				File functionFile = new File(functionsDir, functionFileName);
-				functionsMap.put(removeExtension(functionFileName), readFile(functionFile));
+			String path = format("%s%s/", rootPath, element);
+			for (String fileName : listResources(path)) {
+				String contents = readFile(format("/%s%s", path, fileName));
+				functionsMap.put(removeExtension(fileName), contents);
 			}
 		}
 		return functionsMap;

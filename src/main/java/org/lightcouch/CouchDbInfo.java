@@ -79,39 +79,12 @@ public class CouchDbInfo {
 		return diskFormatVersion;
 	}
 
-	public void setDbName(String dbName) {
-		this.dbName = dbName;
-	}
-
-	public void setDocCount(long docCount) {
-		this.docCount = docCount;
-	}
-
-	public void setDocDelCount(String docDelCount) {
-		this.docDelCount = docDelCount;
-	}
-
-	public void setUpdateSeq(String updateSeq) {
-		this.updateSeq = updateSeq;
-	}
-
-	public void setPurgeSeq(long purgeSeq) {
-		this.purgeSeq = purgeSeq;
-	}
-
-	public void setCompactRunning(boolean compactRunning) {
-		this.compactRunning = compactRunning;
-	}
-
-	public void setDiskSize(long diskSize) {
-		this.diskSize = diskSize;
-	}
-
-	public void setInstanceStartTime(long instanceStartTime) {
-		this.instanceStartTime = instanceStartTime;
-	}
-
-	public void setDiskFormatVersion(int diskFormatVersion) {
-		this.diskFormatVersion = diskFormatVersion;
+	@Override
+	public String toString() {
+		return String
+				.format("CouchDbInfo [dbName=%s, docCount=%s, docDelCount=%s, updateSeq=%s, purgeSeq=%s, compactRunning=%s, diskSize=%s, instanceStartTime=%s, diskFormatVersion=%s]",
+						dbName, docCount, docDelCount, updateSeq, purgeSeq,
+						compactRunning, diskSize, instanceStartTime,
+						diskFormatVersion);
 	}
 }

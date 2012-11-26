@@ -17,13 +17,17 @@
 package org.lightcouch;
 
 /**
- * Represents CouchDB response as a result of a save, update or delete requests.
+ * Represents CouchDB response as a result of a request.
  * @author Ahmed Yehia
  *
  */
 public class Response {
 	private String id;
 	private String rev;
+	
+	// related to bulk response only
+	private String error;
+	private String reason;
 
 	public String getId() {
 		return id;
@@ -32,13 +36,12 @@ public class Response {
 	public String getRev() {
 		return rev;
 	}
-
-	public void setId(String id) {
-		this.id = id;
+	
+	public String getError() {
+		return error;
 	}
-
-	public void setRev(String rev) {
-		this.rev = rev;
+	public String getReason() {
+		return reason;
 	}
 
 	@Override

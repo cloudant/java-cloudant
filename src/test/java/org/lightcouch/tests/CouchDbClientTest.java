@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -49,6 +50,7 @@ import org.lightcouch.View;
 import org.lightcouch.ViewResult;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 /**
@@ -193,11 +195,36 @@ public class CouchDbClientTest {
     	map.put("some-key", "some-value");
     	dbClient.save(map); 
     	
-    	// save json
+    	// save json (Gson object)
     	JsonObject json = new JsonObject();
 		json.addProperty("_id", generateUUID());
 		json.add("an-array", new JsonArray());
 		dbClient.save(json); 
+		
+		// save in batch mode
+		dbClient.batch(new Foo()); 
+	}
+	
+	@Test
+	public void testBulkDocuments() {
+		System.out.println("------------------------------- Testing Bulk Documents");
+		// Bulk - Modify docs
+		List<Object> newDocs = new ArrayList<Object>();
+		newDocs.add(new Foo());
+		newDocs.add(new JsonObject());
+		
+		List<Response> responses = dbClient.bulk(newDocs, true);
+		assertThat(responses.size(), is(2));
+		
+		// Bulk - Fetch docs
+		Response resp1 = dbClient.save(new Foo());
+		Response resp2 = dbClient.save(new Foo());
+		List<String> keys = Arrays.asList(new String[]{resp1.getId(), resp2.getId()});
+		List<Foo> docs = dbClient.view("_all_docs").includeDocs(true).keys(keys).query(Foo.class);
+		assertThat(docs.size(), is(2));
+		
+		List<JsonObject> allDocs = dbClient.view("_all_docs").query(JsonObject.class);
+		assertThat(allDocs.size(), not(0));
 	}
 	
 	@Test
@@ -213,9 +240,10 @@ public class CouchDbClientTest {
 		attachment2.setContentType("text/plain");
 		// binary to base64 encoding using the included Apache Codec
 		String data = Base64.encodeBase64String("some text contents".getBytes());
-		attachment2.setData(data); 
+		attachment2.setData(data);
 		
-		Foo foo = new Foo();
+		
+		Foo foo = new Foo(); // Foo does not extend Document
 		Map<String, Attachment> attachments = new HashMap<String, Attachment>();
 		attachments.put("foo.txt", attachment1);
 		attachments.put("foo2.txt", attachment2);
@@ -279,7 +307,6 @@ public class CouchDbClientTest {
 	
 	@Test(expected=NoDocumentException.class)
 	public void testRemoveThrowsNoDocumentException() {
-		
 		// trying to delete a document that does not exist, CouchDB returns error 404.
 		Foo foo = new Foo();
 		foo.set_id(generateUUID());  
@@ -297,7 +324,7 @@ public class CouchDbClientTest {
 		
 		Response responseRemove = dbClient.remove(foo);           
 
-		// saved doc rev should not equal deleted doc rev (of the same doc)
+		// deleted document gets a new revision
     	assertThat(responseSave.getRev(), not(responseRemove.getRev())); 
 	}
 	
@@ -396,6 +423,14 @@ public class CouchDbClientTest {
 		assertThat(viewResult.getRows().get(0).getValue(), is(2));
 	}
 	
+	@Test()
+	public void testTempViews() {
+		System.out.println("------------------------------- Test Temp View");
+		dbClient.save(new Foo(generateUUID(), "foo title", 1));
+		List<Foo> list = dbClient.view("_temp_view").tempView("temp_1").includeDocs(true).reduce(false).query(Foo.class);
+		assertThat(list.size(), not(0));
+	}
+	
 	// ------------------------------------------------------------------ Replication
 
 	@Test
@@ -408,6 +443,36 @@ public class CouchDbClientTest {
 			.target(dbClient2.getDBUri().toString())
 			.trigger();
     	assertThat(result.getHistories().size(), not(0));
+	}
+	
+	@Test
+	public void testReplicationConflict() {
+		System.out.println("------------------------------- Testing Replication with conflicts");
+    	
+		DesignDocument conflictsDoc = dbClient.design().getFromDesk("conflicts");
+		dbClient2.design().synchronizeWithDb(conflictsDoc);
+    	
+		String anId = generateUUID();
+		Foo foodb1 = new Foo(anId, "title", 0);
+		dbClient.save(foodb1); // save to db 1
+		
+		dbClient.replication()
+			.source(dbClient.getDBUri().toString())
+			.target(dbClient2.getDBUri().toString())
+			.trigger();
+		
+		Foo foodb2 = dbClient2.find(Foo.class, anId); // find in db 2
+		foodb2.setTitle("new title"); // modify
+		dbClient2.update(foodb2); // update in db 2
+		
+		foodb1 = dbClient.find(Foo.class, anId); // find in db 1
+		foodb1.setTitle("another title"); // modify
+		dbClient.update(foodb1); // update in db 1
+		
+		dbClient.replication().source(dbClient.getDBUri().toString()).target(dbClient2.getDBUri().toString()).trigger();
+		
+		ViewResult<String[], String, Void> conflicts = dbClient2.view("conflicts/conflict").queryView(String[].class, String.class, Void.class); 
+		assertThat(conflicts.getRows().size(), is(not(0))); // there should be conflicts
 	}
 	
 	@Test
@@ -447,36 +512,6 @@ public class CouchDbClientTest {
 		assertThat(removeResponse.getId(), is(saveResponse.getId())); 
 	}
 	
-	@Test
-	public void testReplicationConflict() {
-		System.out.println("------------------------------- Replicate Conflict Test Started");
-    	
-		DesignDocument conflictsDoc = dbClient.design().getFromDesk("conflicts");
-		dbClient2.design().synchronizeWithDb(conflictsDoc);
-    	
-		String anId = generateUUID();
-		Foo foodb1 = new Foo(anId, "title", 0);
-		dbClient.save(foodb1); // save to db 1
-		
-		dbClient.replication()
-			.source(dbClient.getDBUri().toString())
-			.target(dbClient2.getDBUri().toString())
-			.trigger();
-		
-		Foo foodb2 = dbClient2.find(Foo.class, anId); // find in db 2
-		foodb2.setTitle("new title"); // modify
-		dbClient2.update(foodb2); // update in db 2
-		
-		foodb1 = dbClient.find(Foo.class, anId); // find in db 1
-		foodb1.setTitle("another title"); // modify
-		dbClient.update(foodb1); // update in db 1
-		
-		dbClient.replication().source(dbClient.getDBUri().toString()).target(dbClient2.getDBUri().toString()).trigger();
-		
-		ViewResult<String[], String, Void> conflicts = dbClient2.view("conflicts/conflict").queryView(String[].class, String.class, Void.class); 
-		assertThat(conflicts.getRows().size(), is(not(0))); // there should be conflicts
-	}
-	
 	// --------------------------------------------------------------- context API
 	@Test
 	public void testDbInfo() {
@@ -511,6 +546,16 @@ public class CouchDbClientTest {
 		dbClient.context().ensureFullCommit();
 	}
 	
+	@Test
+	public void testActiveTasks() {
+		System.out.println("------------------------------- Testing _active_tasks");
+		JsonElement json = dbClient.findAny(JsonElement.class, dbClient.getBaseUri().toString() + "_active_tasks");
+		
+		for (JsonElement j : json.getAsJsonArray()) {
+			System.err.println("PID = " + j.getAsJsonObject().get("pid"));
+		}
+	}
+	
 	// ------------------------------------------------------- Design documents
 	@Test
 	public void testDesignDocs() {
@@ -539,6 +584,8 @@ public class CouchDbClientTest {
 	@Test
 	public void testPagination() {
 		System.out.println("------------------------------- Testing Pagination");
+		dbClient.design().synchronizeAllWithDb();
+		
 		// DB may already contains records, insert few for safety
 		for (int i = 0; i < 7; i++) {
 			dbClient.save(new Foo(generateUUID(), "paging title", 1));

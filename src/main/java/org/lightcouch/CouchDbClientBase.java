@@ -29,6 +29,7 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.List;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
@@ -55,7 +56,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.ClientContext;
-import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -66,7 +66,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.protocol.BasicHttpContext;
@@ -80,6 +80,9 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * Base client class to be extended by a concrete subclass, responsible for establishing
@@ -89,7 +92,7 @@ import com.google.gson.JsonParseException;
  */
 abstract class CouchDbClientBase {
 
-	private static final Log log = LogFactory.getLog(CouchDbClientBase.class);
+	static final Log log = LogFactory.getLog(CouchDbClientBase.class);
 	
 	private HttpClient httpClient;
 	private URI baseURI;
@@ -105,11 +108,12 @@ abstract class CouchDbClientBase {
 	}
 	
 	protected CouchDbClientBase(CouchDbConfig config) {
-		this.httpClient = createHttpClient(config);
+		CouchDbProperties props = config.getProperties();
+		this.httpClient = createHttpClient(props);
 		this.gson = initGson(new GsonBuilder());
 		this.config = config;
-		baseURI = builder().scheme(config.getProtocol()).host(config.getHost()).port(config.getPort()).path("/").build();
-		dbURI   = builder(baseURI).path(config.getDbName()).path("/").build();
+		baseURI = builder().scheme(props.getProtocol()).host(props.getHost()).port(props.getPort()).path("/").build();
+		dbURI   = builder(baseURI).path(props.getDbName()).path("/").build();
 	}
 	
 	// ---------------------------------------------- Getters
@@ -133,19 +137,15 @@ abstract class CouchDbClientBase {
 		return config;
 	}
 	
-	// ------------------------------------------------- HTTP Requests
+	// HTTP Requests
+	
 	/**
 	 * Performs a HTTP GET request. 
 	 * @return {@link InputStream} 
 	 */
 	InputStream get(HttpGet httpGet) {
 		HttpResponse response = executeRequest(httpGet); 
-		try { 
-			return response.getEntity().getContent();
-		} catch (Exception e) {
-			log.error("Error reading response. " + e.getMessage());
-			throw new CouchDbException(e);
-		}
+		return getStream(response);
 	}
 	
 	/**
@@ -163,8 +163,8 @@ abstract class CouchDbClientBase {
 	<T> T get(URI uri, Class<T> classType) {
 		InputStream instream = null;
 		try {
-			Reader reader = new InputStreamReader(instream = get(uri));
-			return getGson().fromJson(reader, classType);
+			instream = get(uri);
+			return deserialize(instream, classType);
 		} finally {
 			close(instream);
 		}
@@ -186,7 +186,7 @@ abstract class CouchDbClientBase {
 		assertNotEmpty(object, "object");
 		HttpResponse response = null;
 		try {  
-			JsonObject json = objectToJson(getGson(), object);
+			JsonObject json = getGson().toJsonTree(object).getAsJsonObject();
 			String id = getElement(json, "_id");
 			String rev = getElement(json, "_rev");
 			if(newEntity) { // save
@@ -265,16 +265,16 @@ abstract class CouchDbClientBase {
 		return response;
 	}
 	
-	// ----------------------------------------------- Helpers
+	// Helpers
 	
 	/**
 	 * @return {@link DefaultHttpClient} instance.
 	 */
-	private HttpClient createHttpClient(CouchDbConfig cf) {
+	private HttpClient createHttpClient(CouchDbProperties props) {
 		DefaultHttpClient httpclient = null;
 		try {
 			SchemeSocketFactory ssf = null;
-			if(cf.getProtocol().equals("https")) {
+			if(props.getProtocol().equals("https")) {
 				TrustManager trustManager = new X509TrustManager() {
 					public void checkClientTrusted(X509Certificate[] chain,
 							String authType) throws CertificateException {
@@ -295,21 +295,26 @@ abstract class CouchDbClientBase {
 				ssf = PlainSocketFactory.getSocketFactory();
 			}
 			SchemeRegistry schemeRegistry = new SchemeRegistry();
-			schemeRegistry.register(new Scheme(cf.getProtocol(), cf.getPort(), ssf));
-			ClientConnectionManager ccm = new ThreadSafeClientConnManager(schemeRegistry);
+			schemeRegistry.register(new Scheme(props.getProtocol(), props.getPort(), ssf));
+			PoolingClientConnectionManager ccm = new PoolingClientConnectionManager(schemeRegistry);
 			httpclient = new DefaultHttpClient(ccm);
-			host = new HttpHost(cf.getHost(), cf.getPort(), cf.getProtocol());
+			host = new HttpHost(props.getHost(), props.getPort(), props.getProtocol());
 			context = new BasicHttpContext();
 			// Http params
 			httpclient.getParams().setParameter(CoreProtocolPNames.HTTP_CONTENT_CHARSET, "UTF-8");
-			httpclient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, cf.getSocketTimeout());
-			httpclient.getParams().setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, cf.getConnectionTimeout());
+			httpclient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, props.getSocketTimeout());
+			httpclient.getParams().setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, props.getConnectionTimeout());
+			int maxConnections = props.getMaxConnections();
+			if(maxConnections != 0) {
+				ccm.setMaxTotal(maxConnections);
+				ccm.setDefaultMaxPerRoute(maxConnections);
+			}
 			// basic authentication
-			if(cf.getUsername() != null && cf.getPassword() != null) {
+			if(props.getUsername() != null && props.getPassword() != null) {
 				httpclient.getCredentialsProvider().setCredentials(
-						new AuthScope(cf.getHost(), cf.getPort()),
-						new UsernamePasswordCredentials(cf.getUsername(), cf.getPassword()));
-				cf.resetPassword();
+						new AuthScope(props.getHost(), props.getPort()),
+						new UsernamePasswordCredentials(props.getUsername(), props.getPassword()));
+				props.clearPassword();
 				AuthCache authCache = new BasicAuthCache();
 				BasicScheme basicAuth = new BasicScheme();
 				authCache.put(host, basicAuth);
@@ -372,13 +377,17 @@ abstract class CouchDbClientBase {
 	 * @return {@link Response}
 	 */
 	Response getResponse(HttpResponse response) throws CouchDbException {
-		try {
-			Reader reader = new InputStreamReader(response.getEntity().getContent());
-			return getGson().fromJson(reader, Response.class);
-		} catch (Exception e) { 
-			log.error("Error reading response. " + e.getMessage());
-			throw new CouchDbException(e.getMessage(), e);
-		} 
+		return deserialize(getStream(response), Response.class);
+	}
+	
+	/**
+	 * @param response The {@link HttpResponse}
+	 * @return {@link Response}
+	 */
+	List<Response> getResponseList(HttpResponse response) throws CouchDbException {
+		InputStream instream = getStream(response);
+		Reader reader = new InputStreamReader(instream);
+		return getGson().fromJson(reader, new TypeToken<List<Response>>(){}.getType());
 	}
 	
 	/**
@@ -395,6 +404,23 @@ abstract class CouchDbClientBase {
 			log.error("Error setting request data. " + e.getMessage());
 			throw new IllegalArgumentException(e);
 		}
+	}
+	
+	/**
+	 * @return {@link InputStream} from a {@link HttpResponse}
+	 */
+	InputStream getStream(HttpResponse response) {
+		try { 
+			return response.getEntity().getContent();
+		} catch (Exception e) {
+			log.error("Error reading response. " + e.getMessage());
+			throw new CouchDbException(e);
+		}
+	}
+	
+	<T> T deserialize(InputStream instream, Class<T> classType) {
+		Reader reader = new InputStreamReader(instream);
+		return getGson().fromJson(reader, classType);
 	}
 	
 	/**
@@ -416,6 +442,13 @@ abstract class CouchDbClientBase {
 					throws JsonParseException {
 				return json.getAsJsonObject();
 			}
+		});
+		gsonBuilder.registerTypeAdapter(JsonObject.class, new JsonSerializer<JsonObject>() {
+			public JsonElement serialize(JsonObject src, Type typeOfSrc,
+					JsonSerializationContext context) {
+				return src.getAsJsonObject();
+			}
+			
 		});
 		return gsonBuilder.create();
 	}

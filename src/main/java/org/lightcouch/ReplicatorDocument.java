@@ -19,7 +19,7 @@ package org.lightcouch;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Represents a replicator document in a replicator database.
+ * Represents a replication document in a replicator database.
  * @see Replicator
  * @author Ahmed Yehia
  * 
@@ -48,8 +48,20 @@ public class ReplicatorDocument extends Document {
 	private String replicationState;
 	@SerializedName("_replication_state_time")
 	private String replicationStateTime;
+	@SerializedName("worker_processes")
+	private Integer workerProcesses;
+	@SerializedName("worker_batch_size")
+	private Integer workerBatchSize;
+	@SerializedName("http_connections")
+	private Integer httpConnections;
+	@SerializedName("connection_timeout ")
+	private Long connectionTimeout;
+	@SerializedName("retries_per_request")
+	private Integer retriesPerRequest;
 	@SerializedName("user_ctx")
 	private UserCtx userCtx;
+	@SerializedName("since_seq")
+	private Integer sinceSeq;
 
 	public String getSource() {
 		return source;
@@ -97,6 +109,26 @@ public class ReplicatorDocument extends Document {
 
 	public UserCtx getUserCtx() {
 		return userCtx;
+	}
+	
+	public Integer getWorkerProcesses() {
+		return workerProcesses;
+	}
+
+	public Integer getWorkerBatchSize() {
+		return workerBatchSize;
+	}
+
+	public Integer getHttpConnections() {
+		return httpConnections;
+	}
+
+	public Long getConnectionTimeout() {
+		return connectionTimeout;
+	}
+
+	public Integer getRetriesPerRequest() {
+		return retriesPerRequest;
 	}
 
 	public void setSource(String source) {
@@ -147,6 +179,34 @@ public class ReplicatorDocument extends Document {
 		this.userCtx = userCtx;
 	}
 
+	public void setWorkerProcesses(Integer workerProcesses) {
+		this.workerProcesses = workerProcesses;
+	}
+
+	public void setWorkerBatchSize(Integer workerBatchSize) {
+		this.workerBatchSize = workerBatchSize;
+	}
+
+	public void setHttpConnections(Integer httpConnections) {
+		this.httpConnections = httpConnections;
+	}
+
+	public void setConnectionTimeout(Long connectionTimeout) {
+		this.connectionTimeout = connectionTimeout;
+	}
+
+	public void setRetriesPerRequest(Integer retriesPerRequest) {
+		this.retriesPerRequest = retriesPerRequest;
+	}
+
+	public Integer getSinceSeq() {
+		return sinceSeq;
+	}
+
+	public void setSinceSeq(Integer sinceSeq) {
+		this.sinceSeq = sinceSeq;
+	}
+
 	public class UserCtx {
 		private String name;
 		private String[] roles;
@@ -163,5 +223,5 @@ public class ReplicatorDocument extends Document {
 		public void setRoles(String[] roles) {
 			this.roles = roles;
 		}
-	}
+	} // /class UserCtx
 }

@@ -22,13 +22,13 @@
    under the License.
  -->                                
 <article>
-	<title>LightCouch User Guide 0.0.4</title>
+	<title>LightCouch User Guide 0.0.5</title>
 	
 	<articleinfo>
 		<author>
 			<firstname>Author: Ahmed Yehia</firstname>
 		</author>
-		<date>Oct 12, 2011</date>
+		<date>Oct 24, 2012</date>
 	</articleinfo>
 	
 	<section id="preface">
@@ -70,7 +70,7 @@
 		Note: The API is covered by an integration unit tests packaged with the
 		source code, see
 		<ulink url="http://www.lightcouch.org/download.html">Download</ulink>.
-		The API was tested against CouchDB up to version 1.1.1
+		The API was tested against CouchDB up to version 1.2
 		</para>
 	</section>
 	<section id="setup">
@@ -85,7 +85,7 @@
 <dependency>
   <groupId>org.lightcouch</groupId>
   <artifactId>lightcouch</artifactId> 
-  <version>0.0.4</version>
+  <version>0.0.5</version>
 </dependency> 
 		]]></programlisting>
 		<para id="dependencies">
@@ -94,29 +94,29 @@
 		<itemizedlist>
 			<listitem>
 				<para>
-					<ulink url="https://github.com/downloads/ahmedyha/LightCouch/lightcouch-0.0.4.jar">
-						<citetitle>LightCouch 0.0.4</citetitle>
+					<ulink url="https://github.com/downloads/ahmedyha/LightCouch/lightcouch-0.0.5.jar">
+						<citetitle>LightCouch 0.0.5</citetitle>
 					</ulink>
 				</para>
 			</listitem>
                   <listitem>
                         <para>
                               <ulink url="http://hc.apache.org/downloads.cgi">
-                                    <citetitle>HttpClient 4.1.2</citetitle>
+                                    <citetitle>HttpClient 4.2.2</citetitle>
                               </ulink>
                         </para>
                   </listitem>
 			<listitem>
 				<para>
 					<ulink url="http://hc.apache.org/downloads.cgi">
-						<citetitle>HttpCore 4.1.2</citetitle>
+						<citetitle>HttpCore 4.2.2</citetitle>
 					</ulink>
 				</para>
 			</listitem>
 			<listitem>
 				<para>
 					<ulink url="http://commons.apache.org/codec/download_codec.cgi">
-						<citetitle>Commons Codec 1.4</citetitle>
+						<citetitle>Commons Codec 1.6</citetitle>
 					</ulink>
 				</para>
 			</listitem>
@@ -130,7 +130,7 @@
 			<listitem>
 				<para>
 					<ulink url="http://code.google.com/p/google-gson/downloads/list">
-						<citetitle>Gson 2.0</citetitle>
+						<citetitle>Gson 2.2.2</citetitle>
 					</ulink>
 				</para>
 			</listitem>
@@ -166,6 +166,8 @@ couchdb.password=
 couchdb.http.socket.timeout= 
 # Timeout to establish a connection, in milliseconds. Defaults to 0 (no timeout).
 couchdb.http.connection.timeout=
+# Max connections. 
+couchdb.max.connections=
 			]]></programlisting>
 		</section>
 	</section>
@@ -182,31 +184,40 @@ couchdb.http.connection.timeout=
 		</para>
 		<para>
 		The easiest way to instantiate a new client is by using it's default 
-		constructor, it will search your application default classpath for the file you
-		have created earlier, i.e <literal>couchdb.properties</literal>
+		constructor, it will search your application default classpath for <literal>couchdb.properties</literal>.
 		</para>
 		<programlisting><![CDATA[ 
 CouchDbClient dbClient = new CouchDbClient();
 // API is ready to use
 		]]></programlisting>
+		
 		<para>
 		Another overloaded constructor accepts a properties file name to be supplied:
 		</para>
 		<programlisting><![CDATA[  
-CouchDbClient dbClient2 = new CouchDbClient("couchdb-2.properties");
-            ]]></programlisting>
+dbClient = new CouchDbClient("couchdb-2.properties");
+        ]]></programlisting>
+            
 		<para>
-		The final constructor accepts individual parameters to be supplied directly, 
-		may be useful when using external files does not make sence in your environment, 
-		or for dynamic creation of a client on the fly:
+		Another constructor accepts individual parameters to be supplied:
 		</para>
 		<programlisting><![CDATA[ 
-CouchDbClient dbClient3 = new CouchDbClient(...);
-            ]]></programlisting>
+dbClient = new CouchDbClient("db-name", true, "http", "127.0.0.1", 5984, "user", "secret");
+        ]]></programlisting>
+            
+        <para>
+		The final constructor expects an object holding properties, see 
+		<ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbProperties.html">CouchDbProperties</ulink>
+		</para>
+		<programlisting><![CDATA[ 
+CouchDbProperties properties = new CouchDbProperties();
+// .. set properties
+
+dbClient = new CouchDbClient(properties);
+         ]]></programlisting>  
+              
 		<para>
-		Note: A client instance is thread-safe, typically you would create one 
-		at the beginning of your application startup and re-use it throughout 
-		your code.
+		Note: A client instance is thread-safe, typically one instance is created per application.
 		</para>
 		<para> 
 		At the end of usage, it might be useful to shutdown a client's underlying 
@@ -223,8 +234,8 @@ dbClient.shutdown();
 			container handles initializing and injecting your client(s): 
 			</para>
 			<programlisting><![CDATA[  
-<bean id="dbClient" class="org.couchy.CouchDbClient" destroy-method="shutdown"/> 
-<bean id="dbClient2" class="org.lightcouch.CouchDbClient" destroy-method="shutdown"> 
+<bean id="dbClient" class="org.lightcouch.CouchDbClient" init-method="syncDesignDocsWithDb" destroy-method="shutdown"/> 
+<bean id="dbClient2" class="org.lightcouch.CouchDbClient" init-method="syncDesignDocsWithDb" destroy-method="shutdown"> 
   <constructor-arg value="couchdb-2.properties" /> 
 </bean> 
 			]]></programlisting>
@@ -312,12 +323,12 @@ Response resp = dbClient.save(foo);
 Response resp2 = dbClient.update(foo);
 
 Map<String, Object> map = new HashMap<String, Object>();
-map.put("_id", "some-id");
+map.put("_id", "doc-id");
 map.put("a-list", Collections.EMPTY_LIST);
 dbClient.save(map);
 
 JsonObject json = new JsonObject();
-json.addProperty("_id", "some-id-2");
+json.addProperty("_id", "doc-id-2");
 json.add("an-array", new JsonArray());
 dbClient.save(json); 
             ]]></programlisting>
@@ -352,17 +363,18 @@ dbClient.save(json);
 			<para>Usage Example:</para>
 			<programlisting><![CDATA[ 
 // initialize a client 'dbClient' here ..  
-Foo foo = dbClient.find(Foo.class, "some-id"); 
-foo = dbClient.find(Foo.class, "some-id", "some-rev"); 
-boolean b = dbClient.contains("some-id"); 
+Foo foo = dbClient.find(Foo.class, "doc-id"); 
+foo = dbClient.find(Foo.class, "doc-id", "doc-rev"); 
+boolean b = dbClient.contains("doc-id"); 
 
-InputStream in = dbClient.find("some-id"); // find as stream 
+InputStream in = dbClient.find("doc-id"); // find as stream 
 // do something useful, close stream
 in.close();
 
-JsonObject json = dbClient.find(JsonObject.class, "some-id");
+JsonObject json = dbClient.find(JsonObject.class, "doc-id");
 
-json = dbClient.findAny(JsonObject.class, dbClient.getDBUri().toString() + "any-uri");
+String dbURI = dbClient.getDBUri().toString();
+json = dbClient.findAny(JsonObject.class, dbURI + "doc-id?revs_info=true");
 				]]></programlisting>
 		</section><!-- end find documents -->
 		
@@ -376,8 +388,8 @@ json = dbClient.findAny(JsonObject.class, dbClient.getDBUri().toString() + "any-
 			<para>Usage Example:</para>
 			<programlisting><![CDATA[ 
 // initialize a client 'dbClient' here ..   
-Response resp = dbClient.remove(object); // object contains both an id and rev 
-resp = dbClient.remove("some-id", "some-rev");
+Response response = dbClient.remove(object); // object contains both an id and rev 
+response = dbClient.remove("doc-id", "doc-rev");
             ]]></programlisting>
 		</section><!-- end delete documents -->
 		
@@ -564,10 +576,18 @@ log4j.logger.org.apache.http=ERROR
 		this results in requesting a view with the full URI of <literal>_design/example/_view/foo</literal>
 		</para>
 		<para>
-            The API employs a <literal>Builder</literal> pattern for constructing views 
-            query requests by chaining the appropriate parameters that makes sence for 
-            a specific view. Query a view given a Complex key is tightly integrated in the API.
-            </para>
+		The API also supports special views such as <literal>_all_docs</literal> &amp; <literal>_temp_view</literal>
+		</para>
+		<para>
+		Temporary Views is typically maintained on local <literal>.js</literal> files; on the application classpath (similar to design documents approach), 
+		or it can be constructed via 
+		<ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/DesignDocument.MapReduce.html">MapReduce</ulink> class.
+		</para>
+		<para>
+        The API employs a <literal>Builder</literal> pattern for constructing views 
+        query requests by chaining the appropriate parameters that makes sence for 
+        a specific view. Query a view given a Complex key is tightly integrated in the API.
+        </para>
 		<para>
 		Views query is supported by a number of options you may choose from, as per a use case:
 		<literallayout>
@@ -597,6 +617,26 @@ View view = dbClient.view("example/by_date")
 
 ViewResult<int[], String, Foo> entries = // View entries (keys/values) & documents 
              view.queryView(int[].class, String.class, Foo.class); 
+             
+// _all_docs 
+List<JsonObject> allDocs = dbClient.view("_all_docs").query(JsonObject.class);
+
+// _temp_view
+List<Foo> list = dbClient.view("_temp_view")
+.tempView("temp_1")
+// .tempView(mapRedObj) // or an instance of MapReduce
+.includeDocs(true)
+.reduce(false)
+.query(Foo.class);
+
+// temp views directory structure 
+temp-views
+    |- temp_1
+        |- map.js
+        |- reduce.js   
+    |- temp_2
+        |- map.js  
+    |- ...
 		]]></programlisting>
 		
 		<section id="pagination">
@@ -607,8 +647,9 @@ ViewResult<int[], String, Foo> entries = // View entries (keys/values) & documen
 			an efficient pagination for CouchDB views.
 			</para>
 			<para>
-			A <literal><![CDATA[Page<T>]]></literal> object holds useful information for 
-			displaying a featured pagination with lowest effort possible from your part.
+			A <literal><![CDATA[Page<T>]]></literal> object, 
+			<ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/Page.html">Page</ulink>
+			holds useful information for displaying a featured pagination with lowest effort possible from your part.
 			</para>
 			<para>
 			Following is an example of using the API in a web application, 
@@ -633,20 +674,21 @@ request.setAttribute("page", page);
 <p>Showing:  ${page.resultFrom} - ${page.resultTo} of total ${page.totalResults} 
 
 <%-- handle navigation --%>
+<p>
 <c:choose> 
   <c:when test="${page.hasPrevious}"> 
-  <a href="/getpage?param=${page.previousParam}"> <<Previous </a>
+  <a href="/getpage?param=${page.previousParam}"> Previous </a>
   </c:when> 
-  <c:otherwise> <<Previous </c:otherwise>
+  <c:otherwise> Previous </c:otherwise>
 </c:choose>  
 
 ${page.pageNumber} 
  
 <c:choose> 
   <c:when test="${page.hasNext}"> 
-  <a href="/getpage?param=${page.nextParam}"> Next>> </a> 
+  <a href="/getpage?param=${page.nextParam}"> Next </a> 
   </c:when>
-  <c:otherwise> Next>> </c:otherwise> 
+  <c:otherwise> Next </c:otherwise> 
 </c:choose> 
 			]]></programlisting>
 			<para>Finally a Servlet for handling paging navigation:</para>
@@ -660,6 +702,25 @@ request.setAttribute("page", page);
 	            ]]></programlisting>
 	            </section>
 	</section><!-- end of views -->
+	
+	<section id="bulk-docs">
+		<title>Bulk Documents</title>
+		<para>
+		Bulk documents API performs two operations: Modify &amp; Fetch documents; in one request.
+		</para>
+		<programlisting><![CDATA[ 
+// Modify
+List<Object> newDocs = new ArrayList<Object>();
+newDocs.add(new Foo());
+newDocs.add(new JsonObject());
+boolean allOrNothing = true;
+List<Response> bulkResponse = dbClient.bulk(newDocs, allOrNothing);
+
+// Fetch
+List<String> keys = Arrays.asList(new String[]{"doc-id-1", "doc-id-2"});
+List<Foo> docs = dbClient.view("_all_docs").includeDocs(true).keys(keys).query(Foo.class);
+		]]></programlisting>
+	</section> <!-- end bulk docs -->
 	
 	<section id="design-docs">
 		<title>Design Documents</title>
@@ -707,8 +768,13 @@ design-docs
 // find by document dir name		
 DesignDocument designDoc = dbClient.design().getFromDesk("example");  
 Response response = dbClient.design().synchronizeWithDb(designDoc); 
+
 // find by document id
 DesignDocument documentFromDb = dbClient.design().getFromDb("_design/example"); 
+
+// sync all
+dbClient.syncDesignDocsWithDb();
+dbClient.design().synchronizeAllWithDb();
 		]]></programlisting>
 		<para>
 		You may refer to the Javadocs to see all supported operations:
@@ -772,6 +838,12 @@ String version = dbClient.context().serverVersion();
 dbClient.context().compact();
 dbClient.context().ensureFullCommit(); 
 dbClient.context().createDB("new-db");
+
+// query _active_tasks, via Gson API
+JsonElement json = dbClient.findAny(JsonElement.class, dbClient.getBaseUri() + "_active_tasks");
+for (JsonElement j : json.getAsJsonArray()) {
+	String pid = j.getAsJsonObject().get("pid");
+}
 		]]></programlisting>
 		<section id="replication">
 			<title>Replication</title>
@@ -780,8 +852,9 @@ dbClient.context().createDB("new-db");
 			it supports the traditional replication that is issued by POSTing to
 			<literal>_replicate</literal>	URI, and the newer replicator database
 			(i.e <literal>_replicator</literal> by default) that is
-			introduced with CouchDB version 1.1.0 A replication request
-			is triggered by saving a document in the replicator database, 
+			introduced with CouchDB version <literal>1.1.0</literal> 
+			</para>
+			<para>A replication request	is triggered by saving a document in the replicator database, 
 			and is canceled by removing the document that triggered the replication.
 			</para>
 			<para>Usage Example:</para>
@@ -790,14 +863,17 @@ ReplicationResult result = dbClient.replication()
 .source("source-db")
 .target("http://user:secret@127.0.0.1:5984/target-db") 
 .createTarget(true)
+.sinceSeq(100) // as of CouchDB 1.2
+// .cancel()   // cancels a replication
 .trigger();
- 
+
 // the following targets a replicator database 
 Replicator replicator = dbClient.replicator() 
 .source("source-db")
 .target("target-db")
 .continuous(true) 
 .createTarget(true) 
+.sinceSeq(100)                 // as of CouchDB 1.2
 .replicatorDB("_myreplicator") // optional, defaults to _replicator
 .replicatorDocId("doc-id")     // optional, defaults to an UUID
 .userCtxName("user")           // for delegated requests

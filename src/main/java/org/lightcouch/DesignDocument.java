@@ -146,7 +146,7 @@ public class DesignDocument extends Document {
 	 * Holds Map Reduce functions in a view.
 	 * @author Ahmed Yehia
 	 */
-	public class MapReduce {
+	public static class MapReduce {
 		private String map;
 		private String reduce;
 

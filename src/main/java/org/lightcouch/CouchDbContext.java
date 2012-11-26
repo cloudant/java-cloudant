@@ -44,10 +44,11 @@ public class CouchDbContext {
 
 	private CouchDbClient dbc;
 
-	CouchDbContext(CouchDbClient dbc, CouchDbConfig config) {
+	CouchDbContext(CouchDbClient dbc) {
 		this.dbc = dbc;
-		if (config.isCreateDbIfNotExist()) {
-			createDB(config.getDbName());
+		CouchDbProperties props = dbc.getConfig().getProperties();
+		if (props.isCreateDbIfNotExist()) {
+			createDB(props.getDbName());
 		} else {
 			serverVersion(); // pre warm up client
 		}

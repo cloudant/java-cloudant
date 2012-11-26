@@ -70,124 +70,37 @@ import com.google.gson.JsonParser;
  */
 public class Replicator {
 
-	private String source;
-	private String target;
-	private Boolean continuous;
-	private String filter;
-	private String queryParams; 
-	private String[] docIds;      
-	private String proxy;       
-	private Boolean createTarget;
-	
 	private String replicatorDB;
-	private String replicatorDocId;
-	private String replicatorDocRev;
-	
-	private String userCtxName; // for delegated requests
+	private String userCtxName;
 	private String[] userCtxRoles;
 
 	private CouchDbClient dbc;
+	private ReplicatorDocument replicatorDoc;
+	private URI dbURI;
 			
 	public Replicator(CouchDbClient dbc) {
 		this.dbc = dbc;
+		replicatorDoc = new ReplicatorDocument();
 		replicatorDB = "_replicator"; // default replicator db
 		userCtxRoles = new String[0]; // default roles
+		dbURI = builder(dbc.getBaseUri()).path(replicatorDB).path("/").build();
 	}
 
-	// ------------------------------------------------------------- Field setters
-
-	public Replicator source(String source) {
-		this.source = source;
-		return this;
-	}
-	
-	public Replicator target(String target) {
-		this.target = target;
-		return this;
-	}
-	
-	public Replicator continuous(Boolean continuous) {
-		this.continuous = continuous;
-		return this;
-	}
-
-	public Replicator filter(String filter) {
-		this.filter = filter;
-		return this;
-	}
-
-	public Replicator queryParams(String queryParams) {
-		this.source = queryParams;
-		return this;
-	}
-
-	public Replicator docIds(String... docIds) {
-		this.docIds = docIds;
-		return this;
-	}
-
-	public Replicator proxy(String proxy) {
-		this.proxy = proxy;
-		return this;
-	}
-
-	public Replicator createTarget(Boolean createTarget) {
-		this.createTarget = createTarget;
-		return this;
-	}
-	
-	public Replicator replicatorDB(String replicatorDB) {
-		this.replicatorDB = replicatorDB;
-		return this;
-	}
-	
-	public Replicator replicatorDocId(String replicatorDocId) {
-		this.replicatorDocId = replicatorDocId;
-		return this;
-	}
-	
-	public Replicator replicatorDocRev(String replicatorDocRev) {
-		this.replicatorDocRev = replicatorDocRev;
-		return this;
-	}
-	
-	public Replicator userCtxName(String userCtxName) {
-		this.userCtxName = userCtxName;
-		return this;
-	}
-	
-	public Replicator userCtxRoles(String... userCtxRoles) {
-		this.userCtxRoles = userCtxRoles;
-		return this;
-	}
-
-	// --------------------------------------------------------------- Requests
 	
 	/**
 	 * Adds a new document to the replicator database. 
 	 * @return {@link Response}
 	 */
 	public Response save() {
-		assertNotEmpty(source, "Source database");
-		assertNotEmpty(target, "Target database");
-		ReplicatorDocument rd = new ReplicatorDocument();
-		rd.setId(replicatorDocId);
-		rd.setSource(source);
-		rd.setTarget(target);
-		rd.setContinuous(continuous);
-		rd.setFilter(filter);
-		rd.setQueryParams(queryParams);
-		rd.setDocIds(docIds);
-		rd.setProxy(proxy);
-		rd.setCreateTarget(createTarget);
+		assertNotEmpty(replicatorDoc.getSource(), "Source");
+		assertNotEmpty(replicatorDoc.getTarget(), "Target");
 		if(userCtxName != null) {
-			UserCtx ctx = rd.new UserCtx();
+			UserCtx ctx = replicatorDoc.new UserCtx();
 			ctx.setName(userCtxName);
 			ctx.setRoles(userCtxRoles);
-			rd.setUserCtx(ctx);
+			replicatorDoc.setUserCtx(ctx);
 		}
-		URI uri = builder(dbc.getBaseUri()).path(replicatorDB).path("/").build();
-		return dbc.put(uri, rd, true);
+		return dbc.put(dbURI, replicatorDoc, true);
 	}
 	
 	/**
@@ -195,8 +108,8 @@ public class Replicator {
 	 * @return {@link ReplicatorDocument}
 	 */
 	public ReplicatorDocument find() {
-		assertNotEmpty(replicatorDocId, "Document Id");
-		URI uri = builder(dbc.getBaseUri()).path(replicatorDB).path("/").path(replicatorDocId).query("rev", replicatorDocRev).build();
+		assertNotEmpty(replicatorDoc.getId(), "Doc id");
+		URI uri = builder(dbURI).path(replicatorDoc.getId()).query("rev", replicatorDoc.getRevision()).build();
 		return dbc.get(uri, ReplicatorDocument.class);
 	}
 	
@@ -206,7 +119,7 @@ public class Replicator {
 	public List<ReplicatorDocument> findAll() {
 		InputStream instream = null;
 		try {  
-			URI uri = builder(dbc.getBaseUri()).path(replicatorDB).path("/").path("_all_docs").query("include_docs", "true").build();
+			URI uri = builder(dbURI).path("_all_docs").query("include_docs", "true").build();
 			Reader reader = new InputStreamReader(instream = dbc.get(uri));
 			JsonArray jsonArray = new JsonParser().parse(reader)
 					.getAsJsonObject().getAsJsonArray("rows");
@@ -229,9 +142,106 @@ public class Replicator {
 	 * @return {@link Response}
 	 */
 	public Response remove() {
-		assertNotEmpty(replicatorDocId, "Replicator Document Id");
-		assertNotEmpty(replicatorDocRev, "Replicator Document revision");
-		URI uri = builder(dbc.getBaseUri()).path(replicatorDB).path("/").path(replicatorDocId).query("rev", replicatorDocRev).build();
+		assertNotEmpty(replicatorDoc.getId(), "Doc id");
+		assertNotEmpty(replicatorDoc.getRevision(), "Doc rev");
+		URI uri = builder(dbURI).path(replicatorDoc.getId()).query("rev", replicatorDoc.getRevision()).build();
 		return dbc.delete(uri);
 	} 
+	
+	// fields
+
+	public Replicator source(String source) {
+		replicatorDoc.setSource(source);
+		return this;
+	}
+
+	public Replicator target(String target) {
+		replicatorDoc.setTarget(target);
+		return this;
+	}
+
+	public Replicator continuous(boolean continuous) {
+		replicatorDoc.setContinuous(continuous);
+		return this;
+	}
+
+	public Replicator filter(String filter) {
+		replicatorDoc.setFilter(filter);
+		return this;
+	}
+
+	public Replicator queryParams(String queryParams) {
+		replicatorDoc.setQueryParams(queryParams);
+		return this;
+	}
+
+	public Replicator docIds(String... docIds) {
+		replicatorDoc.setDocIds(docIds);
+		return this;
+	}
+
+	public Replicator proxy(String proxy) {
+		replicatorDoc.setProxy(proxy);
+		return this;
+	}
+
+	public Replicator createTarget(Boolean createTarget) {
+		replicatorDoc.setCreateTarget(createTarget);
+		return this;
+	}
+
+	public Replicator replicatorDB(String replicatorDB) {
+		this.replicatorDB = replicatorDB;
+		return this;
+	}
+
+	public Replicator replicatorDocId(String replicatorDocId) {
+		replicatorDoc.setId(replicatorDocId);
+		return this;
+	}
+
+	public Replicator replicatorDocRev(String replicatorDocRev) {
+		replicatorDoc.setRevision(replicatorDocRev);
+		return this;
+	}
+
+	public Replicator workerProcesses(int workerProcesses) {
+		replicatorDoc.setWorkerProcesses(workerProcesses);
+		return this;
+	}
+
+	public Replicator workerBatchSize(int workerBatchSize) {
+		replicatorDoc.setWorkerBatchSize(workerBatchSize);
+		return this;
+	}
+
+	public Replicator httpConnections(int httpConnections) {
+		replicatorDoc.setHttpConnections(httpConnections);
+		return this;
+	}
+
+	public Replicator connectionTimeout(long connectionTimeout) {
+		replicatorDoc.setConnectionTimeout(connectionTimeout);
+		return this;
+	}
+
+	public Replicator retriesPerRequest(int retriesPerRequest) {
+		replicatorDoc.setRetriesPerRequest(retriesPerRequest);
+		return this;
+	}
+
+	public Replicator userCtxName(String userCtxName) {
+		this.userCtxName = userCtxName;
+		return this;
+	}
+
+	public Replicator userCtxRoles(String... userCtxRoles) {
+		this.userCtxRoles = userCtxRoles;
+		return this;
+	}
+	
+	public Replicator sinceSeq(Integer sinceSeq) {
+		replicatorDoc.setSinceSeq(sinceSeq);
+		return this;
+	}
 }

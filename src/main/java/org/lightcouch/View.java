@@ -16,6 +16,7 @@
 
 package org.lightcouch;
 
+import static java.lang.String.format;
 import static org.lightcouch.CouchDbUtil.*;
 
 import java.io.InputStream;
@@ -26,9 +27,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.lightcouch.DesignDocument.MapReduce;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -67,7 +69,7 @@ import com.google.gson.JsonParser;
 public class View {
 	private static final Log log = LogFactory.getLog(View.class);
 	
-	// ------------------- constants for defining paging param
+	// paging param fields
 	private static final String START_KEY                = "s_k";
 	private static final String START_KEY_DOC_ID         = "s_k_d_i";
 	private static final String CURRENT_START_KEY        = "c_k";
@@ -77,7 +79,12 @@ public class View {
 	private static final String NEXT                     = "n";
 	private static final String PREVIOUS                 = "p";
 	
-	// ---------------------------------------------- Fields
+	// temp views
+	private static final String TEMP_VIEWS_DIR           = "temp-views";
+	private static final String MAP_JS                   = "map.js";
+	private static final String REDUCE_JS                = "reduce.js";
+	
+	// view fields
 	private String key;
 	private String startKey;
 	private String startKeyDocId;
@@ -96,8 +103,10 @@ public class View {
 	
 	private CouchDbClient dbc;
 	private Gson gson;
-	
 	private URIBuilder uriBuilder;
+	
+	private String allDocsKeys; // bulk docs
+	private MapReduce tempView; // temp view
 	
 	View(CouchDbClient dbc, String viewId) {
 		assertNotEmpty(viewId, "View id");
@@ -112,7 +121,7 @@ public class View {
 		this.uriBuilder = URIBuilder.builder(dbc.getDBUri()).path(view);
 	}
 	
-	// ----------------------------------------------- Query options
+	// Query options
 	
 	/**
 	 * Queries a view as an {@link InputStream}
@@ -121,6 +130,13 @@ public class View {
 	 */
 	public InputStream queryForStream() {
 		URI uri = uriBuilder.build();
+		if(allDocsKeys != null) { // bulk docs
+			return dbc.getStream(dbc.post(uri, allDocsKeys));
+		}
+		if(tempView != null) { // temp view
+			return dbc.getStream(dbc.post(uri, gson.toJson(tempView)));
+		}
+		
 		return dbc.get(uri);
 	}
 	
@@ -256,7 +272,7 @@ public class View {
 		String action;
 		try {
 			// extract fields from the returned HEXed JSON object
-			JsonObject json = new JsonParser().parse(new String(Hex.decodeHex(param.toCharArray()))).getAsJsonObject();
+			JsonObject json = new JsonParser().parse(new String(Base64.decodeBase64(param.getBytes()))).getAsJsonObject();
 			if(log.isDebugEnabled()) {
 				log.debug("Paging Param Decoded = " + json);
 			}
@@ -311,7 +327,7 @@ public class View {
 					jsonNext.addProperty(START_KEY_DOC_ID, rows.get(i).getId());
 					jsonNext.add(CURRENT_KEYS, currentKeys);
 					jsonNext.addProperty(ACTION, NEXT); 
-					page.setNextParam(Hex.encodeHexString(jsonNext.toString().getBytes()));
+					page.setNextParam(Base64.encodeBase64URLSafeString(jsonNext.toString().getBytes()));
 					continue; // exclude 
 				} 
 			}
@@ -324,7 +340,7 @@ public class View {
 			jsonPrev.addProperty(START_KEY_DOC_ID, currentStartKeyDocId);
 			jsonPrev.add(CURRENT_KEYS, currentKeys);
 			jsonPrev.addProperty(ACTION, PREVIOUS); 
-			page.setPreviousParam(Hex.encodeHexString(jsonPrev.toString().getBytes()));
+			page.setPreviousParam(Base64.encodeBase64URLSafeString(jsonPrev.toString().getBytes()));
 		}
 		// calculate paging display info
 		page.setResultList(pageList);
@@ -371,7 +387,7 @@ public class View {
 					jsonNext.addProperty(START_KEY_DOC_ID, rows.get(i).getId());
 					jsonNext.add(CURRENT_KEYS, currentKeys);
 					jsonNext.addProperty(ACTION, NEXT); 
-					page.setNextParam(Hex.encodeHexString(jsonNext.toString().getBytes()));
+					page.setNextParam(Base64.encodeBase64URLSafeString(jsonNext.toString().getBytes()));
 					continue; 
 				}
 			}
@@ -384,7 +400,7 @@ public class View {
 			jsonPrev.addProperty(START_KEY_DOC_ID, currentStartKeyDocId);
 			jsonPrev.add(CURRENT_KEYS, currentKeys);
 			jsonPrev.addProperty(ACTION, PREVIOUS); 
-			page.setPreviousParam(Hex.encodeHexString(jsonPrev.toString().getBytes()));
+			page.setPreviousParam(Base64.encodeBase64URLSafeString(jsonPrev.toString().getBytes()));
 		}
 		// calculate paging display info
 		page.setResultList(pageList);
@@ -396,7 +412,7 @@ public class View {
 		return page;
 	}
 	
-	// -------------------------------------------------------- Parameters setter
+	// fields
 	
 	/**
 	 * @param key The key value, accepts a single value or multiple values for complex keys.
@@ -518,7 +534,36 @@ public class View {
 		return this;
 	}
 	
-	// --------------------------------------------------- Helper
+	public View keys(List<String> keys) {
+		this.allDocsKeys = String.format("{%s:%s}", gson.toJson("keys"), gson.toJson(keys));
+		return this;
+	}
+	
+	// temp views
+	
+	public View tempView(String id) {
+		assertNotEmpty(id, "id");
+		String viewPath = format("%s/%s/", TEMP_VIEWS_DIR, id);
+		List<String> dirList = listResources(viewPath);
+		assertNotEmpty(dirList, "Temp view directory");
+
+		tempView = new MapReduce();
+		for (String mapRed : dirList) {
+			String def = readFile(format("/%s%s", viewPath, mapRed));
+			if(MAP_JS.equals(mapRed))
+				tempView.setMap(def);
+			else if(REDUCE_JS.equals(mapRed))
+				tempView.setReduce(def);
+		} 
+		return this;
+	}
+	
+	public View tempView(MapReduce mapReduce) {
+		assertNotEmpty(mapReduce, "mapReduce");
+		tempView = mapReduce;
+		return this;
+	}
+	
 	private String getKeyAsJson(Object... key) {
 		return (key.length == 1) ? gson.toJson(key[0]) : gson.toJson(key); // single or complex key
 	}
