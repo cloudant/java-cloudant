@@ -80,6 +80,8 @@ class CouchDbConfig {
 			dbProperties.setSocketTimeout(getPropertyAsInt("couchdb.http.socket.timeout", false));
 			dbProperties.setConnectionTimeout(getPropertyAsInt("couchdb.http.connection.timeout", false));
 			dbProperties.setMaxConnections(getPropertyAsInt("couchdb.max.connections", false));
+			dbProperties.setProxyHost(getProperty("couchdb.proxy.host", false));
+			dbProperties.setProxyPort(getPropertyAsInt("couchdb.proxy.port", false));
 			
 		} catch (Exception e) {
 			throw new IllegalStateException(e);
@@ -98,7 +100,7 @@ class CouchDbConfig {
 			log.error(msg);
 			throw new IllegalStateException(msg);
 		} else {
-			return (property != null && property.length() != 0) ? property : null;
+			return (property != null && property.length() != 0) ? property.trim() : null;
 		}
 	}
 	

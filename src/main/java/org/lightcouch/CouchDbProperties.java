@@ -36,6 +36,8 @@ public class CouchDbProperties {
 	private int socketTimeout;
 	private int connectionTimeout;
 	private int maxConnections;
+	private String proxyHost;
+	private int proxyPort;
 
 	public CouchDbProperties() {
 		// default constructor
@@ -92,6 +94,14 @@ public class CouchDbProperties {
 	public int getMaxConnections() {
 		return maxConnections;
 	}
+	
+	public String getProxyHost() {
+		return proxyHost;
+	}
+
+	public int getProxyPort() {
+		return proxyPort;
+	}
 
 	public void setDbName(String dbName) {
 		this.dbName = dbName;
@@ -131,6 +141,14 @@ public class CouchDbProperties {
 
 	public void setMaxConnections(int maxConnections) {
 		this.maxConnections = maxConnections;
+	}
+	
+	public void setProxyHost(String proxyHost) {
+		this.proxyHost = proxyHost;
+	}
+
+	public void setProxyPort(int proxyPort) {
+		this.proxyPort = proxyPort;
 	}
 
 	public void clearPassword() {

@@ -56,6 +56,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -308,6 +309,10 @@ abstract class CouchDbClientBase {
 			if(maxConnections != 0) {
 				ccm.setMaxTotal(maxConnections);
 				ccm.setDefaultMaxPerRoute(maxConnections);
+			}
+			if(props.getProxyHost() != null) {
+				HttpHost proxy = new HttpHost(props.getProxyHost(), props.getProxyPort());
+				httpclient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
 			}
 			// basic authentication
 			if(props.getUsername() != null && props.getPassword() != null) {
