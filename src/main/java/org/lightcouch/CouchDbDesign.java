@@ -49,6 +49,7 @@ public class CouchDbDesign {
 	private static final String FILTERS         = "filters";
 	private static final String SHOWS           = "shows";
 	private static final String LISTS           = "lists";
+	private static final String UPDATES         = "updates";
 	private static final String MAP_JS          = "map.js";
 	private static final String REDUCE_JS       = "reduce.js";
 	
@@ -179,6 +180,7 @@ public class CouchDbDesign {
 		dd.setFilters(populateMap(rootPath, elements, FILTERS));
 		dd.setShows(populateMap(rootPath, elements, SHOWS));
 		dd.setLists(populateMap(rootPath, elements, LISTS));
+		dd.setUpdates(populateMap(rootPath, elements, UPDATES));
 		return dd;
 	}
 	

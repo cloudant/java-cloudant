@@ -34,6 +34,7 @@ public class DesignDocument extends Document {
 	private Map<String, String> filters;
 	private Map<String, String> shows;
 	private Map<String, String> lists;
+	private Map<String, String> updates;
 
 	public String getLanguage() {
 		return language;
@@ -57,6 +58,10 @@ public class DesignDocument extends Document {
 
 	public Map<String, String> getLists() {
 		return lists;
+	}
+	
+	public Map<String, String> getUpdates() {
+		return updates;
 	}
 
 	public void setLanguage(String language) {
@@ -83,6 +88,10 @@ public class DesignDocument extends Document {
 		this.lists = lists;
 	}
 
+	public void setUpdates(Map<String, String> updates) {
+		this.updates = updates;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -91,6 +100,7 @@ public class DesignDocument extends Document {
 		result = prime * result + ((language == null) ? 0 : language.hashCode());
 		result = prime * result + ((lists == null) ? 0 : lists.hashCode());
 		result = prime * result + ((shows == null) ? 0 : shows.hashCode());
+		result = prime * result + ((updates == null) ? 0 : updates.hashCode());
 		result = prime * result
 				+ ((validateDocUpdate == null) ? 0 : validateDocUpdate.hashCode());
 		result = prime * result + ((views == null) ? 0 : views.hashCode());
@@ -128,6 +138,11 @@ public class DesignDocument extends Document {
 			if (other.shows != null)
 				return false;
 		} else if (!shows.equals(other.shows))
+			return false;
+		if (updates == null) {
+			if (other.updates != null)
+				return false;
+		} else if (!updates.equals(other.updates))
 			return false;
 		if (validateDocUpdate == null) {
 			if (other.validateDocUpdate != null)
