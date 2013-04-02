@@ -109,7 +109,7 @@ public class Replication {
 	}
 
 	public Replication queryParams(String queryParams) {
-		this.source = queryParams;
+		this.queryParams = queryParams;
 		return this;
 	}
 
