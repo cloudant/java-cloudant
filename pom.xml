@@ -6,7 +6,7 @@
 	<version>0.0.6-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>LightCouch</name>
-	<description>Java Persistence API for CouchDB</description>
+	<description>CouchDB Java API</description>
 	<inceptionYear>2011</inceptionYear>
 	<url>http://www.lightcouch.org</url>
 	<parent>
@@ -35,8 +35,8 @@
 	</developers>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<httpclient.version>4.2.2</httpclient.version>
-		<gson.version>2.2.2</gson.version>
+		<httpclient.version>4.2.4</httpclient.version>
+		<gson.version>2.2.3</gson.version>
 		<junit.version>4.8.2</junit.version>
 	</properties>
 	<dependencies>
@@ -63,9 +63,9 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
+			<groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.1</version>
 				<configuration>
 					<source>1.5</source>
 					<target>1.5</target>
