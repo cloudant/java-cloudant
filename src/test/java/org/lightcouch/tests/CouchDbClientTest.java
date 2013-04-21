@@ -304,6 +304,27 @@ public class CouchDbClientTest {
 		assertArrayEquals(bytesToDB, bytesFromDB); 
 	}
 	
+	@Test
+	public void testGetDocumentWithAttachments() throws IOException {
+		System.out.println("------------------------------- Testing get document with Attachment ");
+		
+		String data = "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=";
+		
+		// save doc with attachment
+		Attachment attachment = new Attachment();
+		attachment.setContentType("text/plain");
+		attachment.setData(data);
+		Bar bar = new Bar(); 
+		bar.addAttachment("bar.txt", attachment);
+		Response saveResponse = dbClient.save(bar);
+		
+		// get doc with attachment
+		String uri = dbClient.getDBUri() + saveResponse.getId() + "?attachments=true";
+		bar = dbClient.findAny(Bar.class, uri);
+		
+		assertEquals(bar.getAttachments().get("bar.txt").getData(), data);
+	}
+	
 	// ----------------------------------------------------------------- Remove 
 	@Test(expected=IllegalArgumentException.class)
 	public void testRemoveThrowsIllegalArgumentException() {
