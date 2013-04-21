@@ -154,7 +154,9 @@ abstract class CouchDbClientBase {
 	 * @return {@link InputStream} 
 	 */
 	InputStream get(URI uri) {
-		return get(new HttpGet(uri));
+		HttpGet get = new HttpGet(uri);
+		get.addHeader("Accept", "application/json");
+		return get(get);
 	}
 	
 	/**
