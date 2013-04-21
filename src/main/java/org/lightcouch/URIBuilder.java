@@ -89,7 +89,9 @@ class URIBuilder {
 	}
 	
 	public URIBuilder query(String query) {
-		this.query.append(query);
+	        if(query != null) {
+	                this.query.append(query);
+	        }
 		return this;
 	}
 }

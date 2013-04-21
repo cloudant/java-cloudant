@@ -24,6 +24,7 @@ import java.net.URI;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPut;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -398,6 +399,23 @@ public final class CouchDbClient extends CouchDbClientBase {
 		assertNotEmpty(rev, "revision");
 		return delete(builder(getDBUri()).path(id).query("rev", rev).build());
 	}
+	
+	/**
+	 * Invokes an Update Handler.
+	 * @param updateHandlerUri The Update Handler URI, in the format: <code>designDocId/updateFunction</code>
+	 * @param docId The document id to update.
+	 * @param query The query string parameters, e.g, field=field1&value=value1
+	 * @return The output of the request.
+	 */
+	public String invokeUpdateHandler(String updateHandlerUri, String docId, String query) {
+	    assertNotEmpty(updateHandlerUri, "updateHandlerUri");
+	    assertNotEmpty(docId, "docId");
+	    String[] v = updateHandlerUri.split("/");
+	    String path = String.format("_design/%s/_update/%s/%s", v[0], v[1], docId);
+	    URI uri = builder(getDBUri()).path(path).query(query).build();
+            HttpResponse response = executeRequest(new HttpPut(uri));
+            return streamToString(getStream(response));
+        }
 	
 	/**
 	 * {@inheritDoc}

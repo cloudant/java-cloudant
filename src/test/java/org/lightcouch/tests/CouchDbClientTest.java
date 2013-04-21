@@ -228,6 +228,26 @@ public class CouchDbClientTest {
 	}
 	
 	@Test
+	public void testUpdateHandler() {
+	        System.out.println("------------------------------- Testing Update Handler");
+	        dbClient.syncDesignDocsWithDb();
+
+	        Foo foo = new Foo();
+	        foo.setTitle("title");
+	        Response response = dbClient.save(foo);
+	        
+	        String newTitle = "new title";
+	        
+	        // invoke the update handler - set a new title
+	        String output = dbClient.invokeUpdateHandler("example/example_update", response.getId(), "field=title&value="+ newTitle);
+	        
+	        // confirm the update
+	        foo = dbClient.find(Foo.class, response.getId());
+	        assertNotNull(output);
+	        assertEquals(foo.getTitle(), newTitle);
+        }
+	
+	@Test
 	public void testSaveAttachmentInline() {
 		System.out.println("------------------------------- Testing Save Attachment - Inline");
 		

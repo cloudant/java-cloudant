@@ -155,6 +155,13 @@ final class CouchDbUtil {
 		return fileName.substring(0, fileName.lastIndexOf('.'));
 	}
 	
+	public static String streamToString(InputStream in) {
+	    Scanner s = new Scanner(in).useDelimiter("\\A");
+	    String str = s.hasNext() ? s.next() : "";
+	    close(in);
+	    return str;
+	}
+	
 	/**
 	 * Closes the response input stream.
 	 * 
