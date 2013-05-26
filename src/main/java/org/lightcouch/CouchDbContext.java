@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPut;
 
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
@@ -146,5 +147,15 @@ public class CouchDbContext {
 		} finally {
 			close(response);
 		}
+	}
+	
+	/**
+	 * Request a database sends a list of UUIDs.
+	 * @param count The count of UUIDs.
+	 */
+	public List<String> uuids(long count) {
+		String uri = String.format("%s_uuids?count=%d", dbc.getBaseUri(), count);
+		JsonObject json = dbc.findAny(JsonObject.class, uri);
+		return dbc.getGson().fromJson(json.get("uuids").toString(), new TypeToken<List<String>>(){}.getType());
 	}
 }

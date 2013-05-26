@@ -126,10 +126,16 @@ abstract class CouchDbClientBase {
 		return dbURI;
 	}
 	
+	/**
+	 * @return The base URI.
+	 */
 	protected URI getBaseUri() {
 		return baseURI;
 	}
 	
+	/**
+	 * @return The Gson instance.
+	 */
 	protected Gson getGson() {
 		return gson;
 	}

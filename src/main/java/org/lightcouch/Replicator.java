@@ -25,11 +25,13 @@ import java.io.Reader;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.lightcouch.ReplicatorDocument.UserCtx;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 /**
@@ -171,7 +173,12 @@ public class Replicator {
 	}
 
 	public Replicator queryParams(String queryParams) {
-		replicatorDoc.setQueryParams(queryParams);
+		replicatorDoc.setQueryParams(dbc.getGson().fromJson(queryParams, JsonObject.class));
+		return this;
+	}
+	
+	public Replicator queryParams(Map<String, Object> queryParams) {
+		replicatorDoc.setQueryParams(dbc.getGson().toJsonTree(queryParams).getAsJsonObject());
 		return this;
 	}
 
@@ -192,6 +199,7 @@ public class Replicator {
 
 	public Replicator replicatorDB(String replicatorDB) {
 		this.replicatorDB = replicatorDB;
+		dbURI = builder(dbc.getBaseUri()).path(replicatorDB).path("/").build();
 		return this;
 	}
 

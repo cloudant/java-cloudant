@@ -20,6 +20,7 @@ public class Foo {
 	private Set<Bar> bars;
 	private Date date;
 	private Map<String, Attachment> _attachments;
+	private List<RevInfo> _revs_info;
 
 	public Foo() {
 		super();
@@ -29,10 +30,9 @@ public class Foo {
 		this._id = _id;
 	}
 
-	public Foo(String _id, String title, int position) {
+	public Foo(String _id, String title) {
 		this._id = _id;
 		this.title = title;
-		this.position = position;
 	}
 
 	public String get_id() {
@@ -71,6 +71,10 @@ public class Foo {
 		return _attachments;
 	}
 
+	public List<RevInfo> get_revs_info() {
+		return _revs_info;
+	}
+
 	public void set_id(String _id) {
 		this._id = _id;
 	}
@@ -107,12 +111,42 @@ public class Foo {
 		this._attachments = _attachments;
 	}
 
-	@Override
-	public String toString() {
-		return "Foo [_id=" + _id + ", _rev=" + _rev + ", title=" + title
-				+ ", position=" + position + ", tags=" + tags
-				+ ", complexDate=" + Arrays.toString(complexDate) + ", bars="
-				+ bars + "]";
+	public void set_revs_info(List<RevInfo> _revs_info) {
+		this._revs_info = _revs_info;
 	}
 
-}
+	@Override
+	public String toString() {
+		return "Foo [_id=" + _id + ", _rev=" + _rev + ", title=" + title + ", position="
+				+ position + ", tags=" + tags + ", complexDate="
+				+ Arrays.toString(complexDate) + ", bars=" + bars + ", _revs_info="
+				+ _revs_info + "]";
+	}
+
+	public static class RevInfo {
+		private String rev;
+		private String status;
+
+		public String getRev() {
+			return rev;
+		}
+
+		public void setRev(String rev) {
+			this.rev = rev;
+		}
+
+		public String getStatus() {
+			return status;
+		}
+
+		public void setStatus(String status) {
+			this.status = status;
+		}
+
+		@Override
+		public String toString() {
+			return "RevInfo [rev=" + rev + ", status=" + status + "]";
+		}
+	} // end RevInfo
+
+} // end Foo

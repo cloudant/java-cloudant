@@ -16,6 +16,7 @@
 
 package org.lightcouch;
 
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -35,7 +36,7 @@ public class ReplicatorDocument extends Document {
 	@SerializedName("filter")
 	private String filter;
 	@SerializedName("query_params")
-	private String queryParams;
+	private JsonObject queryParams;
 	@SerializedName("doc_ids")
 	private String[] docIds;
 	@SerializedName("proxy")
@@ -79,7 +80,7 @@ public class ReplicatorDocument extends Document {
 		return filter;
 	}
 
-	public String getQueryParams() {
+	public JsonObject getQueryParams() {
 		return queryParams;
 	}
 
@@ -147,7 +148,7 @@ public class ReplicatorDocument extends Document {
 		this.filter = filter;
 	}
 
-	public void setQueryParams(String queryParams) {
+	public void setQueryParams(JsonObject queryParams) {
 		this.queryParams = queryParams;
 	}
 

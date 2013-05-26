@@ -16,7 +16,11 @@
 
 package org.lightcouch;
 
-import static org.lightcouch.CouchDbUtil.*;
+import static org.lightcouch.CouchDbUtil.assertNotEmpty;
+import static org.lightcouch.CouchDbUtil.close;
+import static org.lightcouch.CouchDbUtil.generateUUID;
+import static org.lightcouch.CouchDbUtil.getElement;
+import static org.lightcouch.CouchDbUtil.streamToString;
 import static org.lightcouch.URIBuilder.builder;
 
 import java.io.InputStream;
@@ -26,6 +30,7 @@ import java.util.List;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPut;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
@@ -201,9 +206,24 @@ public final class CouchDbClient extends CouchDbClientBase {
 	 * @throws NoDocumentException If the document is not found in the database.
 	 */
 	public <T> T find(Class<T> classType, String id) {
-		assertNotEmpty(classType, "Class Type");
+		assertNotEmpty(classType, "Class");
 		assertNotEmpty(id, "id");
 		return get(builder(getDBUri()).path(id).build(), classType);
+	}
+	
+	/**
+	 * Finds an Object of the specified type.
+	 * @param <T> Object type.
+	 * @param classType The class of type T.
+	 * @param id The document id.
+	 * @param params Extra parameters to append.
+	 * @return An object of type T.
+	 * @throws NoDocumentException If the document is not found in the database.
+	 */
+	public <T> T find(Class<T> classType, String id, Params params) {
+		assertNotEmpty(classType, "Class");
+		assertNotEmpty(id, "id");
+		return get(builder(getDBUri()).path(id).query(params).build(), classType);
 	}
 	
 	/**
@@ -216,7 +236,7 @@ public final class CouchDbClient extends CouchDbClientBase {
 	 * @throws NoDocumentException If the document is not found in the database.
 	 */
 	public <T> T find(Class<T> classType, String id, String rev) {
-		assertNotEmpty(classType, "Class Type");
+		assertNotEmpty(classType, "Class");
 		assertNotEmpty(id, "id");
 		assertNotEmpty(id, "rev");
 		URI uri = builder(getDBUri()).path(id).query("rev", rev).build();
@@ -335,9 +355,9 @@ public final class CouchDbClient extends CouchDbClientBase {
 	 * @return {@link Response}
 	 */
 	public Response saveAttachment(InputStream instream, String name, String contentType) {
-		assertNotEmpty(instream, "Input Stream");
-		assertNotEmpty(name, "Attachment Name");
-		assertNotEmpty(contentType, "Content-Type");
+		assertNotEmpty(instream, "InputStream");
+		assertNotEmpty(name, "name");
+		assertNotEmpty(contentType, "ContentType");
 		URI uri = builder(getDBUri()).path(generateUUID()).path("/").path(name).build();
 		return put(uri, instream, contentType);
 	}
@@ -355,10 +375,10 @@ public final class CouchDbClient extends CouchDbClientBase {
 	 * @return {@link Response}
 	 */
 	public Response saveAttachment(InputStream instream, String name, String contentType, String docId, String docRev) {
-		assertNotEmpty(instream, "Input Stream");
-		assertNotEmpty(name, "Attachment Name");
-		assertNotEmpty(contentType, "Content-Type");
-		assertNotEmpty(docId, "Document id");
+		assertNotEmpty(instream, "InputStream");
+		assertNotEmpty(name, "name");
+		assertNotEmpty(contentType, "ContentType");
+		assertNotEmpty(docId, "DocId");
 		URI uri = builder(getDBUri()).path(docId).path("/").path(name).query("rev", docRev).build();
 		return put(uri, instream, contentType);
 	}
@@ -380,7 +400,7 @@ public final class CouchDbClient extends CouchDbClientBase {
 	 * @return {@link Response}
 	 */
 	public Response remove(Object object) {
-		assertNotEmpty(object, "Object");
+		assertNotEmpty(object, "object");
 		JsonObject jsonObject = getGson().toJsonTree(object).getAsJsonObject();
 		String id = getElement(jsonObject, "_id");
 		String rev = getElement(jsonObject, "_rev");
@@ -396,7 +416,7 @@ public final class CouchDbClient extends CouchDbClientBase {
 	 */
 	public Response remove(String id, String rev) {
 		assertNotEmpty(id, "id");
-		assertNotEmpty(rev, "revision");
+		assertNotEmpty(rev, "rev");
 		return delete(builder(getDBUri()).path(id).query("rev", rev).build());
 	}
 	
@@ -431,6 +451,14 @@ public final class CouchDbClient extends CouchDbClientBase {
 	@Override
 	public URI getBaseUri() {
 		return super.getBaseUri();
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Gson getGson() {
+		return super.getGson();
 	}
 	
 	/**

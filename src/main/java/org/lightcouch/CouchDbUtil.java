@@ -157,7 +157,7 @@ final class CouchDbUtil {
 	
 	public static String streamToString(InputStream in) {
 	    Scanner s = new Scanner(in).useDelimiter("\\A");
-	    String str = s.hasNext() ? s.next() : "";
+	    String str = s.hasNext() ? s.next() : null;
 	    close(in);
 	    return str;
 	}

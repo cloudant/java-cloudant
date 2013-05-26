@@ -22,7 +22,7 @@
    under the License.
  -->                                
 <article>
-	<title>LightCouch User Guide 0.0.5</title>
+	<title>LightCouch User Guide 0.0.6</title>
 	
 	<articleinfo>
 		<author>
@@ -31,85 +31,65 @@
 		<date>Oct 24, 2012</date>
 	</articleinfo>
 	
-	<section id="preface">
-		<title>Preface</title>
-		<para>
-		LightCouch provides a Java persistence interface for CouchDB databases, 
-		it defines a set of APIs for communicating with the RESTful JSON APIs
-		provided by CouchDB.
-		</para>
-		<para>
-		Through it's API, LightCouch offers a simple yet powerful persistence 
-		interface, that is easy-to-use and lightweight.
-		</para>
-		<para> 
-		LightCouch APIs was designed to offer a high degree of reliability and flexibility, 
-		with minimal code base and dependency.
-		</para>
-	</section>
 	<section id="overview">
 		<title>Overview</title>
 		<para> 
-		LightCouch API is presented by establishing a client to a database server instance.
+		LightCouch provides a Java interface for communicating with CouchDB RESTful JSON APIs.
 		</para>
 		<para>
-		A LightCouch client is the central and primary gate way for gaining access to all 
-		of the available APIs.
+		APIs in LightCouch is accessed by establishing a 'client' towards a CouchDB database server.
+		A client is the main object which performs every request to the database, under it's context, such as document persistence or querying Views.
 		</para>
 		<para>
-		The API in LightCouch is organized and grouped by functionality under different
-		contexts, that is accessible via a client instance.
+		The APIs focus on Documents <acronym>CRUD</acronym>, Views, Attachments, Design Documents, 
+		Bulk operations, Changes notification, and database specific such as Compaction and Replication.
 		</para>
 		<para>
-		The API is mainly focused on document persistence, supporting 
-		<acronym>CRUD</acronym> (i.e Create Read Update Delete) kind of operations. 
-		Another set of APIs for handling CouchDB Views and Design documents, and another 
-		for performing database specific tasks such as database replication and compaction.
-		</para>
-		<para>
-		Note: The API is covered by an integration unit tests packaged with the
-		source code, see
+		API usage and use cases examples is covered by integration unit tests, that runs against a running database.
 		<ulink url="http://www.lightcouch.org/download.html">Download</ulink>.
-		The API was tested against CouchDB up to version 1.2
 		</para>
-	</section>
+        <para>
+        Internally LightCouch depends on 
+        <ulink url="http://hc.apache.org/httpcomponents-client-ga/index.html">Apache HttpClient</ulink> 
+        for handling the HTTP communications &amp; <ulink url="http://code.google.com/p/google-gson/">Gson</ulink>
+        for JSON / Java mappings.
+        </para>
+	</section><!-- /overview -->
+	
 	<section id="setup">
 		<title>Setup</title>
 		<para>
-		To setup LightCouch for use in your application, you need to have the
-		binary distribution (along with it's dependencies) available to your 
-		application classpath. Maven users could add the LightCouch dependency
-		element to their application <literal>pom.xml</literal> file:
+        <literal>Maven</literal>
 		</para>
 		<programlisting><![CDATA[ 
 <dependency>
   <groupId>org.lightcouch</groupId>
   <artifactId>lightcouch</artifactId> 
-  <version>0.0.5</version>
+  <version>0.0.6</version>
 </dependency> 
 		]]></programlisting>
 		<para id="dependencies">
-		Alternatively download the following binary Jar files:
+		Alternatively download the dependencies.
 		</para>
 		<itemizedlist>
 			<listitem>
 				<para>
-					<ulink url="https://github.com/downloads/ahmedyha/LightCouch/lightcouch-0.0.5.jar">
-						<citetitle>LightCouch 0.0.5</citetitle>
+					<ulink url="https://github.com/downloads/ahmedyha/LightCouch/lightcouch-0.0.6.jar">
+						<citetitle>LightCouch 0.0.6</citetitle>
 					</ulink>
 				</para>
 			</listitem>
                   <listitem>
                         <para>
                               <ulink url="http://hc.apache.org/downloads.cgi">
-                                    <citetitle>HttpClient 4.2.2</citetitle>
+                                    <citetitle>HttpClient 4.2.5</citetitle>
                               </ulink>
                         </para>
                   </listitem>
 			<listitem>
 				<para>
 					<ulink url="http://hc.apache.org/downloads.cgi">
-						<citetitle>HttpCore 4.2.2</citetitle>
+						<citetitle>HttpCore 4.2.4</citetitle>
 					</ulink>
 				</para>
 			</listitem>
@@ -130,24 +110,24 @@
 			<listitem>
 				<para>
 					<ulink url="http://code.google.com/p/google-gson/downloads/list">
-						<citetitle>Gson 2.2.2</citetitle>
+						<citetitle>Gson 2.2.4</citetitle>
 					</ulink>
 				</para>
 			</listitem>
 		</itemizedlist>
-		<section id="configuration">
-			<title>Configuration</title>
-			<para>
-			To configure a LightCouch client, you may use a <literal>.properties</literal>
-			file containing all the parameters required to successfully connect to a running
-			database instance.
-			</para>
-			<para>
-			Typically prepare a file named <literal>couchdb.properties</literal>
-			and make it available to your application default classpath. 
-			A client knows how to find and parse this file to extract all the necessary
-			parameters it needs:
-			</para>
+		</section><!-- /setup -->
+		
+		<section id="configure-and-use">
+			<title>Configuration and Use</title>
+	        <para>
+	        LightCouch client, i.e. <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbClient.html">org.lightcouch.CouchDbClient</ulink>
+            can be configured and constructed in several ways as preferred. 
+            </para>
+            <para>
+            Configuration parameters can be supplied to a client via <literal>.properties</literal> files, or through convenient constructors.
+            Typical usage is creating a file named <literal>couchdb.properties</literal> in the default classpath of your application, 
+            containing the following parameters:
+            </para>
 			<programlisting><![CDATA[  
 ### Required 
 couchdb.name=db-test
@@ -162,233 +142,211 @@ couchdb.username=
 couchdb.password= 
 
 ### Optional/Advanced 
-# Timeout to wait for a response, in milliseconds. Defaults to 0 (no timeout). 
-couchdb.http.socket.timeout= 
-# Timeout to establish a connection, in milliseconds. Defaults to 0 (no timeout).
+# Timeout to wait for a response in ms. Defaults to 0 (no timeout). 
+couchdb.http.socket.timeout=
+# Timeout to establish a connection in ms. Defaults to 0 (no timeout).
 couchdb.http.connection.timeout=
 # Max connections. 
-couchdb.max.connections=
+couchdb.max.connections=100
+# Connect through proxy
+couchdb.proxy.host=
+couchdb.proxy.port=
 			]]></programlisting>
-		</section>
-	</section>
-	<section id="using-lightCouch">
-		<title>Using LightCouch</title>
-		<para>
-		As mentioned earlier, you have to create a client to start using the API.
-		</para>
-		<para>
-		A client class is called <literal>org.lightcouch.CouchDbClient</literal>.
-		It offers three convenient constructors for instantiating a new instance,
-		or multiple instances if you wish to handle multiple databases simultaneously, 
-		typically each client handles one database, in isolation.
-		</para>
-		<para>
-		The easiest way to instantiate a new client is by using it's default 
-		constructor, it will search your application default classpath for <literal>couchdb.properties</literal>.
-		</para>
-		<programlisting><![CDATA[ 
-CouchDbClient dbClient = new CouchDbClient();
-// API is ready to use
-		]]></programlisting>
-		
-		<para>
-		Another overloaded constructor accepts a properties file name to be supplied:
-		</para>
-		<programlisting><![CDATA[  
-dbClient = new CouchDbClient("couchdb-2.properties");
-        ]]></programlisting>
-            
-		<para>
-		Another constructor accepts individual parameters to be supplied:
-		</para>
-		<programlisting><![CDATA[ 
-dbClient = new CouchDbClient("db-name", true, "http", "127.0.0.1", 5984, "user", "secret");
-        ]]></programlisting>
-            
-        <para>
-		The final constructor expects an object holding properties, see 
-		<ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbProperties.html">CouchDbProperties</ulink>
-		</para>
-		<programlisting><![CDATA[ 
-CouchDbProperties properties = new CouchDbProperties();
-// .. set properties
-
-dbClient = new CouchDbClient(properties);
-         ]]></programlisting>  
-              
-		<para>
-		Note: A client instance is thread-safe, typically one instance is created per application.
-		</para>
-		<para> 
-		At the end of usage, it might be useful to shutdown a client's underlying 
-		connection manager, and thus ensure a proper release of resources:
-		</para>
-		<programlisting><![CDATA[ 
-dbClient.shutdown();
-            ]]></programlisting>
-		<section id="spring">
-			<title>Spring Integration</title>
 			<para>
-			If you use Spring in your environment, it may be useful to define
-			LightCouch clients as Spring beans, and let Spring DI 
-			container handles initializing and injecting your client(s): 
+			Next, create a client instance, using the default constructor:
 			</para>
-			<programlisting><![CDATA[  
+<programlisting><![CDATA[           
+CouchDbClient dbClient = new CouchDbClient(); 
+            ]]></programlisting>
+            <para>
+            <literal>CouchDbClient</literal> provides additional constructors for instantiating a client.
+            One which accepts a <literal>.properties</literal> file name e.g, <literal>mycouchdb.properties</literal>,
+            another that accepts individual parameters, the final uses an object with properties <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbProperties.html">CouchDbProperties</ulink>.
+            </para>			
+            <programlisting><![CDATA[ 
+// couchdb-2.properties is on the classpath
+CouchDbClient dbClient1 = new CouchDbClient("couchdb-2.properties");
+            
+CouchDbClient dbClient2 = new CouchDbClient("db-name", true, "http", "127.0.0.1", 5984, "username", "secret");
+
+CouchDbProperties properties = new CouchDbProperties()
+  .setDbName("db-name")
+  .setCreateDbIfNotExist(true)
+  .setProtocol("https")
+  .setHost("example.com")
+  .setPort(443)
+  .setUsername("username")
+  .setPassword("secret")
+  .setMaxConnections(100)
+  .setConnectionTimeout(0);
+
+CouchDbClient dbClient3 = new CouchDbClient(properties);
+
+// Client is ready to use
+            ]]></programlisting>
+		<para>
+        Typically a client instance is created once per an application, and reused.
+        </para>
+        <para>
+        Multiple client instances within an application; can be created to handle 
+        multiple databases, each instance runs in isolation.
+        </para>
+        <para>
+        After usage, it might be useful to shutdown a client's underlying connection manager, 
+        for proper release of resources:
+        </para>
+        <programlisting><![CDATA[ 
+dbClient.shutdown();
+        ]]></programlisting>
+        
+        <section id="spring">
+            <title>Spring DI</title>
+            <programlisting><![CDATA[  
 <bean id="dbClient" class="org.lightcouch.CouchDbClient" init-method="syncDesignDocsWithDb" destroy-method="shutdown"/> 
 <bean id="dbClient2" class="org.lightcouch.CouchDbClient" init-method="syncDesignDocsWithDb" destroy-method="shutdown"> 
   <constructor-arg value="couchdb-2.properties" /> 
 </bean> 
-			]]></programlisting>
-			<para>
-			Autowire a client to your Spring components:
-			</para>
-			<programlisting><![CDATA[ 
+            ]]></programlisting>
+            <para>
+            Note, the example synchronize Design documents with the databse, after a client is created.
+            </para>            
+            <programlisting><![CDATA[ 
 @Autowired 
 private CouchDbClient dbClient;
-			]]></programlisting>
-		</section>
-	</section>
+            ]]></programlisting>
+        </section> <!-- /spring -->
+        </section> <!-- /configure-and-use -->
+
 	<section id="docs-api">
 		<title>Documents API</title>
 		<para>
-		Document persistence API is accessible under a client instance directly. A
-            LightCouch client acts as an <literal>EntityManager</literal> that is used in 
-            JPA, it provides convenient methods for handling document persistence.
+		Documents API is accessed via a client instance which acts like <literal>JPA EntityManager</literal>.
 		</para>
 		<para> 
-            The API supports <literal>CRUD</literal> operations to be performed on documents.
+        The API provides <literal>CRUD</literal> kind of operations for documents.
         </para>
 		<para>
-		Documents in a CouchDB are mainly identified by declaring two fields, 
-		an id and a revision (i.e <literal>_id</literal> and <literal>_rev</literal>).
+		Model classes that represent documents in CouchDB, can choose to extend
+		<ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/Document.html">org.lightcouch.Document</ulink>
+		for conventience.
+		Plain objects need to define id and revision fields, i.e. <literal>_id</literal> &amp; <literal>_rev</literal>.
 		</para>
 		<para>
-		Your model data is required to declare those special fields to qualify as valid
-		persisted documents.
+		Gson Mapping annotations eg. <literal>@SerializedName("_id") String id;</literal> could be used to indicate the <literal>JSON</literal> name of a field.
+		Fields with <literal>null</literal> value are not serialized by defualt. 
+		An instance of <literal>Gson</literal> may be obtained by a client,	for use in an application when desired. 
 		</para>
-		<para>
-		LightCouch provides a convenient base class which you may choose to extend by
-		your model classes, this class is called <literal>org.lightcouch.Document</literal>.
-		If it's not your flavor, or if you want your objects not to depend on LightCouch
-		(this may be preferable as to promote models portability across different domains),
-		you may use JSON mapping annotations 
-		(i.e <literal>com.google.gson.annotations.SerializedName("_id")</literal> for example),
-		or, to get away with clean models, you may define those special fields by their naming
-		convention (<literal>i.e String _id &amp; String _rev</literal>).
-		</para>
-		<para>
-		LightCouch gives you the flexibility of choosing a model data most suitable to 
-		your application, you may choose to work with raw streams, JSON objects, 
-		Maps, and rich domain models.
-		</para>
-		<para>
-		LightCouch has a dependency on Google <literal>Gson</literal> library which it 
-		relies on for handling JSON/Java mapping. During serialization <literal>Gson</literal>
-		by default will not serialize <literal>null</literal> fields.
-		</para>
-		<para>
-		The following sections explores what LightCouch API offers for handling document 
-		persistence.
-		</para>
-		
 		<section id="docs-api-save">
 			<title>Saving/Updating Documents</title>
 			<para>
-			Documents could be saved and updated by using methods conventiently 
-			named <literal>save()</literal> and <literal>update()</literal>
-			both methods takes an entity object as parameter. 
+			Saving / Updating Documents is handled by <literal>save(Object)</literal> and <literal>update(Object)</literal>.
 			<literallayout>
-			An object may be one of: 
-			1. A plain Java object (<literal>POJO</literal>). 
-			2. A <literal>java.util.Map</literal> holding key/value pairs. 
-			3. A <literal>com.google.gson.JsonObject</literal> object, which is a JSON representation class from <literal>Gson</literal>.
+			An object can be: 
+			1. Plain Java Object.
+			2. <literal>java.util.Map</literal>. 
+			3. <literal>com.google.gson.JsonObject</literal>.
 			</literallayout>
 			</para>
 			<para>
-			When saving a new object, it worth to mention that LightCouch will
-			generate an <literal>UUID</literal> for your object <literal>_id</literal> field
-			before sending it over to the database, but only in case you left it blank.  
+			Saving a new object internally is handled by <literal>HTTP PUT</literal>, 
+			a case where a document must be assigned an <literal>id</literal> prior to sending to the database.
 			</para>
 			<para>
-			Beside the usual saving operation, you may also use <literal>batch()</literal>, 
-			which may be suitable for logging scenarios. 
+            If the new object does not define an <literal>id</literal>, the API will generate an
+            <literal>UUID</literal> similar to database generated.
+            <literal>UUID</literal>s can also by obtained from the database, 
+            an example below on Databse API section.
+            </para>
+			<para>
+			Documents can also be saved via <literal>batch(Object)</literal>.
 			</para>
-			<para>Usage Example:</para>
+			<para>The Result of save or update operations returns a 
+			<ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/Response.html">org.lightcouch.Response</ulink>
+			object that represents the database response.
+			</para>
 			<programlisting><![CDATA[ 
-// initialize a client 'dbClient' here .. 
+CouchDbClient dbClient = new CouchDbClient();
 Foo foo = new Foo(); 
-Response resp = dbClient.save(foo); 
-// dbClient.save(foo);   // or save and ignore response 
-// dbClient.batch(foo);  // saves as batch
-Response resp2 = dbClient.update(foo);
 
-Map<String, Object> map = new HashMap<String, Object>();
+Response response = dbClient.save(foo); 
+// dbClient.save(foo);   // save, ignore response 
+// dbClient.batch(foo);  // saves batch
+
+dbClient.update(foo);
+
+Map<String, Object> map = new HashMap<>();
 map.put("_id", "doc-id");
-map.put("a-list", Collections.EMPTY_LIST);
+map.put("title", "value");
 dbClient.save(map);
 
 JsonObject json = new JsonObject();
-json.addProperty("_id", "doc-id-2");
-json.add("an-array", new JsonArray());
+json.addProperty("_id", "doc-id");
+json.add("array", new JsonArray());
 dbClient.save(json); 
+
+String jsonstr = "{\"title\":\"val\"}";
+JsonObject jsonobj = dbClient.getGson().fromJson(jsonstr, JsonObject.class);
+dbClient.save(jsonobj);
             ]]></programlisting>
-			<para>
-                  Normally when you persist an object to CouchDB, the database replies with
-                  the document Id and revision, a <literal>Response</literal> object
-                  holds this information.
-			</para>
 		</section> <!-- end save/update documents -->
 		
 		<section id="docs-api-find">
 			<title>Finding Documents</title>
 			<para>
-			Retrieving documents API is offered by a convenient method 
-			<literal>find()</literal>, it accepts a document id and or revision.
+			Finding documents API is available through <literal>find()</literal>s,
+			that expect the document <literal>id</literal>, or w/ <literal>rev</literal>, 
+			and optional query parameters through <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/Params.html">org.lightcouch.Params</ulink>
+			</para>
+			<para>
+			An additional finder <literal>findAny()</literal> gives the option to get any document from the database, 
+			given a <literal>URI</literal>, as string, encoding may be required. 
+			</para>
+			<para>
+			Documents returned as:
 			<literallayout>
-			As a return type, you may choose one of: 
-			1. An <literal>InputStream</literal>. 
-			2. A <literal>com.google.gson.JsonObject</literal> object.
-			3. A plain Java object.
+			1. Plain Java Objects.
+			2. <literal>com.google.gson.JsonObject</literal>.
+			3. <literal>java.io.InputStream</literal>. 
 			</literallayout>
-			A <literal>java.util.Map</literal> however does not qualify for a return type.
+			<literal>java.util.Map</literal>, however does not qualify as a return type.
 			</para>
 			<para>
-			An additional finder method <literal>findAny()</literal> is provided as to give more control over the query,
-			typically use it to retrieve any kind of document when there is no equivalent API already supported by the client.
-			Unlike other finder methods, this method expects a fully formatted and encoded URI to be supplied. 
+			Note: Input streams need to be closed properly; to release the connection.
 			</para>
-			<para>
-			When working with streams, it is important to close it after usage to release the connection.
-			</para>
-			<para>Usage Example:</para>
-			<programlisting><![CDATA[ 
-// initialize a client 'dbClient' here ..  
+			<programlisting><![CDATA[  			
 Foo foo = dbClient.find(Foo.class, "doc-id"); 
 foo = dbClient.find(Foo.class, "doc-id", "doc-rev"); 
-boolean b = dbClient.contains("doc-id"); 
 
-InputStream in = dbClient.find("doc-id"); // find as stream 
-// do something useful, close stream
-in.close();
+foo = dbClient.find(Foo.class, "doc-id", new Params().revsInfo().localSeq()); 
+
+boolean found = dbClient.contains("doc-id");
+
+InputStream in = dbClient.find("doc-id"); 
+// ..
+in.close(); // close stream
 
 JsonObject json = dbClient.find(JsonObject.class, "doc-id");
 
+String baseURI = dbClient.getBaseUri().toString();
 String dbURI = dbClient.getDBUri().toString();
-json = dbClient.findAny(JsonObject.class, dbURI + "doc-id?revs_info=true");
+String uri = baseURI + "_stats";
+JsonObject stats = dbClient.findAny(JsonObject.class, uri);
 				]]></programlisting>
 		</section><!-- end find documents -->
 		
 		<section id="docs-api-delete">
 			<title>Deleting Documents</title>
 			<para>
-			Following with the API, the respective method for deleting documents
-			is <literal>remove()</literal>, which accepts both a document id and revision,
-			and another overloaded which accepts an object. 
+			The API provides a <literal>remove()</literal> for deleting documents, 
+			expected parameters:
+			<literallayout>
+            1. An object containing <literal>_id</literal> and <literal>_rev</literal>.
+            2. <literal>id</literal> and <literal>revision</literal> values.
+            </literallayout>
 			</para>
-			<para>Usage Example:</para>
 			<programlisting><![CDATA[ 
-// initialize a client 'dbClient' here ..   
-Response response = dbClient.remove(object); // object contains both an id and rev 
+Response response = dbClient.remove(object); 
+
 response = dbClient.remove("doc-id", "doc-rev");
             ]]></programlisting>
 		</section><!-- end delete documents -->
@@ -396,31 +354,31 @@ response = dbClient.remove("doc-id", "doc-rev");
 		<section id="docs-api-custom-serializer">
 			<title>Custom Serializers</title>
 			<para>
-			Gson by default does not know how to handle serialization/deserialization of 
-			some third party classes, for example JodaTime <literal>DateTime</literal> class.
-			To workaround this limitation, you may register a custom serializer/deserializer
-			via <literal>GsonBuilder</literal> then supply it to a CouchDbClient instance.
+			Configuring a custom serializer gives the option to register classes
+			<literal>Gson</literal> may not be able to handle by default, 
+			eg. <literal>JodaTime</literal> <literal>DateTime</literal> class.
 			</para>
-			<para>Usage Example:</para>
 			<programlisting><![CDATA[ 
 GsonBuilder gsonBuilder = new GsonBuilder();
+
 gsonBuilder.registerTypeAdapter(DateTime.class, new JsonSerializer<DateTime>() {
-public JsonElement serialize(DateTime src, Type typeOfSrc, 
-JsonSerializationContext context) {
-return new JsonPrimitive(src.toString());
-}
+    public JsonElement serialize(DateTime src, Type typeOfSrc, 
+    JsonSerializationContext context) {
+        return new JsonPrimitive(src.toString());
+    }
 });
 		
 gsonBuilder.registerTypeAdapter(DateTime.class, new JsonDeserializer<DateTime>() {
-public DateTime deserialize(JsonElement json, Type typeOfT, 
-JsonDeserializationContext context) throws JsonParseException {
-return new DateTime(json.getAsJsonPrimitive().getAsString());
-}
+    public DateTime deserialize(JsonElement json, Type typeOfT, 
+    JsonDeserializationContext context) throws JsonParseException {
+        return new DateTime(json.getAsJsonPrimitive().getAsString());
+    }
 });
 
 CouchDbClient dbClient = new CouchDbClient();		
 dbClient.setGsonBuilder(gsonBuilder);
-// .. use the client normally as you would
+
+// .. client is ready to use
             ]]></programlisting>
 		</section><!-- end delete documents -->
 	</section><!-- end docs api -->
@@ -428,179 +386,121 @@ dbClient.setGsonBuilder(gsonBuilder);
 	<section id="docs-api-attachments">
 		<title>Attachments API</title>
 		<para>
-		Documents in CouchDB may have attachments, either inline  
-		or standalone. The following sections illustrates both features.
+		The API supports both inline and standalone Attachments.
 		</para>
 	<section id="docs-api-attachment-inline">
 		<title>Inline Attachments</title>
 		<para>
-		To save an inline attachment, the class <literal>org.lightcouch.Attachment</literal> 
-		exposes	properties for setting a base64 encoded string, and a content type of the attachment. 
-		A document may have one or more inline attachments which get saved along with 
-		the enclosing document during the usual save operation described above.
+		<ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/Attachment.html">org.lightcouch.Attachment</ulink>
+		represents an inline attachment enclosed in a document. 
 		</para>
 		<para>
-		To enable inline attachments in a domain model, one may extend 
-		<literal>org.lightcouch.Document</literal> which provides 
-		means for adding attachments, or if a domain does not 
-		extend <literal>Document</literal>, see the example below.
+		The <literal>base64</literal> data of an attachment may be encoded utilizing  
+		the included dependency on <literal>Apache Codec</literal> <literal>Base64.encodeBase64String(bytes)</literal>.
 		</para>
 		<para>
-		Retrieving a document that has an attachment does not also retrieve 
-		the attachment itself, instead it returns metadata. 
+		Model classes that extend <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/Document.html">org.lightcouch.Document</ulink> 
+		inherit the support for inline attachments.
 		</para>
 		<para>
-		Note: For encoding base64 strings, 
-		<literal>Base64.encodeBase64String(bytes)</literal> may be used, thats included in 
-		Apache Codec.
+		To retrieve the <literal>base64</literal> data of an attachment, include a parameter to the <literal>find()</literal>
 		</para>
-		<programlisting><![CDATA[ 
-public class Foo { 
-// .. define id & rev
-@SerializedName("_attachments")
-private Map<String, Attachment> attachments;
-// .. setters & getters
-}		
-	
-// init an attachment		
+		<programlisting><![CDATA[     
+String data = Base64.encodeBase64String("text string".getBytes());
+ 
 Attachment attachment = new Attachment();
-attachment.setData("VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=");
+attachment.setData(data);
 attachment.setContentType("text/plain");
-
-Foo foo = new Foo();
-Map<String, Attachment> attachments = new HashMap<String, Attachment>();
-attachments.put("foo.txt", attachment); 
-foo.setAttachments(attachments);
-dbClient.save(foo);
-
-Bar bar = new Bar(); // Bar extends Document
-bar.addAttachment("bar.txt", attachment); 
+				
+Bar bar = new Bar(); 
+bar.addAttachment("bar.txt", attachment);
+ 
 dbClient.save(bar);
+
+bar = dbClient.find(Bar.class, "doc-id", new Params().attachments());
+String base64Data = bar.getAttachments().get("bar.txt").getData();
 	]]></programlisting>
 	</section><!-- end attachments inline -->
 				
 	<section id="docs-api-attachment-standalone">
 		<title>Standalone Attachments</title>
 		<para>
-		Standalone attachments may be saved to an existing, or to 
-		a new document. The supporting method expects an attachment in
-		an <literal>InputStream</literal> format holding binary data, 
-		and a "Content-Type" to be provided. The corresponding APIs for 
-		saving attachments is available under a client instance.
-		</para>
-		<para>
-		In the following example, the first statement saves an attachment under
-		a newly created document (with a generated UUID as the document id).
-		</para>
-		<para>
-		The second statement, saves an attachment under a document given a 
-		document id	and revision. 
-		However, revision may be <literal>null</literal>, in which case 
-		a new document will be created using the specified id. 
+		Standalone attachments could be saved to an existing, or to a new document. 
+		The attachment data is provided as <literal>java.io.InputStream</literal>.
 		</para>
 		<programlisting><![CDATA[ 
-InputStream in =  // .. init input stream
-Response resp = dbClient.saveAttachment(in, "foo.txt", "text/plain");
-resp = dbClient.saveAttachment(in, "foo.txt", "text/plain", "doc-id", "doc-rev");
+InputStream in =  // .. init stream
+
+// save under a new document, a generated UUID is assigned as id.
+dbClient.saveAttachment(in, "photo.png", "image/png");
+
+// save to an existing document
+dbClient.saveAttachment(in, "file.pdf", "application/pdf", "doc-id", "doc-rev");
+
+// save under a new document with the given id. 
+dbClient.saveAttachment(in, "photo.jpeg", "image/jpeg", "doc-id", null);
+
+// get attachment
+InputStream in = dbClient.find("doc-id/photo.jpeg");
+// ..
+in.close(); // close the stream
 		]]></programlisting>
 	</section><!-- end attachments standalone -->
-				
-	<section id="docs-api-attachment-find">
-		<title>Finding Attachments</title>
-		<para>
-		To retrieve an attachment, use the <literal>find()</literal> that
-		returns an input stream: 
-		</para>
-		<programlisting><![CDATA[ 
-InputStream in = dbClient.find("doc-id/foo.txt");
-// do something useful, close stream
-in.close();
-		]]></programlisting>
-	</section><!-- end attachments find -->
-				
 	</section> <!-- end attachments -->
 	
 	<section id="logging-error-handling">
 		<title>Logging and Error Handling</title>
-		<para>
-		Logging may be useful during development, LightCouch is designed to provide 
-		concise logging messages and report errors as you work with the API.
-		</para>
 		<section id="logging">
 			<title>Logging</title>
 			<para>
-			By enabling a more verbose logging level 
-			(i.e <literal>INFO</literal> for example), 
-			LightCouch will log events as they occure. 
-			You can get hold of useful information during development like what
-			API calls is made, how a request URI and parameters look like, and what reply 
-			the database has responsed as a result to your request.
+			LightCouch logs information about API usage, such as a request URI, and the returned <literal>HTTP status code</literal>
+			from the database server, such information is logged at the level <literal>INFO</literal>.
 			</para>
 			<para> 
-			If you are using <literal>Log4j</literal> in your application,  
-			you may control logging levels like this:</para>
+			<literal>Log4j</literal> configuration:
+			</para>
 			<programlisting><![CDATA[ 
-# Controls LightCouch logging
+# LightCouch 
 log4j.logger.org.lightcouch=INFO 
-# Controls Apache HttpClient logging
+
+# Apache HttpClient 
 log4j.logger.org.apache.http=ERROR 
 				]]></programlisting>
 		</section>
 		<section id="error-handling">
 			<title>Error Handling</title>
 			<para>
-			In the event of failure, the API will throw specific exceptions
-			in correspondence to the failed event, by proper handling from your
-			application side, you can take the appropriate decision based on the
-			exception that is being thrown.
+			In the event of API call failure, an exception of a specific type is thrown to report the failure.
 			</para>
 			<para>
-			LightCouch provides three convenient runtime exception classes for that purpose.
+			Defined Exceptions:
 			<literallayout>
-			1. <literal>NoDocumentException</literal> when a requested document could not be found (or a view with no result).
+			1. <literal>NoDocumentException</literal> when a requested document could not be found (or a View with no result).
 			2. <literal>DocumentConflictException</literal>	when a conflict is detected during a save or update. 
-			3. <literal>CouchDbException</literal> is the super class for the former two exception classes, for bravity, 
-			it is thrown in every other failure events, i.e in cases of HTTP error (<literal>400</literal>) for instance. 
+			3. <literal>CouchDbException</literal> is the super class for the former two exceptions, 
+			conventiently it is thrown in cases of unexcpected exceptions, such as database errors <literal>4xx</literal> or <literal>5xx</literal>.
 			</literallayout>	
 			</para>
 		</section>
-	</section> <!-- end logging and error handling -->
+	</section> <!-- /error-handling -->
 	
 	<section id="views-api">
 		<title>Views API</title>
 		<para>
-		The API for CouchDB views is accessible via a client instance under a 
-		special context <literal>view(String)</literal> which accepts a view name,
-		consisting of the design document name and the view name
-		(i.e <literal>example/foo</literal> for example)
-		this results in requesting a view with the full URI of <literal>_design/example/_view/foo</literal>
+		Views API is accessible under the context <literal>view("design_name/my_view")</literal>.
 		</para>
 		<para>
-		The API also supports special views such as <literal>_all_docs</literal> &amp; <literal>_temp_view</literal>
-		</para>
-		<para>
-		Temporary Views is typically maintained on local <literal>.js</literal> files; on the application classpath (similar to design documents approach), 
-		or it can be constructed via 
-		<ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/DesignDocument.MapReduce.html">MapReduce</ulink> class.
-		</para>
-		<para>
-        The API employs a <literal>Builder</literal> pattern for constructing views 
-        query requests by chaining the appropriate parameters that makes sence for 
-        a specific view. Query a view given a Complex key is tightly integrated in the API.
-        </para>
-		<para>
-		Views query is supported by a number of options you may choose from, as per a use case:
+		Views can be queried in a number of ways:
 		<literallayout>
-		1. <literal><![CDATA[List<T>]]></literal> A list of a specified type.
-		2. <literal>InputStream</literal> raw streaming.
-		3. Scalar values (i.e <literal>int</literal> etc.)
-		4. View entries (keys/values) as they reside in the database B-Tree.
+		1. <literal><![CDATA[List<T>]]></literal> A list of specified type.
+		2. Scalar values, <literal>int</literal>, <literal>boolean</literal> etc.
+		3. View entries, key/value pairs as stored in the Database B-Tree.
+		4. <literal>java.io.InputStream</literal>.
 		5. Pagination.
 		</literallayout>
 		</para>
-		<para>Usage Example:</para>
 		<programlisting><![CDATA[ 
-// initialize a client 'dbClient' here ..
+// List<T>
 List<Foo> list = dbClient.view("example/foo")
 .includeDocs(true)
 .startKey("start-key")
@@ -608,28 +508,43 @@ List<Foo> list = dbClient.view("example/foo")
 .limit(10)
 .query(Foo.class);
 
+// primitive types
 int count = dbClient.view("example/by_tag").key("couchdb").queryForInt(); 
 
+// View entries (keys/values), with Documents 
 View view = dbClient.view("example/by_date")
-.key(2011, 10, 15) // complex key, may also pass an array: new int[] {2011, 10, 15}
+.key(2011, 10, 15) // complex key as: values, or array
 .reduce(false) 
 .includeDocs(true); 
 
-ViewResult<int[], String, Foo> entries = // View entries (keys/values) & documents 
+ViewResult<int[], String, Foo> entries = 
              view.queryView(int[].class, String.class, Foo.class); 
-             
+		]]></programlisting>
+		<section id="special-views">
+            <title>Special Views</title>
+            <para>
+            Views API extends to support special Views such as <literal>_all_docs</literal> &amp; <literal>_temp_view</literal>. 
+            </para>
+            <para>
+            Temporary Views functions may be be defined in local <literal>.js</literal> files; saved in the application classpath,
+            or through <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/DesignDocument.MapReduce.html">MapReduce</ulink> object.
+            </para>
+        <programlisting><![CDATA[             
 // _all_docs 
 List<JsonObject> allDocs = dbClient.view("_all_docs").query(JsonObject.class);
 
 // _temp_view
 List<Foo> list = dbClient.view("_temp_view")
 .tempView("temp_1")
-// .tempView(mapRedObj) // or an instance of MapReduce
+// .tempView(mapRedObj) 
 .includeDocs(true)
 .reduce(false)
 .query(Foo.class);
-
-// temp views directory structure 
+        ]]></programlisting>
+        <para>
+        Temp views directory structure.
+        </para>
+        <programlisting><![CDATA[
 temp-views
     |- temp_1
         |- map.js
@@ -637,37 +552,42 @@ temp-views
     |- temp_2
         |- map.js  
     |- ...
-		]]></programlisting>
-		
+        ]]></programlisting>                     
+        </section><!-- /special-views -->    
 		<section id="pagination">
 			<title>Pagination</title>
 			<para>
-			The Pagination API provides means for displaying an effective paging that supports
-			previous and next navigation handlers, it is the recommended method for implementing 
-			an efficient pagination for CouchDB views.
+			Paging over a View results is offered by an API that features <literal>previous &amp; next</literal> navigation model. 
 			</para>
 			<para>
-			A <literal><![CDATA[Page<T>]]></literal> object, 
-			<ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/Page.html">Page</ulink>
-			holds useful information for displaying a featured pagination with lowest effort possible from your part.
+			A View page is respresented by <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/Page.html"><![CDATA[Page<T>]]></ulink>
 			</para>
 			<para>
-			Following is an example of using the API in a web application, 
-			first a Servlet for initializing pagination of 15 results per page:
+			Usage example in web application.
 			</para>
-			<programlisting><![CDATA[ 
-public void doGet(HttpServletRequest request, HttpServletResponse resp) { 
-// request first page 
-Page<Foo> page = dbClient.view("example/foo").reduce(false).queryPage(15, null, Foo.class);
-request.setAttribute("page", page); 
-// .. forward to a jsp for display
+			<programlisting><![CDATA[ 	
+// Servlet 
+
+public void doGet(HttpServletRequest request, HttpServletResponse response) { 
+
+String param = request.getParameter("param"); 
+int resultsPerPage = 15;
+
+// null param gets the first page
+Page<Foo> page = dbClient.view("example/foo").reduce(false).queryPage(resultsPerPage, param, Foo.class); 
+
+request.setAttribute("page", page);
+
+// .. forward to a JSP for display
 } 
 			]]></programlisting>
-			<para>Second, a JSP page for display:</para>
+			
 			<programlisting><![CDATA[ 
+<%-- JSP --%>
+			
 <%-- iterate over documents --%>		
-<c:forEach items="${page.resultList}" var="r"> 
-  <p>${r.title} - ${r.address}  
+<c:forEach items="${page.resultList}" var="foo"> 
+  <p>${foo.title}
 </c:forEach> 
 
 <%-- show paging status --%>
@@ -691,22 +611,13 @@ ${page.pageNumber}
   <c:otherwise> Next </c:otherwise> 
 </c:choose> 
 			]]></programlisting>
-			<para>Finally a Servlet for handling paging navigation:</para>
-			<programlisting><![CDATA[ 
-public void doGet(HttpServletRequest request, HttpServletResponse resp) { 
-String param = request.getParameter("param");
-Page<Foo> page = dbClient.view("example/foo").reduce(false).queryPage(15, param, Foo.class); 
-request.setAttribute("page", page); 
-// .. forward to the same jsp page for displaying sub-sequent pages
-} 
-	            ]]></programlisting>
-	            </section>
-	</section><!-- end of views -->
+	            </section><!-- /pagination -->
+	</section><!-- /views-api -->
 	
 	<section id="bulk-docs">
 		<title>Bulk Documents</title>
 		<para>
-		Bulk documents API performs two operations: Modify &amp; Fetch documents; in one request.
+		Bulk documents API performs two operations: Modify &amp; Fetch for bulk documents.
 		</para>
 		<programlisting><![CDATA[ 
 // Modify
@@ -718,40 +629,49 @@ List<Response> bulkResponse = dbClient.bulk(newDocs, allOrNothing);
 
 // Fetch
 List<String> keys = Arrays.asList(new String[]{"doc-id-1", "doc-id-2"});
-List<Foo> docs = dbClient.view("_all_docs").includeDocs(true).keys(keys).query(Foo.class);
+List<Foo> docs = dbClient.view("_all_docs")
+.includeDocs(true)
+.keys(keys)
+.query(Foo.class);
 		]]></programlisting>
-	</section> <!-- end bulk docs -->
+	</section> <!-- /bulk-docs -->
 	
 	<section id="design-docs">
 		<title>Design Documents</title>
 		<para>
-		The API for Design documents is accessible via a client instance under 
-		yet another special context <literal>design()</literal>.
+		The API for Design Documents is accessible under the context <literal>design()</literal>.
 		</para>
 		<para>
-		Design documents may be edited and saved on text <literal>.js</literal>
-		files and then pushed to the database, an approach implemented by 
-		<literal>couchapp</literal>. 
-		If you have downloaded LightCouch source code, you can see a working example 
-		in the test	package.
+		A Design Document is represented by
+		<ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/DesignDocument.html">org.lightcouch.DesignDocument</ulink>.
+		Design Documents may be maintained on local <literal>.js</literal> files; saved in an application classpath.
 		</para>
 		<para>
-		Design documents may be maintained on disk files and saved on your application
-		classpath, with the following directory structure:
+        An API is provides a kind of <literal>synchronization</literal> to copy from local files to the database.
+        <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbDesign.html">org.lightcouch.CouchDbDesign</ulink> 
+        lists all the supported operations.
+        </para>
+        <para>
+        An example design document can be found under the test package of the source code. 
+        </para>
+		<para>
+		Design documents directory structure:
 		</para>
 		<programlisting><![CDATA[ 
 design-docs
     |- example
         |- filters
             |- filter1.js
-            |- filter2.js
             |- ..
         |- lists
-            |- list1.js    
-            |- list2.js
+            |- list1.js  
+            |- ..  
         |- shows    
             |- show1.js
-            |- show2.js
+            |- ..
+        |- updates    
+            |- update1.js
+            |- ..
         |- validate_doc_update
             |- validate.js 
         |- views
@@ -763,126 +683,138 @@ design-docs
     |- example2
         ...
 		]]></programlisting>
-		<para>Usage Example:</para>
 		<programlisting><![CDATA[ 
-// find by document dir name		
+// find by dir name
 DesignDocument designDoc = dbClient.design().getFromDesk("example");  
-Response response = dbClient.design().synchronizeWithDb(designDoc); 
 
-// find by document id
-DesignDocument documentFromDb = dbClient.design().getFromDb("_design/example"); 
+dbClient.design().synchronizeWithDb(designDoc); 
 
-// sync all
-dbClient.syncDesignDocsWithDb();
+// find from Db
+DesignDocument designDocFromDb = dbClient.design().getFromDb("_design/example"); 
+
+// synchronize all
 dbClient.design().synchronizeAllWithDb();
+// dbClient.syncDesignDocsWithDb(); // or use a client
 		]]></programlisting>
-		<para>
-		You may refer to the Javadocs to see all supported operations:
-		<ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbDesign.html">org.lightcouch.CouchDbDesign</ulink>
-		A <literal>DesignDocument</literal> object that is used to carry a design document, 
-		properly implements <literal>equals()</literal>.
-		This may come in handy for comparing documents that are loaded from either 
-		desk files or the database, this is what practically is used when 
-		<literal>synchronizeWithDb()</literal> is invoked, as to avoid un-necessary
-		updates to a design document in the database that is up-to-date.
-		</para>
-	</section> <!-- end design docs -->
+	</section> <!-- /design-docs -->
 	
 	<section id="changes">
 		<title>Change Notifications</title>
 		<para>Change notifications API is accessible under the context 
-		<acronym>changes()</acronym>. The API supports change feeds of both types 
+		<acronym>changes()</acronym>. The API supports Changes feed of both types 
 		<acronym>normal</acronym> and <acronym>continuous</acronym>. 
-		Documents in the changes result are returned as <acronym>JsonObject</acronym>s.
+		A Row in the Changes feed is returned as <acronym>com.google.gson.JsonObject</acronym>
 		</para>
-		<para>Usage Example:</para>
 		<programlisting><![CDATA[
-// feed type normal
-ChangesResult change = dbClient.changes()
-.includeDocs(true)
-.limit(20)
-.getChanges();
-
-List<ChangesResult.Row> rows = change.getResults(); 
-
+// get latest update seq
 CouchDbInfo dbInfo = dbClient.context().info();
-String since = dbInfo.getUpdateSeq(); // get latest update seq
+String since = dbInfo.getUpdateSeq(); 
+		
+// feed type normal
+ChangesResult changes = dbClient.changes()
+  .includeDocs(true)
+  .limit(20)
+  .since(since)
+  .getChanges();
+
+List<ChangesResult.Row> rows = changes.getResults();
+
+for (ChangesResult.Row row : rows) {
+ String docId = row.getId()
+ JsonObject doc = row.getDoc();
+}
 
 // feed type continuous
 Changes changes = dbClient.changes()
-.includeDocs(true)
-.since(since)
-.heartBeat(30000)
-.filter("example/filter")
-.continuousChanges();
+  .includeDocs(true)
+  .since(since)
+  .heartBeat(30000)
+  .filter("example/filter")
+  .continuousChanges();
 
-// access live continuous feeds in an iterator style
-while (changes.hasNext()) { // blocks until a feed is received
-ChangesResult.Row feed = changes.next();
-// changes.stop(); // stop a running feed
+// live access to continuous feeds
+while (changes.hasNext()) { 
+  ChangesResult.Row feed = changes.next();
+  String docId = feed.getId();
+  JsonObject doc = feed.getDoc();
+	
+  // changes.stop(); // stop the running feed
 }
 		]]></programlisting>
-	</section> <!-- end changes api -->
+	</section> <!-- /changes -->
+	
+    <section id="update-handlers">
+        <title>Update Handlers</title>
+        <para>Update handlers can be invoked by a client by calling <acronym>invokeUpdateHandler()</acronym>.
+        </para>
+        <programlisting><![CDATA[
+String query  = "field=title&value=new value";     
+
+String output = dbClient.invokeUpdateHandler("example_design/example_update", "doc-id", query);
+        ]]></programlisting>
+    </section> <!-- /update-handlers -->	
 	
 	<section id="db-api">
 		<title>Database API</title>
 		<para>
-		The final set of APIs is database specific, it provide various tasks to
-		perform on databases. This API is accessible via a client instance under 
-		the context <literal>context()</literal>.
+		Database specific APIs is accessible under the context <literal>context()</literal>.
 		</para>
-		<para>Usage Example:</para>
-		<programlisting><![CDATA[ 
-CouchDbInfo dbInfo = dbClient.context().info(); // the database info
+		<programlisting><![CDATA[ 		
+CouchDbInfo dbInfo = dbClient.context().info();
+ 
 String version = dbClient.context().serverVersion(); 
-dbClient.context().compact();
-dbClient.context().ensureFullCommit(); 
-dbClient.context().createDB("new-db");
 
-// query _active_tasks, via Gson API
-JsonElement json = dbClient.findAny(JsonElement.class, dbClient.getBaseUri() + "_active_tasks");
-for (JsonElement j : json.getAsJsonArray()) {
-	String pid = j.getAsJsonObject().get("pid");
-}
+dbClient.context().compact();
+
+dbClient.context().ensureFullCommit(); 
+
+dbClient.context().createDB("new-db");
 		]]></programlisting>
 		<section id="replication">
 			<title>Replication</title>
 			<para>
-			LightCouch provides two subset of APIs for handling database replication, 
-			it supports the traditional replication that is issued by POSTing to
-			<literal>_replicate</literal>	URI, and the newer replicator database
-			(i.e <literal>_replicator</literal> by default) that is
-			introduced with CouchDB version <literal>1.1.0</literal> 
+			Replication is handled by two sets of API, one that replicate by POSTing to
+			<literal>_replicate</literal> URI, and the newer replicator database
+			(i.e <literal>_replicator</literal>) introduced with CouchDB <literal>1.1.0</literal> .
 			</para>
-			<para>A replication request	is triggered by saving a document in the replicator database, 
-			and is canceled by removing the document that triggered the replication.
-			</para>
-			<para>Usage Example:</para>
 			<programlisting><![CDATA[ 
+// query params for filtered replication						
+Map<String, Object> queryParams = new HashMap<>();
+queryParams.put("key1", "val");
+// String queryParams = "{\"key1\":\"val\"}";
+        			
+// normal replication			
 ReplicationResult result = dbClient.replication()
 .source("source-db")
 .target("http://user:secret@127.0.0.1:5984/target-db") 
 .createTarget(true)
 .sinceSeq(100) // as of CouchDB 1.2
-// .cancel()   // cancels a replication
+// .cancel()   // cancel a replication
+.filter("example/filter1")
+.queryParams(queryParams);
 .trigger();
 
-// the following targets a replicator database 
+List<ReplicationHistory> histories = result.getHistories();
+
+// _replicator database 
 Replicator replicator = dbClient.replicator() 
 .source("source-db")
 .target("target-db")
 .continuous(true) 
 .createTarget(true) 
 .sinceSeq(100)                 // as of CouchDB 1.2
-.replicatorDB("_myreplicator") // optional, defaults to _replicator
-.replicatorDocId("doc-id")     // optional, defaults to an UUID
+.replicatorDB("replicator_2")  // optional, defaults to _replicator
+.replicatorDocId("doc-id")     // optional, defaults to UUID
+.filter("example/filter1")
+.queryParams(queryParams)
 .userCtxName("user")           // for delegated requests
 .userCtxRoles("admin", "manager");
 
 Response response = replicator.save(); // triggers a replication
 
 ReplicatorDocument findDocument = dbClient.replicator()
-.replicatorDocId("doc-id").find(); 
+.replicatorDocId("doc-id")
+.find(); 
 
 List<ReplicatorDocument> docs = dbClient.replicator().findAll(); 
 
@@ -891,6 +823,6 @@ Response removeResponse = dbClient.replicator()
 .replicatorDocRev("doc-rev")
 .remove(); // cancels an ongoing replication
 			]]></programlisting>
-		</section>
-	</section> <!-- end database api -->
+		</section><!-- /replication -->
+	</section> <!-- /db-api -->
 </article>

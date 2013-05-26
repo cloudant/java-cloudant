@@ -35,8 +35,8 @@
 	</developers>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<httpclient.version>4.2.4</httpclient.version>
-		<gson.version>2.2.3</gson.version>
+		<httpclient.version>4.2.5</httpclient.version>
+		<gson.version>2.2.4</gson.version>
 		<junit.version>4.8.2</junit.version>
 	</properties>
 	<dependencies>

@@ -16,8 +16,14 @@
 
 package org.lightcouch.tests;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -37,259 +43,264 @@ import org.junit.Test;
 import org.lightcouch.Attachment;
 import org.lightcouch.Changes;
 import org.lightcouch.ChangesResult;
+import org.lightcouch.ChangesResult.Row;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbInfo;
 import org.lightcouch.DesignDocument;
 import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
 import org.lightcouch.Page;
+import org.lightcouch.Params;
 import org.lightcouch.ReplicationResult;
+import org.lightcouch.ReplicationResult.ReplicationHistory;
 import org.lightcouch.ReplicatorDocument;
 import org.lightcouch.Response;
-import org.lightcouch.View;
 import org.lightcouch.ViewResult;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 /**
- * Database integration tests.
+ * API Integration testing with live databases.
+ * 
  * @author Ahmed Yehia
  */
 public class CouchDbClientTest {
-	
+
 	private static CouchDbClient dbClient;
 	private static CouchDbClient dbClient2;
-//	private static CouchDbClient dbClient3;
-	
+
 	@BeforeClass
 	public static void setUpClass() {
-		System.out.println("---------------------- Creating Clients");
 		dbClient = new CouchDbClient();
 		dbClient2 = new CouchDbClient("couchdb-2.properties");
-//		dbClient3 = new CouchDbClient("lightcouch-db-test-3", true, "http", "127.0.0.1", 5984, null, null);
+		
+		// dbClient = new CouchDbClient("db-name", true, "http", "127.0.0.1", 5984, "username", "secret");
+		/*CouchDbProperties properties = new CouchDbProperties()
+		 .setDbName("db-name")
+		 .setCreateDbIfNotExist(true)
+		 .setProtocol("https")
+		 .setHost("example.com")
+		 .setPort(443)
+		 .setUsername("username")
+		 .setPassword("secret")
+		 .setMaxConnections(100);*/
+		//dbClient = new CouchDbClient(properties);
 	}
-	
+
 	@AfterClass
 	public static void tearDownClass() {
 		dbClient.shutdown();
 		dbClient2.shutdown();
-//		dbClient3.shutdown();
+	}
+
+	// Find
+
+	@Test
+	public void findById() {
+		Response response = dbClient.save(new Foo());
+		Foo foo = dbClient.find(Foo.class, response.getId());
+		assertNotNull(foo);
 	}
 	
-	// ----------------------------------------------------------------- Find
+	@Test
+	public void findByIdAndRev() {
+		Response response = dbClient.save(new Foo());
+		Foo foo = dbClient.find(Foo.class, response.getId(), response.getRev());
+		assertNotNull(foo);
+	}
+
+	@Test
+	public void findPOJO() {
+		Response response = dbClient.save(new Foo());
+		Foo foo = dbClient.find(Foo.class, response.getId());
+		assertNotNull(foo);
+	}
 	
-	@Test(expected=IllegalArgumentException.class)
-	public void testFindThrowsIllegalArgumentException() {
-		// empty or null arguments
+	@Test
+	public void findJsonObject() {
+		Response response = dbClient.save(new Foo());
+		JsonObject jsonObject = dbClient.find(JsonObject.class, response.getId());
+		assertNotNull(jsonObject);
+	}
+	
+	@Test
+	public void findAny() {
+		JsonObject jsonObject = dbClient.findAny(JsonObject.class, dbClient.getDBUri().toString());
+		assertNotNull(jsonObject);
+	}
+	
+	@Test
+	public void findInputstream() throws IOException {
+		Response response = dbClient.save(new Foo());
+		InputStream inputStream = dbClient.find(response.getId());
+		assertTrue(inputStream.read() != -1); 
+		inputStream.close();
+	}
+
+	@Test
+	public void findWithParams() {
+		Response response = dbClient.save(new Foo());
+		Foo foo = dbClient.find(Foo.class, response.getId(), new Params().revsInfo().attachments());
+		assertNotNull(foo);
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	public void findWithInvalidId_throwsIllegalArgumentException() {
 		dbClient.find(Foo.class, ""); 
 	}
-	
-	@Test(expected=NoDocumentException.class)
-	public void testFindThrowsNoDocumentException() {
-		// id value of a new UUID should never be found
-		dbClient.find(Foo.class, generateUUID()); 
-	}
-	
-	@Test
-	public void testFind() throws IOException {
-		System.out.println("------------------------------- Testing find()");
 
-		// save a new doc and obtain the response
-		Response resp = dbClient.save(new Foo()); 
-		
-		// find by id
-		Foo foo = dbClient.find(Foo.class, resp.getId()); 
-		assertNotNull(foo);
-		
-		// find by id & rev
-		foo = dbClient.find(Foo.class, resp.getId(), resp.getRev()); 
-		assertNotNull(foo);
-		
-		// find Json
-		JsonObject json = dbClient.find(JsonObject.class, resp.getId());
-		assertNotNull(json);
-		
-		// find any
-		json = dbClient.findAny(JsonObject.class, dbClient.getDBUri().toString());
-		assertNotNull(json);
-		
-		// find stream
-		InputStream inputStream = dbClient.find(resp.getId()); 
-		assertTrue(inputStream.read() != -1); // check the stream is not empty
-		inputStream.close();
-		
-		inputStream = dbClient.find(resp.getId(), resp.getRev());
-		assertTrue(inputStream.read() != -1);
-		inputStream.close();
+	@Test(expected = NoDocumentException.class)
+	public void findWithUnknownId_throwsNoDocumentException() {
+		dbClient.find(Foo.class, generateUUID());
 	}
-	
+
 	@Test
-	public void testContains() {
-		System.out.println("------------------------------- Testing contains()");
-		
-		String id = generateUUID(); 
-		boolean found = dbClient.contains(id);
+	public void contains() {
+		boolean found = dbClient.contains(generateUUID());
 		assertFalse(found);
-		
-		dbClient.save(new Foo(id));
-		found = dbClient.contains(id);
+
+		Response response = dbClient.save(new Foo());
+		found = dbClient.contains(response.getId());
 		assertTrue(found);
 	}
+
+	// Save
 	
-	// ----------------------------------------------------------------- Save/Update
-	
-	@Test(expected=IllegalArgumentException.class)
-	public void testSaveThrowsIllegalArgumentException() {
-		// invalid object
-		dbClient.save(null); 
+	@Test
+	public void savePOJO() {
+		dbClient.save(new Foo());
+	}
+
+	@Test
+	public void saveMap() {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("_id", generateUUID());
+		map.put("field1", "value1");
+		dbClient.save(map);
 	}
 	
-	@Test(expected=IllegalArgumentException.class)
-	public void testSaveThrowsIllegalArgumentException_2() {
-		// saving a new doc with a revision
-		Foo foo = new Foo();
-		foo.set_rev("some-rev"); 
+	@Test
+	public void saveJsonObject() {
+		JsonObject json = new JsonObject();
+		json.addProperty("_id", generateUUID());
+		json.add("an-array", new JsonArray());
+		dbClient.save(json);
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	public void saveInvalidObject_throwsIllegalArgumentException() {
+		dbClient.save(null);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void saveWithRevision_throwsIllegalArgumentException() {
+		Bar bar = new Bar();
+		bar.setRevision("rev-val");
+		dbClient.save(bar);
+	}
+	
+	@Test(expected = DocumentConflictException.class)
+	public void saveWitDuplicateId_throwsDocumentConflictException() {
+		Foo foo = new Foo(generateUUID());
+		dbClient.save(foo); 
 		dbClient.save(foo); 
 	}
 	
-	@Test(expected=IllegalArgumentException.class)
-	public void testUpdateThrowsIllegalArgumentException_3() {
-		// updating a document without id and revision
-		Foo foo = new Foo();
+	@Test
+	public void batch() {
+		dbClient.batch(new Foo());
+	}
+
+	// Update
+	
+	@Test
+	public void update() {
+		Response response = dbClient.save(new Foo());
+		Foo foo = dbClient.find(Foo.class, response.getId());
+		dbClient.update(foo);
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	public void updateWithoutIdAndRev_throwsIllegalArgumentException() {
+		dbClient.update(new Foo());
+	}
+
+	@Test(expected = DocumentConflictException.class)
+	public void updateWithOutdatedRev_throwsDocumentConflictException() {
+		Response response = dbClient.save(new Foo());
+		Foo foo = dbClient.find(Foo.class, response.getId());
+		dbClient.update(foo); 
 		dbClient.update(foo); 
 	}
-	
-	@Test(expected=DocumentConflictException.class)
-	public void testSaveThrowsDocumentConflictException() {
-		// saving the same doc twice (i.e with the same _id), gives 409 conflict
-		Foo foo = new Foo(generateUUID());
-		dbClient.save(foo); // OK
-		dbClient.save(foo); // Fail
-	}
-	
-	@Test(expected=DocumentConflictException.class)
-	public void testUpdateThrowsDocumentConflictException() {
-		Response resp = dbClient.save(new Foo());         
-		Foo foo = dbClient.find(Foo.class, resp.getId()); 
-		dbClient.update(foo); // OK, foo rev is the latest
-		dbClient.update(foo); // Fail, foo rev is out of date
-	}
-	
-	@Test
-	public void testSaveAndUpdate() throws IOException {
-		System.out.println("------------------------------- Testing Save/Update");
-    	
-		// save
-    	Response resp = dbClient.save(new Foo());         
-    	Foo foo = dbClient.find(Foo.class, resp.getId()); 
 
-    	// update, update rev first
-    	foo.set_rev(resp.getRev());
-    	dbClient.update(foo);
-    	
-    	// save map
-    	Map<String, Object> map = new HashMap<String, Object>();
-    	map.put("_id", generateUUID());
-    	map.put("some-key", "some-value");
-    	dbClient.save(map); 
-    	
-    	// save json (Gson object)
-    	JsonObject json = new JsonObject();
-		json.addProperty("_id", generateUUID());
-		json.add("an-array", new JsonArray());
-		dbClient.save(json); 
-		
-		// save in batch mode
-		dbClient.batch(new Foo()); 
-	}
+	// Bulk
 	
 	@Test
-	public void testBulkDocuments() {
-		System.out.println("------------------------------- Testing Bulk Documents");
-		// Bulk - Modify docs
+	public void bulkModifyDoc() {
 		List<Object> newDocs = new ArrayList<Object>();
 		newDocs.add(new Foo());
 		newDocs.add(new JsonObject());
-		
+
 		List<Response> responses = dbClient.bulk(newDocs, true);
 		assertThat(responses.size(), is(2));
-		
-		// Bulk - Fetch docs
-		Response resp1 = dbClient.save(new Foo());
-		Response resp2 = dbClient.save(new Foo());
-		List<String> keys = Arrays.asList(new String[]{resp1.getId(), resp2.getId()});
-		List<Foo> docs = dbClient.view("_all_docs").includeDocs(true).keys(keys).query(Foo.class);
-		assertThat(docs.size(), is(2));
-		
-		List<JsonObject> allDocs = dbClient.view("_all_docs").query(JsonObject.class);
-		assertThat(allDocs.size(), not(0));
 	}
 	
 	@Test
-	public void testUpdateHandler() {
-	        System.out.println("------------------------------- Testing Update Handler");
-	        dbClient.syncDesignDocsWithDb();
-
-	        Foo foo = new Foo();
-	        foo.setTitle("title");
-	        Response response = dbClient.save(foo);
-	        
-	        String newTitle = "new title";
-	        
-	        // invoke the update handler - set a new title
-	        String output = dbClient.invokeUpdateHandler("example/example_update", response.getId(), "field=title&value="+ newTitle);
-	        
-	        // confirm the update
-	        foo = dbClient.find(Foo.class, response.getId());
-	        assertNotNull(output);
-	        assertEquals(foo.getTitle(), newTitle);
-        }
+	public void bulkGetDocs() {
+		Response resp1 = dbClient.save(new Foo());
+		Response resp2 = dbClient.save(new Foo());
+		List<String> keys = Arrays.asList(new String[] { resp1.getId(), resp2.getId() });
+		
+		List<Foo> docs = dbClient.view("_all_docs").includeDocs(true).keys(keys)
+				.query(Foo.class);
+		assertThat(docs.size(), is(2));
+	}
+	
+	// Attachment
 	
 	@Test
-	public void testSaveAttachmentInline() {
-		System.out.println("------------------------------- Testing Save Attachment - Inline");
-		
-		// init 2 attachments
-		Attachment attachment1 = new Attachment();
-		attachment1.setContentType("text/plain");
-		attachment1.setData("VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=");
+	public void attachmentInline() {
+		Attachment attachment = new Attachment();
+		attachment.setContentType("text/plain");
+		attachment.setData("VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=");
 		
 		Attachment attachment2 = new Attachment();
 		attachment2.setContentType("text/plain");
-		// binary to base64 encoding using the included Apache Codec
 		String data = Base64.encodeBase64String("some text contents".getBytes());
 		attachment2.setData(data);
-		
-		
-		Foo foo = new Foo(); // Foo does not extend Document
-		Map<String, Attachment> attachments = new HashMap<String, Attachment>();
-		attachments.put("foo.txt", attachment1);
-		attachments.put("foo2.txt", attachment2);
-		foo.set_attachments(attachments);
-		
-		dbClient.save(foo);
-		
-		Bar bar = new Bar(); // Bar extends Document
-		bar.addAttachment("bar.txt", attachment1);
+
+		Bar bar = new Bar(); 
+		bar.addAttachment("bar.txt", attachment);
 		bar.addAttachment("bar2.txt", attachment2);
-		
+
 		dbClient.save(bar);
 	}
 	
 	@Test
-	public void testSaveAttachmentStandalone() throws IOException {
-		System.out.println("------------------------------- Testing Save Attachment - Standalone");
+	public void attachmentInline_getWithDocument() {
+		Attachment attachment = new Attachment();
+		attachment.setContentType("text/plain");
+		attachment.setData("VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=");
+
+		Bar bar = new Bar(); 
+		bar.addAttachment("bar.txt", attachment);
 		
+		Response response = dbClient.save(bar);
+				
+		bar = dbClient.find(Bar.class, response.getId(), new Params().attachments());
+		String base64Data = bar.getAttachments().get("bar.txt").getData();
+		assertNotNull(base64Data);
+	}
+
+	@Test
+	public void attachmentStandalone() throws IOException {
 		byte[] bytesToDB = "some text contents".getBytes();
-		
-		// save a file as document attachment 
 		ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
-		Response resp = dbClient.saveAttachment(bytesIn, "foo.txt", "text/plain"); 
-		
-		// read attachment, extract bytes for comparison
-		InputStream in = dbClient.find(String.format("%s/%s", resp.getId(), "foo.txt"));
+		Response response = dbClient.saveAttachment(bytesIn, "foo.txt", "text/plain");
+
+		String attachmentId = response.getId() + "/foo.txt";
+		InputStream in = dbClient.find(attachmentId);
 		ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
 		int n;
 		while ((n = in.read()) != -1) {
@@ -297,353 +308,169 @@ public class CouchDbClientTest {
 		}
 		bytesOut.flush();
 		in.close();
-		
+
 		byte[] bytesFromDB = bytesOut.toByteArray();
-		
-		// ensure we got the exact bytes we just saved
-		assertArrayEquals(bytesToDB, bytesFromDB); 
+
+		assertArrayEquals(bytesToDB, bytesFromDB);
 	}
+	
+	// Delete
 	
 	@Test
-	public void testGetDocumentWithAttachments() throws IOException {
-		System.out.println("------------------------------- Testing get document with Attachment ");
-		
-		String data = "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=";
-		
-		// save doc with attachment
-		Attachment attachment = new Attachment();
-		attachment.setContentType("text/plain");
-		attachment.setData(data);
-		Bar bar = new Bar(); 
-		bar.addAttachment("bar.txt", attachment);
-		Response saveResponse = dbClient.save(bar);
-		
-		// get doc with attachment
-		String uri = dbClient.getDBUri() + saveResponse.getId() + "?attachments=true";
-		bar = dbClient.findAny(Bar.class, uri);
-		
-		assertEquals(bar.getAttachments().get("bar.txt").getData(), data);
-	}
-	
-	// ----------------------------------------------------------------- Remove 
-	@Test(expected=IllegalArgumentException.class)
-	public void testRemoveThrowsIllegalArgumentException() {
-		// invalid args
-		dbClient.remove(null); 
-	}
-	
-	@Test(expected=IllegalArgumentException.class)
-	public void testRemoveThrowsIllegalArgumentException_2() {
-		// on delete, must specify both id & rev
-		dbClient.remove("some-id", null); 
-	}
-	
-	@Test(expected=IllegalArgumentException.class)
-	public void testRemoveThrowsIllegalArgumentException_3() {
-		// on delete, object must contain both id & rev
-		Foo foo = new Foo();
-		foo.set_id("some-id"); 
-		dbClient.remove(foo); 
-	}
-	
-	@Test(expected=NoDocumentException.class)
-	public void testRemoveThrowsNoDocumentException() {
-		// trying to delete a document that does not exist, CouchDB returns error 404.
-		Foo foo = new Foo();
-		foo.set_id(generateUUID());  
-		foo.set_rev(generateUUID()); 
-		
+	public void deleteObject() {
+		Response response = dbClient.save(new Foo());
+		Foo foo = dbClient.find(Foo.class, response.getId());
 		dbClient.remove(foo);
 	}
 	
 	@Test
-	public void testRemove() {
-		System.out.println("------------------------------- Testing remove()");
-		
-		Response responseSave = dbClient.save(new Foo());        
-		Foo foo = dbClient.find(Foo.class, responseSave.getId()); 
-		
-		Response responseRemove = dbClient.remove(foo);           
-
-		// deleted document gets a new revision
-    	assertThat(responseSave.getRev(), not(responseRemove.getRev())); 
+	public void deleteByIdAndRev() {
+		Response response = dbClient.save(new Foo());
+		dbClient.remove(response.getId(), response.getRev());
 	}
-	
-	// ------------------------------------------------------------------------- Views
-	
-	private void initView() {
+
+	@Test(expected = IllegalArgumentException.class)
+	public void deleteObjectWithInvalidValues_throwsIllegalArgumentException() {
+		Bar bar = new Bar();
+		bar.setId("doc-id");
+		bar.setRevision(null);
+		
+		dbClient.remove(bar);
+	}
+
+	// Views
+
+	private void initDataForViews() {
 		try {
 			Foo foo = null;
 
-			foo = new Foo("hello-world-1", "hello-world-1", 1);
-			foo.setTags(Arrays.asList(new String[] {"couchdb", "views"}));
-			foo.setComplexDate(new int[] {2011, 10, 15});
+			foo = new Foo("foo-id-1", "foo-key-1");
+			foo.setTags(Arrays.asList(new String[] { "couchdb", "views" }));
+			foo.setComplexDate(new int[] { 2011, 10, 15 });
 			dbClient.save(foo);
 
-			foo = new Foo("hello-world-2", "hello-world-2", 2);
-			foo.setTags(Arrays.asList(new String[] {"java", "couchdb"}));
-			foo.setComplexDate(new int[] {2011, 10, 15});
+			foo = new Foo("foo-id-2", "foo-key-2");
+			foo.setTags(Arrays.asList(new String[] { "java", "couchdb" }));
+			foo.setComplexDate(new int[] { 2011, 10, 15 });
 			dbClient.save(foo);
 
-			foo = new Foo("hello-world-3", "hello-world-3", 3);
-			foo.setComplexDate(new int[] {2013, 12, 17});
+			foo = new Foo("foo-id-3", "foo-key-3");
+			foo.setComplexDate(new int[] { 2013, 12, 17 });
 			dbClient.save(foo);
 
 			DesignDocument exampleDoc = dbClient.design().getFromDesk("example");
 			dbClient.design().synchronizeWithDb(exampleDoc);
-			
-		} catch (DocumentConflictException e) {}
+
+		} catch (DocumentConflictException e) {
+		}
 	}
-	
+
 	@Test()
-	public void testViewIncludeDocs() {
-		initView();
-		System.out.println("------------------------------- Test View with include docs");
+	public void views() {
+		initDataForViews();
 		
-		View view = dbClient.view("example/foo").includeDocs(true).key("hello-world-1");
-		List<Foo> foos = view.query(Foo.class);
+		List<Foo> foos = dbClient.view("example/foo").includeDocs(true).query(Foo.class);
 		assertThat(foos.size(), not(0));
 	}
 	
 	@Test()
-	public void testViewByKeyRange() {
-		initView();
-		System.out.println("------------------------------- Test View by key range");
+	public void views_byKey() {
+		initDataForViews();
 		
-		List<Foo> foos = dbClient.view("example/foo")
-		.includeDocs(true).startKey("hello-world-1").endKey("hello-world-2").query(Foo.class);
-		assertThat("Only 2 docs should be returned.", foos.size(), is(2));
+		List<Foo> foos = dbClient.view("example/foo").includeDocs(true)
+				.key("foo-key-1").query(Foo.class);
+		assertThat(foos.size(), is(1));
 	}
 	
 	@Test()
-	public void testViewByComplexKey() {
-		initView();
-		System.out.println("------------------------------- Test View by complex key ");
+	public void views_byStartAndEndKey() {
+		initDataForViews();
 		
-		int[] requestComplexKey = new int[] {2011, 10, 15};
-		ViewResult<int[], String, Foo> viewResult = dbClient.view("example/by_date").key(requestComplexKey).updateSeq(true).reduce(false).queryView(int[].class, String.class, Foo.class);
-		int[] resultComplexKey = viewResult.getRows().get(0).getKey();
-		
-		// we have 2 docs with this complex key
-		assertThat(viewResult.getRows().size(), is(2)); 
-		assertTrue("Result key should match that of the request key.", Arrays.equals(requestComplexKey, resultComplexKey));
+		List<Foo> foos = dbClient.view("example/foo").startKey("foo-key-1").endKey("foo-key-2").includeDocs(true).query(Foo.class);
+		assertThat(foos.size(), is(2));
+	}
+
+	@Test()
+	public void views_byComplexKey() {
+		initDataForViews();
+
+		int[] complexKey = new int[] { 2011, 10, 15 };
+		List<Foo> foos = dbClient.view("example/by_date").key(complexKey).includeDocs(true).reduce(false).query(Foo.class);
+		assertThat(foos.size(), is(2));
 	}
 	
 	@Test()
-	public void testViewWithScalarValues() {
-		initView();
-		System.out.println("------------------------------- Test View return scalar values");
+	public void views_ViewResult() {
+		initDataForViews();
+
+		ViewResult<int[], String, Foo> viewResult = dbClient.view("example/by_date")
+				.reduce(false).queryView(int[].class, String.class, Foo.class);
 		
+		assertThat(viewResult.getRows().size(), is(3));
+	}
+
+	@Test()
+	public void views_scalarValues() {
+		initDataForViews();
+
 		int allTags = dbClient.view("example/by_tag").queryForInt();
-		assertThat(allTags, is(4));     // we have 4 tags defined
-		
+		assertThat(allTags, is(4)); 
+
 		long couchDbTags = dbClient.view("example/by_tag").key("couchdb").queryForLong();
-		assertThat(couchDbTags, is(2L)); // we have 2 occurrence of couchdb tag
-		
+		assertThat(couchDbTags, is(2L));
+
 		String javaTags = dbClient.view("example/by_tag").key("java").queryForString();
-		assertThat(javaTags, is("1")); // we have 1 occurrence of java tag
+		assertThat(javaTags, is("1")); 
 	}
-	
-	@Test(expected=NoDocumentException.class)
-	public void testViewThrowsNoDocumentException() {
-		System.out.println("------------------------------- Test View throws exception");
-		
+
+	@Test(expected = NoDocumentException.class)
+	public void viewsWithNoResult_throwsNoDocumentException() {
+		initDataForViews();
 		dbClient.view("example/by_tag").key("javax").queryForInt();
 	}
-	
+
 	@Test
-	public void testViewByGroupLevel() {
-		System.out.println("------------------------------- Test View by group level");
+	public void views_ByGroupLevel() {
+		ViewResult<int[], Integer, Foo> viewResult = dbClient.view("example/by_date")
+				.groupLevel(2).queryView(int[].class, Integer.class, Foo.class);
 		
-		// yields two rows: (key:value) [2011,10]:2 and [2013,12]:1
-		ViewResult<int[], Integer, Foo> viewResult = dbClient.view("example/by_date").groupLevel(2).queryView(int[].class, Integer.class, Foo.class);
-		assertThat(viewResult.getRows().size(), is(2)); 
-		
-		// check 1st row 
-		assertThat(viewResult.getRows().get(0).getKey(), is(new int[] {2011, 10})); 
-		assertThat(viewResult.getRows().get(0).getValue(), is(2));
+		assertThat(viewResult.getRows().size(), is(2));
 	}
-	
+
 	@Test()
-	public void testTempViews() {
-		System.out.println("------------------------------- Test Temp View");
-		dbClient.save(new Foo(generateUUID(), "foo title", 1));
-		List<Foo> list = dbClient.view("_temp_view").tempView("temp_1").includeDocs(true).reduce(false).query(Foo.class);
+	public void tempViews() {
+		dbClient.save(new Foo(generateUUID(), "title"));
+		List<Foo> list = dbClient.view("_temp_view").tempView("temp_1").includeDocs(true)
+				.reduce(false).query(Foo.class);
 		assertThat(list.size(), not(0));
 	}
-	
-	// ------------------------------------------------------------------ Replication
 
 	@Test
-	public void testReplicate() {
-		System.out.println("------------------------------- Testing Replication");
-		
-		ReplicationResult result = dbClient.replication()
-			.createTarget(true)
-			.source(dbClient.getDBUri().toString())
-			.target(dbClient2.getDBUri().toString())
-			.trigger();
-    	assertThat(result.getHistories().size(), not(0));
+	public void allDocs() {
+		dbClient.save(new Foo());
+		List<JsonObject> allDocs = dbClient.view("_all_docs").query(JsonObject.class);
+		assertThat(allDocs.size(), not(0));
 	}
 	
-	@Test
-	public void testReplicationConflict() {
-		System.out.println("------------------------------- Testing Replication with conflicts");
-    	
-		DesignDocument conflictsDoc = dbClient.design().getFromDesk("conflicts");
-		dbClient2.design().synchronizeWithDb(conflictsDoc);
-    	
-		String anId = generateUUID();
-		Foo foodb1 = new Foo(anId, "title", 0);
-		dbClient.save(foodb1); // save to db 1
-		
-		dbClient.replication()
-			.source(dbClient.getDBUri().toString())
-			.target(dbClient2.getDBUri().toString())
-			.trigger();
-		
-		Foo foodb2 = dbClient2.find(Foo.class, anId); // find in db 2
-		foodb2.setTitle("new title"); // modify
-		dbClient2.update(foodb2); // update in db 2
-		
-		foodb1 = dbClient.find(Foo.class, anId); // find in db 1
-		foodb1.setTitle("another title"); // modify
-		dbClient.update(foodb1); // update in db 1
-		
-		dbClient.replication().source(dbClient.getDBUri().toString()).target(dbClient2.getDBUri().toString()).trigger();
-		
-		ViewResult<String[], String, Void> conflicts = dbClient2.view("conflicts/conflict").queryView(String[].class, String.class, Void.class); 
-		assertThat(conflicts.getRows().size(), is(not(0))); // there should be conflicts
-	}
-	
-	@Test
-	public void testReplicatorDB() throws InterruptedException {
-		String version = dbClient.context().serverVersion();
-		if(version.startsWith("0") || version.startsWith("1.0")) { 
-			return; // skip test for older CouchDB releases not supporting the replicator db.
-		}
-		System.out.println("------------------------------- Testing Replicator DB");
-		
-		// save replicator doc
-		Response saveResponse = dbClient.replicator()
-				.source(dbClient.getDBUri().toString())
-				.target(dbClient2.getDBUri().toString())
-				.continuous(true)
-				.createTarget(true)
-				.save(); 
-
-		// allow some time for the document to update itself in the DB
-		Thread.sleep(300L); 
-
-		// find replicator doc
-		ReplicatorDocument findDocument = dbClient.replicator()
-				.replicatorDocId(saveResponse.getId())
-				.find();
-		assertThat(saveResponse.getId(), is(findDocument.getId())); 
-
-		// find all replicator docs
-		List<ReplicatorDocument> docs = dbClient.replicator().findAll();
-		assertThat(docs.size(), is(not(0)));
-
-		// remove replicator doc
-		Response removeResponse = dbClient.replicator()
-				.replicatorDocId(findDocument.getId())
-				.replicatorDocRev(findDocument.getRevision())
-				.remove();
-		assertThat(removeResponse.getId(), is(saveResponse.getId())); 
-	}
-	
-	// --------------------------------------------------------------- context API
-	@Test
-	public void testDbInfo() {
-		System.out.println("------------------------------- Testing DB info()");
-		CouchDbInfo dbInfo = dbClient.context().info();
-		assertNotNull(dbInfo);
-	}
-	
-	@Test
-	public void testDbServerVersion() {
-		System.out.println("------------------------------- Testing serverVersion()");
-		String version = dbClient.context().serverVersion();
-		assertNotNull(version);
-	}
-	
-	@Test
-	public void testCompactDb() {
-		System.out.println("------------------------------- Testing compact()");
-		dbClient.context().compact();
-	}
-	
-	@Test
-	public void testGetAllDbs() {
-		System.out.println("------------------------------- Testing getAllDbs()");
-		List<String> allDbs = dbClient.context().getAllDbs();
-		assertThat(allDbs.size(), is(not(0)));
-	}
-	
-	@Test
-	public void testEnsureFullCommit() {
-		System.out.println("------------------------------- Testing ensureFullCommit()");
-		dbClient.context().ensureFullCommit();
-	}
-	
-	@Test
-	public void testActiveTasks() {
-		System.out.println("------------------------------- Testing _active_tasks");
-		JsonElement json = dbClient.findAny(JsonElement.class, dbClient.getBaseUri().toString() + "_active_tasks");
-		
-		for (JsonElement j : json.getAsJsonArray()) {
-			System.err.println("PID = " + j.getAsJsonObject().get("pid"));
-		}
-	}
-	
-	// ------------------------------------------------------- Design documents
-	@Test
-	public void testDesignDocs() {
-		System.out.println("------------------------------- Testing Design documents");
-		dbClient.design().synchronizeAllWithDb();
-		
-		DesignDocument exampleDoc = dbClient.design().getFromDesk("example");
-		DesignDocument exampleDoc1 = dbClient.design().getFromDesk("example");
-		
-		assertTrue(exampleDoc.equals(exampleDoc1)); // same doc
-		
-		DesignDocument documentFromDb = dbClient.design().getFromDb("_design/example");
-		assertTrue(exampleDoc.equals(documentFromDb)); // same doc, from db and desk
-		
-		exampleDoc.getViews().get("foo").setMap("new map function()");
-		assertFalse(exampleDoc.equals(documentFromDb));
-		
-		List<DesignDocument> designDocuments =  dbClient.design().getAllFromDesk();
-		assertThat(designDocuments.size(), not(0));
-		
-		DesignDocument documentFromDb2 = dbClient.design().getFromDb(documentFromDb.getId(), documentFromDb.getRevision());
-		assertEquals(documentFromDb.getRevision(), documentFromDb2.getRevision());
-	}
-	
-	// ------------------------------------------------------- Pagination
 	@Test
 	public void testPagination() {
-		System.out.println("------------------------------- Testing Pagination");
 		dbClient.design().synchronizeAllWithDb();
-		
-		// DB may already contains records, insert few for safety
+
 		for (int i = 0; i < 7; i++) {
-			dbClient.save(new Foo(generateUUID(), "paging title", 1));
+			dbClient.save(new Foo(generateUUID(), "title"));
 		}
-		
+
 		final int rowsPerPage = 3;
 		// first page, page #1, rows: 1 - 3
-		Page<Foo> page = dbClient.view("example/foo").queryPage(rowsPerPage, null, Foo.class);
+		Page<Foo> page = dbClient.view("example/foo").queryPage(rowsPerPage, null,
+				Foo.class);
 		assertFalse(page.isHasPrevious());
 		assertTrue(page.isHasNext());
 		assertThat(page.getResultFrom(), is(1));
 		assertThat(page.getResultTo(), is(3));
 		assertThat(page.getPageNumber(), is(1));
 		assertThat(page.getResultList().size(), is(3));
-		//-----------------------------------------
 
-		// prepare to go next
 		String param = page.getNextParam();
 		// next page, page #2, rows: 4 - 6
 		page = dbClient.view("example/foo").queryPage(rowsPerPage, param, Foo.class);
@@ -653,9 +480,7 @@ public class CouchDbClientTest {
 		assertThat(page.getResultTo(), is(6));
 		assertThat(page.getPageNumber(), is(2));
 		assertThat(page.getResultList().size(), is(3));
-		//-----------------------------------------
 
-		// prepare to go previous
 		param = page.getPreviousParam();
 		// previous page, page #1, rows: 1 - 3
 		page = dbClient.view("example/foo").queryPage(rowsPerPage, param, Foo.class);
@@ -667,43 +492,210 @@ public class CouchDbClientTest {
 		assertThat(page.getResultList().size(), is(3));
 	}
 
-	// ------------------------------------------------------- Changes
+	// Update handler
+	
 	@Test
-	public void testChanges() {
-		System.out.println("------------------------------- Testing Change Notifications");
-		dbClient.save(new Foo(generateUUID(), "title", 1)); // save a document
+	public void updateHandler() {
+		dbClient.syncDesignDocsWithDb();
+
+		Foo foo = new Foo();
+		foo.setTitle("title");
+		Response response = dbClient.save(foo);
+
+		String newTitle = "new title value";
+		String query = String.format("field=title&value=%s", newTitle);
+		String output = dbClient.invokeUpdateHandler("example/example_update", response.getId(), query);
+
+		foo = dbClient.find(Foo.class, response.getId());
+		assertNotNull(output);
+		assertEquals(foo.getTitle(), newTitle);
+	}
+	
+	// Replication
+
+	@Test
+	public void replication() {
+		ReplicationResult result = dbClient.replication()
+				.createTarget(true)
+				.source(dbClient.getDBUri().toString())
+				.target(dbClient2.getDBUri().toString())
+				.trigger();
+
+		List<ReplicationHistory> histories = result.getHistories();
+		assertThat(histories.size(), not(0));
+	}
+
+	@Test
+	public void replication_filteredWithQueryParams() {
+    	Map<String, Object> queryParams = new HashMap<String, Object>();
+    	queryParams.put("somekey1", "value 1");
+    	
+		dbClient.replication()
+				.createTarget(true)
+				.source(dbClient.getDBUri().toString())
+				.target(dbClient2.getDBUri().toString())
+				.filter("example/example_filter")
+				.queryParams(queryParams)
+				.trigger();
+	}
+
+	@Test
+	public void replication_conflict() {
+		DesignDocument conflictsDoc = dbClient.design().getFromDesk("conflicts");
+		dbClient2.design().synchronizeWithDb(conflictsDoc);
+
+		String docId = generateUUID();
+		Foo foodb1 = new Foo(docId, "title");
+		Foo foodb2 = null;
 		
-		// feed type normal
-		ChangesResult result = dbClient.changes()
+		foodb1 = new Foo(docId, "titleX");
+		
+		dbClient.save(foodb1); 
+		
+		dbClient.replication().source(dbClient.getDBUri().toString())
+				.target(dbClient2.getDBUri().toString()).trigger();
+
+		foodb2 = dbClient2.find(Foo.class, docId); 
+		foodb2.setTitle("titleY"); 
+		dbClient2.update(foodb2); 
+
+		foodb1 = dbClient.find(Foo.class, docId); 
+		foodb1.setTitle("titleZ"); 
+		dbClient.update(foodb1); 
+
+		dbClient.replication().source(dbClient.getDBUri().toString())
+				.target(dbClient2.getDBUri().toString()).trigger();
+
+		ViewResult<String[], String, Foo> conflicts = dbClient2.view("conflicts/conflict")
+				.includeDocs(true).queryView(String[].class, String.class, Foo.class);
+		
+		assertThat(conflicts.getRows().size(), is(not(0))); 
+	}
+
+	@Test
+	public void replicatorDB() throws InterruptedException {
+		String version = dbClient.context().serverVersion();
+		if (version.startsWith("0") || version.startsWith("1.0")) {
+			return; 
+		}
+
+		Response response = dbClient.replicator()
+				.source(dbClient.getDBUri().toString())
+				.target(dbClient2.getDBUri().toString()).continuous(true)
+				.createTarget(true)
+				.save();
+
+		List<ReplicatorDocument> replicatorDocs = dbClient.replicator()
+			.findAll();
+		assertThat(replicatorDocs.size(), is(not(0))); 
+		
+		ReplicatorDocument replicatorDoc = dbClient.replicator()
+				.replicatorDocId(response.getId())
+				.find();
+
+		dbClient.replicator()
+				.replicatorDocId(replicatorDoc.getId())
+				.replicatorDocRev(replicatorDoc.getRevision())
+				.remove();
+	}
+
+	// Database
+	
+	@Test
+	public void dbInfo() {
+		CouchDbInfo dbInfo = dbClient.context().info();
+		assertNotNull(dbInfo);
+	}
+
+	@Test
+	public void serverVersion() {
+		String version = dbClient.context().serverVersion();
+		assertNotNull(version);
+	}
+
+	@Test
+	public void compactDb() {
+		dbClient.context().compact();
+	}
+
+	@Test
+	public void allDBs() {
+		List<String> allDbs = dbClient.context().getAllDbs();
+		assertThat(allDbs.size(), is(not(0)));
+	}
+
+	@Test
+	public void ensureFullCommit() {
+		dbClient.context().ensureFullCommit();
+	}
+
+	//  Design documents
+	
+	@Test
+	public void designDocs() {
+		dbClient.design().synchronizeAllWithDb();
+
+		DesignDocument designDoc = dbClient.design().getFromDesk("example");
+		DesignDocument designDoc1 = dbClient.design().getFromDesk("example");
+		assertTrue(designDoc.equals(designDoc1)); 
+
+		DesignDocument designDocFromDb = dbClient.design().getFromDb("_design/example");
+		assertTrue(designDoc.equals(designDocFromDb)); 
+
+		List<DesignDocument> designDocs = dbClient.design().getAllFromDesk();
+		assertThat(designDocs.size(), not(0));
+	}
+
+	// Changes
+	
+	@SuppressWarnings("unused")
+	@Test
+	public void changes_normalFeed() {
+		dbClient.save(new Foo()); 
+
+		ChangesResult changes = dbClient.changes()
 				.includeDocs(true)
 				.limit(1)
 				.getChanges();
-		assertThat(result.getResults().size(), is(1)); 
 		
+		List<ChangesResult.Row> rows = changes.getResults();
+		
+		for (Row row : rows) {
+			List<ChangesResult.Row.Rev> revs = row.getChanges();
+			String docId = row.getId();
+			JsonObject doc = row.getDoc();
+			assertNotNull(doc);
+		}
+		
+		assertThat(rows.size(), is(1));
+	}
+
+	@Test
+	public void changes_continuousFeed() {
+		dbClient.save(new Foo()); 
+
 		CouchDbInfo dbInfo = dbClient.context().info();
 		String since = dbInfo.getUpdateSeq();
-		
-		// feed type continuous
+
 		Changes changes = dbClient.changes()
 				.includeDocs(true)
 				.since(since)
 				.heartBeat(30000)
 				.continuousChanges();
-		
-		Response resp = dbClient.save(new Foo(generateUUID(), "title", 1));
-		
+
+		Response response = dbClient.save(new Foo());
+
 		while (changes.hasNext()) {
 			ChangesResult.Row feed = changes.next();
 			String docId = feed.getId();
-			assertEquals(resp.getId(), docId);
+			assertEquals(response.getId(), docId);
 			changes.stop();
 		}
 	}
 	
 	// util
-	
-	private static String generateUUID() {
+
+	private static String generateUUID() { 
 		return UUID.randomUUID().toString().replace("-", "");
 	}
 }
-

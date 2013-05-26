@@ -18,8 +18,9 @@ package org.lightcouch;
 
 /**
  * Represents configuration properties for connecting to CouchDB.
- *
+ * 
  * @author Ahmed Yehia
+ * @author Daan van Berkel
  */
 public class CouchDbProperties {
 
@@ -43,9 +44,8 @@ public class CouchDbProperties {
 		// default constructor
 	}
 
-	public CouchDbProperties(String dbName, boolean createDbIfNotExist,
-			String protocol, String host, int port, String username,
-			String password) {
+	public CouchDbProperties(String dbName, boolean createDbIfNotExist, String protocol,
+			String host, int port, String username, String password) {
 		this.dbName = dbName;
 		this.createDbIfNotExist = createDbIfNotExist;
 		this.protocol = protocol;
@@ -167,83 +167,4 @@ public class CouchDbProperties {
 		setPassword("");
 		setPassword(null);
 	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + connectionTimeout;
-		result = prime * result + (createDbIfNotExist ? 1231 : 1237);
-		result = prime * result + ((dbName == null) ? 0 : dbName.hashCode());
-		result = prime * result + ((host == null) ? 0 : host.hashCode());
-		result = prime * result + maxConnections;
-		result = prime * result
-				+ ((password == null) ? 0 : password.hashCode());
-		result = prime * result + port;
-		result = prime * result
-				+ ((protocol == null) ? 0 : protocol.hashCode());
-		result = prime * result
-				+ ((proxyHost == null) ? 0 : proxyHost.hashCode());
-		result = prime * result + proxyPort;
-		result = prime * result + socketTimeout;
-		result = prime * result
-				+ ((username == null) ? 0 : username.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		CouchDbProperties other = (CouchDbProperties) obj;
-		if (connectionTimeout != other.connectionTimeout)
-			return false;
-		if (createDbIfNotExist != other.createDbIfNotExist)
-			return false;
-		if (dbName == null) {
-			if (other.dbName != null)
-				return false;
-		} else if (!dbName.equals(other.dbName))
-			return false;
-		if (host == null) {
-			if (other.host != null)
-				return false;
-		} else if (!host.equals(other.host))
-			return false;
-		if (maxConnections != other.maxConnections)
-			return false;
-		if (password == null) {
-			if (other.password != null)
-				return false;
-		} else if (!password.equals(other.password))
-			return false;
-		if (port != other.port)
-			return false;
-		if (protocol == null) {
-			if (other.protocol != null)
-				return false;
-		} else if (!protocol.equals(other.protocol))
-			return false;
-		if (proxyHost == null) {
-			if (other.proxyHost != null)
-				return false;
-		} else if (!proxyHost.equals(other.proxyHost))
-			return false;
-		if (proxyPort != other.proxyPort)
-			return false;
-		if (socketTimeout != other.socketTimeout)
-			return false;
-		if (username == null) {
-			if (other.username != null)
-				return false;
-		} else if (!username.equals(other.username))
-			return false;
-		return true;
-	}
-
-
 }

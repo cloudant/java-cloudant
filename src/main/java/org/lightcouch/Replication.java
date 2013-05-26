@@ -16,11 +16,15 @@
 
 package org.lightcouch;
 
-import static org.lightcouch.CouchDbUtil.*;
+import static org.lightcouch.CouchDbUtil.assertNotEmpty;
+import static org.lightcouch.CouchDbUtil.close;
 import static org.lightcouch.URIBuilder.builder;
 
 import java.net.URI;
+import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 
 import com.google.gson.JsonObject;
@@ -44,12 +48,14 @@ import com.google.gson.JsonObject;
  */
 public class Replication {
 
+	static final Log log = LogFactory.getLog(Replication.class);
+	
 	private String source;
 	private String target;
 	private Boolean cancel;
 	private Boolean continuous;
 	private String filter;
-	private String queryParams; 
+	private JsonObject queryParams; 
 	private String[] docIds;      
 	private String proxy;       
 	private Boolean createTarget;
@@ -77,7 +83,9 @@ public class Replication {
 		HttpResponse response = null;
 		try {
 			JsonObject json = createJson();
-			
+			if(log.isDebugEnabled()) {
+				log.debug(json);
+			}
 			URI uri = builder(dbc.getBaseUri()).path("_replicate").build();
 			response = dbc.post(uri, json.toString());
 			return dbc.deserialize(dbc.getStream(response), ReplicationResult.class);
@@ -109,7 +117,12 @@ public class Replication {
 	}
 
 	public Replication queryParams(String queryParams) {
-		this.queryParams = queryParams;
+		this.queryParams = dbc.getGson().fromJson(queryParams, JsonObject.class);
+		return this;
+	}
+	
+	public Replication queryParams(Map<String, Object> queryParams) {
+		this.queryParams = dbc.getGson().toJsonTree(queryParams).getAsJsonObject();
 		return this;
 	}
 
@@ -158,11 +171,12 @@ public class Replication {
 		addProperty(json, "cancel", cancel);
 		addProperty(json, "continuous", continuous);
 		addProperty(json, "filter", filter);
-		addProperty(json, "query_params", queryParams);
 		
-		if(docIds != null) {
+		if(queryParams != null) 
+			json.add("query_params", queryParams);
+		if(docIds != null) 
 			json.add("doc_ids", dbc.getGson().toJsonTree(docIds, String[].class));
-		}
+		
 		addProperty(json, "proxy", proxy);
 		addProperty(json, "since_seq", sinceSeq);
 		addProperty(json, "create_target", createTarget);
