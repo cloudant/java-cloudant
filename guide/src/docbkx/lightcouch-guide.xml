@@ -198,23 +198,17 @@ CouchDbClient dbClient3 = new CouchDbClient(properties);
         <programlisting><![CDATA[ 
 dbClient.shutdown();
         ]]></programlisting>
-        
-        <section id="spring">
-            <title>Spring DI</title>
-            <programlisting><![CDATA[  
-<bean id="dbClient" class="org.lightcouch.CouchDbClient" init-method="syncDesignDocsWithDb" destroy-method="shutdown"/> 
-<bean id="dbClient2" class="org.lightcouch.CouchDbClient" init-method="syncDesignDocsWithDb" destroy-method="shutdown"> 
-  <constructor-arg value="couchdb-2.properties" /> 
-</bean> 
+        <para>
+        Example use in Spring application.
+        </para>
+        <programlisting><![CDATA[  
+<bean id="dbClient" class="org.lightcouch.CouchDbClient" 
+        init-method="syncDesignDocsWithDb" destroy-method="shutdown"/> 
             ]]></programlisting>
-            <para>
-            Note, the example synchronize Design documents with the databse, after a client is created.
-            </para>            
             <programlisting><![CDATA[ 
 @Autowired 
 private CouchDbClient dbClient;
-            ]]></programlisting>
-        </section> <!-- /spring -->
+            ]]></programlisting>        
         </section> <!-- /configure-and-use -->
 
 	<section id="docs-api">
@@ -769,6 +763,8 @@ dbClient.context().compact();
 dbClient.context().ensureFullCommit(); 
 
 dbClient.context().createDB("new-db");
+
+List<String> uuids = dbClient.context().uuids(10);
 		]]></programlisting>
 		<section id="replication">
 			<title>Replication</title>
