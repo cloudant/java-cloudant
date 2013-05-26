@@ -321,8 +321,10 @@ in.close(); // close stream
 
 JsonObject json = dbClient.find(JsonObject.class, "doc-id");
 
+
 String baseURI = dbClient.getBaseUri().toString();
 String dbURI = dbClient.getDBUri().toString();
+
 String uri = baseURI + "_stats";
 JsonObject stats = dbClient.findAny(JsonObject.class, uri);
 				]]></programlisting>
@@ -496,20 +498,20 @@ log4j.logger.org.apache.http=ERROR
 		<programlisting><![CDATA[ 
 // List<T>
 List<Foo> list = dbClient.view("example/foo")
-.includeDocs(true)
-.startKey("start-key")
-.endKey("end-key")
-.limit(10)
-.query(Foo.class);
+  .includeDocs(true)
+  .startKey("start-key")
+  .endKey("end-key")
+  .limit(10)
+  .query(Foo.class);
 
 // primitive types
 int count = dbClient.view("example/by_tag").key("couchdb").queryForInt(); 
 
 // View entries (keys/values), with Documents 
 View view = dbClient.view("example/by_date")
-.key(2011, 10, 15) // complex key as: values, or array
-.reduce(false) 
-.includeDocs(true); 
+  .key(2011, 10, 15) // complex key as: values, or array
+  .reduce(false) 
+  .includeDocs(true); 
 
 ViewResult<int[], String, Foo> entries = 
              view.queryView(int[].class, String.class, Foo.class); 
@@ -529,11 +531,11 @@ List<JsonObject> allDocs = dbClient.view("_all_docs").query(JsonObject.class);
 
 // _temp_view
 List<Foo> list = dbClient.view("_temp_view")
-.tempView("temp_1")
+  .tempView("temp_1")
 // .tempView(mapRedObj) 
-.includeDocs(true)
-.reduce(false)
-.query(Foo.class);
+  .includeDocs(true)
+  .reduce(false)
+  .query(Foo.class);
         ]]></programlisting>
         <para>
         Temp views directory structure.
@@ -562,13 +564,15 @@ temp-views
 			<programlisting><![CDATA[ 	
 // Servlet 
 
-public void doGet(HttpServletRequest request, HttpServletResponse response) { 
+public void doGet(HttpServletRequest request, HttpServletResponse r) { 
 
 String param = request.getParameter("param"); 
 int resultsPerPage = 15;
 
 // null param gets the first page
-Page<Foo> page = dbClient.view("example/foo").reduce(false).queryPage(resultsPerPage, param, Foo.class); 
+Page<Foo> page = dbClient.view("example/foo")
+  .reduce(false)
+  .queryPage(resultsPerPage, param, Foo.class); 
 
 request.setAttribute("page", page);
 
@@ -619,14 +623,16 @@ List<Object> newDocs = new ArrayList<Object>();
 newDocs.add(new Foo());
 newDocs.add(new JsonObject());
 boolean allOrNothing = true;
+
 List<Response> bulkResponse = dbClient.bulk(newDocs, allOrNothing);
 
 // Fetch
 List<String> keys = Arrays.asList(new String[]{"doc-id-1", "doc-id-2"});
+
 List<Foo> docs = dbClient.view("_all_docs")
-.includeDocs(true)
-.keys(keys)
-.query(Foo.class);
+  .includeDocs(true)
+  .keys(keys)
+  .query(Foo.class);
 		]]></programlisting>
 	</section> <!-- /bulk-docs -->
 	
@@ -692,6 +698,26 @@ dbClient.design().synchronizeAllWithDb();
 		]]></programlisting>
 	</section> <!-- /design-docs -->
 	
+    <section id="db-api">
+        <title>Database API</title>
+        <para>
+        Database specific APIs is accessible under the context <literal>context()</literal>.
+        </para>
+        <programlisting><![CDATA[       
+CouchDbInfo dbInfo = dbClient.context().info();
+ 
+String version = dbClient.context().serverVersion(); 
+
+dbClient.context().compact();
+
+dbClient.context().ensureFullCommit(); 
+
+dbClient.context().createDB("new-db");
+
+List<String> uuids = dbClient.context().uuids(100);
+        ]]></programlisting>
+    </section> <!-- /db-api -->
+	
 	<section id="changes">
 		<title>Change Notifications</title>
 		<para>Change notifications API is accessible under the context 
@@ -714,8 +740,8 @@ ChangesResult changes = dbClient.changes()
 List<ChangesResult.Row> rows = changes.getResults();
 
 for (ChangesResult.Row row : rows) {
- String docId = row.getId()
- JsonObject doc = row.getDoc();
+  String docId = row.getId()
+  JsonObject doc = row.getDoc();
 }
 
 // feed type continuous
@@ -747,78 +773,58 @@ String query  = "field=title&value=new value";
 String output = dbClient.invokeUpdateHandler("example_design/example_update", "doc-id", query);
         ]]></programlisting>
     </section> <!-- /update-handlers -->	
-	
-	<section id="db-api">
-		<title>Database API</title>
-		<para>
-		Database specific APIs is accessible under the context <literal>context()</literal>.
-		</para>
-		<programlisting><![CDATA[ 		
-CouchDbInfo dbInfo = dbClient.context().info();
- 
-String version = dbClient.context().serverVersion(); 
-
-dbClient.context().compact();
-
-dbClient.context().ensureFullCommit(); 
-
-dbClient.context().createDB("new-db");
-
-List<String> uuids = dbClient.context().uuids(10);
-		]]></programlisting>
-		<section id="replication">
-			<title>Replication</title>
-			<para>
-			Replication is handled by two sets of API, one that replicate by POSTing to
-			<literal>_replicate</literal> URI, and the newer replicator database
-			(i.e <literal>_replicator</literal>) introduced with CouchDB <literal>1.1.0</literal> .
-			</para>
-			<programlisting><![CDATA[ 
-// query params for filtered replication						
+      <section id="replication">
+          <title>Replication</title>
+          <para>
+          Replication is handled by two sets of API, one that replicate by POSTing to
+          <literal>_replicate</literal> URI, and the newer replicator database
+          (i.e <literal>_replicator</literal>) introduced with CouchDB <literal>1.1.0</literal> .
+          </para>
+          <programlisting><![CDATA[ 
+// query params for filtered replication                        
 Map<String, Object> queryParams = new HashMap<>();
 queryParams.put("key1", "val");
 // String queryParams = "{\"key1\":\"val\"}";
-        			
-// normal replication			
+                    
+// normal replication           
 ReplicationResult result = dbClient.replication()
-.source("source-db")
-.target("http://user:secret@127.0.0.1:5984/target-db") 
-.createTarget(true)
-.sinceSeq(100) // as of CouchDB 1.2
+  .source("source-db")
+  .target("http://user:secret@127.0.0.1:5984/target-db") 
+  .createTarget(true)
+  .sinceSeq(100) // as of CouchDB 1.2
 // .cancel()   // cancel a replication
-.filter("example/filter1")
-.queryParams(queryParams);
-.trigger();
+  .filter("example/filter1")
+  .queryParams(queryParams);
+  .trigger();
 
 List<ReplicationHistory> histories = result.getHistories();
 
 // _replicator database 
 Replicator replicator = dbClient.replicator() 
-.source("source-db")
-.target("target-db")
-.continuous(true) 
-.createTarget(true) 
-.sinceSeq(100)                 // as of CouchDB 1.2
-.replicatorDB("replicator_2")  // optional, defaults to _replicator
-.replicatorDocId("doc-id")     // optional, defaults to UUID
-.filter("example/filter1")
-.queryParams(queryParams)
-.userCtxName("user")           // for delegated requests
-.userCtxRoles("admin", "manager");
+  .source("source-db")
+  .target("target-db")
+  .continuous(true) 
+  .createTarget(true) 
+  .sinceSeq(100)                 // as of CouchDB 1.2
+  .replicatorDB("replicator_2")  // optional, defaults to _replicator
+  .replicatorDocId("doc-id")     // optional, defaults to UUID
+  .filter("example/filter1")
+  .queryParams(queryParams)
+  .userCtxName("user")           // for delegated requests
+  .userCtxRoles("admin", "manager");
 
 Response response = replicator.save(); // triggers a replication
 
 ReplicatorDocument findDocument = dbClient.replicator()
-.replicatorDocId("doc-id")
-.find(); 
+  .replicatorDocId("doc-id")
+  .find(); 
 
 List<ReplicatorDocument> docs = dbClient.replicator().findAll(); 
 
 Response removeResponse = dbClient.replicator() 
-.replicatorDocId("doc-id")
-.replicatorDocRev("doc-rev")
-.remove(); // cancels an ongoing replication
-			]]></programlisting>
-		</section><!-- /replication -->
-	</section> <!-- /db-api -->
+  .replicatorDocId("doc-id")
+  .replicatorDocRev("doc-rev")
+  .remove(); // cancels an ongoing replication
+            ]]></programlisting>
+      </section><!-- /replication -->
 </article>
