@@ -22,7 +22,7 @@
    under the License.
  -->                                
 <article>
-	<title>LightCouch User Guide 0.0.6</title>
+	<title><ulink url="http://www.lightcouch.org">LightCouch</ulink> User Guide 0.0.6</title>
 	
 	<articleinfo>
 		<author>
@@ -75,8 +75,11 @@
 			<listitem>
 				<para>
 					<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.0.6.jar">
-						<citetitle>LightCouch 0.0.6</citetitle>
+						<citetitle>lightcouch-0.0.6.jar</citetitle>
 					</ulink>
+					 [<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.0.6.md5">
+                        <citetitle>md5</citetitle>
+                    </ulink>]
 				</para>
 			</listitem>
                   <listitem>
@@ -343,7 +346,7 @@ JsonObject stats = dbClient.findAny(JsonObject.class, uri);
 			<programlisting><![CDATA[ 
 Response response = dbClient.remove(object); 
 
-response = dbClient.remove("doc-id", "doc-rev");
+dbClient.remove("doc-id", "doc-rev");
             ]]></programlisting>
 		</section><!-- end delete documents -->
 		
@@ -401,8 +404,9 @@ dbClient.setGsonBuilder(gsonBuilder);
 		<para>
 		To retrieve the <literal>base64</literal> data of an attachment, include a parameter to the <literal>find()</literal>
 		</para>
-		<programlisting><![CDATA[     
-String data = Base64.encodeBase64String("text string".getBytes());
+		<programlisting><![CDATA[    
+byte[] bytes = "binary string".getBytes(); 
+String data = Base64.encodeBase64String(bytes);
  
 Attachment attachment = new Attachment();
 attachment.setData(data);
@@ -414,6 +418,7 @@ bar.addAttachment("bar.txt", attachment);
 dbClient.save(bar);
 
 bar = dbClient.find(Bar.class, "doc-id", new Params().attachments());
+
 String base64Data = bar.getAttachments().get("bar.txt").getData();
 	]]></programlisting>
 	</section><!-- end attachments inline -->
@@ -428,7 +433,7 @@ String base64Data = bar.getAttachments().get("bar.txt").getData();
 InputStream in =  // .. init stream
 
 // save under a new document, a generated UUID is assigned as id.
-dbClient.saveAttachment(in, "photo.png", "image/png");
+Response response = dbClient.saveAttachment(in, "photo.png", "image/png");
 
 // save to an existing document
 dbClient.saveAttachment(in, "file.pdf", "application/pdf", "doc-id", "doc-rev");
@@ -618,22 +623,24 @@ ${page.pageNumber}
 		Bulk documents API performs two operations: Modify &amp; Fetch for bulk documents.
 		</para>
 		<programlisting><![CDATA[ 
-// Modify
-List<Object> newDocs = new ArrayList<Object>();
+// insert/update docs
+List<Object> newDocs = new ArrayList<>();
 newDocs.add(new Foo());
 newDocs.add(new JsonObject());
+
 boolean allOrNothing = true;
 
 List<Response> bulkResponse = dbClient.bulk(newDocs, allOrNothing);
-
-// Fetch
+		]]></programlisting>
+		<programlisting><![CDATA[ 
+// fetch multiple documents
 List<String> keys = Arrays.asList(new String[]{"doc-id-1", "doc-id-2"});
 
 List<Foo> docs = dbClient.view("_all_docs")
   .includeDocs(true)
   .keys(keys)
   .query(Foo.class);
-		]]></programlisting>
+    ]]></programlisting>
 	</section> <!-- /bulk-docs -->
 	
 	<section id="design-docs">
@@ -690,7 +697,7 @@ DesignDocument designDoc = dbClient.design().getFromDesk("example");
 dbClient.design().synchronizeWithDb(designDoc); 
 
 // find from Db
-DesignDocument designDocFromDb = dbClient.design().getFromDb("_design/example"); 
+DesignDocument designDoc1 = dbClient.design().getFromDb("_design/example"); 
 
 // synchronize all
 dbClient.design().synchronizeAllWithDb();
@@ -755,6 +762,7 @@ Changes changes = dbClient.changes()
 // live access to continuous feeds
 while (changes.hasNext()) { 
   ChangesResult.Row feed = changes.next();
+  
   String docId = feed.getId();
   JsonObject doc = feed.getDoc();
 	
@@ -768,9 +776,9 @@ while (changes.hasNext()) {
         <para>Update handlers can be invoked by a client by calling <acronym>invokeUpdateHandler()</acronym>.
         </para>
         <programlisting><![CDATA[
-String query  = "field=title&value=new value";     
+String query = "field=title&value=new value";     
 
-String output = dbClient.invokeUpdateHandler("example_design/example_update", "doc-id", query);
+String output = dbClient.invokeUpdateHandler("example/update", "doc-id", query);
         ]]></programlisting>
     </section> <!-- /update-handlers -->	
       <section id="replication">
@@ -781,10 +789,10 @@ String output = dbClient.invokeUpdateHandler("example_design/example_update", "d
           (i.e <literal>_replicator</literal>) introduced with CouchDB <literal>1.1.0</literal> .
           </para>
           <programlisting><![CDATA[ 
-// query params for filtered replication                        
+// query params for filtered replication
+// String queryParams = "{\"key1\":\"val\"}";                        
 Map<String, Object> queryParams = new HashMap<>();
 queryParams.put("key1", "val");
-// String queryParams = "{\"key1\":\"val\"}";
                     
 // normal replication           
 ReplicationResult result = dbClient.replication()
@@ -792,7 +800,7 @@ ReplicationResult result = dbClient.replication()
   .target("http://user:secret@127.0.0.1:5984/target-db") 
   .createTarget(true)
   .sinceSeq(100) // as of CouchDB 1.2
-// .cancel()   // cancel a replication
+// .cancel()     // cancel a replication
   .filter("example/filter1")
   .queryParams(queryParams);
   .trigger();
@@ -813,7 +821,7 @@ Replicator replicator = dbClient.replicator()
   .userCtxName("user")           // for delegated requests
   .userCtxRoles("admin", "manager");
 
-Response response = replicator.save(); // triggers a replication
+replicator.save(); // triggers a replication
 
 ReplicatorDocument findDocument = dbClient.replicator()
   .replicatorDocId("doc-id")
@@ -821,7 +829,7 @@ ReplicatorDocument findDocument = dbClient.replicator()
 
 List<ReplicatorDocument> docs = dbClient.replicator().findAll(); 
 
-Response removeResponse = dbClient.replicator() 
+dbClient.replicator() 
   .replicatorDocId("doc-id")
   .replicatorDocRev("doc-rev")
   .remove(); // cancels an ongoing replication
