@@ -654,7 +654,7 @@ List<Foo> docs = dbClient.view("_all_docs")
 		Design Documents may be maintained on local <literal>.js</literal> files; saved in an application classpath.
 		</para>
 		<para>
-        An API is provides a kind of <literal>synchronization</literal> to copy from local files to the database.
+        An API provides a kind of <literal>synchronization</literal> to copy from local files to the database.
         <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbDesign.html">org.lightcouch.CouchDbDesign</ulink> 
         lists all the supported operations.
         </para>
