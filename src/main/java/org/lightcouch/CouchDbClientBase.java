@@ -102,7 +102,7 @@ abstract class CouchDbClientBase {
 	private CouchDbConfig config;
 	
 	private HttpHost host;
-	private BasicHttpContext context;
+	private AuthCache authCache;
 	
 	protected CouchDbClientBase() {
 		this(new CouchDbConfig());
@@ -265,13 +265,21 @@ abstract class CouchDbClientBase {
 	protected HttpResponse executeRequest(HttpRequestBase request) {
 		HttpResponse response = null;
 		try {
-			response = httpClient.execute(host, request, context);
+			response = httpClient.execute(host, request, getContext());
 		} catch (IOException e) {
 			request.abort();
 			log.error("Error executing request. " + e.getMessage());
 			throw new CouchDbException(e);
 		} 
 		return response;
+	}
+	
+	private HttpContext getContext() {
+		HttpContext context = new BasicHttpContext();
+		if (authCache != null) {
+			context.setAttribute(ClientContext.AUTH_CACHE, authCache);
+		}
+		return context;
 	}
 	
 	// Helpers
@@ -308,7 +316,6 @@ abstract class CouchDbClientBase {
 			PoolingClientConnectionManager ccm = new PoolingClientConnectionManager(schemeRegistry);
 			httpclient = new DefaultHttpClient(ccm);
 			host = new HttpHost(props.getHost(), props.getPort(), props.getProtocol());
-			context = new BasicHttpContext();
 			// Http params
 			httpclient.getParams().setParameter(CoreProtocolPNames.HTTP_CONTENT_CHARSET, "UTF-8");
 			httpclient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, props.getSocketTimeout());
@@ -328,10 +335,9 @@ abstract class CouchDbClientBase {
 						new AuthScope(props.getHost(), props.getPort()),
 						new UsernamePasswordCredentials(props.getUsername(), props.getPassword()));
 				props.clearPassword();
-				AuthCache authCache = new BasicAuthCache();
+				authCache = new BasicAuthCache();
 				BasicScheme basicAuth = new BasicScheme();
 				authCache.put(host, basicAuth);
-				context.setAttribute(ClientContext.AUTH_CACHE, authCache);
 			}
 			// request interceptor
 			httpclient.addRequestInterceptor(new HttpRequestInterceptor() {
