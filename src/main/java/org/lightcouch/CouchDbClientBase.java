@@ -40,6 +40,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
+import org.apache.http.RequestLine;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpResponseInterceptor;
@@ -94,13 +95,13 @@ import com.google.gson.reflect.TypeToken;
 abstract class CouchDbClientBase {
 
 	static final Log log = LogFactory.getLog(CouchDbClientBase.class);
-	
+
 	private HttpClient httpClient;
 	private URI baseURI;
 	private URI dbURI;
 	private Gson gson; 
 	private CouchDbConfig config;
-	
+
 	private HttpHost host;
 	private AuthCache authCache;
 	
@@ -344,8 +345,10 @@ abstract class CouchDbClientBase {
                 public void process(
                         final HttpRequest request,
                         final HttpContext context) throws IOException {
-                	if(log.isInfoEnabled()) 
-        				log.info(">> " + request.getRequestLine());
+                    if (log.isInfoEnabled()) {
+                        RequestLine requestLine = request.getRequestLine();
+                        log.info(">> " + requestLine.getMethod() + " " + URI.create(requestLine.getUri()).getPath());
+                    }
                 }
             });
 			// response interceptor
