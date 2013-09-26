@@ -24,13 +24,6 @@
 <article>
 	<title><ulink url="http://www.lightcouch.org">LightCouch</ulink> User Guide 0.0.6</title>
 	
-	<articleinfo>
-		<author>
-			<firstname>Author: Ahmed Yehia</firstname>
-		</author>
-		<date>Oct 24, 2012</date>
-	</articleinfo>
-	
 	<section id="overview">
 		<title>Overview</title>
 		<para> 
@@ -778,7 +771,24 @@ while (changes.hasNext()) {
         <programlisting><![CDATA[
 String query = "field=title&value=new value";     
 
-String output = dbClient.invokeUpdateHandler("example/update", "doc-id", query);
+String output = dbClient.invokeUpdateHandler("example/update1", "doc-id", query);
+        ]]></programlisting>
+        <para>
+        Example Update Function:
+        </para>
+        <programlisting><![CDATA[
+design-docs
+    |- example
+        |- updates    
+            |- update1.js 
+                   
+function(doc, req) {
+	var field = req.query.field;
+	var value = req.query.value;
+	var message = 'set '+field+' to '+value;
+	doc[field] = value;
+	return [doc, message];
+}
         ]]></programlisting>
     </section> <!-- /update-handlers -->	
       <section id="replication">
