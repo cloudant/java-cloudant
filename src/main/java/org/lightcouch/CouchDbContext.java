@@ -73,17 +73,17 @@ public class CouchDbContext {
 	 */
 	public void createDB(String dbName) {
 		assertNotEmpty(dbName, "Database name");
-		HttpResponse headresp = null;
+		InputStream getresp = null;
 		HttpResponse putresp = null;
 		URI uri = builder(dbc.getBaseUri()).path(dbName).build();
 		try {
-			headresp = dbc.head(uri);
+			getresp = dbc.get(uri);
 		} catch (NoDocumentException e) { // db doesn't exist
 			HttpPut put = new HttpPut(uri);
 			putresp = dbc.executeRequest(put);
 			log.info(String.format("Database: '%s' is created.", dbName));
 		} finally {
-			close(headresp);
+			close(getresp);
 			close(putresp);
 		}
 	}
