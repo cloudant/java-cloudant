@@ -103,7 +103,6 @@ abstract class CouchDbClientBase {
 	private CouchDbConfig config;
 
 	private HttpHost host;
-	private AuthCache authCache;
 	
 	protected CouchDbClientBase() {
 		this(new CouchDbConfig());
@@ -275,14 +274,6 @@ abstract class CouchDbClientBase {
 		return response;
 	}
 	
-	private HttpContext getContext() {
-		HttpContext context = new BasicHttpContext();
-		if (authCache != null) {
-			context.setAttribute(ClientContext.AUTH_CACHE, authCache);
-		}
-		return context;
-	}
-	
 	// Helpers
 	
 	/**
@@ -336,9 +327,6 @@ abstract class CouchDbClientBase {
 						new AuthScope(props.getHost(), props.getPort()),
 						new UsernamePasswordCredentials(props.getUsername(), props.getPassword()));
 				props.clearPassword();
-				authCache = new BasicAuthCache();
-				BasicScheme basicAuth = new BasicScheme();
-				authCache.put(host, basicAuth);
 			}
 			// request interceptor
 			httpclient.addRequestInterceptor(new HttpRequestInterceptor() {
@@ -366,6 +354,15 @@ abstract class CouchDbClientBase {
 			throw new IllegalStateException(e);
 		}
 		return httpclient;
+	}
+	
+	private HttpContext getContext() {
+		AuthCache authCache = new BasicAuthCache();
+		authCache.put(host, new BasicScheme());
+		
+		HttpContext context = new BasicHttpContext();
+	    context.setAttribute(ClientContext.AUTH_CACHE, authCache);
+		return context;
 	}
 	
 	/**
