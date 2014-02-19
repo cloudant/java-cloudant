@@ -29,6 +29,7 @@ public class CouchDbProperties {
 	private boolean createDbIfNotExist;
 	private String protocol;
 	private String host;
+	private String path;
 	private int port;
 	private String username;
 	private String password;
@@ -69,6 +70,10 @@ public class CouchDbProperties {
 
 	public String getHost() {
 		return host;
+	}
+	
+	public String getPath() {
+		return path;
 	}
 
 	public int getPort() {
@@ -122,6 +127,11 @@ public class CouchDbProperties {
 		this.host = host;
 		return this;
 	}
+
+	public CouchDbProperties setPath(String path) {
+        	this.path = path;
+        	return this;
+    	}
 
 	public CouchDbProperties setPort(int port) {
 		this.port = port;
