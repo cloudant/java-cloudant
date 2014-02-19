@@ -113,8 +113,10 @@ abstract class CouchDbClientBase {
 		this.httpClient = createHttpClient(props);
 		this.gson = initGson(new GsonBuilder());
 		this.config = config;
-		baseURI = builder().scheme(props.getProtocol()).host(props.getHost()).port(props.getPort()).path("/").build();
-		dbURI   = builder(baseURI).path(props.getDbName()).path("/").build();
+		
+		String path = props.getPath() != null ? props.getPath() : "";
+        	this.baseURI = builder().scheme(props.getProtocol()).host(props.getHost()).port(props.getPort()).path("/").path(path).build();
+		this.dbURI   = builder(baseURI).path(props.getDbName()).path("/").build();
 	}
 	
 	// ---------------------------------------------- Getters
