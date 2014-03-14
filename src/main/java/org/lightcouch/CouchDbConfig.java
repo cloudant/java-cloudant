@@ -77,6 +77,7 @@ class CouchDbConfig {
 			dbProperties.setPassword(getProperty("couchdb.password", true));
 			
 			// optional
+			dbProperties.setPath(getProperty("couchdb.path", false));
 			dbProperties.setSocketTimeout(getPropertyAsInt("couchdb.http.socket.timeout", false));
 			dbProperties.setConnectionTimeout(getPropertyAsInt("couchdb.http.connection.timeout", false));
 			dbProperties.setMaxConnections(getPropertyAsInt("couchdb.max.connections", false));
