@@ -527,6 +527,10 @@ public class CouchDbClientTest {
 
 	@Test
 	public void replication_filteredWithQueryParams() {
+		Foo foo = new Foo();
+		foo.setTitle("somekey1");
+		dbClient.save(foo);
+		
     	Map<String, Object> queryParams = new HashMap<String, Object>();
     	queryParams.put("somekey1", "value 1");
     	
