@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
+ * Copyright (C) 2011 lightcouch.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,12 +36,15 @@ import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
 /**
- * Provides access to database APIs.
- * @author Ahmed Yehia
+ * Contains database server specific APIs.
+ * 
+ * @see CouchDbClient#context() 
+ * @since 0.0.2
+ * @author ahmed
  */
 public class CouchDbContext {
 
-	private static final Log log = LogFactory.getLog(CouchDbContext.class);
+	private static final Log log = LogFactory.getLog(CouchDbClient.class);
 
 	private CouchDbClient dbc;
 
@@ -56,19 +59,19 @@ public class CouchDbContext {
 	}
 
 	/**
-	 * Deletes a database.
-	 * @param dbName The database name to delete
-	 * @param confirm For double checking, the text "delete database" must be supplied.
+	 * Requests CouchDB deletes a database.
+	 * @param dbName The database name
+	 * @param confirm A confirmation string with the value: <tt>delete database</tt>
 	 */
 	public void deleteDB(String dbName, String confirm) {
-		assertNotEmpty(dbName, "Database name");
+		assertNotEmpty(dbName, "dbName");
 		if(!"delete database".equals(confirm))
-			throw new IllegalArgumentException("Cannot delete database without confirmation!");
+			throw new IllegalArgumentException("Invalid confirm!");
 		dbc.delete(builder(dbc.getBaseUri()).path(dbName).build());
 	}
 
 	/**
-	 * Creates a new Database, if it does not already exist.
+	 * Requests CouchDB creates a new database; if one doesn't exist.
 	 * @param dbName The Database name
 	 */
 	public void createDB(String dbName) {
