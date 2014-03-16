@@ -1,12 +1,13 @@
 CouchDB Java API
 ================
 
-* Homepage: <http://www.lightcouch.org/> 
+A Java _client_ for [CouchDB](http://couchdb.apache.org/) database.
 
-LightCouch aims at providing a simple and easy-to-use APIs for accessing CouchDB databases.
+* Homepage: <http://lightcouch.org/> 
 
-It offers a powerful and lightweight persistence interface with minimal code base and dependency.
 
-Getting Started guide is available on the website at: <http://www.lightcouch.org/getstarted.html>
+## License
 
-API documentation and User Guide: <http://www.lightcouch.org/docs.html>
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
