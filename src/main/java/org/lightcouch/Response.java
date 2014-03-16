@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
+ * Copyright (C) 2011 lightcouch.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,22 +17,31 @@
 package org.lightcouch;
 
 /**
- * Represents CouchDB response as a result of a request.
- * @author Ahmed Yehia
- *
+ * Contains the response returned from CouchDB.
+ * 
+ * <p>The response typically contains an <tt>id</tt> and <tt>rev</tt> values,
+ * additional data might be returned such as <tt>error</tt> from Bulk request.
+ * 
+ * @since 0.0.2
+ * @author ahmed
  */
 public class Response {
 	private String id;
 	private String rev;
 	
-	// related to bulk response only
 	private String error;
 	private String reason;
 
+	/**
+	 * @return the <tt>id</tt> of the response
+	 */
 	public String getId() {
 		return id;
 	}
 
+	/**
+	 * @return the <tt>rev</tt> of the response
+	 */
 	public String getRev() {
 		return rev;
 	}
@@ -40,10 +49,14 @@ public class Response {
 	public String getError() {
 		return error;
 	}
+	
 	public String getReason() {
 		return reason;
 	}
 
+	/**
+	 * @return <tt>id</tt> and <tt>rev</tt> concatenated.
+	 */
 	@Override
 	public String toString() {
 		return "Response [id=" + id + ", rev=" + rev + "]";
