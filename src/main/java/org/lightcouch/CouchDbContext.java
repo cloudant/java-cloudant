@@ -46,9 +46,9 @@ public class CouchDbContext {
 
 	private static final Log log = LogFactory.getLog(CouchDbClient.class);
 
-	private CouchDbClient dbc;
+	private CouchDbClientBase dbc;
 
-	CouchDbContext(CouchDbClient dbc) {
+	CouchDbContext(CouchDbClientBase dbc) {
 		this.dbc = dbc;
 		CouchDbProperties props = dbc.getConfig().getProperties();
 		if (props.isCreateDbIfNotExist()) {

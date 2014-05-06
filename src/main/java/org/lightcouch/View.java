@@ -101,14 +101,14 @@ public class View {
 	private Boolean inclusiveEnd;
 	private Boolean updateSeq;
 	
-	private CouchDbClient dbc;
+	private CouchDbClientBase dbc;
 	private Gson gson;
 	private URIBuilder uriBuilder;
 	
 	private String allDocsKeys; // bulk docs
 	private MapReduce tempView; // temp view
 	
-	View(CouchDbClient dbc, String viewId) {
+	View(CouchDbClientBase dbc, String viewId) {
 		assertNotEmpty(viewId, "View id");
 		this.dbc = dbc;
 		this.gson = dbc.getGson();

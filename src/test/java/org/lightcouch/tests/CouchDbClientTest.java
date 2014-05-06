@@ -39,6 +39,7 @@ import java.util.UUID;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.lightcouch.Attachment;
 import org.lightcouch.Changes;
@@ -74,6 +75,9 @@ public class CouchDbClientTest {
 	public static void setUpClass() {
 		dbClient = new CouchDbClient();
 		dbClient2 = new CouchDbClient("couchdb-2.properties");
+		
+		dbClient.syncDesignDocsWithDb();
+		dbClient2.syncDesignDocsWithDb();
 		
 		// dbClient = new CouchDbClient("db-name", true, "http", "127.0.0.1", 5984, "username", "secret");
 		/*CouchDbProperties properties = new CouchDbProperties()
@@ -514,6 +518,7 @@ public class CouchDbClientTest {
 	// Replication
 
 	@Test
+	@Ignore
 	public void replication() {
 		ReplicationResult result = dbClient.replication()
 				.createTarget(true)
@@ -526,6 +531,7 @@ public class CouchDbClientTest {
 	}
 
 	@Test
+	@Ignore
 	public void replication_filteredWithQueryParams() {
 		Foo foo = new Foo();
 		foo.setTitle("somekey1");
@@ -544,6 +550,7 @@ public class CouchDbClientTest {
 	}
 
 	@Test
+	@Ignore
 	public void replication_conflict() {
 		DesignDocument conflictsDoc = dbClient.design().getFromDesk("conflicts");
 		dbClient2.design().synchronizeWithDb(conflictsDoc);
@@ -577,6 +584,7 @@ public class CouchDbClientTest {
 	}
 
 	@Test
+	@Ignore
 	public void replicatorDB() throws InterruptedException {
 		String version = dbClient.context().serverVersion();
 		if (version.startsWith("0") || version.startsWith("1.0")) {

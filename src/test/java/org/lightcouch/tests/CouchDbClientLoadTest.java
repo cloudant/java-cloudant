@@ -21,6 +21,7 @@ import java.util.concurrent.Executors;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.lightcouch.CouchDbClient;
 
@@ -33,6 +34,7 @@ import org.lightcouch.CouchDbClient;
  * @author Ahmed Yehia
  *
  */
+@Ignore
 public class CouchDbClientLoadTest {
 	
 	private static CouchDbClient dbClient;

@@ -64,11 +64,11 @@ public class Changes {
 	private Row nextRow;
 	private boolean stop;
 	
-	private CouchDbClient dbc;
+	private CouchDbClientBase dbc;
 	private Gson gson;
 	private URIBuilder uriBuilder;
 	
-	Changes(CouchDbClient dbc) {
+	Changes(CouchDbClientBase dbc) {
 		this.dbc = dbc;
 		this.gson = dbc.getGson();
 		this.uriBuilder = URIBuilder.builder(dbc.getDBUri()).path("_changes");

@@ -17,7 +17,12 @@
 package org.lightcouch;
 
 import static java.lang.String.format;
-import static org.lightcouch.CouchDbUtil.*;
+import static org.lightcouch.CouchDbUtil.assertNotEmpty;
+import static org.lightcouch.CouchDbUtil.assertNull;
+import static org.lightcouch.CouchDbUtil.close;
+import static org.lightcouch.CouchDbUtil.generateUUID;
+import static org.lightcouch.CouchDbUtil.getElement;
+import static org.lightcouch.CouchDbUtil.streamToString;
 import static org.lightcouch.URIBuilder.builder;
 
 import java.io.IOException;
@@ -27,27 +32,13 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.List;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.RequestLine;
-import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.HttpStatus;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
@@ -56,22 +47,8 @@ import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.protocol.ClientContext;
-import org.apache.http.conn.params.ConnRoutePNames;
-import org.apache.http.conn.scheme.PlainSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.scheme.SchemeSocketFactory;
-import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
-import org.apache.http.params.CoreConnectionPNames;
-import org.apache.http.params.CoreProtocolPNames;
-import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
@@ -90,19 +67,21 @@ import com.google.gson.reflect.TypeToken;
  * Base client class to be extended by a concrete subclass, responsible for establishing
  * a connection with the database and the definition of the basic HTTP request handling and validation. 
  * @see CouchDbClient
+ * @see CouchDbClientAndroid
  * @author Ahmed Yehia
  */
-abstract class CouchDbClientBase {
+public abstract class CouchDbClientBase {
 
 	static final Log log = LogFactory.getLog(CouchDbClientBase.class);
 
-	private HttpClient httpClient;
+	protected HttpClient httpClient;
+	protected HttpHost host;
 	private URI baseURI;
 	private URI dbURI;
 	private Gson gson; 
 	private CouchDbConfig config;
-
-	private HttpHost host;
+	private CouchDbContext context;
+	private CouchDbDesign design;
 	
 	protected CouchDbClientBase() {
 		this(new CouchDbConfig());
@@ -112,35 +91,357 @@ abstract class CouchDbClientBase {
 		CouchDbProperties props = config.getProperties();
 		this.httpClient = createHttpClient(props);
 		this.gson = initGson(new GsonBuilder());
+		this.host = new HttpHost(props.getHost(), props.getPort(), props.getProtocol());
 		this.config = config;
 		
 		String path = props.getPath() != null ? props.getPath() : "";
-        	this.baseURI = builder().scheme(props.getProtocol()).host(props.getHost()).port(props.getPort()).path("/").path(path).build();
+        this.baseURI = builder().scheme(props.getProtocol()).host(props.getHost()).port(props.getPort()).path("/").path(path).build();
 		this.dbURI   = builder(baseURI).path(props.getDbName()).path("/").build();
+		
+		this.context = new CouchDbContext(this); 
+		this.design = new CouchDbDesign(this);
 	}
 	
-	// ---------------------------------------------- Getters
+	/**
+	 * @return {@link HttpClient} instance for HTTP request execution.
+	 */
+	protected abstract HttpClient createHttpClient(CouchDbProperties properties);
+	
+	/**
+	 * @return {@link HttpContext} instance for HTTP request execution.
+	 */
+	protected abstract HttpContext createContext();
+
+	/**
+	 * Shuts down the connection manager used by this client instance.
+	 */
+	protected abstract void shutdown();
+	
+	// Public API
+	
+	/**
+	 * Provides access to the database APIs.
+	 */
+	public CouchDbContext context() {
+		return context;
+	}
+	
+	/**
+	 * Provides access to the database design documents API.
+	 */
+	public CouchDbDesign design() {
+		return design;
+	}
+	
+	/**
+	 * Provides access to the View APIs.
+	 */
+	public View view(String viewId) {
+		return new View(this, viewId);
+	}
+
+	/**
+	 * Provides access to the replication APIs.
+	 */
+	public Replication replication() {
+		return new Replication(this);
+	}
+	
+	/**
+	 * Provides access to the replicator database APIs.
+	 */
+	public Replicator replicator() {
+		return new Replicator(this);
+	}
+	
+	/**
+	 * Provides access to the Change Notifications API.
+	 */
+	public Changes changes() {
+		return new Changes(this);
+	}
+	
+	/**
+	 * Finds an Object of the specified type.
+	 * @param <T> Object type.
+	 * @param classType The class of type T.
+	 * @param id The document id.
+	 * @return An object of type T.
+	 * @throws NoDocumentException If the document is not found in the database.
+	 */
+	public <T> T find(Class<T> classType, String id) {
+		assertNotEmpty(classType, "Class");
+		assertNotEmpty(id, "id");
+		return get(builder(getDBUri()).path(id).build(), classType);
+	}
+	
+	/**
+	 * Finds an Object of the specified type.
+	 * @param <T> Object type.
+	 * @param classType The class of type T.
+	 * @param id The document id.
+	 * @param params Extra parameters to append.
+	 * @return An object of type T.
+	 * @throws NoDocumentException If the document is not found in the database.
+	 */
+	public <T> T find(Class<T> classType, String id, Params params) {
+		assertNotEmpty(classType, "Class");
+		assertNotEmpty(id, "id");
+		return get(builder(getDBUri()).path(id).query(params).build(), classType);
+	}
+	
+	/**
+	 * Finds an Object of the specified type.
+	 * @param <T> Object type.
+	 * @param classType The class of type T.
+	 * @param id The document id to get.
+	 * @param rev The document revision.
+	 * @return An object of type T.
+	 * @throws NoDocumentException If the document is not found in the database.
+	 */
+	public <T> T find(Class<T> classType, String id, String rev) {
+		assertNotEmpty(classType, "Class");
+		assertNotEmpty(id, "id");
+		assertNotEmpty(id, "rev");
+		URI uri = builder(getDBUri()).path(id).query("rev", rev).build();
+		return get(uri, classType);
+	}
+	
+	/**
+	 * A General purpose find, that gives more control over the query.
+	 * <p>Unlike other finders, this method expects a fully formated and encoded URI to be supplied.
+	 * @param classType The class of type T.
+	 * @param uri The URI.
+	 * @return An object of type T.
+	 */
+	public <T> T findAny(Class<T> classType, String uri) {
+		assertNotEmpty(classType, "Class");
+		assertNotEmpty(uri, "uri");
+		return get(URI.create(uri), classType);
+	}
+	
+	/**
+	 * <p>Finds a document and returns the result as an {@link InputStream}.</p>
+	 * The stream should be properly closed after usage, as to avoid connection leaks.
+	 * @param id The document id.
+	 * @return The result of the request as an {@link InputStream}
+	 * @throws NoDocumentException If the document is not found in the database.
+	 * @see #find(String, String)
+	 */
+	public InputStream find(String id) {
+		assertNotEmpty(id, "id");
+		return get(builder(getDBUri()).path(id).build());
+	}
+	
+	/**
+	 * <p>Finds a document given an id and revision, returns the result as {@link InputStream}.</p>
+	 * The stream should be properly closed after usage, as to avoid connection leaks.
+	 * @param id The document id.
+	 * @param rev The document revision.
+	 * @return The result of the request as an {@link InputStream}
+	 * @throws NoDocumentException If the document is not found in the database.
+	 */
+	public InputStream find(String id, String rev) {
+		assertNotEmpty(id, "id");
+		assertNotEmpty(rev, "rev");
+		return get(builder(getDBUri()).path(id).query("rev", rev).build());
+	}
+	
+	/**
+	 * Checks if the database contains a document given an id.
+	 * @param id The document id.
+	 * @return true If the document is found, false otherwise.
+	 */
+	public boolean contains(String id) { 
+		assertNotEmpty(id, "id");
+		HttpResponse response = null;
+		try {
+			response = head(builder(getDBUri()).path(id).build());
+		} catch (NoDocumentException e) {
+			return false;
+		} finally {
+			close(response);
+		}
+		return true;
+	}
+	
+	/**
+	 * Saves an object in the database.
+	 * @param object The object to save
+	 * @throws DocumentConflictException If a conflict is detected during the save.
+	 * @return {@link Response}
+	 */
+	public Response save(Object object) {
+		return put(getDBUri(), object, true);
+	}
+	
+	/**
+	 * Saves the given object in a batch request.
+	 * @param object The object to save.
+	 */
+	public void batch(Object object) {
+		assertNotEmpty(object, "object");
+		HttpResponse response = null;
+		try { 
+			URI uri = builder(getDBUri()).query("batch", "ok").build();
+			response = post(uri, getGson().toJson(object));
+		} finally {
+			close(response);
+		}
+	}
+	
+	/**
+	 * Performs a Bulk Documents request.
+	 * @param objects The {@link List} of objects.
+	 * @param allOrNothing Indicated whether the request has all-or-nothing semantics.
+	 * @return {@code List<Response>} Containing the resulted entries.
+	 */
+	public List<Response> bulk(List<?> objects, boolean allOrNothing) {
+		assertNotEmpty(objects, "objects");
+		HttpResponse response = null;
+		try { 
+			String allOrNothingVal = allOrNothing ? "\"all_or_nothing\": true, " : "";
+			URI uri = builder(getDBUri()).path("_bulk_docs").build();
+			String json = String.format("{%s%s%s}", allOrNothingVal, "\"docs\": ", getGson().toJson(objects));
+			response = post(uri, json);
+			return getResponseList(response);
+		} finally {
+			close(response);
+		}
+	}
+	
+	/**
+	 * <p>Saves an attachment under a new document with a generated UUID as the document id.
+	 * <p>To retrieve an attachment, see {@link #find(String)}.
+	 * @param instream The {@link InputStream} holding the binary data.
+	 * @param name The attachment name.
+	 * @param contentType The attachment "Content-Type".
+	 * @return {@link Response}
+	 */
+	public Response saveAttachment(InputStream instream, String name, String contentType) {
+		assertNotEmpty(instream, "InputStream");
+		assertNotEmpty(name, "name");
+		assertNotEmpty(contentType, "ContentType");
+		URI uri = builder(getDBUri()).path(generateUUID()).path("/").path(name).build();
+		return put(uri, instream, contentType);
+	}
+	
+	/**
+	 * <p>Saves an attachment under an existing document given both a document id
+	 * and revision, or under a new document given only the document id.
+	 * <p>To retrieve an attachment, see {@link #find(String)}.
+	 * @param instream The {@link InputStream} holding the binary data.
+	 * @param name The attachment name.
+	 * @param contentType The attachment "Content-Type".
+	 * @param docId The document id to save the attachment under, or {@code null} to save under a new document.
+	 * @param docRev The document revision to save the attachment under, or {@code null} when saving to a new document.
+	 * @throws DocumentConflictException 
+	 * @return {@link Response}
+	 */
+	public Response saveAttachment(InputStream instream, String name, String contentType, String docId, String docRev) {
+		assertNotEmpty(instream, "InputStream");
+		assertNotEmpty(name, "name");
+		assertNotEmpty(contentType, "ContentType");
+		assertNotEmpty(docId, "DocId");
+		URI uri = builder(getDBUri()).path(docId).path("/").path(name).query("rev", docRev).build();
+		return put(uri, instream, contentType);
+	}
+	
+	/**
+	 * Updates an object in the database, the object must have the correct id and revision values.
+	 * @param object The object to update
+	 * @throws DocumentConflictException If a conflict is detected during the update.
+	 * @return {@link Response}
+	 */
+	public Response update(Object object) {
+		return put(getDBUri(), object, false);
+	}
+	
+	/**
+	 * Removes an object from the database, the object must have the correct id and revision values.
+	 * @param object The object to remove
+	 * @throws NoDocumentException If the document could not be found in the database.
+	 * @return {@link Response}
+	 */
+	public Response remove(Object object) {
+		assertNotEmpty(object, "object");
+		JsonObject jsonObject = getGson().toJsonTree(object).getAsJsonObject();
+		String id = getElement(jsonObject, "_id");
+		String rev = getElement(jsonObject, "_rev");
+		return remove(id, rev);
+	}
+	
+	/**
+	 * Removes a document from the database, given both an id and revision values.
+	 * @param id The document id
+	 * @param rev The document revision
+	 * @throws NoDocumentException If the document could not be found in the database.
+	 * @return {@link Response}
+	 */
+	public Response remove(String id, String rev) {
+		assertNotEmpty(id, "id");
+		assertNotEmpty(rev, "rev");
+		return delete(builder(getDBUri()).path(id).query("rev", rev).build());
+	}
+	
+	/**
+	 * Invokes an Update Handler.
+	 * @param updateHandlerUri The Update Handler URI, in the format: <code>designDocId/updateFunction</code>
+	 * @param docId The document id to update.
+	 * @param query The query string parameters, e.g, field=field1&value=value1
+	 * @return The output of the request.
+	 */
+	public String invokeUpdateHandler(String updateHandlerUri, String docId, String query) {
+		assertNotEmpty(updateHandlerUri, "updateHandlerUri");
+		assertNotEmpty(docId, "docId");
+		String[] v = updateHandlerUri.split("/");
+		String path = String.format("_design/%s/_update/%s/%s", v[0], v[1], docId);
+		URI uri = builder(getDBUri()).path(path).query(query).build();
+		HttpResponse response = executeRequest(new HttpPut(uri));
+		return streamToString(getStream(response));
+	}
+	
+	/**
+	 * Synchronize all design documents on desk with the database.
+	 * <p>Shorthand for {@link CouchDbDesign#synchronizeAllWithDb()}
+	 * <p>This method might be used to sync design documents upon a client creation, eg. a Spring bean init-method.
+	 */
+	public void syncDesignDocsWithDb() {
+		design().synchronizeAllWithDb();
+	}
+	
+	/**
+	 * Sets a {@link GsonBuilder} to create {@link Gson} instance.
+	 * <p>Useful for registering custom serializers/deserializers, such as JodaTime classes.
+	 */
+	public void setGsonBuilder(GsonBuilder gsonBuilder) {
+		this.gson = initGson(gsonBuilder);
+	}
 	
 	/**
 	 * @return The database URI.
 	 */
-	protected URI getDBUri() {
+	public URI getDBUri() {
 		return dbURI;
 	}
 	
 	/**
 	 * @return The base URI.
 	 */
-	protected URI getBaseUri() {
+	public URI getBaseUri() {
 		return baseURI;
 	}
 	
 	/**
 	 * @return The Gson instance.
 	 */
-	protected Gson getGson() {
+	public Gson getGson() {
 		return gson;
 	}
+	
+	// End - Public API
+	
+	// Getters
 	
 	protected CouchDbConfig getConfig() {
 		return config;
@@ -265,113 +566,21 @@ abstract class CouchDbClientBase {
 	 * @return {@link HttpResponse}
 	 */
 	protected HttpResponse executeRequest(HttpRequestBase request) {
-		HttpResponse response = null;
 		try {
-			response = httpClient.execute(host, request, getContext());
+			return  httpClient.execute(host, request, createContext());
 		} catch (IOException e) {
 			request.abort();
-			log.error("Error executing request. " + e.getMessage());
-			throw new CouchDbException(e);
+			throw new CouchDbException("Error executing request. ", e);
 		} 
-		return response;
 	}
 	
 	// Helpers
 	
 	/**
-	 * @return {@link DefaultHttpClient} instance.
-	 */
-	private HttpClient createHttpClient(CouchDbProperties props) {
-		DefaultHttpClient httpclient = null;
-		try {
-			SchemeSocketFactory ssf = null;
-			if(props.getProtocol().equals("https")) {
-				TrustManager trustManager = new X509TrustManager() {
-					public void checkClientTrusted(X509Certificate[] chain,
-							String authType) throws CertificateException {
-					}
-					public void checkServerTrusted(X509Certificate[] chain,
-							String authType) throws CertificateException {
-					}
-					public X509Certificate[] getAcceptedIssuers() {
-						return null;
-					}
-				};
-				SSLContext sslcontext = SSLContext.getInstance("TLS");
-				sslcontext.init(null, new TrustManager[] { trustManager }, null);
-				ssf = new SSLSocketFactory(sslcontext, SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER); 
-				SSLSocket socket = (SSLSocket) ssf.createSocket(null); 
-				socket.setEnabledCipherSuites(new String[] { "SSL_RSA_WITH_RC4_128_MD5" });
-			} else {
-				ssf = PlainSocketFactory.getSocketFactory();
-			}
-			SchemeRegistry schemeRegistry = new SchemeRegistry();
-			schemeRegistry.register(new Scheme(props.getProtocol(), props.getPort(), ssf));
-			PoolingClientConnectionManager ccm = new PoolingClientConnectionManager(schemeRegistry);
-			httpclient = new DefaultHttpClient(ccm);
-			host = new HttpHost(props.getHost(), props.getPort(), props.getProtocol());
-			// Http params
-			httpclient.getParams().setParameter(CoreProtocolPNames.HTTP_CONTENT_CHARSET, "UTF-8");
-			httpclient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, props.getSocketTimeout());
-			httpclient.getParams().setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, props.getConnectionTimeout());
-			int maxConnections = props.getMaxConnections();
-			if(maxConnections != 0) {
-				ccm.setMaxTotal(maxConnections);
-				ccm.setDefaultMaxPerRoute(maxConnections);
-			}
-			if(props.getProxyHost() != null) {
-				HttpHost proxy = new HttpHost(props.getProxyHost(), props.getProxyPort());
-				httpclient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
-			}
-			// basic authentication
-			if(props.getUsername() != null && props.getPassword() != null) {
-				httpclient.getCredentialsProvider().setCredentials(
-						new AuthScope(props.getHost(), props.getPort()),
-						new UsernamePasswordCredentials(props.getUsername(), props.getPassword()));
-				props.clearPassword();
-			}
-			// request interceptor
-			httpclient.addRequestInterceptor(new HttpRequestInterceptor() {
-                public void process(
-                        final HttpRequest request,
-                        final HttpContext context) throws IOException {
-                    if (log.isInfoEnabled()) {
-                        RequestLine requestLine = request.getRequestLine();
-                        log.info(">> " + requestLine.getMethod() + " " + URI.create(requestLine.getUri()).getPath());
-                    }
-                }
-            });
-			// response interceptor
-			httpclient.addResponseInterceptor(new HttpResponseInterceptor() {
-                public void process(
-                        final HttpResponse response,
-                        final HttpContext context) throws IOException {
-                	validate(response);
-                	if(log.isInfoEnabled())
-        				log.info("<< Status: " + response.getStatusLine().getStatusCode());
-                }
-            });
-		} catch (Exception e) {
-			log.error("Error Creating HTTP client. " + e.getMessage());
-			throw new IllegalStateException(e);
-		}
-		return httpclient;
-	}
-	
-	private HttpContext getContext() {
-		AuthCache authCache = new BasicAuthCache();
-		authCache.put(host, new BasicScheme());
-		
-		HttpContext context = new BasicHttpContext();
-	    context.setAttribute(ClientContext.AUTH_CACHE, authCache);
-		return context;
-	}
-	
-	/**
 	 * Validates a HTTP response; on error cases logs status and throws relevant exceptions.
 	 * @param response The HTTP response.
 	 */
-	private void validate(HttpResponse response) throws IOException {
+	protected void validate(HttpResponse response) throws IOException {
 		int code = response.getStatusLine().getStatusCode();
 		if(code == 200 || code == 201 || code == 202) { // success (ok | created | accepted)
 			return;
@@ -445,14 +654,6 @@ abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * <p>The supplied {@link GsonBuilder} is used to create a new {@link Gson} instance.
-	 * Useful for registering custom serializers/deserializers, for example JodaTime DateTime class.
-	 */
-	protected void setGsonBuilder(GsonBuilder gsonBuilder) {
-		this.gson = initGson(gsonBuilder);
-	}
-	
-	/**
 	 * Builds {@link Gson} and registers any required serializer/deserializer.
 	 * @return {@link Gson} instance
 	 */
@@ -474,10 +675,4 @@ abstract class CouchDbClientBase {
 		return gsonBuilder.create();
 	}
 	
-	/**
-	 * Shuts down the connection manager used by this client instance.
-	 */
-	protected void shutdown() {
-		this.httpClient.getConnectionManager().shutdown();
-	}
 }
