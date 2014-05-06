@@ -22,7 +22,7 @@
    under the License.
  -->                                
 <article>
-	<title><ulink url="http://www.lightcouch.org">LightCouch</ulink> User Guide 0.0.6</title>
+	<title><ulink url="http://www.lightcouch.org">LightCouch</ulink> User Guide 0.1.0</title>
 	
 	<section id="overview">
 		<title>Overview</title>
@@ -58,7 +58,7 @@
 <dependency>
   <groupId>org.lightcouch</groupId>
   <artifactId>lightcouch</artifactId> 
-  <version>0.0.6</version>
+  <version>0.1.0</version>
 </dependency> 
 		]]></programlisting>
 		<para id="dependencies">
@@ -67,10 +67,10 @@
 		<itemizedlist>
 			<listitem>
 				<para>
-					<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.0.6.jar">
-						<citetitle>lightcouch-0.0.6.jar</citetitle>
+					<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.0.jar">
+						<citetitle>lightcouch-0.1.0.jar</citetitle>
 					</ulink>
-					 [<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.0.6.md5">
+					 [<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.0.md5">
                         <citetitle>md5</citetitle>
                     </ulink>]
 				</para>
@@ -118,6 +118,9 @@
 	        <para>
 	        LightCouch client, i.e. <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbClient.html">org.lightcouch.CouchDbClient</ulink>
             can be configured and constructed in several ways as preferred. 
+            </para>
+	        <para>
+	        LightCouch could run on <literal>Android</literal> platform via <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbClientAndroid.html">org.lightcouch.CouchDbClientAndroid</ulink>
             </para>
             <para>
             Configuration parameters can be supplied to a client via <literal>.properties</literal> files, or through convenient constructors.
@@ -401,9 +404,7 @@ dbClient.setGsonBuilder(gsonBuilder);
 byte[] bytes = "binary string".getBytes(); 
 String data = Base64.encodeBase64String(bytes);
  
-Attachment attachment = new Attachment();
-attachment.setData(data);
-attachment.setContentType("text/plain");
+Attachment attachment = new Attachment(data, "text/plain");
 				
 Bar bar = new Bar(); 
 bar.addAttachment("bar.txt", attachment);
