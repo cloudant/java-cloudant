@@ -122,6 +122,9 @@
 	        <para>
 	        LightCouch could run on <literal>Android</literal> platform via <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbClientAndroid.html">org.lightcouch.CouchDbClientAndroid</ulink>
             </para>
+			<para>
+	        Note: When running on <literal>Android</literal> HttpClient jars should not be included among the dependencies.
+            </para>
             <para>
             Configuration parameters can be supplied to a client via <literal>.properties</literal> files, or through convenient constructors.
             Typical usage is creating a file named <literal>couchdb.properties</literal> in the default classpath of your application, 
