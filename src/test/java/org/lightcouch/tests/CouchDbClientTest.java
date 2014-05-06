@@ -265,9 +265,7 @@ public class CouchDbClientTest {
 	
 	@Test
 	public void attachmentInline() {
-		Attachment attachment = new Attachment();
-		attachment.setContentType("text/plain");
-		attachment.setData("VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=");
+		Attachment attachment = new Attachment("VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=", "text/plain");
 		
 		Attachment attachment2 = new Attachment();
 		attachment2.setContentType("text/plain");
@@ -283,9 +281,7 @@ public class CouchDbClientTest {
 	
 	@Test
 	public void attachmentInline_getWithDocument() {
-		Attachment attachment = new Attachment();
-		attachment.setContentType("text/plain");
-		attachment.setData("VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=");
+		Attachment attachment = new Attachment("VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=", "text/plain");
 
 		Bar bar = new Bar(); 
 		bar.addAttachment("bar.txt", attachment);
