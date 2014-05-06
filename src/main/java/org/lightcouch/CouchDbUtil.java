@@ -128,6 +128,7 @@ final class CouchDbUtil {
 						}
 					}
 				}
+				close(jar);
 				return new ArrayList<String>(result);
 			} 
 			return null;
@@ -156,9 +157,11 @@ final class CouchDbUtil {
 	}
 	
 	public static String streamToString(InputStream in) {
-	    Scanner s = new Scanner(in).useDelimiter("\\A");
+	    Scanner s = new Scanner(in);
+	    s.useDelimiter("\\A");
 	    String str = s.hasNext() ? s.next() : null;
 	    close(in);
+	    close(s);
 	    return str;
 	}
 	

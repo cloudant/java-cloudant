@@ -18,9 +18,8 @@ package org.lightcouch;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * <p>Represents an in-line document attachment. 
- * <p>On saving, the fields 'data' holds the base64 encoded data, 
- * and 'contentType' holds the Content-Type of the attachment.
+ * Represents an in-line document attachment. 
+ * @see Document#addAttachment(String, Attachment)
  * @author Ahmed Yehia
  */
 public class Attachment {
@@ -32,7 +31,27 @@ public class Attachment {
 	private String digest;
 	private long length;
 	private boolean stub;
+	
+	// Constructor
+	
+	public Attachment() {
 
+	}
+	
+	/**
+	 * @param data The base64 encoded data of the attachment.
+	 * @param contentType The Content-Type of the attachment.
+	 */
+	public Attachment(String data, String contentType) {
+		this.data = data;
+		this.contentType = contentType;
+	}
+	
+	// Getter
+
+	/**
+	 * @return The base64 encoded data of the attachment.
+	 */
 	public String getData() {
 		return data;
 	}
@@ -56,28 +75,17 @@ public class Attachment {
 	public boolean isStub() {
 		return stub;
 	}
-
-	public void setData(String data) {
-		this.data = data;
-	}
-
+	
+	// Setter
+	
 	public void setContentType(String contentType) {
 		this.contentType = contentType;
 	}
 
-	public void setRevpos(int revpos) {
-		this.revpos = revpos;
-	}
-
-	public void setDigest(String digest) {
-		this.digest = digest;
-	}
-
-	public void setLength(long length) {
-		this.length = length;
-	}
-
-	public void setStub(boolean stub) {
-		this.stub = stub;
+	/**
+	 * @param data The base64 encoded data of the attachment.
+	 */
+	public void setData(String data) {
+		this.data = data;
 	}
 }

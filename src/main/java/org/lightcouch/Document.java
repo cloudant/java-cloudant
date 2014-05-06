@@ -60,6 +60,11 @@ public class Document {
 		this.attachments = attachments;
 	}
 	
+	/**
+	 * Adds an in-line document attachment.
+	 * @param name The attachment file name
+	 * @param attachment 
+	 */
 	public void addAttachment(String name, Attachment attachment) {
 		if(attachments == null)
 			attachments = new HashMap<String, Attachment>(); 
