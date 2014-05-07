@@ -877,18 +877,17 @@ dbClient.replicator()
       <section id="extend">
           <title>Extending the API</title>
           <para>
-          This API allows excuting user-defined Http requests against the database; by exposing it's underlying low-level request excution <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbClientBase.html#executeRequest(org.apache.http.client.methods.HttpRequestBase)">dbClient.executeRequest(org.apache.http.client.methods.HttpRequestBase)</ulink>.
+          This API allows excuting user-defined Http requests against the database; by exposing it's underlying low-level request excution and validation <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbClientBase.html#executeRequest(org.apache.http.client.methods.HttpRequestBase)">dbClient.executeRequest(org.apache.http.client.methods.HttpRequestBase)</ulink>.
           </para>
           <para>
-          It enables making a request that's not provided by LightCouch APIs, such as getting information about a document by issuing a <literal>HEAD</literal> request.
+          It enables making a request that's not provided natively by LightCouch.  Such as getting information about a document by issuing a <literal>HEAD</literal> request.
           </para>
           <programlisting><![CDATA[ 
 org.apache.http.client.methods.HttpHead head = new HttpHead(dbClient.getDBUri() + "doc-id");
+
 org.apache.http.HttpResponse response = dbClient.executeRequest(head);
 
-Header[] headers = response.getAllHeaders();
-for (Header h : headers) 
-	String header = h.getName() + ": " + h.getValue();
+String revision = response.getFirstHeader("ETAG").getValue();
 
 org.apache.http.client.utils.HttpClientUtils.closeQuietly(response); // closes the response
             ]]></programlisting>
