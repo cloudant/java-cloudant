@@ -10,6 +10,7 @@ import org.lightcouch.Attachment;
 
 public class Foo {
 	
+	@SuppressWarnings("unused")
 	private final String Type = "Foo";
 
 	private String _id;

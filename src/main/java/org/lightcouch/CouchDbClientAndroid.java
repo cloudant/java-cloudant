@@ -66,12 +66,12 @@ import org.apache.http.protocol.HttpContext;
 
 /**
  * Presents a <i>client</i> to CouchDB database server; targeted to run on Android platform.
- * @see {@link CouchDbClient} for more information on using the client.
+ * @see CouchDbClient
  * @since 0.1.0
  * @author Ahmed Yehia
  */
 @SuppressWarnings("deprecation")
-public final class CouchDbClientAndroid extends CouchDbClientBase {
+public class CouchDbClientAndroid extends CouchDbClientBase {
 	
 	/**
 	 * @see CouchDbClient#CouchDbClient()

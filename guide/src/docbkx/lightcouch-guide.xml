@@ -22,7 +22,7 @@
    under the License.
  -->                                
 <article>
-	<title><ulink url="http://www.lightcouch.org">LightCouch</ulink> User Guide 0.1.0</title>
+	<title><ulink url="http://www.lightcouch.org">LightCouch</ulink> User Guide 0.1.2</title>
 	
 	<section id="overview">
 		<title>Overview</title>
@@ -58,7 +58,7 @@
 <dependency>
   <groupId>org.lightcouch</groupId>
   <artifactId>lightcouch</artifactId> 
-  <version>0.1.0</version>
+  <version>0.1.2</version>
 </dependency> 
 		]]></programlisting>
 		<para id="dependencies">
@@ -67,10 +67,10 @@
 		<itemizedlist>
 			<listitem>
 				<para>
-					<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.0.jar">
-						<citetitle>lightcouch-0.1.0.jar</citetitle>
+					<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.2.jar">
+						<citetitle>lightcouch-0.1.2.jar</citetitle>
 					</ulink>
-					 [<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.0.md5">
+					 [<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.2.md5">
                         <citetitle>md5</citetitle>
                     </ulink>]
 				</para>
@@ -78,14 +78,14 @@
                   <listitem>
                         <para>
                               <ulink url="http://hc.apache.org/downloads.cgi">
-                                    <citetitle>HttpClient 4.2.5</citetitle>
+                                    <citetitle>HttpClient 4.3.3</citetitle>
                               </ulink>
                         </para>
                   </listitem>
 			<listitem>
 				<para>
 					<ulink url="http://hc.apache.org/downloads.cgi">
-						<citetitle>HttpCore 4.2.4</citetitle>
+						<citetitle>HttpCore 4.3.2</citetitle>
 					</ulink>
 				</para>
 			</listitem>
@@ -99,8 +99,34 @@
 			<listitem>
 				<para>
 					<ulink url="http://commons.apache.org/logging/download_logging.cgi">
-						<citetitle>Commons Logging 1.1.1</citetitle>
+						<citetitle>Commons Logging 1.1.3</citetitle>
 					</ulink>
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<ulink url="http://code.google.com/p/google-gson/downloads/list">
+						<citetitle>Gson 2.2.4</citetitle>
+					</ulink>
+				</para>
+			</listitem>
+		</itemizedlist>
+		</section><!-- /setup -->
+		
+	<section id="setup-android">
+		<title>Setup (Android)</title>
+		<para id="dependencies-android">
+		Include the following dependencies only, excluding HttpClient.
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.2.jar">
+						<citetitle>lightcouch-0.2.0.jar</citetitle>
+					</ulink>
+					 [<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.2.md5">
+                        <citetitle>md5</citetitle>
+                    </ulink>]
 				</para>
 			</listitem>
 			<listitem>
@@ -121,9 +147,6 @@
             </para>
 	        <para>
 	        LightCouch could run on <literal>Android</literal> platform via <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbClientAndroid.html">org.lightcouch.CouchDbClientAndroid</ulink>
-            </para>
-			<para>
-	        Note: When running on <literal>Android</literal> HttpClient jars should not be included among the dependencies.
             </para>
             <para>
             Configuration parameters can be supplied to a client via <literal>.properties</literal> files, or through convenient constructors.
@@ -153,6 +176,8 @@ couchdb.max.connections=100
 # Connect through proxy
 couchdb.proxy.host=
 couchdb.proxy.port=
+# path to append to DB URI
+couchdb.path=
 			]]></programlisting>
 			<para>
 			Next, create a client instance, using the default constructor:
@@ -795,7 +820,7 @@ function(doc, req) {
 }
         ]]></programlisting>
     </section> <!-- /update-handlers -->	
-      <section id="replication">
+    <section id="replication">
           <title>Replication</title>
           <para>
           Replication is handled by two sets of API, one that replicate by POSTing to
@@ -849,4 +874,23 @@ dbClient.replicator()
   .remove(); // cancels an ongoing replication
             ]]></programlisting>
       </section><!-- /replication -->
+      <section id="extend">
+          <title>Extending the API</title>
+          <para>
+          This API allows excuting user-defined Http requests against the database; by exposing it's underlying low-level request excution <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbClientBase.html#executeRequest(org.apache.http.client.methods.HttpRequestBase)">dbClient.executeRequest(org.apache.http.client.methods.HttpRequestBase)</ulink>.
+          </para>
+          <para>
+          It enables making a request that's not provided by LightCouch APIs, such as getting information about a document by issuing a <literal>HEAD</literal> request.
+          </para>
+          <programlisting><![CDATA[ 
+org.apache.http.client.methods.HttpHead head = new HttpHead(dbClient.getDBUri() + "doc-id");
+org.apache.http.HttpResponse response = dbClient.executeRequest(head);
+
+Header[] headers = response.getAllHeaders();
+for (Header h : headers) 
+	String header = h.getName() + ": " + h.getValue();
+
+org.apache.http.client.utils.HttpClientUtils.closeQuietly(response); // closes the response
+            ]]></programlisting>
+      </section><!-- /extend -->
 </article>
