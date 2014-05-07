@@ -29,14 +29,24 @@ import java.util.Map;
 import org.lightcouch.DesignDocument.MapReduce;
 
 /**
- * Provides methods to create and save CouchDB design documents. 
+ * Provides API to work with design documents. 
  * <h3>Usage Example:</h3>
  * <pre>
- * DesignDocument exampleDoc = dbClient.design().getFromDesk("example");
- * Response response = dbClient.design().synchronizeWithDb(exampleDoc);
- * DesignDocument documentFromDb = dbClient.design().getFromDb("_design/example");
+ * // read from system files
+ * DesignDocument design1 = dbClient.design().getFromDesk("example");
+ * 
+ * // sync with the database
+ * dbClient.design().synchronizeWithDb(design1);
+ * 
+ * // sync all with the database
+ * dbClient.syncDesignDocsWithDb();
+ * 
+ * // read from the database
+ * DesignDocument design2 = dbClient.design().getFromDb("_design/example");
  * </pre>
+ * @see {@link CouchDbClient#design() dbClient.design()} to access the API.
  * @see DesignDocument
+ * @since 0.0.2
  * @author Ahmed Yehia
  */
 public class CouchDbDesign {
@@ -50,6 +60,7 @@ public class CouchDbDesign {
 	private static final String SHOWS           = "shows";
 	private static final String LISTS           = "lists";
 	private static final String UPDATES         = "updates";
+	private static final String REWRITES        = "rewrites";
 	private static final String MAP_JS          = "map.js";
 	private static final String REDUCE_JS       = "reduce.js";
 	
@@ -156,6 +167,16 @@ public class CouchDbDesign {
 				break; // only one validate_doc_update file
 			}
 		} // /validate_doc_update
+		
+		if(elements.contains(REWRITES)) { // rewrites
+			String rewritePath = format("%s%s/", rootPath, REWRITES);
+			List<String> dirList = listResources(rewritePath);
+			for (String file : dirList) {
+				String contents = readFile(format("/%s%s", rewritePath, file));
+				dd.setRewrites(contents);
+				break; // only one rewrites file
+			}
+		} // /rewrites
 		Map<String, MapReduce> views = null;
 		if(elements.contains(VIEWS)) { // views
 			String viewsPath = format("%s%s/", rootPath, VIEWS);

@@ -20,6 +20,7 @@ import com.google.gson.annotations.SerializedName;
 /**
  * Represents an in-line document attachment. 
  * @see Document#addAttachment(String, Attachment)
+ * @since 0.0.4
  * @author Ahmed Yehia
  */
 public class Attachment {

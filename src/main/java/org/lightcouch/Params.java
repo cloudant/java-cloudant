@@ -26,8 +26,9 @@ import java.util.List;
  * <p>Example: 
  * <pre>
  * dbClient.find(Foo.class, "doc-id", new Params().revsInfo().attachments());
- * 
- * @see CouchDbClient#find(Class, String, Params)
+ * </pre>
+ * @see CouchDbClientBase#find(Class, String, Params)
+ * @since 0.0.6
  * @author Ahmed Yehia
  * 
  */

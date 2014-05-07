@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 lightcouch.org
+ * Copyright (C) Ahmed Yehia (ahmed.yehia.m@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ import com.google.gson.reflect.TypeToken;
  * 
  * @see CouchDbClient#context() 
  * @since 0.0.2
- * @author ahmed
+ * @author Ahmed Yehia
  */
 public class CouchDbContext {
 
@@ -48,9 +48,8 @@ public class CouchDbContext {
 
 	private CouchDbClientBase dbc;
 
-	CouchDbContext(CouchDbClientBase dbc) {
+	CouchDbContext(CouchDbClientBase dbc, CouchDbProperties props) {
 		this.dbc = dbc;
-		CouchDbProperties props = dbc.getConfig().getProperties();
 		if (props.isCreateDbIfNotExist()) {
 			createDB(props.getDbName());
 		} else {
@@ -122,7 +121,7 @@ public class CouchDbContext {
 		try {
 			instream = dbc.get(builder(dbc.getBaseUri()).build());
 			Reader reader = new InputStreamReader(instream);
-			return getElement(new JsonParser().parse(reader).getAsJsonObject(), "version");
+			return getAsString(new JsonParser().parse(reader).getAsJsonObject(), "version");
 		} finally {
 			close(instream);
 		}

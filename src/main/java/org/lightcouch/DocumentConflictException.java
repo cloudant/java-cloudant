@@ -17,7 +17,8 @@
 package org.lightcouch;
 
 /**
- * Thrown when a conflict is detected during a save or update.
+ * Thrown when a conflict is detected during save or update.
+ * @since 0.0.2
  * @author Ahmed Yehia
  */
 public class DocumentConflictException extends CouchDbException {

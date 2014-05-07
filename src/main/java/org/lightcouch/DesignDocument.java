@@ -23,6 +23,7 @@ import com.google.gson.annotations.SerializedName;
 /**
  * Represents a design document.
  * @see CouchDbDesign
+ * @since 0.0.2
  * @author Ahmed Yehia
  */
 public class DesignDocument extends Document {
@@ -35,6 +36,7 @@ public class DesignDocument extends Document {
 	private Map<String, String> shows;
 	private Map<String, String> lists;
 	private Map<String, String> updates;
+	private String rewrites;
 
 	public String getLanguage() {
 		return language;
@@ -46,6 +48,10 @@ public class DesignDocument extends Document {
 
 	public String getValidateDocUpdate() {
 		return validateDocUpdate;
+	}
+	
+	public String getRewrites() {
+		return rewrites;
 	}
 
 	public Map<String, String> getFilters() {
@@ -75,6 +81,10 @@ public class DesignDocument extends Document {
 	public void setValidateDocUpdate(String validateDocUpdate) {
 		this.validateDocUpdate = validateDocUpdate;
 	}
+	
+	public void setRewrites(String rewrites) {
+		this.rewrites = rewrites;
+	}
 
 	public void setFilters(Map<String, String> filters) {
 		this.filters = filters;
@@ -103,6 +113,7 @@ public class DesignDocument extends Document {
 		result = prime * result + ((updates == null) ? 0 : updates.hashCode());
 		result = prime * result
 				+ ((validateDocUpdate == null) ? 0 : validateDocUpdate.hashCode());
+		result = prime * result + ((rewrites == null) ? 0 : rewrites.hashCode());
 		result = prime * result + ((views == null) ? 0 : views.hashCode());
 		return result;
 	}
@@ -148,6 +159,11 @@ public class DesignDocument extends Document {
 			if (other.validateDocUpdate != null)
 				return false;
 		} else if (!validateDocUpdate.equals(other.validateDocUpdate))
+			return false;
+		if (rewrites == null) {
+			if (other.rewrites != null)
+				return false;
+		} else if (!rewrites.equals(other.rewrites))
 			return false;
 		if (views == null) {
 			if (other.views != null)

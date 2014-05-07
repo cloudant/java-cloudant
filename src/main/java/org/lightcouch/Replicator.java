@@ -35,10 +35,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 /**
- * <p>This class allows construction and sending of replication requests targeting a replicator database.
- * <p>The Replicator database, by default is called <tt>_replicator</tt> was introduced in CouchDB version 1.1.0
- * <p>The API supports triggering replication requests by adding a document to the replicator database, 
- * and cancelling a replication by removing the document that triggered the replication.
+ * This class provides access to the <tt>_replicator</tt> database introduced in CouchDB version 1.1.0
+ * <p>A replication is triggered by persisting a document, and cancelled by removing the document that triggered the replication.
  * 
  * <h3>Usage Example:</h3>
  * <pre>
@@ -47,26 +45,29 @@ import com.google.gson.JsonParser;
  * 	.target("target-db")
  * 	.continuous(true)
  * 	.createTarget(true)
- * 	.replicatorDB("replicator-db-name") // optionally specify database name, defaults to _replicator
- * 	.replicatorDocId("doc-id")          // optionally specify document id, defaults to a new UUID being assigned
- * 	.save(); 
+ * 	.replicatorDB("replicator-db-name") // optional, defaults to _replicator
+ * 	.replicatorDocId("doc-id")          // optional, defaults to UUID 
+ * 	.save(); // trigger replication
  * 
- * ReplicatorDocument document = dbClient.replicator()
+ * ReplicatorDocument replicatorDoc = dbClient.replicator()
  * 	.replicatorDocId("doc-id")
  * 	.replicatorDocRev("doc-rev") // optional
  * 	.find();
  * 
  * {@code 
- * List<ReplicatorDocument> docs = dbClient.replicator().findAll();
+ * List<ReplicatorDocument> replicatorDocs = dbClient.replicator().findAll();
  * }
  * 
  * Response response = dbClient.replicator()
  * 	.replicatorDocId("doc-id")
  * 	.replicatorDocRev("doc-rev")
- * 	.remove();
+ * 	.remove(); // cancels a replication
  * </pre>
  * 
+ * @see CouchDbClientBase#replicator()
  * @see Replication 
+ * @see ReplicatorDocument
+ * @since 0.0.2
  * @author Ahmed Yehia
  *
  */
@@ -128,7 +129,7 @@ public class Replicator {
 			List<ReplicatorDocument> list = new ArrayList<ReplicatorDocument>();
 			for (JsonElement jsonElem : jsonArray) {
 				JsonElement elem = jsonElem.getAsJsonObject().get("doc");
-				if(!getElement(elem.getAsJsonObject(), "_id").startsWith("_design")) { // skip design docs
+				if(!getAsString(elem.getAsJsonObject(), "_id").startsWith("_design")) { // skip design docs
 					ReplicatorDocument rd = dbc.getGson().fromJson(elem, ReplicatorDocument.class);
 					list.add(rd);
 				}

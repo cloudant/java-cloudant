@@ -23,6 +23,7 @@ import java.util.List;
 /**
  * Holds the result of a replication request, along with previous sessions history.
  * @see Replication
+ * @since 0.0.2
  * @author Ahmed Yehia
  */
 public class ReplicationResult {

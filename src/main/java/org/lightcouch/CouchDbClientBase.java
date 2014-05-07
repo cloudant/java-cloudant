@@ -16,12 +16,12 @@
 
 package org.lightcouch;
 
-import static java.lang.String.format;
 import static org.lightcouch.CouchDbUtil.assertNotEmpty;
 import static org.lightcouch.CouchDbUtil.assertNull;
 import static org.lightcouch.CouchDbUtil.close;
 import static org.lightcouch.CouchDbUtil.generateUUID;
-import static org.lightcouch.CouchDbUtil.getElement;
+import static org.lightcouch.CouchDbUtil.getAsString;
+import static org.lightcouch.CouchDbUtil.getStream;
 import static org.lightcouch.CouchDbUtil.streamToString;
 import static org.lightcouch.URIBuilder.builder;
 
@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.List;
@@ -64,58 +63,57 @@ import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 
 /**
- * Base client class to be extended by a concrete subclass, responsible for establishing
- * a connection with the database and the definition of the basic HTTP request handling and validation. 
+ * Contains a client Public API definition.
  * @see CouchDbClient
  * @see CouchDbClientAndroid
  * @author Ahmed Yehia
  */
 public abstract class CouchDbClientBase {
 
-	static final Log log = LogFactory.getLog(CouchDbClientBase.class);
+	static final Log log = LogFactory.getLog(CouchDbClient.class);
 
-	protected HttpClient httpClient;
-	protected HttpHost host;
 	private URI baseURI;
 	private URI dbURI;
 	private Gson gson; 
-	private CouchDbConfig config;
 	private CouchDbContext context;
 	private CouchDbDesign design;
+	final HttpClient httpClient;
+	final HttpHost host;
 	
-	protected CouchDbClientBase() {
+	CouchDbClientBase() {
 		this(new CouchDbConfig());
 	}
 	
-	protected CouchDbClientBase(CouchDbConfig config) {
-		CouchDbProperties props = config.getProperties();
+	CouchDbClientBase(CouchDbConfig config) {
+		final CouchDbProperties props = config.getProperties();
 		this.httpClient = createHttpClient(props);
 		this.gson = initGson(new GsonBuilder());
 		this.host = new HttpHost(props.getHost(), props.getPort(), props.getProtocol());
-		this.config = config;
 		
-		String path = props.getPath() != null ? props.getPath() : "";
+		final String path = props.getPath() != null ? props.getPath() : "";
         this.baseURI = builder().scheme(props.getProtocol()).host(props.getHost()).port(props.getPort()).path("/").path(path).build();
 		this.dbURI   = builder(baseURI).path(props.getDbName()).path("/").build();
 		
-		this.context = new CouchDbContext(this); 
+		this.context = new CouchDbContext(this, props); 
 		this.design = new CouchDbDesign(this);
 	}
+	
+	// Client(s) provided implementation
 	
 	/**
 	 * @return {@link HttpClient} instance for HTTP request execution.
 	 */
-	protected abstract HttpClient createHttpClient(CouchDbProperties properties);
+	abstract HttpClient createHttpClient(CouchDbProperties properties);
 	
 	/**
 	 * @return {@link HttpContext} instance for HTTP request execution.
 	 */
-	protected abstract HttpContext createContext();
+	abstract HttpContext createContext();
 
 	/**
 	 * Shuts down the connection manager used by this client instance.
 	 */
-	protected abstract void shutdown();
+	abstract void shutdown();
 	
 	// Public API
 	
@@ -366,8 +364,8 @@ public abstract class CouchDbClientBase {
 	public Response remove(Object object) {
 		assertNotEmpty(object, "object");
 		JsonObject jsonObject = getGson().toJsonTree(object).getAsJsonObject();
-		String id = getElement(jsonObject, "_id");
-		String rev = getElement(jsonObject, "_rev");
+		String id = getAsString(jsonObject, "_id");
+		String rev = getAsString(jsonObject, "_rev");
 		return remove(id, rev);
 	}
 	
@@ -399,6 +397,20 @@ public abstract class CouchDbClientBase {
 		URI uri = builder(getDBUri()).path(path).query(query).build();
 		HttpResponse response = executeRequest(new HttpPut(uri));
 		return streamToString(getStream(response));
+	}
+	
+	/**
+	 * Executes a HTTP request.
+	 * @param request The HTTP request to execute.
+	 * @return {@link HttpResponse}
+	 */
+	public HttpResponse executeRequest(HttpRequestBase request) {
+		try {
+			return  httpClient.execute(host, request, createContext());
+		} catch (IOException e) {
+			request.abort();
+			throw new CouchDbException("Error executing request. ", e);
+		} 
 	}
 	
 	/**
@@ -441,14 +453,6 @@ public abstract class CouchDbClientBase {
 	
 	// End - Public API
 	
-	// Getters
-	
-	protected CouchDbConfig getConfig() {
-		return config;
-	}
-	
-	// HTTP Requests
-	
 	/**
 	 * Performs a HTTP GET request. 
 	 * @return {@link InputStream} 
@@ -473,12 +477,12 @@ public abstract class CouchDbClientBase {
 	 * @return An object of type T
 	 */
 	<T> T get(URI uri, Class<T> classType) {
-		InputStream instream = null;
+		InputStream in = null;
 		try {
-			instream = get(uri);
-			return deserialize(instream, classType);
+			in = get(uri);
+			return getGson().fromJson(new InputStreamReader(in), classType);
 		} finally {
-			close(instream);
+			close(in);
 		}
 	}
 	
@@ -499,8 +503,8 @@ public abstract class CouchDbClientBase {
 		HttpResponse response = null;
 		try {  
 			JsonObject json = getGson().toJsonTree(object).getAsJsonObject();
-			String id = getElement(json, "_id");
-			String rev = getElement(json, "_rev");
+			String id = getAsString(json, "_id");
+			String rev = getAsString(json, "_rev");
 			if(newEntity) { // save
 				assertNull(rev, "revision");
 				id = (id == null) ? generateUUID() : id;
@@ -560,44 +564,27 @@ public abstract class CouchDbClientBase {
 		}
 	}
 	
-	/**
-	 * Executes a HTTP request.
-	 * @param request The HTTP request to execute.
-	 * @return {@link HttpResponse}
-	 */
-	protected HttpResponse executeRequest(HttpRequestBase request) {
-		try {
-			return  httpClient.execute(host, request, createContext());
-		} catch (IOException e) {
-			request.abort();
-			throw new CouchDbException("Error executing request. ", e);
-		} 
-	}
-	
 	// Helpers
 	
 	/**
 	 * Validates a HTTP response; on error cases logs status and throws relevant exceptions.
 	 * @param response The HTTP response.
 	 */
-	protected void validate(HttpResponse response) throws IOException {
+	void validate(HttpResponse response) throws IOException {
 		int code = response.getStatusLine().getStatusCode();
 		if(code == 200 || code == 201 || code == 202) { // success (ok | created | accepted)
 			return;
 		} 
-		String msg = format("<< Status: %s (%s) ", code, response.getStatusLine().getReasonPhrase());
+		String reason = response.getStatusLine().getReasonPhrase();
 		switch (code) {
 		case HttpStatus.SC_NOT_FOUND: {
-			log.info(msg); 
-			throw new NoDocumentException(msg);
+			throw new NoDocumentException(reason);
 		}
 		case HttpStatus.SC_CONFLICT: {
-			log.warn(msg);
-			throw new DocumentConflictException(msg);
+			throw new DocumentConflictException(reason);
 		}
 		default: { // other errors: 400 | 401 | 500 etc.
-			log.error(msg += EntityUtils.toString(response.getEntity()));
-			throw new CouchDbException(msg);
+			throw new CouchDbException(reason += EntityUtils.toString(response.getEntity()));
 		}
 		}
 	}
@@ -606,15 +593,16 @@ public abstract class CouchDbClientBase {
 	 * @param response The {@link HttpResponse}
 	 * @return {@link Response}
 	 */
-	Response getResponse(HttpResponse response) throws CouchDbException {
-		return deserialize(getStream(response), Response.class);
+	private Response getResponse(HttpResponse response) throws CouchDbException {
+		InputStreamReader reader = new InputStreamReader(getStream(response));
+		return getGson().fromJson(reader, Response.class);
 	}
 	
 	/**
 	 * @param response The {@link HttpResponse}
 	 * @return {@link Response}
 	 */
-	List<Response> getResponseList(HttpResponse response) throws CouchDbException {
+	private List<Response> getResponseList(HttpResponse response) throws CouchDbException {
 		InputStream instream = getStream(response);
 		Reader reader = new InputStreamReader(instream);
 		return getGson().fromJson(reader, new TypeToken<List<Response>>(){}.getType());
@@ -625,32 +613,10 @@ public abstract class CouchDbClientBase {
 	 * @param httpRequest The request to set entity.
 	 * @param json The JSON String to set.
 	 */
-	protected void setEntity(HttpEntityEnclosingRequestBase httpRequest, String json) {
-		try {
-			StringEntity entity = new StringEntity(json, "UTF-8");
-			entity.setContentType("application/json");
-			httpRequest.setEntity(entity);
-		} catch (UnsupportedEncodingException e) {
-			log.error("Error setting request data. " + e.getMessage());
-			throw new IllegalArgumentException(e);
-		}
-	}
-	
-	/**
-	 * @return {@link InputStream} from a {@link HttpResponse}
-	 */
-	InputStream getStream(HttpResponse response) {
-		try { 
-			return response.getEntity().getContent();
-		} catch (Exception e) {
-			log.error("Error reading response. " + e.getMessage());
-			throw new CouchDbException(e);
-		}
-	}
-	
-	<T> T deserialize(InputStream instream, Class<T> classType) {
-		Reader reader = new InputStreamReader(instream);
-		return getGson().fromJson(reader, classType);
+	private void setEntity(HttpEntityEnclosingRequestBase httpRequest, String json) {
+		StringEntity entity = new StringEntity(json, "UTF-8");
+		entity.setContentType("application/json");
+		httpRequest.setEntity(entity);
 	}
 	
 	/**

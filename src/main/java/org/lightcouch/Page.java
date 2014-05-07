@@ -21,8 +21,7 @@ import java.util.List;
 /**
  * Holds data of a page as result of a view pagination query. 
  * @see View#queryPage(int, String, Class)
- * @param <T> Object type T 
- * 
+ * @since 0.0.3
  * @author Ahmed Yehia
  */
 public class Page<T> {

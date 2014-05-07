@@ -18,6 +18,7 @@ package org.lightcouch;
 
 /**
  * Thrown when a requested document is not found.
+ * @since 0.0.2
  * @author Ahmed Yehia
  */
 public class NoDocumentException extends CouchDbException {

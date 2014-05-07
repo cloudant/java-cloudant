@@ -106,7 +106,7 @@ public final class CouchDbClientAndroid extends CouchDbClientBase {
 	 * @return {@link DefaultHttpClient} instance.
 	 */
 	@Override
-	protected HttpClient createHttpClient(CouchDbProperties props) {
+	HttpClient createHttpClient(CouchDbProperties props) {
 		DefaultHttpClient httpclient = null;
 		try {
 			SchemeRegistry schemeRegistry = createRegistry(props);
@@ -136,21 +136,12 @@ public final class CouchDbClientAndroid extends CouchDbClientBase {
 	}
 	
 	@Override
-	protected HttpContext createContext() {	
+	HttpContext createContext() {	
 		HttpContext context = new BasicHttpContext();
-
 		BasicScheme basicAuth = new BasicScheme();
 		context.setAttribute("preemptive-auth", basicAuth);
-		
 		((AbstractHttpClient) httpClient).addRequestInterceptor(new PreemptiveAuthInterceptor(), 0);
 		return context;
-		
-		/*AuthCache authCache = new BasicAuthCache();
-		authCache.put(host, new BasicScheme());
-		
-		HttpContext context = new BasicHttpContext();
-	    context.setAttribute(ClientContext.AUTH_CACHE, authCache);
-		return context;*/
 	}
 
 	@Override
@@ -179,7 +170,7 @@ public final class CouchDbClientAndroid extends CouchDbClientBase {
 		            final HttpContext context) throws IOException {
 		        if (log.isInfoEnabled()) {
 					RequestLine req = request.getRequestLine();
-					log.info(">> " + req.getMethod() + URLDecoder.decode(req.getUri(), "UTF-8"));
+					log.info("> " + req.getMethod() + URLDecoder.decode(req.getUri(), "UTF-8"));
 		        }
 		    }
 		});
@@ -188,7 +179,7 @@ public final class CouchDbClientAndroid extends CouchDbClientBase {
 		            final HttpResponse response,
 		            final HttpContext context) throws IOException {
 		    	if(log.isInfoEnabled()) {
-					log.info("<< Status: " + response.getStatusLine().getStatusCode());
+					log.info("< Status: " + response.getStatusLine().getStatusCode());
 		    	}
 		    	validate(response);
 		    }

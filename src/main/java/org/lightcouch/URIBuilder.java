@@ -23,7 +23,7 @@ import java.util.List;
 
 /**
  * Helper class for construction of HTTP request URIs.
- * 
+ * @since 0.0.2
  * @author Ahmed Yehia
  * 
  */
@@ -34,7 +34,8 @@ class URIBuilder {
 	private String path = "";
 	/* The final query */
 	private final StringBuilder query = new StringBuilder();
-	private final List<String> queries = new ArrayList<String>();
+	/* key=value params */
+	private final List<String> qParams = new ArrayList<String>();
 
 	public static URIBuilder builder() {
 		return new URIBuilder();
@@ -48,10 +49,9 @@ class URIBuilder {
 
 	public URI build() {
 		try {
-			for (int i = 0; i < queries.size(); i++) {
-				query.append(queries.get(i));
-				if (i != queries.size() - 1)
-					query.append("&");
+			for (int i = 0; i < qParams.size(); i++) {
+				String amp = (i != qParams.size() - 1) ? "&" : "";
+				query.append(qParams.get(i) + amp);
 			}
 			String q = (query.length() == 0) ? null : query.toString();
 			return new URI(scheme, null, host, port, path, q, null);
@@ -82,7 +82,7 @@ class URIBuilder {
 
 	public URIBuilder query(String name, Object value) {
 		if (name != null && value != null)
-			this.queries.add(String.format("%s=%s", name, value));
+			this.qParams.add(String.format("%s=%s", name, value));
 		return this;
 	}
 
@@ -94,7 +94,7 @@ class URIBuilder {
 
 	public URIBuilder query(Params params) {
 		if (params.getParams() != null)
-			this.queries.addAll(params.getParams());
+			this.qParams.addAll(params.getParams());
 		return this;
 	}
 }

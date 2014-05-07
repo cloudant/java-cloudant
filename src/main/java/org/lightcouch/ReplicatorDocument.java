@@ -20,8 +20,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Represents a replication document in a replicator database.
+ * Represents a replication document in the <tt>_replicator</tt> database.
  * @see Replicator
+ * @since 0.0.2
  * @author Ahmed Yehia
  * 
  */

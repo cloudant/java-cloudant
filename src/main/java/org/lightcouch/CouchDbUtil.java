@@ -77,15 +77,21 @@ final class CouchDbUtil {
 	/**
 	 * @return A JSON element as a String, or null if not found.
 	 */
-	public static String getElement(JsonObject j, String e) {
+	public static String getAsString(JsonObject j, String e) {
 		return (j.get(e) == null) ? null : j.get(e).getAsString();  
 	}
 	
-	public static long getElementAsLong(JsonObject j, String e) {
+	/**
+	 * @return A JSON element as <code>long</code>, or <code>0</code> if not found.
+	 */
+	public static long getAsLong(JsonObject j, String e) {
 		return (j.get(e) == null) ? 0L : j.get(e).getAsLong();
 	}
 	
-	public static int getElementAsInt(JsonObject j, String e) {
+	/**
+	 * @return A JSON element as <code>int</code>, or <code>0</code> if not found.
+	 */
+	public static int getAsInt(JsonObject j, String e) {
 		return (j.get(e) == null) ? 0 : j.get(e).getAsInt();
 	}
 	
@@ -150,6 +156,17 @@ final class CouchDbUtil {
 			scanner.close();
 		}
 		return content.toString();
+	}
+	
+	/**
+	 * @return {@link InputStream} of {@link HttpResponse}
+	 */
+	public static InputStream getStream(HttpResponse response) {
+		try { 
+			return response.getEntity().getContent();
+		} catch (Exception e) {
+			throw new CouchDbException("Error reading response. ", e);
+		}
 	}
 	
 	public static String removeExtension(String fileName) {

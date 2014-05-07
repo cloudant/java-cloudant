@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 lightcouch.org
+ * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,9 @@ package org.lightcouch;
  * <p>The response typically contains an <tt>id</tt> and <tt>rev</tt> values,
  * additional data might be returned such as <tt>error</tt> from Bulk request.
  * 
+ * @see CouchDbClientBase#save(Object)
  * @since 0.0.2
- * @author ahmed
+ * @author Ahmed Yehia
  */
 public class Response {
 	private String id;

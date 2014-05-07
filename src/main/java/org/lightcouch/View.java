@@ -39,35 +39,35 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 /**
- * <p>This class allows construction and sending of View query requests.
- * The API supports view queries for various data type results, and for pagination.
+ * This class provides access to the <tt>View</tt> APIs.
  * 
  * <h3>Usage Example:</h3>
  * <pre>
  * {@code
  *  List<Foo> list = dbClient.view("example/foo")
- *	.includeDocs(true).startKey("start-key").endKey("end-key").limit(10).query(Foo.class);
+ *	.startKey("start-key")
+ *	.endKey("end-key")
+ *	.limit(10)
+ *	.includeDocs(true)
+ *	.query(Foo.class);
  *  
- * int count = dbClient.view("example/by_tag").key("couchdb").queryForInt(); // query for scalar values
- *  
- * // query for view entries
- * View view = dbClient.view("example/by_date")
- *	.key(2011, 10, 15) // complex key example
- *	.reduce(false)
- *	.includeDocs(true);
- * ViewResult<int[], String, Foo> result = 
- *	view.queryView(int[].class, String.class, Foo.class);
+ *  // scalar values
+ *  int count = dbClient.view("example/by_tag")
+ * 	.key("couchdb")
+ * 	.queryForInt(); 
  * 
  * // pagination
- * Page<Foo> page = dbClient.view("example/foo").queryPage(15, param, Foo.class);
- * // page.get*Param() contains the param to query subsequent pages, {@code null} param queries the first page
+ * Page<Foo> page = dbClient.view("example/foo").queryPage(...);
  * }
  * </pre>
  * 
+ * @see CouchDbClientBase#view(String)
+ * @see ViewResult
+ * @since 0.0.2
  * @author Ahmed Yehia
  */
 public class View {
-	private static final Log log = LogFactory.getLog(View.class);
+	private static final Log log = LogFactory.getLog(CouchDbClient.class);
 	
 	// paging param fields
 	private static final String START_KEY                = "s_k";
@@ -131,10 +131,10 @@ public class View {
 	public InputStream queryForStream() {
 		URI uri = uriBuilder.build();
 		if(allDocsKeys != null) { // bulk docs
-			return dbc.getStream(dbc.post(uri, allDocsKeys));
+			return getStream(dbc.post(uri, allDocsKeys));
 		}
 		if(tempView != null) { // temp view
-			return dbc.getStream(dbc.post(uri, gson.toJson(tempView)));
+			return getStream(dbc.post(uri, gson.toJson(tempView)));
 		}
 		
 		return dbc.get(uri);
@@ -182,9 +182,9 @@ public class View {
 			Reader reader = new InputStreamReader(instream = queryForStream());
 			JsonObject json = new JsonParser().parse(reader).getAsJsonObject(); 
 			ViewResult<K, V, T> vr = new ViewResult<K, V, T>();
-			vr.setTotalRows(getElementAsLong(json, "total_rows")); 
-			vr.setOffset(getElementAsInt(json, "offset"));
-			vr.setUpdateSeq(getElementAsLong(json, "update_seq"));
+			vr.setTotalRows(getAsLong(json, "total_rows")); 
+			vr.setOffset(getAsInt(json, "offset"));
+			vr.setUpdateSeq(getAsLong(json, "update_seq"));
 			JsonArray jsonArray = json.getAsJsonArray("rows");
 			if(jsonArray.size() == 0) { // validate available rows
 				throw new NoDocumentException("No result was returned by this view query.");

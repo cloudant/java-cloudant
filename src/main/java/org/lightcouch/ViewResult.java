@@ -23,6 +23,7 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * Holds a view result entries. 
+ * @since 0.0.2
  * @see View
  * @author Ahmed Yehia
  */

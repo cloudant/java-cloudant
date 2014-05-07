@@ -23,7 +23,8 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * Convenient base class for CouchDB documents, defines the basic 
- * id and revision properties and attachments.
+ * <code>id</code>, <code>revision</code> properties, and attachments.
+ * @since 0.0.2
  * @author Ahmed Yehia
  *
  */

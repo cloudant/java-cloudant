@@ -9,6 +9,8 @@ import java.util.Set;
 import org.lightcouch.Attachment;
 
 public class Foo {
+	
+	private final String Type = "Foo";
 
 	private String _id;
 	private String _rev;

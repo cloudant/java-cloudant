@@ -18,31 +18,43 @@ package org.lightcouch;
 
 import static org.lightcouch.CouchDbUtil.assertNotEmpty;
 import static org.lightcouch.CouchDbUtil.close;
+import static org.lightcouch.CouchDbUtil.getStream;
 import static org.lightcouch.URIBuilder.builder;
 
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
+import org.lightcouch.ReplicationResult.ReplicationHistory;
 
 import com.google.gson.JsonObject;
 
 /**
- * <p>This class allows construction and sending of replication requests.
- * <p>Replication is triggered by sending a POST request to _replicate. 
+ * This class provides access to the database replication API; a replication request 
+ * is sent via HTTP POST to <code>_replicate</code> URI.
  * 
  * <h3>Usage Example:</h3>
  * <pre>
- * ReplicationResult result = dbClient.replication()
+ * ReplicationResult replication = dbClient.replication()
  * 	.source("source-db")
  * 	.target("target-db")
  * 	.createTarget(true)
+ *	.filter("example/filter1")
  * 	.trigger();
+ * 
+ * {@code
+ * List<ReplicationHistory> histories = replication.getHistories();
+ * }
  * </pre>
  * 
+ * @see CouchDbClientBase#replication()
+ * @see ReplicationResult
+ * @see ReplicationHistory
  * @see Replicator
+ * @since 0.0.2
  * @author Ahmed Yehia
  *
  */
@@ -88,7 +100,8 @@ public class Replication {
 			}
 			URI uri = builder(dbc.getBaseUri()).path("_replicate").build();
 			response = dbc.post(uri, json.toString());
-			return dbc.deserialize(dbc.getStream(response), ReplicationResult.class);
+			InputStreamReader reader = new InputStreamReader(getStream(response));
+			return dbc.getGson().fromJson(reader, ReplicationResult.class);
 		} finally {
 			close(response);
 		}

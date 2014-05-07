@@ -27,16 +27,21 @@ import org.lightcouch.ChangesResult.Row;
 import com.google.gson.Gson;
 
 /**
- * <p>Contains the Change Notifications API, supports change feeds of types <i>normal</i> 
- * and <i>continuous</i>. 
+ * <p>Contains the Change Notifications API, supports <i>normal</i> and <i>continuous</i> feed Changes. 
  * <h3>Usage Example:</h3>
  * <pre>
  * // feed type normal 
- * ChangesResult result = dbClient.changes()
- *	.since("seq-value") // *
+ * String since = dbClient.context().info().getUpdateSeq(); // latest update seq
+ * ChangesResult changeResult = dbClient.changes()
+ *	.since(since) 
  *	.limit(10)
  *	.filter("example/filter")
  *	.getChanges();
+ *
+ * for (ChangesResult.Row row : changeResult.getResults()) {
+ *   String docId = row.getId()
+ *   JsonObject doc = row.getDoc();
+ * }
  *
  * // feed type continuous
  * Changes changes = dbClient.changes()
@@ -46,15 +51,13 @@ import com.google.gson.Gson;
  * 
  * while (changes.hasNext()) { 
  *	ChangesResult.Row feed = changes.next();
+ *  String docId = feed.getId();
+ *  JsonObject doc = feed.getDoc();
  *	// changes.stop(); // stop continuous feed
  * }
  * </pre>
- * <p>* Getting changes since latest update may be obtained by:
- * <pre>
- * CouchDbInfo dbInfo = dbClient.context().info();
- * String since = dbInfo.getUpdateSeq();
- * <pre> 
  * @see ChangesResult
+ * @since 0.0.2
  * @author Ahmed Yehia
  */
 public class Changes {

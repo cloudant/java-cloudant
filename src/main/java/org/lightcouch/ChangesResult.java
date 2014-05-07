@@ -22,7 +22,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * <p>Represents a Change notifications feed result.
+ * Represents Changes feed result of type <i>normal</i>.
+ * @since 0.0.2
  * @see Changes
  * @author Ahmed Yehia
  *
