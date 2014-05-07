@@ -3,7 +3,7 @@
 
 	<groupId>org.lightcouch</groupId>
 	<artifactId>lightcouch</artifactId>
-	<version>0.1.1-SNAPSHOT</version>
+	<version>0.1.2</version>
 	<packaging>jar</packaging>
 	<name>LightCouch</name>
 	<description>CouchDB Java API</description>
