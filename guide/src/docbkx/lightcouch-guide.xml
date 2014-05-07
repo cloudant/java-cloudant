@@ -877,10 +877,10 @@ dbClient.replicator()
       <section id="extend">
           <title>Extending the API</title>
           <para>
-          This API allows excuting user-defined Http requests against the database; by exposing it's underlying low-level request excution and validation <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbClientBase.html#executeRequest(org.apache.http.client.methods.HttpRequestBase)">dbClient.executeRequest(org.apache.http.client.methods.HttpRequestBase)</ulink>.
+          This API exposes LightCouch internal low-level Http request excution to allow excuting user-defined requests against the database via <ulink url="http://www.lightcouch.org/javadocs/org/lightcouch/CouchDbClientBase.html#executeRequest(org.apache.http.client.methods.HttpRequestBase)">dbClient.executeRequest(org.apache.http.client.methods.HttpRequestBase)</ulink>.
           </para>
           <para>
-          It enables making a request that's not provided natively by LightCouch.  Such as getting information about a document by issuing a <literal>HEAD</literal> request.
+          Useful to make a request that's not provided natively by LightCouch.  Such as getting a document information by issuing a <literal>HEAD</literal> request.
           </para>
           <programlisting><![CDATA[ 
 org.apache.http.client.methods.HttpHead head = new HttpHead(dbClient.getDBUri() + "doc-id");
