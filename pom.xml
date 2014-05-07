@@ -22,9 +22,9 @@
 		</license>
 	</licenses>
 	<scm>
-		<connection>scm:git:git://github.com/ahmedyha/LightCouch.git</connection>
-		<developerConnection>scm:git:git@github.com:ahmedyha/LightCouch.git</developerConnection>
-		<url>https://ahmedyha@github.com/ahmedyha/LightCouch.git</url>
+		<connection>scm:git:git://github.com/lightcouch/LightCouch.git</connection>
+		<developerConnection>scm:git:git@github.com:lightcouch/LightCouch.git</developerConnection>
+		<url>https://lightcouch@github.com/lightcouch/LightCouch.git</url>
 	</scm>
 	<developers>
 		<developer>
@@ -35,7 +35,7 @@
 	</developers>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<httpclient.version>4.2.5</httpclient.version>
+		<httpclient.version>4.3.3</httpclient.version>
 		<gson.version>2.2.4</gson.version>
 		<junit.version>4.8.2</junit.version>
 	</properties>
