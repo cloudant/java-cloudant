@@ -431,19 +431,19 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * @return The database URI.
-	 */
-	public URI getDBUri() {
-		return dbURI;
-	}
-	
-	/**
 	 * @return The base URI.
 	 */
 	public URI getBaseUri() {
 		return baseURI;
 	}
 	
+	/**
+	 * @return The database URI.
+	 */
+	public URI getDBUri() {
+		return dbURI;
+	}
+    
 	/**
 	 * @return The Gson instance.
 	 */
@@ -640,5 +640,4 @@ public abstract class CouchDbClientBase {
 		});
 		return gsonBuilder.create();
 	}
-	
 }

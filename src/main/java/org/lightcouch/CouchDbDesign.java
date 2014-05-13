@@ -16,8 +16,11 @@
 
 package org.lightcouch;
 
-import static org.lightcouch.CouchDbUtil.*;
 import static java.lang.String.format;
+import static org.lightcouch.CouchDbUtil.assertNotEmpty;
+import static org.lightcouch.CouchDbUtil.listResources;
+import static org.lightcouch.CouchDbUtil.readFile;
+import static org.lightcouch.CouchDbUtil.removeExtension;
 import static org.lightcouch.URIBuilder.builder;
 
 import java.net.URI;
@@ -27,6 +30,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.lightcouch.DesignDocument.MapReduce;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * Provides API to work with design documents. 
@@ -61,6 +67,7 @@ public class CouchDbDesign {
 	private static final String LISTS           = "lists";
 	private static final String UPDATES         = "updates";
 	private static final String REWRITES        = "rewrites";
+	private static final String FULLTEXT        = "fulltext";
 	private static final String MAP_JS          = "map.js";
 	private static final String REDUCE_JS       = "reduce.js";
 	
@@ -157,28 +164,9 @@ public class CouchDbDesign {
 		if(elements == null) {
 			throw new IllegalArgumentException("Design docs directory cannot be empty.");
 		}
-		
-		if(elements.contains(VALIDATE_DOC)) { // validate_doc_update
-			String validateDocPath = format("%s%s/", rootPath, VALIDATE_DOC);
-			List<String> dirList = listResources(validateDocPath);
-			for (String file : dirList) {
-				String contents = readFile(format("/%s%s", validateDocPath, file));
-				dd.setValidateDocUpdate(contents);
-				break; // only one validate_doc_update file
-			}
-		} // /validate_doc_update
-		
-		if(elements.contains(REWRITES)) { // rewrites
-			String rewritePath = format("%s%s/", rootPath, REWRITES);
-			List<String> dirList = listResources(rewritePath);
-			for (String file : dirList) {
-				String contents = readFile(format("/%s%s", rewritePath, file));
-				dd.setRewrites(contents);
-				break; // only one rewrites file
-			}
-		} // /rewrites
+		// Views
 		Map<String, MapReduce> views = null;
-		if(elements.contains(VIEWS)) { // views
+		if(elements.contains(VIEWS)) { 
 			String viewsPath = format("%s%s/", rootPath, VIEWS);
 			views = new HashMap<String, MapReduce>();
 			for (String viewDirName : listResources(viewsPath)) { // views sub-dirs
@@ -202,6 +190,9 @@ public class CouchDbDesign {
 		dd.setShows(populateMap(rootPath, elements, SHOWS));
 		dd.setLists(populateMap(rootPath, elements, LISTS));
 		dd.setUpdates(populateMap(rootPath, elements, UPDATES));
+		dd.setValidateDocUpdate(readContent(elements, rootPath, VALIDATE_DOC));
+		dd.setRewrites(dbc.getGson().fromJson(readContent(elements, rootPath, REWRITES), JsonArray.class));
+		dd.setFulltext(dbc.getGson().fromJson(readContent(elements, rootPath, FULLTEXT), JsonObject.class));
 		return dd;
 	}
 	
@@ -216,5 +207,17 @@ public class CouchDbDesign {
 			}
 		}
 		return functionsMap;
+	}
+	
+	public String readContent(List<String> elements, String rootPath, String element) {
+		if(elements.contains(element)) { 
+			String path = format("%s%s/", rootPath, element);
+			List<String> dirList = listResources(path);
+			for (String file : dirList) {
+				String contents = readFile(format("/%s%s", path, file));
+				return contents;
+			}
+		} 
+		return null;
 	}
 }

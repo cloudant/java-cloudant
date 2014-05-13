@@ -18,6 +18,8 @@ package org.lightcouch;
 
 import java.util.Map;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -36,7 +38,8 @@ public class DesignDocument extends Document {
 	private Map<String, String> shows;
 	private Map<String, String> lists;
 	private Map<String, String> updates;
-	private String rewrites;
+	private JsonArray rewrites;
+	private JsonObject fulltext;
 
 	public String getLanguage() {
 		return language;
@@ -50,8 +53,12 @@ public class DesignDocument extends Document {
 		return validateDocUpdate;
 	}
 	
-	public String getRewrites() {
+	public JsonArray getRewrites() {
 		return rewrites;
+	}
+	
+	public JsonObject getFulltext() {
+		return fulltext;
 	}
 
 	public Map<String, String> getFilters() {
@@ -82,8 +89,12 @@ public class DesignDocument extends Document {
 		this.validateDocUpdate = validateDocUpdate;
 	}
 	
-	public void setRewrites(String rewrites) {
+	public void setRewrites(JsonArray rewrites) {
 		this.rewrites = rewrites;
+	}
+	
+	public void setFulltext(JsonObject fulltext) {
+		this.fulltext = fulltext;
 	}
 
 	public void setFilters(Map<String, String> filters) {
@@ -114,6 +125,7 @@ public class DesignDocument extends Document {
 		result = prime * result
 				+ ((validateDocUpdate == null) ? 0 : validateDocUpdate.hashCode());
 		result = prime * result + ((rewrites == null) ? 0 : rewrites.hashCode());
+		result = prime * result + ((fulltext == null) ? 0 : fulltext.hashCode());
 		result = prime * result + ((views == null) ? 0 : views.hashCode());
 		return result;
 	}
@@ -164,6 +176,11 @@ public class DesignDocument extends Document {
 			if (other.rewrites != null)
 				return false;
 		} else if (!rewrites.equals(other.rewrites))
+			return false;
+		if (fulltext == null) {
+			if (other.fulltext != null)
+				return false;
+		} else if (!fulltext.equals(other.fulltext))
 			return false;
 		if (views == null) {
 			if (other.views != null)
