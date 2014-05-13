@@ -38,7 +38,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.experimental.theories.suppliers.TestedOn;
 import org.lightcouch.Attachment;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.DocumentConflictException;
