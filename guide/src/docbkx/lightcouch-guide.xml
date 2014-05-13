@@ -72,7 +72,10 @@
 					</ulink>
 					 [<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.2.md5">
                         <citetitle>md5</citetitle>
-                    </ulink>]
+                    </ulink>] - 
+   				<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.2-sources.jar">
+						<citetitle>sources</citetitle>
+				</ulink>
 				</para>
 			</listitem>
                   <listitem>
@@ -122,11 +125,14 @@
 			<listitem>
 				<para>
 					<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.2.jar">
-						<citetitle>lightcouch-0.2.0.jar</citetitle>
+						<citetitle>lightcouch-0.1.2.jar</citetitle>
 					</ulink>
 					 [<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.2.md5">
                         <citetitle>md5</citetitle>
-                    </ulink>]
+                    </ulink>] - 
+                    <ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.2-sources.jar">
+						<citetitle>sources</citetitle>
+					</ulink>
 				</para>
 			</listitem>
 			<listitem>
