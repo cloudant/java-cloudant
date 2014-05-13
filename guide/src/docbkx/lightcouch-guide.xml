@@ -708,7 +708,9 @@ design-docs
             |- update1.js
             |- ..
         |- validate_doc_update
-            |- validate.js 
+            |- validate_doc_update.js 
+        |- rewrites
+            |- rewrites.js 
         |- views
             |- by_date
                 |- map.js
@@ -894,6 +896,40 @@ org.apache.http.client.methods.HttpHead head = new HttpHead(dbClient.getDBUri() 
 org.apache.http.HttpResponse response = dbClient.executeRequest(head);
 
 String revision = response.getFirstHeader("ETAG").getValue();
+
+org.apache.http.client.utils.HttpClientUtils.closeQuietly(response); // closes the response
+            ]]></programlisting>
+          <para>
+          The following shows how to query the database for fulltext search provided by <ulink url="https://github.com/rnewson/couchdb-lucene">couchdb-lucene</ulink>.
+          </para>
+          <para>
+          Include <literal>fulltext</literal> to your design document and synchronize with the database, then execute a query:
+          </para>
+          <programlisting><![CDATA[ 
+design-docs
+    |- example
+        |- fulltext    
+            |- fulltext.js 
+                   
+{
+	"by_title": {
+	      "index": "function(doc) { var ret = new Document(); ret.add( doc.title ); return ret; }"
+	},
+	"by_content": {
+		"index": "function(doc) { var ret = new Document(); ret.add( doc.content ); return ret; }"
+	}
+}
+            ]]></programlisting>
+          <programlisting><![CDATA[               
+String dbName = dbClient.context().info().getDbName();
+String q = java.net.URLEncoder.encode("hello world", "UTF-8");
+String ftsUri  = dbClient.getBaseUri() + "_fti/local/" + dbName + "/_design/example/by_title?q=" + q;
+
+org.apache.http.HttpResponse response = dbClient.executeRequest(new org.apache.http.client.methods.HttpGet(ftsUri));
+InputStream in = response.getEntity().getContent();
+
+// use org.gson.JsonObject or map to your own POJO
+JsonObject searchResult = dbClient.getGson().fromJson(new InputStreamReader(in), JsonObject.class); 
 
 org.apache.http.client.utils.HttpClientUtils.closeQuietly(response); // closes the response
             ]]></programlisting>

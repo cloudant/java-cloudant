@@ -1,1 +1,1 @@
-Usage: mvn generate-sources
+Usage: mvn clean generate-sources
