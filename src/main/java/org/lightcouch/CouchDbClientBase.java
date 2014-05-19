@@ -118,42 +118,48 @@ public abstract class CouchDbClientBase {
 	// Public API
 	
 	/**
-	 * Provides access to the database APIs.
+	 * Provides access to DB server APIs.
+	 * @see CouchDbContext
 	 */
 	public CouchDbContext context() {
 		return context;
 	}
 	
 	/**
-	 * Provides access to the database design documents API.
+	 * Provides access to CouchDB Design Documents.
+	 * @see CouchDbDesign
 	 */
 	public CouchDbDesign design() {
 		return design;
 	}
 	
 	/**
-	 * Provides access to the View APIs.
+	 * Provides access to CouchDB <tt>View</tt> APIs.
+	 * @see View
 	 */
 	public View view(String viewId) {
 		return new View(this, viewId);
 	}
 
 	/**
-	 * Provides access to the replication APIs.
+	 * Provides access to CouchDB <tt>replication</tt> APIs.
+	 * @see Replication
 	 */
 	public Replication replication() {
 		return new Replication(this);
 	}
 	
 	/**
-	 * Provides access to the replicator database APIs.
+	 * Provides access to the <tt>replicator database</tt>.
+	 * @see Replicator
 	 */
 	public Replicator replicator() {
 		return new Replicator(this);
 	}
 	
 	/**
-	 * Provides access to the Change Notifications API.
+	 * Provides access to <tt>Change Notifications</tt> API.
+	 * @see Changes
 	 */
 	public Changes changes() {
 		return new Changes(this);
@@ -192,8 +198,8 @@ public abstract class CouchDbClientBase {
 	 * Finds an Object of the specified type.
 	 * @param <T> Object type.
 	 * @param classType The class of type T.
-	 * @param id The document id to get.
-	 * @param rev The document revision.
+	 * @param id The document _id field.
+	 * @param rev The document _rev field.
 	 * @return An object of type T.
 	 * @throws NoDocumentException If the document is not found in the database.
 	 */
@@ -206,10 +212,10 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * A General purpose find, that gives more control over the query.
-	 * <p>Unlike other finders, this method expects a fully formated and encoded URI to be supplied.
+	 * This method finds any document given a URI.
+	 * <p>The URI must be URI-encoded.
 	 * @param classType The class of type T.
-	 * @param uri The URI.
+	 * @param uri The URI as string.
 	 * @return An object of type T.
 	 */
 	public <T> T findAny(Class<T> classType, String uri) {
@@ -219,10 +225,10 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * <p>Finds a document and returns the result as an {@link InputStream}.</p>
-	 * The stream should be properly closed after usage, as to avoid connection leaks.
-	 * @param id The document id.
-	 * @return The result of the request as an {@link InputStream}
+	 * Finds a document and return the result as {@link InputStream}.
+	 * <p><b>Note</b>: The stream must be closed after use to release the connection.
+	 * @param id The document _id field.
+	 * @return The result as {@link InputStream}
 	 * @throws NoDocumentException If the document is not found in the database.
 	 * @see #find(String, String)
 	 */
@@ -232,11 +238,11 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * <p>Finds a document given an id and revision, returns the result as {@link InputStream}.</p>
-	 * The stream should be properly closed after usage, as to avoid connection leaks.
-	 * @param id The document id.
-	 * @param rev The document revision.
-	 * @return The result of the request as an {@link InputStream}
+	 * Finds a document given id and revision and returns the result as {@link InputStream}.
+	 * <p><b>Note</b>: The stream must be closed after use to release the connection.
+	 * @param id The document _id field.
+	 * @param rev The document _rev field.
+	 * @return The result as {@link InputStream}
 	 * @throws NoDocumentException If the document is not found in the database.
 	 */
 	public InputStream find(String id, String rev) {
@@ -246,8 +252,8 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * Checks if the database contains a document given an id.
-	 * @param id The document id.
+	 * Checks if a document exist in the database.
+	 * @param id The document _id field.
 	 * @return true If the document is found, false otherwise.
 	 */
 	public boolean contains(String id) { 
@@ -274,7 +280,7 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * Saves the given object in a batch request.
+	 * Saves a document with <tt>batch=ok</tt> query param.
 	 * @param object The object to save.
 	 */
 	public void batch(Object object) {
@@ -289,9 +295,47 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
+	 * Updates an object in the database, the object must have the correct id and revision values.
+	 * @param object The object to update
+	 * @throws DocumentConflictException If a conflict is detected during the update.
+	 * @return {@link Response}
+	 */
+	public Response update(Object object) {
+		return put(getDBUri(), object, false);
+	}
+	
+	/**
+	 * Removes a document from the database. 
+	 * <p>The object must have the correct _id and _rev values.
+	 * @param object The document to remove as object.
+	 * @throws NoDocumentException If the document is not found in the database.
+	 * @return {@link Response}
+	 */
+	public Response remove(Object object) {
+		assertNotEmpty(object, "object");
+		JsonObject jsonObject = getGson().toJsonTree(object).getAsJsonObject();
+		String id = getAsString(jsonObject, "_id");
+		String rev = getAsString(jsonObject, "_rev");
+		return remove(id, rev);
+	}
+	
+	/**
+	 * Removes a document from the database given both _id and _rev values.
+	 * @param id The document _id field.
+	 * @param rev The document _rev field.
+	 * @throws NoDocumentException If the document is not found in the database.
+	 * @return {@link Response}
+	 */
+	public Response remove(String id, String rev) {
+		assertNotEmpty(id, "id");
+		assertNotEmpty(rev, "rev");
+		return delete(builder(getDBUri()).path(id).query("rev", rev).build());
+	}
+	
+	/**
 	 * Performs a Bulk Documents request.
 	 * @param objects The {@link List} of objects.
-	 * @param allOrNothing Indicated whether the request has all-or-nothing semantics.
+	 * @param allOrNothing Indicated whether the request has <tt>all-or-nothing</tt> semantics.
 	 * @return {@code List<Response>} Containing the resulted entries.
 	 */
 	public List<Response> bulk(List<?> objects, boolean allOrNothing) {
@@ -309,7 +353,7 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * <p>Saves an attachment under a new document with a generated UUID as the document id.
+	 * Saves an attachment to a new document with a generated <tt>UUID</tt> as the document id.
 	 * <p>To retrieve an attachment, see {@link #find(String)}.
 	 * @param instream The {@link InputStream} holding the binary data.
 	 * @param name The attachment name.
@@ -325,8 +369,8 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * <p>Saves an attachment under an existing document given both a document id
-	 * and revision, or under a new document given only the document id.
+	 * Saves an attachment to an existing document given both a document id
+	 * and revision, or save to a new document given only the id, and rev as {@code null}.
 	 * <p>To retrieve an attachment, see {@link #find(String)}.
 	 * @param instream The {@link InputStream} holding the binary data.
 	 * @param name The attachment name.
@@ -346,45 +390,8 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * Updates an object in the database, the object must have the correct id and revision values.
-	 * @param object The object to update
-	 * @throws DocumentConflictException If a conflict is detected during the update.
-	 * @return {@link Response}
-	 */
-	public Response update(Object object) {
-		return put(getDBUri(), object, false);
-	}
-	
-	/**
-	 * Removes an object from the database, the object must have the correct id and revision values.
-	 * @param object The object to remove
-	 * @throws NoDocumentException If the document could not be found in the database.
-	 * @return {@link Response}
-	 */
-	public Response remove(Object object) {
-		assertNotEmpty(object, "object");
-		JsonObject jsonObject = getGson().toJsonTree(object).getAsJsonObject();
-		String id = getAsString(jsonObject, "_id");
-		String rev = getAsString(jsonObject, "_rev");
-		return remove(id, rev);
-	}
-	
-	/**
-	 * Removes a document from the database, given both an id and revision values.
-	 * @param id The document id
-	 * @param rev The document revision
-	 * @throws NoDocumentException If the document could not be found in the database.
-	 * @return {@link Response}
-	 */
-	public Response remove(String id, String rev) {
-		assertNotEmpty(id, "id");
-		assertNotEmpty(rev, "rev");
-		return delete(builder(getDBUri()).path(id).query("rev", rev).build());
-	}
-	
-	/**
 	 * Invokes an Update Handler.
-	 * @param updateHandlerUri The Update Handler URI, in the format: <code>designDocId/updateFunction</code>
+	 * @param updateHandlerUri The Update Handler URI, in the format: <code>designDoc/update1</code>
 	 * @param docId The document id to update.
 	 * @param query The query string parameters, e.g, field=field1&value=value1
 	 * @return The output of the request.
@@ -401,6 +408,7 @@ public abstract class CouchDbClientBase {
 	
 	/**
 	 * Executes a HTTP request.
+	 * <p><b>Note</b>: The response must be closed after use to release the connection.
 	 * @param request The HTTP request to execute.
 	 * @return {@link HttpResponse}
 	 */
@@ -414,9 +422,7 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * Synchronize all design documents on desk with the database.
-	 * <p>Shorthand for {@link CouchDbDesign#synchronizeAllWithDb()}
-	 * <p>This method might be used to sync design documents upon a client creation, eg. a Spring bean init-method.
+	 * Synchronize all design documents with the database.
 	 */
 	public void syncDesignDocsWithDb() {
 		design().synchronizeAllWithDb();
