@@ -68,6 +68,7 @@ public class CouchDbDesign {
 	private static final String UPDATES         = "updates";
 	private static final String REWRITES        = "rewrites";
 	private static final String FULLTEXT        = "fulltext";
+	private static final String INDEXES         = "indexes";
 	private static final String MAP_JS          = "map.js";
 	private static final String REDUCE_JS       = "reduce.js";
 	
@@ -193,6 +194,7 @@ public class CouchDbDesign {
 		dd.setValidateDocUpdate(readContent(elements, rootPath, VALIDATE_DOC));
 		dd.setRewrites(dbc.getGson().fromJson(readContent(elements, rootPath, REWRITES), JsonArray.class));
 		dd.setFulltext(dbc.getGson().fromJson(readContent(elements, rootPath, FULLTEXT), JsonObject.class));
+		dd.setIndexes(dbc.getGson().fromJson(readContent(elements, rootPath, INDEXES), JsonObject.class));
 		return dd;
 	}
 	

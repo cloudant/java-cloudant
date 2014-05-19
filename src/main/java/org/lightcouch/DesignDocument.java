@@ -40,6 +40,7 @@ public class DesignDocument extends Document {
 	private Map<String, String> updates;
 	private JsonArray rewrites;
 	private JsonObject fulltext;
+	private JsonObject indexes;
 
 	public String getLanguage() {
 		return language;
@@ -59,6 +60,10 @@ public class DesignDocument extends Document {
 	
 	public JsonObject getFulltext() {
 		return fulltext;
+	}
+	
+	public JsonObject getIndexes() {
+		return indexes;
 	}
 
 	public Map<String, String> getFilters() {
@@ -95,6 +100,10 @@ public class DesignDocument extends Document {
 	
 	public void setFulltext(JsonObject fulltext) {
 		this.fulltext = fulltext;
+	}
+	
+	public void setIndexes(JsonObject indexes) {
+		this.indexes = indexes;
 	}
 
 	public void setFilters(Map<String, String> filters) {
