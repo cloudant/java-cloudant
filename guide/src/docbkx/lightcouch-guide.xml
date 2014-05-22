@@ -58,7 +58,7 @@
 <dependency>
   <groupId>org.lightcouch</groupId>
   <artifactId>lightcouch</artifactId> 
-  <version>0.1.2</version>
+  <version>0.1.3</version>
 </dependency> 
 		]]></programlisting>
 		<para id="dependencies">
@@ -67,13 +67,13 @@
 		<itemizedlist>
 			<listitem>
 				<para>
-					<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.2.jar">
-						<citetitle>lightcouch-0.1.2.jar</citetitle>
+					<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.3.jar">
+						<citetitle>lightcouch-0.1.3.jar</citetitle>
 					</ulink>
-					 [<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.2.md5">
+					 [<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.3.md5">
                         <citetitle>md5</citetitle>
                     </ulink>] - 
-   				<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.2-sources.jar">
+   				<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.3-sources.jar">
 						<citetitle>sources</citetitle>
 				</ulink>
 				</para>
@@ -124,13 +124,13 @@
 		<itemizedlist>
 			<listitem>
 				<para>
-					<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.2.jar">
-						<citetitle>lightcouch-0.1.2.jar</citetitle>
+					<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.3.jar">
+						<citetitle>lightcouch-0.1.3.jar</citetitle>
 					</ulink>
-					 [<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.2.md5">
+					 [<ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.3.md5">
                         <citetitle>md5</citetitle>
                     </ulink>] - 
-                    <ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.2-sources.jar">
+                    <ulink url="http://www.lightcouch.org/downloads/lightcouch-0.1.3-sources.jar">
 						<citetitle>sources</citetitle>
 					</ulink>
 				</para>
