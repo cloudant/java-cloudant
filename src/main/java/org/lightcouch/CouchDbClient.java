@@ -208,7 +208,7 @@ public class CouchDbClient extends CouchDbClientBase {
 					final HttpContext context) throws IOException {
 				if (log.isInfoEnabled()) {
 					RequestLine req = request.getRequestLine();
-					log.info("> " + req.getMethod() + URLDecoder.decode(req.getUri(), "UTF-8"));
+					log.info("> " + req.getMethod() + " " + URLDecoder.decode(req.getUri(), "UTF-8"));
 				}
 			}
 		});
