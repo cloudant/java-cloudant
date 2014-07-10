@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
+ * Copyright (C) 2011 lightcouch.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -109,13 +109,13 @@ public class CouchDbClientAndroid extends CouchDbClientBase {
 	HttpClient createHttpClient(CouchDbProperties props) {
 		DefaultHttpClient httpclient = null;
 		try {
-			SchemeRegistry schemeRegistry = createRegistry(props);
+			final SchemeRegistry schemeRegistry = createRegistry(props);
 			// Http params
-			HttpParams params = new BasicHttpParams();
+			final HttpParams params = new BasicHttpParams();
 			params.setParameter(CoreProtocolPNames.HTTP_CONTENT_CHARSET, "UTF-8");
 			params.setParameter(CoreConnectionPNames.SO_TIMEOUT, props.getSocketTimeout());
 			params.setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, props.getConnectionTimeout());
-			ThreadSafeClientConnManager ccm = new ThreadSafeClientConnManager(params,schemeRegistry);
+			final ThreadSafeClientConnManager ccm = new ThreadSafeClientConnManager(params,schemeRegistry);
 			httpclient = new DefaultHttpClient(ccm, params);
 			if(props.getProxyHost() != null) {
 				HttpHost proxy = new HttpHost(props.getProxyHost(), props.getProxyPort());

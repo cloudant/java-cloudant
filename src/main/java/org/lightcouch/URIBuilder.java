@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
+ * Copyright (C) 2011 lightcouch.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,13 @@
 
 package org.lightcouch;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Helper class for construction of HTTP request URIs.
@@ -32,17 +35,18 @@ class URIBuilder {
 	private String host;
 	private int port;
 	private String path = "";
+	private String pathToEncode = "";
 	/* The final query */
 	private final StringBuilder query = new StringBuilder();
 	/* key=value params */
 	private final List<String> qParams = new ArrayList<String>();
 
-	public static URIBuilder builder() {
+	public static URIBuilder buildUri() {
 		return new URIBuilder();
 	}
 
-	public static URIBuilder builder(URI uri) {
-		URIBuilder builder = URIBuilder.builder().scheme(uri.getScheme())
+	public static URIBuilder buildUri(URI uri) {
+		URIBuilder builder = URIBuilder.buildUri().scheme(uri.getScheme())
 				.host(uri.getHost()).port(uri.getPort()).path(uri.getPath());
 		return builder;
 	}
@@ -58,6 +62,20 @@ class URIBuilder {
 		} catch (URISyntaxException e) {
 			throw new IllegalArgumentException(e);
 		}
+	}
+	
+	public URI buildEncoded() {
+		for (int i = 0; i < qParams.size(); i++) {
+			String amp = (i != qParams.size() - 1) ? "&" : "";
+			query.append(qParams.get(i) + amp);
+		}
+		try {
+			String q = (query.length() == 0) ? "" : "?" + query;
+			String uri = String.format("%s://%s:%s%s%s%s", new Object[]{scheme, host, port, path, pathToEncode, q});
+			return new URI(uri);
+		} catch (URISyntaxException e) {
+			throw new IllegalArgumentException(e);
+		} 
 	}
 
 	public URIBuilder scheme(String scheme) {
@@ -79,6 +97,15 @@ class URIBuilder {
 		this.path += path;
 		return this;
 	}
+	
+	public URIBuilder pathToEncode(String path) {
+		try {
+			pathToEncode = URLEncoder.encode(path, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			throw new IllegalArgumentException(e);
+		}
+		return this;
+	}
 
 	public URIBuilder query(String name, Object value) {
 		if (name != null && value != null)
@@ -97,4 +124,5 @@ class URIBuilder {
 			this.qParams.addAll(params.getParams());
 		return this;
 	}
+	
 }

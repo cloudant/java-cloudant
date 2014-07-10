@@ -64,6 +64,7 @@ public class ChangesTest {
 			List<ChangesResult.Row.Rev> revs = row.getChanges();
 			String docId = row.getId();
 			JsonObject doc = row.getDoc();
+			
 			assertNotNull(revs);
 			assertNotNull(docId);
 			assertNotNull(doc);
@@ -90,7 +91,9 @@ public class ChangesTest {
 		while (changes.hasNext()) {
 			ChangesResult.Row feed = changes.next();
 			String docId = feed.getId();
+			
 			assertEquals(response.getId(), docId);
+			
 			changes.stop();
 		}
 	}

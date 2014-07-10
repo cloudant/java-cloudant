@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
+ * Copyright (C) 2011 lightcouch.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package org.lightcouch;
 
 import static org.lightcouch.CouchDbUtil.*;
-import static org.lightcouch.URIBuilder.builder;
+import static org.lightcouch.URIBuilder.buildUri;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -86,7 +86,7 @@ public class Replicator {
 		replicatorDoc = new ReplicatorDocument();
 		replicatorDB = "_replicator"; // default replicator db
 		userCtxRoles = new String[0]; // default roles
-		dbURI = builder(dbc.getBaseUri()).path(replicatorDB).path("/").build();
+		dbURI = buildUri(dbc.getBaseUri()).path(replicatorDB).path("/").build();
 	}
 
 	
@@ -112,7 +112,7 @@ public class Replicator {
 	 */
 	public ReplicatorDocument find() {
 		assertNotEmpty(replicatorDoc.getId(), "Doc id");
-		URI uri = builder(dbURI).path(replicatorDoc.getId()).query("rev", replicatorDoc.getRevision()).build();
+		final URI uri = buildUri(dbURI).path(replicatorDoc.getId()).query("rev", replicatorDoc.getRevision()).build();
 		return dbc.get(uri, ReplicatorDocument.class);
 	}
 	
@@ -122,11 +122,11 @@ public class Replicator {
 	public List<ReplicatorDocument> findAll() {
 		InputStream instream = null;
 		try {  
-			URI uri = builder(dbURI).path("_all_docs").query("include_docs", "true").build();
-			Reader reader = new InputStreamReader(instream = dbc.get(uri));
-			JsonArray jsonArray = new JsonParser().parse(reader)
+			final URI uri = buildUri(dbURI).path("_all_docs").query("include_docs", "true").build();
+			final Reader reader = new InputStreamReader(instream = dbc.get(uri));
+			final JsonArray jsonArray = new JsonParser().parse(reader)
 					.getAsJsonObject().getAsJsonArray("rows");
-			List<ReplicatorDocument> list = new ArrayList<ReplicatorDocument>();
+			final List<ReplicatorDocument> list = new ArrayList<ReplicatorDocument>();
 			for (JsonElement jsonElem : jsonArray) {
 				JsonElement elem = jsonElem.getAsJsonObject().get("doc");
 				if(!getAsString(elem.getAsJsonObject(), "_id").startsWith("_design")) { // skip design docs
@@ -147,7 +147,7 @@ public class Replicator {
 	public Response remove() {
 		assertNotEmpty(replicatorDoc.getId(), "Doc id");
 		assertNotEmpty(replicatorDoc.getRevision(), "Doc rev");
-		URI uri = builder(dbURI).path(replicatorDoc.getId()).query("rev", replicatorDoc.getRevision()).build();
+		final URI uri = buildUri(dbURI).path(replicatorDoc.getId()).query("rev", replicatorDoc.getRevision()).build();
 		return dbc.delete(uri);
 	} 
 	
@@ -200,7 +200,7 @@ public class Replicator {
 
 	public Replicator replicatorDB(String replicatorDB) {
 		this.replicatorDB = replicatorDB;
-		dbURI = builder(dbc.getBaseUri()).path(replicatorDB).path("/").build();
+		dbURI = buildUri(dbc.getBaseUri()).path(replicatorDB).path("/").build();
 		return this;
 	}
 

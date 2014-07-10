@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
+ * Copyright (C) 2011 lightcouch.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -106,7 +106,7 @@ public class View {
 	private URIBuilder uriBuilder;
 	
 	private String allDocsKeys; // bulk docs
-	private MapReduce tempView; // temp view
+	private MapReduce mapRedtempViewM; // temp view
 	
 	View(CouchDbClientBase dbc, String viewId) {
 		assertNotEmpty(viewId, "View id");
@@ -118,7 +118,7 @@ public class View {
 			String[] v = viewId.split("/");
 			view = String.format("_design/%s/_view/%s", v[0], v[1]);
 		}
-		this.uriBuilder = URIBuilder.builder(dbc.getDBUri()).path(view);
+		this.uriBuilder = URIBuilder.buildUri(dbc.getDBUri()).path(view);
 	}
 	
 	// Query options
@@ -133,8 +133,8 @@ public class View {
 		if(allDocsKeys != null) { // bulk docs
 			return getStream(dbc.post(uri, allDocsKeys));
 		}
-		if(tempView != null) { // temp view
-			return getStream(dbc.post(uri, gson.toJson(tempView)));
+		if(mapRedtempViewM != null) { // temp view
+			return getStream(dbc.post(uri, gson.toJson(mapRedtempViewM)));
 		}
 		
 		return dbc.get(uri);
@@ -272,11 +272,11 @@ public class View {
 		String action;
 		try {
 			// extract fields from the returned HEXed JSON object
-			JsonObject json = new JsonParser().parse(new String(Base64.decodeBase64(param.getBytes()))).getAsJsonObject();
+			final JsonObject json = new JsonParser().parse(new String(Base64.decodeBase64(param.getBytes()))).getAsJsonObject();
 			if(log.isDebugEnabled()) {
 				log.debug("Paging Param Decoded = " + json);
 			}
-			JsonObject jsonCurrent = json.getAsJsonObject(CURRENT_KEYS);
+			final JsonObject jsonCurrent = json.getAsJsonObject(CURRENT_KEYS);
 			currentStartKey = jsonCurrent.get(CURRENT_START_KEY).getAsString();
 			currentStartKeyDocId = jsonCurrent.get(CURRENT_START_KEY_DOC_ID).getAsString();
 			startKey = json.get(START_KEY).getAsString();
@@ -305,17 +305,17 @@ public class View {
 			startKeyDocId(startKeyDocId);
 		}
 		// init page, query view
-		Page<T> page = new Page<T>();
-		List<T> pageList = new ArrayList<T>();
-		ViewResult<String, String, T> vr = queryView(String.class, String.class, classOfT);
-		List<ViewResult<String, String, T>.Rows> rows = vr.getRows();
-		int resultRows = rows.size();
-		int offset = vr.getOffset();
-		long totalRows = vr.getTotalRows();
+		final Page<T> page = new Page<T>();
+		final List<T> pageList = new ArrayList<T>();
+		final ViewResult<String, String, T> vr = queryView(String.class, String.class, classOfT);
+		final List<ViewResult<String, String, T>.Rows> rows = vr.getRows();
+		final int resultRows = rows.size();
+		final int offset = vr.getOffset();
+		final long totalRows = vr.getTotalRows();
 		// holds page params
-		JsonObject currentKeys = new JsonObject();
-		JsonObject jsonNext = new JsonObject();
-		JsonObject jsonPrev = new JsonObject();
+		final JsonObject currentKeys = new JsonObject();
+		final JsonObject jsonNext = new JsonObject();
+		final JsonObject jsonPrev = new JsonObject();
 		currentKeys.addProperty(CURRENT_START_KEY, rows.get(0).getKey());
 		currentKeys.addProperty(CURRENT_START_KEY_DOC_ID, rows.get(0).getId());
 		for (int i = 0; i < resultRows; i++) {
@@ -346,7 +346,7 @@ public class View {
 		page.setResultList(pageList);
 		page.setTotalResults(totalRows);
 		page.setResultFrom(offset + 1);
-		int resultTo = rowsPerPage > resultRows ? resultRows : rowsPerPage; // fix when rowsPerPage exceeds returned rows
+		final int resultTo = rowsPerPage > resultRows ? resultRows : rowsPerPage; // fix when rowsPerPage exceeds returned rows
 		page.setResultTo(offset + resultTo);
 		page.setPageNumber((int) Math.ceil(page.getResultFrom() / Double.valueOf(rowsPerPage)));
 		return page;
@@ -364,18 +364,18 @@ public class View {
 		startKey(currentStartKey); 
 		startKeyDocId(currentStartKeyDocId); 
 		// init page, query view
-		Page<T> page = new Page<T>();
-		List<T> pageList = new ArrayList<T>();
-		ViewResult<String, String, T> vr = queryView(String.class, String.class, classOfT);
-		List<ViewResult<String, String, T>.Rows> rows = vr.getRows();
-		int resultRows = rows.size();
-		int offset = vr.getOffset();
-		long totalRows = vr.getTotalRows();
+		final Page<T> page = new Page<T>();
+		final List<T> pageList = new ArrayList<T>();
+		final ViewResult<String, String, T> vr = queryView(String.class, String.class, classOfT);
+		final List<ViewResult<String, String, T>.Rows> rows = vr.getRows();
+		final int resultRows = rows.size();
+		final int offset = vr.getOffset();
+		final long totalRows = vr.getTotalRows();
 		Collections.reverse(rows); // fix order
 		// holds page params
-		JsonObject currentKeys = new JsonObject();
-		JsonObject jsonNext = new JsonObject();
-		JsonObject jsonPrev = new JsonObject();
+		final JsonObject currentKeys = new JsonObject();
+		final JsonObject jsonNext = new JsonObject();
+		final JsonObject jsonPrev = new JsonObject();
 		currentKeys.addProperty(CURRENT_START_KEY, rows.get(0).getKey());
 		currentKeys.addProperty(CURRENT_START_KEY_DOC_ID, rows.get(0).getId());
 		for (int i = 0; i < resultRows; i++) {
@@ -406,7 +406,7 @@ public class View {
 		page.setResultList(pageList);
 		page.setTotalResults(totalRows);
 		page.setResultFrom((int) totalRows - (offset + rowsPerPage));
-		int resultTo = (int) totalRows - offset - 1;
+		final int resultTo = (int) totalRows - offset - 1;
 		page.setResultTo(resultTo);
 		page.setPageNumber(resultTo / rowsPerPage);
 		return page;
@@ -534,6 +534,11 @@ public class View {
 		return this;
 	}
 	
+	/**
+	 * Supplies a key list when calling <tt>_all_docs</tt> View.
+	 * @param keys
+	 * @return
+	 */
 	public View keys(List<String> keys) {
 		this.allDocsKeys = String.format("{%s:%s}", gson.toJson("keys"), gson.toJson(keys));
 		return this;
@@ -547,20 +552,20 @@ public class View {
 		List<String> dirList = listResources(viewPath);
 		assertNotEmpty(dirList, "Temp view directory");
 
-		tempView = new MapReduce();
+		mapRedtempViewM = new MapReduce();
 		for (String mapRed : dirList) {
 			String def = readFile(format("/%s%s", viewPath, mapRed));
 			if(MAP_JS.equals(mapRed))
-				tempView.setMap(def);
+				mapRedtempViewM.setMap(def);
 			else if(REDUCE_JS.equals(mapRed))
-				tempView.setReduce(def);
+				mapRedtempViewM.setReduce(def);
 		} 
 		return this;
 	}
 	
 	public View tempView(MapReduce mapReduce) {
 		assertNotEmpty(mapReduce, "mapReduce");
-		tempView = mapReduce;
+		mapRedtempViewM = mapReduce;
 		return this;
 	}
 	

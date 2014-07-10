@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
+ * Copyright (C) 2011 lightcouch.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import static org.lightcouch.CouchDbUtil.assertNotEmpty;
 import static org.lightcouch.CouchDbUtil.listResources;
 import static org.lightcouch.CouchDbUtil.readFile;
 import static org.lightcouch.CouchDbUtil.removeExtension;
-import static org.lightcouch.URIBuilder.builder;
+import static org.lightcouch.URIBuilder.buildUri;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -123,7 +123,7 @@ public class CouchDbDesign {
 	 */
 	public DesignDocument getFromDb(String id) {
 		assertNotEmpty(id, "id");
-		URI uri = builder(dbc.getDBUri()).path(id).build();
+		final URI uri = buildUri(dbc.getDBUri()).path(id).build();
 		return dbc.get(uri, DesignDocument.class);
 	}
 	
@@ -136,7 +136,7 @@ public class CouchDbDesign {
 	public DesignDocument getFromDb(String id, String rev) {
 		assertNotEmpty(id, "id");
 		assertNotEmpty(id, "rev");
-		URI uri = builder(dbc.getDBUri()).path(id).query("rev", rev).build();
+		final URI uri = buildUri(dbc.getDBUri()).path(id).query("rev", rev).build();
 		return dbc.get(uri, DesignDocument.class);
 	}
 	
@@ -145,7 +145,7 @@ public class CouchDbDesign {
 	 * @see #getFromDesk(String)
 	 */
 	public List<DesignDocument> getAllFromDesk() {
-		List<DesignDocument> designDocsList = new ArrayList<DesignDocument>();
+		final List<DesignDocument> designDocsList = new ArrayList<DesignDocument>();
 		for (String docName : listResources(format("%s/", DESIGN_DOCS_DIR))) {
 			designDocsList.add(getFromDesk(docName));
 		} 
@@ -159,23 +159,23 @@ public class CouchDbDesign {
 	 */
 	public DesignDocument getFromDesk(String id) {
 		assertNotEmpty(id, "id");
-		DesignDocument dd = new DesignDocument();
-		String rootPath = format("%s/%s/", DESIGN_DOCS_DIR, id);
-		List<String> elements = listResources(rootPath);
+		final DesignDocument dd = new DesignDocument();
+		final String rootPath = format("%s/%s/", DESIGN_DOCS_DIR, id);
+		final List<String> elements = listResources(rootPath);
 		if(elements == null) {
 			throw new IllegalArgumentException("Design docs directory cannot be empty.");
 		}
 		// Views
 		Map<String, MapReduce> views = null;
 		if(elements.contains(VIEWS)) { 
-			String viewsPath = format("%s%s/", rootPath, VIEWS);
 			views = new HashMap<String, MapReduce>();
+			final String viewsPath = format("%s%s/", rootPath, VIEWS);
 			for (String viewDirName : listResources(viewsPath)) { // views sub-dirs
-				MapReduce mr = new MapReduce();
-				String viewPath = format("%s%s/", viewsPath, viewDirName);
-				List<String> dirList = listResources(viewPath);
+				final MapReduce mr = new MapReduce();
+				final String viewPath = format("%s%s/", viewsPath, viewDirName);
+				final List<String> dirList = listResources(viewPath);
 				for (String fileName : dirList) { // view files
-					String def = readFile(format("/%s%s", viewPath, fileName));
+					final String def = readFile(format("/%s%s", viewPath, fileName));
 					if(MAP_JS.equals(fileName))
 						mr.setMap(def);
 					else if(REDUCE_JS.equals(fileName))

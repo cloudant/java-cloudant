@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Ahmed Yehia (ahmed.yehia.m@gmail.com)
+ * Copyright (C) lightcouch.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,7 +66,7 @@ public class CouchDbContext {
 		assertNotEmpty(dbName, "dbName");
 		if(!"delete database".equals(confirm))
 			throw new IllegalArgumentException("Invalid confirm!");
-		dbc.delete(builder(dbc.getBaseUri()).path(dbName).build());
+		dbc.delete(buildUri(dbc.getBaseUri()).path(dbName).build());
 	}
 
 	/**
@@ -74,16 +74,16 @@ public class CouchDbContext {
 	 * @param dbName The Database name
 	 */
 	public void createDB(String dbName) {
-		assertNotEmpty(dbName, "Database name");
+		assertNotEmpty(dbName, "dbName");
 		InputStream getresp = null;
 		HttpResponse putresp = null;
-		URI uri = builder(dbc.getBaseUri()).path(dbName).build();
+		final URI uri = buildUri(dbc.getBaseUri()).path(dbName).build();
 		try {
 			getresp = dbc.get(uri);
 		} catch (NoDocumentException e) { // db doesn't exist
-			HttpPut put = new HttpPut(uri);
+			final HttpPut put = new HttpPut(uri);
 			putresp = dbc.executeRequest(put);
-			log.info(String.format("Database: '%s' is created.", dbName));
+			log.info(String.format("Created Database: '%s'", dbName));
 		} finally {
 			close(getresp);
 			close(putresp);
@@ -91,13 +91,13 @@ public class CouchDbContext {
 	}
 
 	/**
-	 * @return All server databases.
+	 * @return All Server databases.
 	 */
 	public List<String> getAllDbs() {
 		InputStream instream = null;
 		try {
 			Type typeOfList = new TypeToken<List<String>>() {}.getType();
-			instream = dbc.get(builder(dbc.getBaseUri()).path("_all_dbs").build());
+			instream = dbc.get(buildUri(dbc.getBaseUri()).path("_all_dbs").build());
 			Reader reader = new InputStreamReader(instream);
 			return dbc.getGson().fromJson(reader, typeOfList);
 		} finally {
@@ -106,20 +106,19 @@ public class CouchDbContext {
 	}
 
 	/**
-	 * Gets the info of the associated database instance with this client.
-	 * @return {@link CouchDbInfo}
+	 * @return {@link CouchDbInfo} Containing the DB server info.
 	 */
 	public CouchDbInfo info() {
-		return dbc.get(builder(dbc.getDBUri()).build(), CouchDbInfo.class);
+		return dbc.get(buildUri(dbc.getDBUri()).build(), CouchDbInfo.class);
 	}
 
 	/**
-	 * @return CouchDB server version.
+	 * @return DB Server version.
 	 */
 	public String serverVersion() {
 		InputStream instream = null;
 		try {
-			instream = dbc.get(builder(dbc.getBaseUri()).build());
+			instream = dbc.get(buildUri(dbc.getBaseUri()).build());
 			Reader reader = new InputStreamReader(instream);
 			return getAsString(new JsonParser().parse(reader).getAsJsonObject(), "version");
 		} finally {
@@ -128,12 +127,12 @@ public class CouchDbContext {
 	}
 
 	/**
-	 * Triggers a database compaction request.
+	 * Triggers a database <i>compact</i> request.
 	 */
 	public void compact() {
 		HttpResponse response = null;
 		try {
-			response = dbc.post(builder(dbc.getDBUri()).path("_compact").build(), "");
+			response = dbc.post(buildUri(dbc.getDBUri()).path("_compact").build(), "");
 		} finally {
 			close(response);
 		}
@@ -145,7 +144,7 @@ public class CouchDbContext {
 	public void ensureFullCommit() {
 		HttpResponse response = null;
 		try {
-			response = dbc.post(builder(dbc.getDBUri()).path("_ensure_full_commit").build(), "");
+			response = dbc.post(buildUri(dbc.getDBUri()).path("_ensure_full_commit").build(), "");
 		} finally {
 			close(response);
 		}
@@ -156,8 +155,8 @@ public class CouchDbContext {
 	 * @param count The count of UUIDs.
 	 */
 	public List<String> uuids(long count) {
-		String uri = String.format("%s_uuids?count=%d", dbc.getBaseUri(), count);
-		JsonObject json = dbc.findAny(JsonObject.class, uri);
+		final String uri = String.format("%s_uuids?count=%d", dbc.getBaseUri(), count);
+		final JsonObject json = dbc.findAny(JsonObject.class, uri);
 		return dbc.getGson().fromJson(json.get("uuids").toString(), new TypeToken<List<String>>(){}.getType());
 	}
 }

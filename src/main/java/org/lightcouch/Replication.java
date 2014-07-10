@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
+ * Copyright (C) 2011 lightcouch.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package org.lightcouch;
 import static org.lightcouch.CouchDbUtil.assertNotEmpty;
 import static org.lightcouch.CouchDbUtil.close;
 import static org.lightcouch.CouchDbUtil.getStream;
-import static org.lightcouch.URIBuilder.builder;
+import static org.lightcouch.URIBuilder.buildUri;
 
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -98,9 +98,9 @@ public class Replication {
 			if(log.isDebugEnabled()) {
 				log.debug(json);
 			}
-			URI uri = builder(dbc.getBaseUri()).path("_replicate").build();
+			final URI uri = buildUri(dbc.getBaseUri()).path("_replicate").build();
 			response = dbc.post(uri, json.toString());
-			InputStreamReader reader = new InputStreamReader(getStream(response));
+			final InputStreamReader reader = new InputStreamReader(getStream(response));
 			return dbc.getGson().fromJson(reader, ReplicationResult.class);
 		} finally {
 			close(response);

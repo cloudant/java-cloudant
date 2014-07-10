@@ -16,19 +16,22 @@
 
 package org.lightcouch.tests;
 
-import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.lightcouch.CouchDbClient;
-import org.lightcouch.DesignDocument;
+import org.lightcouch.Response;
 
-public class DesignDocumentsTest {
+import com.google.gson.JsonObject;
+
+public class BulkDocumentTest {
 
 	private static CouchDbClient dbClient;
 
@@ -43,27 +46,31 @@ public class DesignDocumentsTest {
 	}
 
 	@Test
-	public void designDocSync() {
-		DesignDocument designDoc = dbClient.design().getFromDesk("example");
-		dbClient.design().synchronizeWithDb(designDoc);
+	public void bulkModifyDocs() {
+		List<Object> newDocs = new ArrayList<Object>();
+		newDocs.add(new Foo());
+		newDocs.add(new JsonObject());
+
+		boolean allOrNothing = true;
+		
+		List<Response> responses = dbClient.bulk(newDocs, allOrNothing);
+		
+		assertThat(responses.size(), is(2));
 	}
-	
+
 	@Test
-	public void designDocCompare() {
-		DesignDocument designDoc1 = dbClient.design().getFromDesk("example");
-		dbClient.design().synchronizeWithDb(designDoc1);
+	public void bulkDocsRetrieve() {
+		Response r1 = dbClient.save(new Foo());
+		Response r2 = dbClient.save(new Foo());
 		
-		DesignDocument designDoc11 = dbClient.design().getFromDb("_design/example");
+		List<String> keys = Arrays.asList(new String[] { r1.getId(), r2.getId() });
 		
-		assertEquals(designDoc1, designDoc11);
-	}
-	
-	@Test
-	public void designDocs() {
-		List<DesignDocument> designDocs = dbClient.design().getAllFromDesk();
-		dbClient.syncDesignDocsWithDb();
+		List<Foo> docs = dbClient.view("_all_docs")
+				.includeDocs(true)
+				.keys(keys)
+				.query(Foo.class);
 		
-		assertThat(designDocs.size(), not(0));
+		assertThat(docs.size(), is(2));
 	}
 
 }

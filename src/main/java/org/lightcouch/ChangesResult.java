@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
+ * Copyright (C) 2011 lightcouch.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,16 +37,8 @@ public class ChangesResult {
 		return results;
 	}
 
-	public void setResults(List<ChangesResult.Row> results) {
-		this.results = results;
-	}
-
 	public String getLastSeq() {
 		return lastSeq;
-	}
-
-	public void setLastSeq(String lastSeq) {
-		this.lastSeq = lastSeq;
 	}
 
 	/**
@@ -63,40 +55,20 @@ public class ChangesResult {
 			return seq;
 		}
 
-		public void setSeq(String seq) {
-			this.seq = seq;
-		}
-
 		public String getId() {
 			return id;
-		}
-
-		public void setId(String id) {
-			this.id = id;
 		}
 
 		public List<Row.Rev> getChanges() {
 			return changes;
 		}
 
-		public void setChanges(List<Row.Rev> changes) {
-			this.changes = changes;
-		}
-
 		public boolean isDeleted() {
 			return deleted;
 		}
 
-		public void setDeleted(boolean deleted) {
-			this.deleted = deleted;
-		}
-
 		public JsonObject getDoc() {
 			return doc;
-		}
-
-		public void setDoc(JsonObject doc) {
-			this.doc = doc;
 		}
 
 		/**
@@ -107,10 +79,6 @@ public class ChangesResult {
 
 			public String getRev() {
 				return rev;
-			}
-
-			public void setRev(String rev) {
-				this.rev = rev;
 			}
 		} // end class Rev
 	} // end class Row

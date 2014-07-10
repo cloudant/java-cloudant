@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
+ * Copyright (C) 2011 lightcouch.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package org.lightcouch;
 
-import static java.lang.String.format;
-
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +52,7 @@ public class Params {
 	}
 
 	public Params rev(String rev) {
-		params.add(format("rev=%s", rev));
+		params.add(String.format("rev=%s", rev));
 		return this;
 	}
 
@@ -66,8 +66,14 @@ public class Params {
 		return this;
 	}
 
-	public Params addParam(String name, Object value) {
-		params.add(format("%s=%s", name, value));
+	public Params addParam(String name, String value) {
+		try {
+			name = URLEncoder.encode(name, "UTF-8");
+			value = URLEncoder.encode(value, "UTF-8");
+			params.add(String.format("%s=%s", name, value));
+		} catch (UnsupportedEncodingException e) {
+			throw new IllegalArgumentException(e);
+		}
 		return this;
 	}
 

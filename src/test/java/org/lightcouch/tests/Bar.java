@@ -4,6 +4,14 @@ import org.lightcouch.Document;
 
 public class Bar extends Document {
 	private String bar;
+	
+	public Bar() {
+		
+	}
+	
+	public Bar(String id) {
+		this.setId(id);
+	}
 
 	public String getBar() {
 		return bar;

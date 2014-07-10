@@ -23,6 +23,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.lightcouch.CouchDbClient;
+import org.lightcouch.Params;
 import org.lightcouch.Response;
 
 public class UpdateHandlerTest {
@@ -41,20 +42,39 @@ public class UpdateHandlerTest {
 	}
 
 	@Test
-	public void updateHandler() {
-		Foo foo = new Foo();
-		foo.setTitle("title");
+	public void updateHandler_queryString() {
+		final String oldValue = "foo";
+		final String newValue = "foo bar";
 		
-		Response response = dbClient.save(foo);
-
-		String newTitle = "title 2";
-		String query = "field=title&value=" + newTitle;
+		Response response = dbClient.save(new Foo(null, oldValue));
+		
+		String query = "field=title&value=" + newValue;
 		
 		String output = dbClient.invokeUpdateHandler("example/example_update", response.getId(), query);
 		
-		foo = dbClient.find(Foo.class, response.getId());
+		// retrieve from db to verify
+		Foo foo = dbClient.find(Foo.class, response.getId());
 		
 		assertNotNull(output);
-		assertEquals(foo.getTitle(), newTitle);
+		assertEquals(foo.getTitle(), newValue);
+	}
+	
+	@Test
+	public void updateHandler_queryParams() {
+		final String oldValue = "foo";
+		final String newValue = "foo bar";
+		
+		Response response = dbClient.save(new Foo(null, oldValue));
+
+		Params params = new Params()
+					.addParam("field", "title")
+					.addParam("value", newValue);
+		String output = dbClient.invokeUpdateHandler("example/example_update", response.getId(), params);
+		
+		// retrieve from db to verify
+		Foo foo = dbClient.find(Foo.class, response.getId());
+		
+		assertNotNull(output);
+		assertEquals(foo.getTitle(), newValue);
 	}
 }

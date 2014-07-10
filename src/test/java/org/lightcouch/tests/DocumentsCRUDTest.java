@@ -16,29 +16,20 @@
 
 package org.lightcouch.tests;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.commons.codec.binary.Base64;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.lightcouch.Attachment;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
@@ -48,7 +39,7 @@ import org.lightcouch.Response;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-public class DocumentsTest {
+public class DocumentsCRUDTest {
 
 	private static CouchDbClient dbClient;
 
@@ -70,12 +61,22 @@ public class DocumentsTest {
 		Foo foo = dbClient.find(Foo.class, response.getId());
 		assertNotNull(foo);
 	}
-
+	
 	@Test
 	public void findByIdAndRev() {
 		Response response = dbClient.save(new Foo());
 		Foo foo = dbClient.find(Foo.class, response.getId(), response.getRev());
 		assertNotNull(foo);
+	}
+	
+	@Test
+	public void findByIdContainSlash() {
+		Response response = dbClient.save(new Foo(generateUUID() + "/" + generateUUID()));
+		Foo foo = dbClient.find(Foo.class, response.getId());
+		assertNotNull(foo);
+
+		Foo foo2 = dbClient.find(Foo.class, response.getId(), response.getRev());
+		assertNotNull(foo2);
 	}
 
 	@Test
@@ -87,7 +88,7 @@ public class DocumentsTest {
 
 	@Test
 	public void findAny() {
-		String uri = dbClient.getDBUri().toString();
+		String uri = dbClient.getBaseUri() + "_stats";
 		JsonObject jsonObject = dbClient.findAny(JsonObject.class, uri);
 		assertNotNull(jsonObject);
 	}
@@ -103,7 +104,7 @@ public class DocumentsTest {
 	@Test
 	public void findWithParams() {
 		Response response = dbClient.save(new Foo());
-		Foo foo = dbClient.find(Foo.class, response.getId(), new Params().revsInfo().attachments());
+		Foo foo = dbClient.find(Foo.class, response.getId(), new Params().revsInfo());
 		assertNotNull(foo);
 	}
 
@@ -119,12 +120,12 @@ public class DocumentsTest {
 
 	@Test
 	public void contains() {
-		boolean found = dbClient.contains(generateUUID());
-		assertFalse(found);
-
 		Response response = dbClient.save(new Foo());
-		found = dbClient.contains(response.getId());
+		boolean found = dbClient.contains(response.getId());
 		assertTrue(found);
+		
+		found = dbClient.contains(generateUUID());
+		assertFalse(found);
 	}
 
 	// Save
@@ -148,6 +149,20 @@ public class DocumentsTest {
 		json.addProperty("_id", generateUUID());
 		json.add("json-array", new JsonArray());
 		dbClient.save(json);
+	}
+	
+	@Test
+	public void saveWithIdContainSlash() {
+		String idWithSlash = "a/b/" + generateUUID();
+		Response response = dbClient.save(new Foo(idWithSlash));
+		assertEquals(idWithSlash, response.getId());
+	}
+	
+	@Test
+	public void saveObjectPost() {
+		// database generated id will be assigned
+		Response response = dbClient.post(new Foo());
+		assertNotNull(response.getId());
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -182,6 +197,16 @@ public class DocumentsTest {
 		Foo foo = dbClient.find(Foo.class, response.getId());
 		dbClient.update(foo);
 	}
+	
+	@Test
+	public void updateWithIdContainSlashd() {
+		String idWithSlash = generateUUID() + "/" + generateUUID();
+		Response response = dbClient.save(new Bar(idWithSlash));
+		
+		Bar bar = dbClient.find(Bar.class, response.getId());
+		Response responseUpdate = dbClient.update(bar);
+		assertEquals(idWithSlash, responseUpdate.getId());
+	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void updateWithoutIdAndRev_throwsIllegalArgumentException() {
@@ -194,84 +219,6 @@ public class DocumentsTest {
 		Foo foo = dbClient.find(Foo.class, response.getId());
 		dbClient.update(foo);
 		dbClient.update(foo);
-	}
-
-	// Bulk
-
-	@Test
-	public void bulkModifyDoc() {
-		List<Object> newDocs = new ArrayList<Object>();
-		newDocs.add(new Foo());
-		newDocs.add(new JsonObject());
-
-		boolean allOrNothing = true;
-		List<Response> responses = dbClient.bulk(newDocs, allOrNothing);
-		assertThat(responses.size(), is(2));
-	}
-
-	@Test
-	public void bulkGetDocs() {
-		Response r1 = dbClient.save(new Foo());
-		Response r2 = dbClient.save(new Foo());
-		
-		List<String> keys = Arrays.asList(new String[] { r1.getId(), r2.getId() });
-		List<Foo> docs = dbClient.view("_all_docs")
-				.includeDocs(true)
-				.keys(keys)
-				.query(Foo.class);
-		assertThat(docs.size(), is(2));
-	}
-
-	// Attachment
-
-	@Test
-	public void attachmentInline() {
-		Attachment attachment = new Attachment("VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=", "text/plain");
-
-		Attachment attachment2 = new Attachment();
-		String data = Base64.encodeBase64String("binary string".getBytes());
-		attachment2.setData(data);
-		attachment2.setContentType("text/plain");
-
-		Bar bar = new Bar(); // Bar extends Document
-		bar.addAttachment("txt1.txt", attachment);
-		bar.addAttachment("txt2.txt", attachment2);
-
-		dbClient.save(bar);
-	}
-
-	@Test
-	public void attachmentInline_getWithDocument() {
-		Attachment attachment = new Attachment("VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=", "text/plain");
-		
-		Bar bar = new Bar();
-		bar.addAttachment("txt1.txt", attachment);
-
-		Response response = dbClient.save(bar);
-		
-		bar = dbClient.find(Bar.class, response.getId(), new Params().attachments());
-		String base64Data = bar.getAttachments().get("txt1.txt").getData();
-		assertNotNull(base64Data);
-	}
-
-	@Test
-	public void attachmentStandalone() throws IOException {
-		byte[] bytesToDB = "binary data".getBytes();
-		ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
-		Response response = dbClient.saveAttachment(bytesIn, "foo.txt", "text/plain");
-
-		InputStream in = dbClient.find(response.getId() + "/foo.txt");
-		ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
-		int n;
-		while ((n = in.read()) != -1) {
-			bytesOut.write(n);
-		}
-		bytesOut.flush();
-		in.close();
-
-		byte[] bytesFromDB = bytesOut.toByteArray();
-
-		assertArrayEquals(bytesToDB, bytesFromDB);
 	}
 
 	// Delete
@@ -288,7 +235,18 @@ public class DocumentsTest {
 		Response response = dbClient.save(new Foo());
 		dbClient.remove(response.getId(), response.getRev());
 	}
+	
+	@Test
+	public void deleteByIdContainSlash() {
+		String idWithSlash = generateUUID() + "/" + generateUUID();
+		Response response = dbClient.save(new Bar(idWithSlash));
+		
+		Response responseRemove = dbClient.remove(response.getId(), response.getRev());
+		assertEquals(idWithSlash, responseRemove.getId());
+	}
 
+	// Helper
+	
 	private static String generateUUID() {
 		return UUID.randomUUID().toString().replace("-", "");
 	}

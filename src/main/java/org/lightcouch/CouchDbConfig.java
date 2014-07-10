@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
+ * Copyright (C) 2011 lightcouch.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,12 +67,10 @@ class CouchDbConfig {
 			// required
 			dbProperties = new CouchDbProperties();
 			dbProperties.setDbName(getProperty("couchdb.name", true));
-			boolean create = Boolean.parseBoolean(getProperty("couchdb.createdb.if-not-exist", true));
-			dbProperties.setCreateDbIfNotExist(create);
+			dbProperties.setCreateDbIfNotExist(new Boolean(getProperty("couchdb.createdb.if-not-exist", true)));
 			dbProperties.setProtocol(getProperty("couchdb.protocol", true));
 			dbProperties.setHost(getProperty("couchdb.host", true));
-			int port = Integer.parseInt(getProperty("couchdb.port", true));
-			dbProperties.setPort(port);
+			dbProperties.setPort(Integer.parseInt(getProperty("couchdb.port", true)));
 			dbProperties.setUsername(getProperty("couchdb.username", true));
 			dbProperties.setPassword(getProperty("couchdb.password", true));
 			

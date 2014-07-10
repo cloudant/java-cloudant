@@ -76,9 +76,9 @@ public class CouchDbClientLoadTest {
     	do { /* waiting */ } 
     		while (!executor.isTerminated());
     	
-    	long elapsed = StopWatch.stop();
-    	long seconds = elapsed / 1000;
-    	int totalDocs = NUM_THREADS * DOCS_PER_THREAD;
+    	final long elapsed = StopWatch.stop();
+    	final long seconds = elapsed / 1000;
+    	final int totalDocs = NUM_THREADS * DOCS_PER_THREAD;
     	
     	printResult(elapsed, seconds, totalDocs);
 	} 
@@ -95,7 +95,7 @@ public class CouchDbClientLoadTest {
 	//
 	
 	private void printResult(long elapsed, long seconds, int totalDocs) {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
     	sb.append("Load Test Completed:");
     	sb.append("\n* Thread count: " + NUM_THREADS);
     	sb.append("\n* Docs per thread: " + DOCS_PER_THREAD);

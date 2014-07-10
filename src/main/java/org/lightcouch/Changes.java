@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
+ * Copyright (C) 2011 lightcouch.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,18 +74,18 @@ public class Changes {
 	Changes(CouchDbClientBase dbc) {
 		this.dbc = dbc;
 		this.gson = dbc.getGson();
-		this.uriBuilder = URIBuilder.builder(dbc.getDBUri()).path("_changes");
+		this.uriBuilder = URIBuilder.buildUri(dbc.getDBUri()).path("_changes");
 	}
 
 	/**
-	 * <p>Requests Change notifications of feed type continuous.
+	 * Requests Change notifications of feed type continuous.
 	 * <p>Feed notifications are accessed in an <i>iterator</i> style.
 	 */
 	public Changes continuousChanges() {
-		URI uri = uriBuilder.query("feed", "continuous").build();
+		final URI uri = uriBuilder.query("feed", "continuous").build();
 		httpGet = new HttpGet(uri);
-		InputStream in = dbc.get(httpGet);
-		InputStreamReader is = new InputStreamReader(in);
+		final InputStream in = dbc.get(httpGet);
+		final InputStreamReader is = new InputStreamReader(in);
 		setReader(new BufferedReader(is));
 		return this;
 	}
@@ -116,11 +116,11 @@ public class Changes {
 	 * Requests Change notifications of feed type normal.
 	 */
 	public ChangesResult getChanges() {
-		URI uri = uriBuilder.query("feed", "normal").build();
+		final URI uri = uriBuilder.query("feed", "normal").build();
 		return dbc.get(uri, ChangesResult.class);
 	}
 
-	// -------------------------------- Query Params
+	// Query Params
 	
 	public Changes since(String since) {
 		uriBuilder.query("since", since);
@@ -157,7 +157,7 @@ public class Changes {
 		return this;
 	}
 	
-	//---------------------------------------- Private
+	// Helper
 
 	/**
 	 * Reads and sets the next feed in the stream.
