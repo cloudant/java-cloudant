@@ -35,7 +35,7 @@ import org.lightcouch.Response;
 
 import com.google.gson.JsonObject;
 
-public class ChangesTest {
+public class ChangeNotificationsTest {
 	
 	private static CouchDbClient dbClient;
 

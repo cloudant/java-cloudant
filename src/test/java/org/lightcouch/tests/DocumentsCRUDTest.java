@@ -173,7 +173,7 @@ public class DocumentsCRUDTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void saveNewDocWithRevision_throwsIllegalArgumentException() {
 		Bar bar = new Bar();
-		bar.setRevision("some-rev");
+		bar.setRevision("unkown");
 		dbClient.save(bar);
 	}
 
@@ -200,7 +200,7 @@ public class DocumentsCRUDTest {
 	
 	@Test
 	public void updateWithIdContainSlashd() {
-		String idWithSlash = generateUUID() + "/" + generateUUID();
+		String idWithSlash = "a/" + generateUUID();
 		Response response = dbClient.save(new Bar(idWithSlash));
 		
 		Bar bar = dbClient.find(Bar.class, response.getId());
@@ -238,7 +238,7 @@ public class DocumentsCRUDTest {
 	
 	@Test
 	public void deleteByIdContainSlash() {
-		String idWithSlash = generateUUID() + "/" + generateUUID();
+		String idWithSlash = "a/" + generateUUID();
 		Response response = dbClient.save(new Bar(idWithSlash));
 		
 		Response responseRemove = dbClient.remove(response.getId(), response.getRev());
