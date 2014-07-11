@@ -22,7 +22,6 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Helper class for construction of HTTP request URIs.
