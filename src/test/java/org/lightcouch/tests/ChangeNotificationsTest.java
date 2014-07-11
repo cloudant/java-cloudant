@@ -90,9 +90,11 @@ public class ChangeNotificationsTest {
 
 		while (changes.hasNext()) {
 			ChangesResult.Row feed = changes.next();
-			String docId = feed.getId();
+			final JsonObject feedObject = feed.getDoc();
+			final String docId = feed.getId();
 			
 			assertEquals(response.getId(), docId);
+			assertNotNull(feedObject);
 			
 			changes.stop();
 		}

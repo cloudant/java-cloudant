@@ -273,7 +273,8 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * Saves an object in the database.
+	 * Saves an object in the database, using HTTP <tt>PUT</tt> request.
+	 * <p>If the object doesn't have an <code>_id</code> value, the code will assign a <code>UUID</code> as the document id.
 	 * @param object The object to save
 	 * @throws DocumentConflictException If a conflict is detected during the save.
 	 * @return {@link Response}
@@ -283,7 +284,8 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * Saves an object in the database using <tt>POST</tt> request.
+	 * Saves an object in the database using HTTP <tt>POST</tt> request.
+	 * <p>The database will be responsible for generating the document id.
 	 * @param object The object to save
 	 * @return {@link Response}
 	 */
@@ -315,7 +317,7 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * Updates an object in the database, the object must have the correct id and revision values.
+	 * Updates an object in the database, the object must have the correct <code>_id</code> and <code>_rev</code> values.
 	 * @param object The object to update
 	 * @throws DocumentConflictException If a conflict is detected during the update.
 	 * @return {@link Response}
@@ -326,7 +328,7 @@ public abstract class CouchDbClientBase {
 	
 	/**
 	 * Removes a document from the database. 
-	 * <p>The object must have the correct _id and _rev values.
+	 * <p>The object must have the correct <code>_id</code> and <code>_rev</code> values.
 	 * @param object The document to remove as object.
 	 * @throws NoDocumentException If the document is not found in the database.
 	 * @return {@link Response}
@@ -340,7 +342,7 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * Removes a document from the database given both _id and _rev values.
+	 * Removes a document from the database given both a document <code>_id</code> and <code>_rev</code> values.
 	 * @param id The document _id field.
 	 * @param rev The document _rev field.
 	 * @throws NoDocumentException If the document is not found in the database.
@@ -354,7 +356,7 @@ public abstract class CouchDbClientBase {
 	}
 	
 	/**
-	 * Performs a Bulk Documents request.
+	 * Performs a Bulk Documents insert request.
 	 * @param objects The {@link List} of objects.
 	 * @param allOrNothing Indicates whether the request has <tt>all-or-nothing</tt> semantics.
 	 * @return {@code List<Response>} Containing the resulted entries.
@@ -363,9 +365,9 @@ public abstract class CouchDbClientBase {
 		assertNotEmpty(objects, "objects");
 		HttpResponse response = null;
 		try { 
-			String allOrNothingVal = allOrNothing ? "\"all_or_nothing\": true, " : "";
-			URI uri = buildUri(getDBUri()).path("_bulk_docs").build();
-			String json = String.format("{%s%s%s}", allOrNothingVal, "\"docs\": ", getGson().toJson(objects));
+			final String allOrNothingVal = allOrNothing ? "\"all_or_nothing\": true, " : "";
+			final URI uri = buildUri(getDBUri()).path("_bulk_docs").build();
+			final String json = String.format("{%s%s%s}", allOrNothingVal, "\"docs\": ", getGson().toJson(objects));
 			response = post(uri, json);
 			return getResponseList(response);
 		} finally {
@@ -557,7 +559,7 @@ public abstract class CouchDbClientBase {
 		assertNotEmpty(object, "object");
 		HttpResponse response = null;
 		try {  
-			JsonObject json = getGson().toJsonTree(object).getAsJsonObject();
+			final JsonObject json = getGson().toJsonTree(object).getAsJsonObject();
 			String id = getAsString(json, "_id");
 			String rev = getAsString(json, "_rev");
 			if(newEntity) { // save
@@ -567,7 +569,7 @@ public abstract class CouchDbClientBase {
 				assertNotEmpty(id, "id");
 				assertNotEmpty(rev, "rev");
 			}
-			HttpPut put = new HttpPut(buildUri(uri).pathToEncode(id).buildEncoded());
+			final HttpPut put = new HttpPut(buildUri(uri).pathToEncode(id).buildEncoded());
 			setEntity(put, json.toString());
 			response = executeRequest(put); 
 			return getResponse(response);
@@ -583,8 +585,8 @@ public abstract class CouchDbClientBase {
 	Response put(URI uri, InputStream instream, String contentType) {
 		HttpResponse response = null;
 		try {
-			HttpPut httpPut = new HttpPut(uri);
-			InputStreamEntity entity = new InputStreamEntity(instream, -1);
+			final HttpPut httpPut = new HttpPut(uri);
+			final InputStreamEntity entity = new InputStreamEntity(instream, -1);
 			entity.setContentType(contentType);
 			httpPut.setEntity(entity);
 			response = executeRequest(httpPut);
@@ -626,7 +628,7 @@ public abstract class CouchDbClientBase {
 	 * @param response The HTTP response.
 	 */
 	void validate(HttpResponse response) throws IOException {
-		int code = response.getStatusLine().getStatusCode();
+		final int code = response.getStatusLine().getStatusCode();
 		if(code == 200 || code == 201 || code == 202) { // success (ok | created | accepted)
 			return;
 		} 
