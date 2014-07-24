@@ -199,7 +199,7 @@ public class DocumentsCRUDTest {
 	}
 	
 	@Test
-	public void updateWithIdContainSlashd() {
+	public void updateWithIdContainSlash() {
 		String idWithSlash = "a/" + generateUUID();
 		Response response = dbClient.save(new Bar(idWithSlash));
 		
