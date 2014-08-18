@@ -71,7 +71,7 @@ import org.apache.http.protocol.HttpContext;
  * @author Ahmed Yehia
  */
 @SuppressWarnings("deprecation")
-public class CouchDbClientAndroid extends CouchDatabaseBase {
+public class CouchDbClientAndroid extends CouchDbClientBase {
 	
 	/**
 	 * @see CouchDbClient#CouchDbClient()
@@ -238,5 +238,10 @@ public class CouchDbClientAndroid extends CouchDatabaseBase {
 
 	    }
 
+	}
+
+	@Override
+	CouchDatabaseBase database(String name, boolean create) {
+		return new CouchDatabase(this,name,create);
 	}
 }
