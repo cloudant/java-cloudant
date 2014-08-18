@@ -61,7 +61,7 @@ import com.google.gson.JsonParser;
  * }
  * </pre>
  * 
- * @see CouchDbClientBase#view(String)
+ * @see CouchDatabaseBase#view(String)
  * @see ViewResult
  * @since 0.0.2
  * @author Ahmed Yehia
@@ -101,14 +101,14 @@ public class View {
 	private Boolean inclusiveEnd;
 	private Boolean updateSeq;
 	
-	private CouchDbClientBase dbc;
+	private CouchDatabaseBase dbc;
 	private Gson gson;
 	private URIBuilder uriBuilder;
 	
 	private String allDocsKeys; // bulk docs
 	private MapReduce mapRedtempViewM; // temp view
 	
-	View(CouchDbClientBase dbc, String viewId) {
+	View(CouchDatabaseBase dbc, String viewId) {
 		assertNotEmpty(viewId, "View id");
 		this.dbc = dbc;
 		this.gson = dbc.getGson();

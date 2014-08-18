@@ -70,7 +70,7 @@ import org.apache.http.protocol.HttpContext;
  * 
  * <p>Start using the API by the client:
  * 
- * <p>Documents <code>CRUD</code> APIs is accessed by the client directly, eg.: {@link CouchDbClientBase#find(Class, String) dbClient.find(Foo.class, "doc-id")}
+ * <p>Documents <code>CRUD</code> APIs is accessed by the client directly, eg.: {@link CouchDatabaseBase#find(Class, String) dbClient.find(Foo.class, "doc-id")}
  * <p>View APIs {@link View dbClient.view()} 
  * <p>Change Notifications {@link Changes dbClient.changes()}
  * <p>Replication {@link Replication dbClient.replication()} and {@link Replicator dbClient.replicator()} 
@@ -84,7 +84,7 @@ import org.apache.http.protocol.HttpContext;
  * @author Ahmed Yehia
  *
  */
-public class CouchDbClient extends CouchDbClientBase {
+public class CouchDbClient extends  CouchDbClientBase {
 
 	/**
 	 * Constructs a new instance of this class, expects a configuration file named 
@@ -112,9 +112,8 @@ public class CouchDbClient extends CouchDbClientBase {
 	 * @param username The Username credential
 	 * @param password The Password credential
 	 */
-	public CouchDbClient(String dbName, boolean createDbIfNotExist, 
-			String protocol, String host, int port, String username, String password) { 
-		super(new CouchDbConfig(new CouchDbProperties(dbName, createDbIfNotExist, protocol, host, port, username, password)));
+	public CouchDbClient(String protocol, String host, int port, String username, String password) { 
+		super(new CouchDbConfig(new CouchDbProperties( protocol, host, port, username, password)));
 	}
 	
 	/**
@@ -167,6 +166,7 @@ public class CouchDbClient extends CouchDbClientBase {
 	    context.setAttribute(HttpClientContext.AUTH_CACHE, authCache);
 		return context;
 	}
+	
 	
 	private PoolingHttpClientConnectionManager createConnectionManager(
 			CouchDbProperties props, Registry<ConnectionSocketFactory> registry) {
@@ -225,5 +225,10 @@ public class CouchDbClient extends CouchDbClientBase {
 	
 	public void shutdown() {
 		HttpClientUtils.closeQuietly(this.httpClient);
+	}
+
+	@Override
+	public CouchDatabase database(String name, boolean create) {
+		return new CouchDatabase(this,name,create);
 	}
 }

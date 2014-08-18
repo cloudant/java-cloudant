@@ -134,7 +134,7 @@ final class CouchDbUtil {
 						}
 					}
 				}
-				close(jar);
+				jar.close(); //mdb
 				return new ArrayList<String>(result);
 			} 
 			return null;
@@ -178,7 +178,7 @@ final class CouchDbUtil {
 	    s.useDelimiter("\\A");
 	    String str = s.hasNext() ? s.next() : null;
 	    close(in);
-	    close(s);
+	    s.close();// mdb
 	    return str;
 	}
 	

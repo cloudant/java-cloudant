@@ -25,8 +25,6 @@ package org.lightcouch;
 public class CouchDbProperties {
 
 	// required
-	private String dbName;
-	private boolean createDbIfNotExist;
 	private String protocol;
 	private String host;
 	private String path;
@@ -45,23 +43,14 @@ public class CouchDbProperties {
 		// default constructor
 	}
 
-	public CouchDbProperties(String dbName, boolean createDbIfNotExist, String protocol,
+	public CouchDbProperties(String protocol,
 			String host, int port, String username, String password) {
-		this.dbName = dbName;
-		this.createDbIfNotExist = createDbIfNotExist;
+		
 		this.protocol = protocol;
 		this.host = host;
 		this.port = port;
 		this.username = username;
 		this.password = password;
-	}
-
-	public String getDbName() {
-		return dbName;
-	}
-
-	public boolean isCreateDbIfNotExist() {
-		return createDbIfNotExist;
 	}
 
 	public String getProtocol() {
@@ -106,16 +95,6 @@ public class CouchDbProperties {
 
 	public int getProxyPort() {
 		return proxyPort;
-	}
-
-	public CouchDbProperties setDbName(String dbName) {
-		this.dbName = dbName;
-		return this;
-	}
-
-	public CouchDbProperties setCreateDbIfNotExist(boolean createDbIfNotExist) {
-		this.createDbIfNotExist = createDbIfNotExist;
-		return this;
 	}
 
 	public CouchDbProperties setProtocol(String protocol) {

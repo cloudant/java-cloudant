@@ -50,7 +50,7 @@ import com.google.gson.JsonObject;
  * }
  * </pre>
  * 
- * @see CouchDbClientBase#replication()
+ * @see CouchDatabaseBase#replication()
  * @see ReplicationResult
  * @see ReplicationHistory
  * @see Replicator
@@ -80,10 +80,10 @@ public class Replication {
 	private String tokenSecret; 
 	private String token;
 
-	private CouchDbClientBase dbc;
+	private CouchDbClientBase client;
 			
-	public Replication(CouchDbClientBase dbc) {
-		this.dbc = dbc;
+	public Replication(CouchDbClientBase client) {
+		this.client = client;
 	}
 
 	/**
@@ -98,10 +98,10 @@ public class Replication {
 			if(log.isDebugEnabled()) {
 				log.debug(json);
 			}
-			final URI uri = buildUri(dbc.getBaseUri()).path("_replicate").build();
-			response = dbc.post(uri, json.toString());
+			final URI uri = buildUri(client.getBaseUri()).path("_replicate").build();
+			response = client.post(uri, json.toString());
 			final InputStreamReader reader = new InputStreamReader(getStream(response));
-			return dbc.getGson().fromJson(reader, ReplicationResult.class);
+			return client.getGson().fromJson(reader, ReplicationResult.class);
 		} finally {
 			close(response);
 		}
@@ -130,12 +130,12 @@ public class Replication {
 	}
 
 	public Replication queryParams(String queryParams) {
-		this.queryParams = dbc.getGson().fromJson(queryParams, JsonObject.class);
+		this.queryParams = client.getGson().fromJson(queryParams, JsonObject.class);
 		return this;
 	}
 	
 	public Replication queryParams(Map<String, Object> queryParams) {
-		this.queryParams = dbc.getGson().toJsonTree(queryParams).getAsJsonObject();
+		this.queryParams = client.getGson().toJsonTree(queryParams).getAsJsonObject();
 		return this;
 	}
 
@@ -188,7 +188,7 @@ public class Replication {
 		if(queryParams != null) 
 			json.add("query_params", queryParams);
 		if(docIds != null) 
-			json.add("doc_ids", dbc.getGson().toJsonTree(docIds, String[].class));
+			json.add("doc_ids", client.getGson().toJsonTree(docIds, String[].class));
 		
 		addProperty(json, "proxy", proxy);
 		addProperty(json, "since_seq", sinceSeq);

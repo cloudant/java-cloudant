@@ -55,7 +55,6 @@ class CouchDbConfig {
 	
 	public CouchDbConfig(CouchDbProperties dbProperties) {
 		assertNotEmpty(dbProperties, "Properties");
-		assertNotEmpty(dbProperties.getDbName(), "Database");
 		assertNotEmpty(dbProperties.getProtocol(), "Protocol");
 		assertNotEmpty(dbProperties.getHost(), "Host");
 		assertNotEmpty(dbProperties.getPort(), "Port");
@@ -66,8 +65,8 @@ class CouchDbConfig {
 		try {
 			// required
 			dbProperties = new CouchDbProperties();
-			dbProperties.setDbName(getProperty("couchdb.name", true));
-			dbProperties.setCreateDbIfNotExist(new Boolean(getProperty("couchdb.createdb.if-not-exist", true)));
+		//	dbProperties.setDbName(getProperty("couchdb.name", true));
+		//	dbProperties.setCreateDbIfNotExist(new Boolean(getProperty("couchdb.createdb.if-not-exist", true)));
 			dbProperties.setProtocol(getProperty("couchdb.protocol", true));
 			dbProperties.setHost(getProperty("couchdb.host", true));
 			dbProperties.setPort(Integer.parseInt(getProperty("couchdb.port", true)));

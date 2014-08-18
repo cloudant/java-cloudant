@@ -64,7 +64,7 @@ import com.google.gson.JsonParser;
  * 	.remove(); // cancels a replication
  * </pre>
  * 
- * @see CouchDbClientBase#replicator()
+ * @see CouchDatabaseBase#replicator()
  * @see Replication 
  * @see ReplicatorDocument
  * @since 0.0.2
@@ -77,16 +77,16 @@ public class Replicator {
 	private String userCtxName;
 	private String[] userCtxRoles;
 
-	private CouchDbClientBase dbc;
+	private CouchDbClientBase client;
 	private ReplicatorDocument replicatorDoc;
 	private URI dbURI;
 			
-	public Replicator(CouchDbClientBase dbc) {
-		this.dbc = dbc;
+	public Replicator(CouchDbClientBase client) {
+		this.client = client;
 		replicatorDoc = new ReplicatorDocument();
 		replicatorDB = "_replicator"; // default replicator db
 		userCtxRoles = new String[0]; // default roles
-		dbURI = buildUri(dbc.getBaseUri()).path(replicatorDB).path("/").build();
+		dbURI = buildUri(client.getBaseUri()).path(replicatorDB).path("/").build();
 	}
 
 	
@@ -103,7 +103,7 @@ public class Replicator {
 			ctx.setRoles(userCtxRoles);
 			replicatorDoc.setUserCtx(ctx);
 		}
-		return dbc.put(dbURI, replicatorDoc, true);
+		return client.put(dbURI, replicatorDoc, true);
 	}
 	
 	/**
@@ -113,7 +113,7 @@ public class Replicator {
 	public ReplicatorDocument find() {
 		assertNotEmpty(replicatorDoc.getId(), "Doc id");
 		final URI uri = buildUri(dbURI).path(replicatorDoc.getId()).query("rev", replicatorDoc.getRevision()).build();
-		return dbc.get(uri, ReplicatorDocument.class);
+		return client.get(uri, ReplicatorDocument.class);
 	}
 	
 	/**
@@ -123,14 +123,14 @@ public class Replicator {
 		InputStream instream = null;
 		try {  
 			final URI uri = buildUri(dbURI).path("_all_docs").query("include_docs", "true").build();
-			final Reader reader = new InputStreamReader(instream = dbc.get(uri));
+			final Reader reader = new InputStreamReader(instream = client.get(uri));
 			final JsonArray jsonArray = new JsonParser().parse(reader)
 					.getAsJsonObject().getAsJsonArray("rows");
 			final List<ReplicatorDocument> list = new ArrayList<ReplicatorDocument>();
 			for (JsonElement jsonElem : jsonArray) {
 				JsonElement elem = jsonElem.getAsJsonObject().get("doc");
 				if(!getAsString(elem.getAsJsonObject(), "_id").startsWith("_design")) { // skip design docs
-					ReplicatorDocument rd = dbc.getGson().fromJson(elem, ReplicatorDocument.class);
+					ReplicatorDocument rd = client.getGson().fromJson(elem, ReplicatorDocument.class);
 					list.add(rd);
 				}
 			}
@@ -148,7 +148,7 @@ public class Replicator {
 		assertNotEmpty(replicatorDoc.getId(), "Doc id");
 		assertNotEmpty(replicatorDoc.getRevision(), "Doc rev");
 		final URI uri = buildUri(dbURI).path(replicatorDoc.getId()).query("rev", replicatorDoc.getRevision()).build();
-		return dbc.delete(uri);
+		return client.delete(uri);
 	} 
 	
 	// fields
@@ -174,12 +174,12 @@ public class Replicator {
 	}
 
 	public Replicator queryParams(String queryParams) {
-		replicatorDoc.setQueryParams(dbc.getGson().fromJson(queryParams, JsonObject.class));
+		replicatorDoc.setQueryParams(client.getGson().fromJson(queryParams, JsonObject.class));
 		return this;
 	}
 	
 	public Replicator queryParams(Map<String, Object> queryParams) {
-		replicatorDoc.setQueryParams(dbc.getGson().toJsonTree(queryParams).getAsJsonObject());
+		replicatorDoc.setQueryParams(client.getGson().toJsonTree(queryParams).getAsJsonObject());
 		return this;
 	}
 
@@ -200,7 +200,7 @@ public class Replicator {
 
 	public Replicator replicatorDB(String replicatorDB) {
 		this.replicatorDB = replicatorDB;
-		dbURI = buildUri(dbc.getBaseUri()).path(replicatorDB).path("/").build();
+		dbURI = buildUri(client.getBaseUri()).path(replicatorDB).path("/").build();
 		return this;
 	}
 

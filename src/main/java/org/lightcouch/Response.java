@@ -22,7 +22,7 @@ package org.lightcouch;
  * <p>The response typically contains an <tt>id</tt> and <tt>rev</tt> values,
  * additional data might be returned such as <tt>error</tt> from Bulk request.
  * 
- * @see CouchDbClientBase#save(Object)
+ * @see CouchDatabaseBase#save(Object)
  * @since 0.0.2
  * @author Ahmed Yehia
  */

@@ -72,9 +72,9 @@ public class CouchDbDesign {
 	private static final String MAP_JS          = "map.js";
 	private static final String REDUCE_JS       = "reduce.js";
 	
-	private CouchDbClientBase dbc;
+	private CouchDatabaseBase dbc;
 	
-	CouchDbDesign(CouchDbClientBase dbc) {
+	CouchDbDesign(CouchDatabaseBase dbc) {
 		this.dbc = dbc;
 	}
 	

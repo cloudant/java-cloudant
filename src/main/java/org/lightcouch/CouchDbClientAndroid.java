@@ -71,7 +71,7 @@ import org.apache.http.protocol.HttpContext;
  * @author Ahmed Yehia
  */
 @SuppressWarnings("deprecation")
-public class CouchDbClientAndroid extends CouchDbClientBase {
+public class CouchDbClientAndroid extends CouchDatabaseBase {
 	
 	/**
 	 * @see CouchDbClient#CouchDbClient()
@@ -90,9 +90,8 @@ public class CouchDbClientAndroid extends CouchDbClientBase {
 	/**
 	 *@see CouchDbClient#CouchDbClient(String, boolean, String, String, int, String, String)
 	 */
-	public CouchDbClientAndroid(String dbName, boolean createDbIfNotExist, 
-			String protocol, String host, int port, String username, String password) { 		
-		super(new CouchDbConfig(new CouchDbProperties(dbName, createDbIfNotExist, protocol, host, port, username, password)));
+	public CouchDbClientAndroid(String protocol, String host, int port, String username, String password) { 		
+		super(new CouchDbConfig(new CouchDbProperties( protocol, host, port, username, password)));
 	}
 	
 	/**
