@@ -29,6 +29,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.lightcouch.Attachment;
+import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.Params;
 import org.lightcouch.Response;
@@ -36,10 +37,12 @@ import org.lightcouch.Response;
 public class AttachmentsTest {
 
 	private static CouchDbClient dbClient;
+	private static CouchDatabase db;
 
 	@BeforeClass
 	public static void setUpClass() {
 		dbClient = new CouchDbClient();
+		db = dbClient.database("lightcouch-db-test", true);
 	}
 
 	@AfterClass
@@ -59,7 +62,7 @@ public class AttachmentsTest {
 		bar.addAttachment("txt_1.txt", attachment1);
 		bar.addAttachment("txt_2.txt", attachment2);
 
-		dbClient.save(bar);
+		db.save(bar);
 	}
 
 	@Test
@@ -68,9 +71,9 @@ public class AttachmentsTest {
 		Bar bar = new Bar();
 		bar.addAttachment("txt_1.txt", attachment);
 		
-		Response response = dbClient.save(bar);
+		Response response = db.save(bar);
 		
-		Bar bar2 = dbClient.find(Bar.class, response.getId(), new Params().attachments());
+		Bar bar2 = db.find(Bar.class, response.getId(), new Params().attachments());
 		String base64Data = bar2.getAttachments().get("txt_1.txt").getData();
 		assertNotNull(base64Data);
 	}
@@ -79,9 +82,9 @@ public class AttachmentsTest {
 	public void attachmentStandalone() throws IOException {
 		byte[] bytesToDB = "binary data".getBytes();
 		ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
-		Response response = dbClient.saveAttachment(bytesIn, "foo.txt", "text/plain");
+		Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain");
 
-		InputStream in = dbClient.find(response.getId() + "/foo.txt");
+		InputStream in = db.find(response.getId() + "/foo.txt");
 		ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
 		int n;
 		while ((n = in.read()) != -1) {

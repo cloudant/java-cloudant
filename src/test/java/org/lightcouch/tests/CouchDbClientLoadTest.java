@@ -23,6 +23,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbProperties;
 
@@ -38,6 +39,8 @@ import org.lightcouch.CouchDbProperties;
 public class CouchDbClientLoadTest {
 	
 	private static CouchDbClient dbClient;
+	private static CouchDatabase db;
+	
 
 	private static final int NUM_THREADS     = 500; 
 	private static final int DOCS_PER_THREAD = 10;
@@ -48,14 +51,18 @@ public class CouchDbClientLoadTest {
 	@BeforeClass 
 	public static void setUpClass() {
 		CouchDbProperties properties = new CouchDbProperties()
-		  .setDbName("lightcouch-db-load")
-		  .setCreateDbIfNotExist(true)
-		  .setProtocol("http")
-		  .setHost("127.0.0.1")
-		  .setPort(5984)
+		  //.setDbName("lightcouch-db-load")
+		  //.setCreateDbIfNotExist(true)
+		  .setProtocol("https")
+		  .setHost("localhost")
+		  .setPort(443)
+		  .setUsername("")
+		  .setPassword("")
 		  .setMaxConnections(MAX_CONNECTIONS);
 		
+		
 		dbClient = new CouchDbClient(properties);
+		db = dbClient.database("lightcouch-db-load", true);
 	}
 	
 	@AfterClass
@@ -87,7 +94,7 @@ public class CouchDbClientLoadTest {
 
 		public void run() {
 			for (int i = 0; i < DOCS_PER_THREAD; i++) {
-				dbClient.save(new Foo());
+				db.save(new Foo());
 			}
 		}
 	}

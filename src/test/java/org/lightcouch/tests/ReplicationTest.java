@@ -29,6 +29,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.ReplicationResult;
 import org.lightcouch.ReplicatorDocument;
@@ -40,15 +41,21 @@ import org.lightcouch.ReplicationResult.ReplicationHistory;
 public class ReplicationTest {
 	
 	private static CouchDbClient dbClient;
+	private static CouchDatabase db1;
+	
 	private static CouchDbClient dbClient2;
+	private static CouchDatabase db2;
 	
 	@BeforeClass
 	public static void setUpClass() {
 		dbClient = new CouchDbClient();
-		dbClient2 = new CouchDbClient("couchdb-2.properties");
+		db1 = dbClient.database("lightcouch-db-test", true);
 		
-		dbClient.syncDesignDocsWithDb();
-		dbClient2.syncDesignDocsWithDb();
+		dbClient2 = new CouchDbClient("couchdb-2.properties");
+		db2 = dbClient.database("lightcouch-db-test-2", true);
+		
+		db1.syncDesignDocsWithDb();
+		db2.syncDesignDocsWithDb();
 	}
 
 	@AfterClass
@@ -61,8 +68,8 @@ public class ReplicationTest {
 	public void replication() {
 		ReplicationResult result = dbClient.replication()
 				.createTarget(true)
-				.source(dbClient.getDBUri().toString())
-				.target(dbClient2.getDBUri().toString())
+				.source(db1.getDBUri().toString())
+				.target(db2.getDBUri().toString())
 				.trigger();
 
 		List<ReplicationHistory> histories = result.getHistories();
@@ -76,8 +83,8 @@ public class ReplicationTest {
     	
 		dbClient.replication()
 				.createTarget(true)
-				.source(dbClient.getDBUri().toString())
-				.target(dbClient2.getDBUri().toString())
+				.source(db1.getDBUri().toString())
+				.target(db2.getDBUri().toString())
 				.filter("example/example_filter")
 				.queryParams(queryParams)
 				.trigger();
@@ -85,15 +92,15 @@ public class ReplicationTest {
 
 	@Test
 	public void replicatorDB() {
-		String version = dbClient.context().serverVersion();
+		String version = dbClient.serverVersion();
 		if (version.startsWith("0") || version.startsWith("1.0")) {
 			return; 
 		}
 
 		// trigger a replication
 		Response response = dbClient.replicator()
-				.source(dbClient.getDBUri().toString())
-				.target(dbClient2.getDBUri().toString()).continuous(true)
+				.source(db1.getDBUri().toString())
+				.target(db2.getDBUri().toString()).continuous(true)
 				.createTarget(true)
 				.save();
 		
@@ -122,23 +129,23 @@ public class ReplicationTest {
 		
 		foodb1 = new Foo(docId, "titleX");
 		
-		dbClient.save(foodb1); 
+		db1.save(foodb1); 
 		
-		dbClient.replication().source(dbClient.getDBUri().toString())
-				.target(dbClient2.getDBUri().toString()).trigger();
+		dbClient.replication().source(db1.getDBUri().toString())
+				.target(db2.getDBUri().toString()).trigger();
 
-		foodb2 = dbClient2.find(Foo.class, docId); 
+		foodb2 = db2.find(Foo.class, docId); 
 		foodb2.setTitle("titleY"); 
-		dbClient2.update(foodb2); 
+		db2.update(foodb2); 
 
-		foodb1 = dbClient.find(Foo.class, docId); 
+		foodb1 = db1.find(Foo.class, docId); 
 		foodb1.setTitle("titleZ"); 
-		dbClient.update(foodb1); 
+		db1.update(foodb1); 
 
-		dbClient.replication().source(dbClient.getDBUri().toString())
-				.target(dbClient2.getDBUri().toString()).trigger();
+		dbClient.replication().source(db1.getDBUri().toString())
+				.target(db2.getDBUri().toString()).trigger();
 
-		ViewResult<String[], String, Foo> conflicts = dbClient2.view("conflicts/conflict")
+		ViewResult<String[], String, Foo> conflicts = db2.view("conflicts/conflict")
 				.includeDocs(true).queryView(String[].class, String.class, Foo.class);
 		
 		assertThat(conflicts.getRows().size(), is(not(0))); 

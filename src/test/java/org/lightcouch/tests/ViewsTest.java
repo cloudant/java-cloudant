@@ -29,6 +29,7 @@ import java.util.UUID;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
@@ -40,12 +41,15 @@ import com.google.gson.JsonObject;
 public class ViewsTest {
 
 	private static CouchDbClient dbClient;
+	private static CouchDatabase db;
+	
 
 	@BeforeClass
 	public static void setUpClass() {
 		dbClient = new CouchDbClient();
+		db = dbClient.database("lightcouch-db-test", true);
 
-		dbClient.syncDesignDocsWithDb();
+		db.syncDesignDocsWithDb();
 		
 		init(); 
 	}
@@ -57,7 +61,7 @@ public class ViewsTest {
 
 	@Test
 	public void queryView() {
-		List<Foo> foos = dbClient.view("example/foo")
+		List<Foo> foos = db.view("example/foo")
 				.includeDocs(true)
 				.query(Foo.class);
 		assertThat(foos.size(), not(0));
@@ -65,7 +69,7 @@ public class ViewsTest {
 
 	@Test
 	public void byKey() {
-		List<Foo> foos = dbClient.view("example/foo")
+		List<Foo> foos = db.view("example/foo")
 				.includeDocs(true)
 				.key("key-1")
 				.query(Foo.class);
@@ -74,7 +78,7 @@ public class ViewsTest {
 
 	@Test
 	public void byStartAndEndKey() {
-		List<Foo> foos = dbClient.view("example/foo")
+		List<Foo> foos = db.view("example/foo")
 				.startKey("key-1")
 				.endKey("key-2")
 				.includeDocs(true)
@@ -85,7 +89,7 @@ public class ViewsTest {
 	@Test
 	public void byComplexKey() {
 		int[] complexKey = new int[] { 2011, 10, 15 };
-		List<Foo> foos = dbClient.view("example/by_date")
+		List<Foo> foos = db.view("example/by_date")
 				.key(complexKey)
 //				.key(2011, 10, 15) 
 				.includeDocs(true)
@@ -96,7 +100,7 @@ public class ViewsTest {
 
 	@Test
 	public void viewResultEntries() {
-		ViewResult<int[], String, Foo> viewResult = dbClient.view("example/by_date")
+		ViewResult<int[], String, Foo> viewResult = db.view("example/by_date")
 				.reduce(false)
 				.queryView(int[].class, String.class, Foo.class);
 		assertThat(viewResult.getRows().size(), is(3));
@@ -104,15 +108,15 @@ public class ViewsTest {
 
 	@Test
 	public void scalarValues() {
-		int allTags = dbClient.view("example/by_tag").queryForInt();
+		int allTags = db.view("example/by_tag").queryForInt();
 		assertThat(allTags, is(4));
 
-		long couchDbTags = dbClient.view("example/by_tag")
+		long couchDbTags = db.view("example/by_tag")
 				.key("couchdb")
 				.queryForLong();
 		assertThat(couchDbTags, is(2L));
 
-		String javaTags = dbClient.view("example/by_tag")
+		String javaTags = db.view("example/by_tag")
 				.key("java")
 				.queryForString();
 		assertThat(javaTags, is("1"));
@@ -120,14 +124,14 @@ public class ViewsTest {
 
 	@Test(expected = NoDocumentException.class)
 	public void viewWithNoResult_throwsNoDocumentException() {
-		dbClient.view("example/by_tag")
+		db.view("example/by_tag")
 		.key("javax")
 		.queryForInt();
 	}
 
 	@Test
 	public void groupLevel() {
-		ViewResult<int[], Integer, Foo> viewResult = dbClient
+		ViewResult<int[], Integer, Foo> viewResult = db
 				.view("example/by_date")
 				.groupLevel(2)
 				.queryView(int[].class, Integer.class, Foo.class);
@@ -136,8 +140,8 @@ public class ViewsTest {
 
 	@Test()
 	public void tempViews() {
-		dbClient.save(new Foo(generateUUID(), "some-val"));
-		List<Foo> list = dbClient.view("_temp_view")
+		db.save(new Foo(generateUUID(), "some-val"));
+		List<Foo> list = db.view("_temp_view")
 				.tempView("temp_1")
 				.includeDocs(true)
 				.reduce(false)
@@ -147,8 +151,8 @@ public class ViewsTest {
 
 	@Test
 	public void allDocs() {
-		dbClient.save(new Foo());
-		List<JsonObject> allDocs = dbClient.view("_all_docs")
+		db.save(new Foo());
+		List<JsonObject> allDocs = db.view("_all_docs")
 				.query(JsonObject.class);
 		assertThat(allDocs.size(), not(0));
 	}
@@ -157,12 +161,12 @@ public class ViewsTest {
 	public void pagination() {
 		for (int i = 0; i < 7; i++) {
 			Foo foo = new Foo(generateUUID(), "some-val");
-			dbClient.save(foo);
+			db.save(foo);
 		}
 
 		final int rowsPerPage = 3;
 		// first page - page #1 (rows 1 - 3)
-		Page<Foo> page = dbClient.view("example/foo")
+		Page<Foo> page = db.view("example/foo")
 				.queryPage(rowsPerPage,	null, Foo.class);
 		assertFalse(page.isHasPrevious());
 		assertTrue(page.isHasNext());
@@ -173,7 +177,7 @@ public class ViewsTest {
 
 		String param = page.getNextParam();
 		// next page - page #2 (rows 4 - 6)
-		page = dbClient.view("example/foo").queryPage(rowsPerPage, param, Foo.class);
+		page = db.view("example/foo").queryPage(rowsPerPage, param, Foo.class);
 		assertTrue(page.isHasPrevious());
 		assertTrue(page.isHasNext());
 		assertThat(page.getResultFrom(), is(4));
@@ -183,7 +187,7 @@ public class ViewsTest {
 
 		param = page.getPreviousParam();
 		// previous page, page #1 (rows 1 - 3)
-		page = dbClient.view("example/foo").queryPage(rowsPerPage, param, Foo.class);
+		page = db.view("example/foo").queryPage(rowsPerPage, param, Foo.class);
 		assertFalse(page.isHasPrevious());
 		assertTrue(page.isHasNext());
 		assertThat(page.getResultFrom(), is(1));
@@ -199,16 +203,16 @@ public class ViewsTest {
 			foo = new Foo("id-1", "key-1");
 			foo.setTags(Arrays.asList(new String[] { "couchdb", "views" }));
 			foo.setComplexDate(new int[] { 2011, 10, 15 });
-			dbClient.save(foo);
+			db.save(foo);
 
 			foo = new Foo("id-2", "key-2");
 			foo.setTags(Arrays.asList(new String[] { "java", "couchdb" }));
 			foo.setComplexDate(new int[] { 2011, 10, 15 });
-			dbClient.save(foo);
+			db.save(foo);
 
 			foo = new Foo("id-3", "key-3");
 			foo.setComplexDate(new int[] { 2013, 12, 17 });
-			dbClient.save(foo);
+			db.save(foo);
 
 		} catch (DocumentConflictException e) {
 		}

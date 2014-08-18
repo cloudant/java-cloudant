@@ -25,16 +25,20 @@ import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.DesignDocument;
 
 public class DesignDocumentsTest {
 
 	private static CouchDbClient dbClient;
+	private static CouchDatabase db;
+	
 
 	@BeforeClass
 	public static void setUpClass() {
 		dbClient = new CouchDbClient();
+		db = dbClient.database("lightcouch-db-test", true);
 	}
 
 	@AfterClass
@@ -44,24 +48,24 @@ public class DesignDocumentsTest {
 
 	@Test
 	public void designDocSync() {
-		DesignDocument designDoc = dbClient.design().getFromDesk("example");
-		dbClient.design().synchronizeWithDb(designDoc);
+		DesignDocument designDoc = db.design().getFromDesk("example");
+		db.design().synchronizeWithDb(designDoc);
 	}
 	
 	@Test
 	public void designDocCompare() {
-		DesignDocument designDoc1 = dbClient.design().getFromDesk("example");
-		dbClient.design().synchronizeWithDb(designDoc1);
+		DesignDocument designDoc1 = db.design().getFromDesk("example");
+		db.design().synchronizeWithDb(designDoc1);
 		
-		DesignDocument designDoc11 = dbClient.design().getFromDb("_design/example");
+		DesignDocument designDoc11 = db.design().getFromDb("_design/example");
 		
 		assertEquals(designDoc1, designDoc11);
 	}
 	
 	@Test
 	public void designDocs() {
-		List<DesignDocument> designDocs = dbClient.design().getAllFromDesk();
-		dbClient.syncDesignDocsWithDb();
+		List<DesignDocument> designDocs = db.design().getAllFromDesk();
+		db.syncDesignDocsWithDb();
 		
 		assertThat(designDocs.size(), not(0));
 	}

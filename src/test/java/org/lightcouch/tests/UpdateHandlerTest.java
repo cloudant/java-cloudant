@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.Params;
 import org.lightcouch.Response;
@@ -29,11 +30,14 @@ import org.lightcouch.Response;
 public class UpdateHandlerTest {
 
 	private static CouchDbClient dbClient;
+	private static CouchDatabase db;
+	
 
 	@BeforeClass
 	public static void setUpClass() {
 		dbClient = new CouchDbClient();
-		dbClient.syncDesignDocsWithDb();
+		db = dbClient.database("lightcouch-db-test", true);
+		db.syncDesignDocsWithDb();
 	}
 
 	@AfterClass
@@ -46,14 +50,14 @@ public class UpdateHandlerTest {
 		final String oldValue = "foo";
 		final String newValue = "foo bar";
 		
-		Response response = dbClient.save(new Foo(null, oldValue));
+		Response response = db.save(new Foo(null, oldValue));
 		
 		String query = "field=title&value=" + newValue;
 		
-		String output = dbClient.invokeUpdateHandler("example/example_update", response.getId(), query);
+		String output = db.invokeUpdateHandler("example/example_update", response.getId(), query);
 		
 		// retrieve from db to verify
-		Foo foo = dbClient.find(Foo.class, response.getId());
+		Foo foo = db.find(Foo.class, response.getId());
 		
 		assertNotNull(output);
 		assertEquals(foo.getTitle(), newValue);
@@ -64,15 +68,15 @@ public class UpdateHandlerTest {
 		final String oldValue = "foo";
 		final String newValue = "foo bar";
 		
-		Response response = dbClient.save(new Foo(null, oldValue));
+		Response response = db.save(new Foo(null, oldValue));
 
 		Params params = new Params()
 					.addParam("field", "title")
 					.addParam("value", newValue);
-		String output = dbClient.invokeUpdateHandler("example/example_update", response.getId(), params);
+		String output = db.invokeUpdateHandler("example/example_update", response.getId(), params);
 		
 		// retrieve from db to verify
-		Foo foo = dbClient.find(Foo.class, response.getId());
+		Foo foo = db.find(Foo.class, response.getId());
 		
 		assertNotNull(output);
 		assertEquals(foo.getTitle(), newValue);

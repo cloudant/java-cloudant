@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.lightcouch.Changes;
 import org.lightcouch.ChangesResult;
 import org.lightcouch.ChangesResult.Row;
+import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbInfo;
 import org.lightcouch.Response;
@@ -38,10 +39,13 @@ import com.google.gson.JsonObject;
 public class ChangeNotificationsTest {
 	
 	private static CouchDbClient dbClient;
+	private static CouchDatabase db;
+	
 
 	@BeforeClass
 	public static void setUpClass() {
 		dbClient = new CouchDbClient();
+		db = dbClient.database("lightcouch-db-test", true);
 	}
 
 	@AfterClass
@@ -51,9 +55,9 @@ public class ChangeNotificationsTest {
 	
 	@Test
 	public void changes_normalFeed() {
-		dbClient.save(new Foo()); 
+		db.save(new Foo()); 
 
-		ChangesResult changes = dbClient.changes()
+		ChangesResult changes = db.changes()
 				.includeDocs(true)
 				.limit(1)
 				.getChanges();
@@ -75,18 +79,18 @@ public class ChangeNotificationsTest {
 
 	@Test
 	public void changes_continuousFeed() {
-		dbClient.save(new Foo()); 
+		db.save(new Foo()); 
 
-		CouchDbInfo dbInfo = dbClient.context().info();
+		CouchDbInfo dbInfo = db.info();
 		String since = dbInfo.getUpdateSeq();
 
-		Changes changes = dbClient.changes()
+		Changes changes = db.changes()
 				.includeDocs(true)
 				.since(since)
 				.heartBeat(30000)
 				.continuousChanges();
 
-		Response response = dbClient.save(new Foo());
+		Response response = db.save(new Foo());
 
 		while (changes.hasNext()) {
 			ChangesResult.Row feed = changes.next();

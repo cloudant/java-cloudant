@@ -26,16 +26,20 @@ import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbInfo;
 
 public class DBServerTest {
 
 	private static CouchDbClient dbClient;
+	private static CouchDatabase db;
+	
 
 	@BeforeClass
 	public static void setUpClass() {
 		dbClient = new CouchDbClient();
+		db = dbClient.database("lightcouch-db-test", true);
 	}
 
 	@AfterClass
@@ -45,35 +49,35 @@ public class DBServerTest {
 
 	@Test
 	public void dbInfo() {
-		CouchDbInfo dbInfo = dbClient.context().info();
+		CouchDbInfo dbInfo = db.info();
 		assertNotNull(dbInfo);
 	}
 
 	@Test
 	public void serverVersion() {
-		String version = dbClient.context().serverVersion();
+		String version = dbClient.serverVersion();
 		assertNotNull(version);
 	}
 
 	@Test
 	public void compactDb() {
-		dbClient.context().compact();
+		db.compact();
 	}
 
 	@Test
 	public void allDBs() {
-		List<String> allDbs = dbClient.context().getAllDbs();
+		List<String> allDbs = dbClient.getAllDbs();
 		assertThat(allDbs.size(), is(not(0)));
 	}
 
 	@Test
 	public void ensureFullCommit() {
-		dbClient.context().ensureFullCommit();
+		db.ensureFullCommit();
 	}
 
 	@Test
 	public void uuids() {
-		List<String> uuids = dbClient.context().uuids(10);
+		List<String> uuids = dbClient.uuids(10);
 		assertThat(uuids.size(), is(10));
 	}
 }

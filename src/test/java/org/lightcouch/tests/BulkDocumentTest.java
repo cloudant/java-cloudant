@@ -26,6 +26,7 @@ import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.Response;
 
@@ -34,10 +35,12 @@ import com.google.gson.JsonObject;
 public class BulkDocumentTest {
 
 	private static CouchDbClient dbClient;
+	private static CouchDatabase db;
 
 	@BeforeClass
 	public static void setUpClass() {
 		dbClient = new CouchDbClient();
+		db = dbClient.database("lightcouch-db-test", true);
 	}
 
 	@AfterClass
@@ -53,19 +56,19 @@ public class BulkDocumentTest {
 
 		boolean allOrNothing = true;
 		
-		List<Response> responses = dbClient.bulk(newDocs, allOrNothing);
+		List<Response> responses = db.bulk(newDocs, allOrNothing);
 		
 		assertThat(responses.size(), is(2));
 	}
 
 	@Test
 	public void bulkDocsRetrieve() {
-		Response r1 = dbClient.save(new Foo());
-		Response r2 = dbClient.save(new Foo());
+		Response r1 = db.save(new Foo());
+		Response r2 = db.save(new Foo());
 		
 		List<String> keys = Arrays.asList(new String[] { r1.getId(), r2.getId() });
 		
-		List<Foo> docs = dbClient.view("_all_docs")
+		List<Foo> docs = db.view("_all_docs")
 				.includeDocs(true)
 				.keys(keys)
 				.query(Foo.class);
