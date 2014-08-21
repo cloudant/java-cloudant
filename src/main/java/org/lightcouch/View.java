@@ -44,7 +44,7 @@ import com.google.gson.JsonParser;
  * <h3>Usage Example:</h3>
  * <pre>
  * {@code
- *  List<Foo> list = dbClient.view("example/foo")
+ *  List<Foo> list = db.view("example/foo")
  *	.startKey("start-key")
  *	.endKey("end-key")
  *	.limit(10)
@@ -52,12 +52,12 @@ import com.google.gson.JsonParser;
  *	.query(Foo.class);
  *  
  *  // scalar values
- *  int count = dbClient.view("example/by_tag")
+ *  int count = db.view("example/by_tag")
  * 	.key("couchdb")
  * 	.queryForInt(); 
  * 
  * // pagination
- * Page<Foo> page = dbClient.view("example/foo").queryPage(...);
+ * Page<Foo> page = db.view("example/foo").queryPage(...);
  * }
  * </pre>
  * 

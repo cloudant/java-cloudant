@@ -46,6 +46,13 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 
+/**
+ * Contains a Client Public API implementation.
+ * @see CouchDbClient
+ * @see CouchDbClientAndroid
+ * @author Ahmed Yehia
+ */
+
 public abstract class CouchDbClientBase {
 	
 	static final Log log = LogFactory.getLog(CouchDbClient.class);
@@ -95,6 +102,13 @@ public abstract class CouchDbClientBase {
 		}
 		
 
+		/**
+		 * Get an instance of Database class to perform DB operations
+		 * @param name The name of the database
+		 * @param create Should the database be created if it doesn't exist
+		 * 
+		 * @exception If the database doesn't exist and create is false, an exception is raised
+		 */
 		abstract CouchDatabaseBase database(String name, boolean create);
 
 		
@@ -218,7 +232,7 @@ public abstract class CouchDbClientBase {
 			try {
 				HttpDelete delete = new HttpDelete(uri);
 				response = executeRequest(delete); 
-				return getResponse(response);
+				return getResponse(response,Response.class);
 			} finally {
 				close(response);
 			}
@@ -287,7 +301,7 @@ public abstract class CouchDbClientBase {
 				final HttpPut put = new HttpPut(buildUri(uri).pathToEncode(id).buildEncoded());
 				setEntity(put, json.toString());
 				response = executeRequest(put); 
-				return getResponse(response);
+				return getResponse(response,Response.class);
 			} finally {
 				close(response);
 			}
@@ -305,7 +319,7 @@ public abstract class CouchDbClientBase {
 				entity.setContentType(contentType);
 				httpPut.setEntity(entity);
 				response = executeRequest(httpPut);
-				return getResponse(response);
+				return getResponse(response, Response.class);
 			} finally {
 				close(response);
 			}
@@ -413,8 +427,8 @@ public abstract class CouchDbClientBase {
 		 * @param response The {@link HttpResponse}
 		 * @return {@link Response}
 		 */
-		Response getResponse(HttpResponse response) throws CouchDbException {
+		 <T> T getResponse(HttpResponse response, Class<T> classType) throws CouchDbException {
 			InputStreamReader reader = new InputStreamReader(getStream(response));
-			return getGson().fromJson(reader, Response.class);
+			return getGson().fromJson(reader, classType);
 		}
 }

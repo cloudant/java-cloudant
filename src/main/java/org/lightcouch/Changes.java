@@ -31,8 +31,8 @@ import com.google.gson.Gson;
  * <h3>Usage Example:</h3>
  * <pre>
  * // feed type normal 
- * String since = dbClient.context().info().getUpdateSeq(); // latest update seq
- * ChangesResult changeResult = dbClient.changes()
+ * String since = db.info().getUpdateSeq(); // latest update seq
+ * ChangesResult changeResult = db.changes()
  *	.since(since) 
  *	.limit(10)
  *	.filter("example/filter")
@@ -44,7 +44,7 @@ import com.google.gson.Gson;
  * }
  *
  * // feed type continuous
- * Changes changes = dbClient.changes()
+ * Changes changes = db.changes()
  *	.includeDocs(true) 
  *	.heartBeat(30000)
  *	.continuousChanges(); 

@@ -40,7 +40,7 @@ import com.google.gson.JsonParser;
  * 
  * <h3>Usage Example:</h3>
  * <pre>
- * Response response = dbClient.replicator()
+ * Response response = db.replicator()
  * 	.source("source-db")
  * 	.target("target-db")
  * 	.continuous(true)
@@ -49,16 +49,16 @@ import com.google.gson.JsonParser;
  * 	.replicatorDocId("doc-id")          // optional, defaults to UUID 
  * 	.save(); // trigger replication
  * 
- * ReplicatorDocument replicatorDoc = dbClient.replicator()
+ * ReplicatorDocument replicatorDoc = db.replicator()
  * 	.replicatorDocId("doc-id")
  * 	.replicatorDocRev("doc-rev") // optional
  * 	.find();
  * 
  * {@code 
- * List<ReplicatorDocument> replicatorDocs = dbClient.replicator().findAll();
+ * List<ReplicatorDocument> replicatorDocs = db.replicator().findAll();
  * }
  * 
- * Response response = dbClient.replicator()
+ * Response response = db.replicator()
  * 	.replicatorDocId("doc-id")
  * 	.replicatorDocRev("doc-rev")
  * 	.remove(); // cancels a replication

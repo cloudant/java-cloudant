@@ -70,12 +70,18 @@ import org.apache.http.protocol.HttpContext;
  * 
  * <p>Start using the API by the client:
  * 
- * <p>Documents <code>CRUD</code> APIs is accessed by the client directly, eg.: {@link CouchDatabaseBase#find(Class, String) dbClient.find(Foo.class, "doc-id")}
- * <p>View APIs {@link View dbClient.view()} 
- * <p>Change Notifications {@link Changes dbClient.changes()}
+ * <p>DB server APIs is accessed by the client directly eg.: {@link CouchDbClientBase#getAllDbs() dbClient.getAllDbs()}
+ * <p>DB is accessed by getting to the CouchDatabase from the client 
+ * <pre>
+ * CouchDatabase db = dbClient.database("customers",false);
+ * </pre>
+ * <p>Documents <code>CRUD</code> APIs is accessed from the CouchDatabase eg.: {@link CouchDatabaseBase#find(Class, String) db.find(Foo.class, "doc-id")}
+ * <p>View APIs {@link View db.view()} 
+ * <p>Change Notifications {@link Changes db.changes()}
+ * <p>Design documents {@link CouchDbDesign db.design()}
+ *  
  * <p>Replication {@link Replication dbClient.replication()} and {@link Replicator dbClient.replicator()} 
- * <p>DB server {@link CouchDbContext dbClient.context()}
- * <p>Design documents {@link CouchDbDesign dbClient.design()}
+ * 
  * 
  * <p>At the end of a client usage; it's useful to call: {@link #shutdown()} to ensure proper release of resources.
  * 
@@ -104,8 +110,6 @@ public class CouchDbClient extends  CouchDbClientBase {
 	
 	/**
 	 * Constructs a new instance of this class.
-	 * @param dbName The database name.
-	 * @param createDbIfNotExist To create a new database if it does not already exist.
 	 * @param protocol The protocol to use (i.e http or https)
 	 * @param host The database host address
 	 * @param port The database listening port
@@ -223,12 +227,13 @@ public class CouchDbClient extends  CouchDbClientBase {
 		});
 	}
 	
-	public void shutdown() {
-		HttpClientUtils.closeQuietly(this.httpClient);
-	}
-
+		
 	@Override
 	public CouchDatabase database(String name, boolean create) {
 		return new CouchDatabase(this,name,create);
+	}
+	
+	public void shutdown() {
+		HttpClientUtils.closeQuietly(this.httpClient);
 	}
 }

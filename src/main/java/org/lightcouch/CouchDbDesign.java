@@ -39,18 +39,18 @@ import com.google.gson.JsonObject;
  * <h3>Usage Example:</h3>
  * <pre>
  * // read from system files
- * DesignDocument design1 = dbClient.design().getFromDesk("example");
+ * DesignDocument design1 = db.design().getFromDesk("example");
  * 
  * // sync with the database
- * dbClient.design().synchronizeWithDb(design1);
+ * db.design().synchronizeWithDb(design1);
  * 
  * // sync all with the database
- * dbClient.syncDesignDocsWithDb();
+ * db.syncDesignDocsWithDb();
  * 
  * // read from the database
- * DesignDocument design2 = dbClient.design().getFromDb("_design/example");
+ * DesignDocument design2 = db.design().getFromDb("_design/example");
  * </pre>
- * @see {@link CouchDbClient#design() dbClient.design()} to access the API.
+ * @see {@link CouchDatabaseBase#design() db.design()} to access the API.
  * @see DesignDocument
  * @since 0.0.2
  * @author Ahmed Yehia

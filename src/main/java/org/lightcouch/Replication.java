@@ -38,7 +38,7 @@ import com.google.gson.JsonObject;
  * 
  * <h3>Usage Example:</h3>
  * <pre>
- * ReplicationResult replication = dbClient.replication()
+ * ReplicationResult replication = db.replication()
  * 	.source("source-db")
  * 	.target("target-db")
  * 	.createTarget(true)

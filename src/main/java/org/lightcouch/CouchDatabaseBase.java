@@ -38,9 +38,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 /**
- * Contains a client Public API implementation.
- * @see CouchDbClient
- * @see CouchDbClientAndroid
+ * Contains a Database Public API implementation.
+ * @see CouchDatabase
  * @author Ahmed Yehia
  */
 public abstract class CouchDatabaseBase {
@@ -219,7 +218,7 @@ public abstract class CouchDatabaseBase {
 		try { 
 			URI uri = buildUri(getDBUri()).build();
 			response = client.post(uri, getGson().toJson(object));
-			return client.getResponse(response);
+			return client.getResponse(response,Response.class);
 		} finally {
 			close(response);
 		}
@@ -408,7 +407,7 @@ public abstract class CouchDatabaseBase {
 	
 	
 	/**
-	 * @return {@link CouchDbInfo} Containing the DB server info.
+	 * @return {@link CouchDbInfo} Containing the DB info.
 	 */
 	public CouchDbInfo info() {
 		return client.get(buildUri(getDBUri()).build(), CouchDbInfo.class);

@@ -104,7 +104,7 @@ final class CouchDbUtil {
 	 * This is basically a brute-force implementation.
 	 * Works for regular files and also JARs.
 	 * 
-	 * @author Greg Briggs
+	 * @author Greg Briggs (ah!!! i Mario Briggs, need to meet this Greg guy... never wrote code with another Briggs)
 	 * @param clazz Any java class that lives in the same place as the resources you want.
 	 * @param path Should end with "/", but not start with one.
 	 * @return Just the name of each member item, not the full paths.
