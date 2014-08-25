@@ -53,7 +53,6 @@ public class CloudantAccount {
 			
 	}
 	
-	
 	/**
 	 * 
 	 * @param name name of database to access
