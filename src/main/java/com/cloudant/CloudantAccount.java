@@ -181,11 +181,9 @@ public class CloudantAccount {
 	/**
 	 * @return the accountName
 	 */
-	public String getAccountName() {
+	String getAccountName() {
 		return accountName;
 	}
 	
-	
-	
-	
+
 }
