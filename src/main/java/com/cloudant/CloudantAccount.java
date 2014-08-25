@@ -55,18 +55,6 @@ public class CloudantAccount {
 	
 	
 	/**
-	 * @param uri
-	 * @param classType
-	 * @return
-	 * @see org.lightcouch.CouchDbClientBase#get(java.net.URI, java.lang.Class)
-	 */
-	public <T> T get(URI uri, Class<T> classType) {
-		return client.get(uri, classType);
-	}
-
-
-
-	/**
 	 * 
 	 * @param name name of database to access
 	 * @param create flag indicating whether to create the database if doesnt exist.
