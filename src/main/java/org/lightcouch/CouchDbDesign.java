@@ -17,11 +17,11 @@
 package org.lightcouch;
 
 import static java.lang.String.format;
-import static org.lightcouch.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.CouchDbUtil.listResources;
-import static org.lightcouch.CouchDbUtil.readFile;
-import static org.lightcouch.CouchDbUtil.removeExtension;
-import static org.lightcouch.URIBuilder.buildUri;
+import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static org.lightcouch.internal.CouchDbUtil.listResources;
+import static org.lightcouch.internal.CouchDbUtil.readFile;
+import static org.lightcouch.internal.CouchDbUtil.removeExtension;
+import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.net.URI;
 import java.util.ArrayList;

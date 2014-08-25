@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.lightcouch;
+package org.lightcouch.internal;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -23,13 +23,15 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.lightcouch.Params;
+
 /**
  * Helper class for construction of HTTP request URIs.
  * @since 0.0.2
  * @author Ahmed Yehia
  * 
  */
-class URIBuilder {
+public class URIBuilder {
 	private String scheme;
 	private String host;
 	private int port;

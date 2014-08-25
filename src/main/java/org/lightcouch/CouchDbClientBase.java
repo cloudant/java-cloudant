@@ -1,12 +1,12 @@
 package org.lightcouch;
 
-import static org.lightcouch.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.CouchDbUtil.assertNull;
-import static org.lightcouch.CouchDbUtil.close;
-import static org.lightcouch.CouchDbUtil.generateUUID;
-import static org.lightcouch.CouchDbUtil.getAsString;
-import static org.lightcouch.CouchDbUtil.getStream;
-import static org.lightcouch.URIBuilder.buildUri;
+import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static org.lightcouch.internal.CouchDbUtil.assertNull;
+import static org.lightcouch.internal.CouchDbUtil.close;
+import static org.lightcouch.internal.CouchDbUtil.generateUUID;
+import static org.lightcouch.internal.CouchDbUtil.getAsString;
+import static org.lightcouch.internal.CouchDbUtil.getStream;
+import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,6 +45,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
+import com.ibm.xtq.ast.nodes.If;
 
 /**
  * Contains a Client Public API implementation.
@@ -262,7 +263,7 @@ public abstract class CouchDbClientBase {
 		 * Performs a HTTP GET request. 
 		 * @return An object of type T
 		 */
-		<T> T get(URI uri, Class<T> classType) {
+		public <T> T get(URI uri, Class<T> classType) {
 			InputStream in = null;
 			try {
 				in = get(uri);
@@ -430,5 +431,22 @@ public abstract class CouchDbClientBase {
 		 <T> T getResponse(HttpResponse response, Class<T> classType) throws CouchDbException {
 			InputStreamReader reader = new InputStreamReader(getStream(response));
 			return getGson().fromJson(reader, classType);
+		}
+		 
+		 /**
+		 * Executes a HTTP request and return a domain object
+		 * @param request The HTTP request to execute.
+		 * @param Class<T> class of domain object to return
+		 * @return <T> T
+		 */
+		public <T> T executeRequest(HttpRequestBase request, Class<T> classType) {
+			HttpResponse response = null;
+			try {
+				response =  executeRequest(request);
+				return getResponse(response, classType);
+			}
+			finally {
+				close(response);
+			}
 		}
 }

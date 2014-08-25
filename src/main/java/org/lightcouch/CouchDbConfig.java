@@ -16,7 +16,7 @@
 
 package org.lightcouch;
 
-import static org.lightcouch.CouchDbUtil.*;
+import static org.lightcouch.internal.CouchDbUtil.*;
 
 import java.io.InputStream;
 import java.util.Properties;

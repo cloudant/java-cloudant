@@ -23,6 +23,8 @@ import java.net.URI;
 
 import org.apache.http.client.methods.HttpGet;
 import org.lightcouch.ChangesResult.Row;
+import org.lightcouch.internal.CouchDbUtil;
+import org.lightcouch.internal.URIBuilder;
 
 import com.google.gson.Gson;
 

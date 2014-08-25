@@ -17,7 +17,7 @@
 package org.lightcouch;
 
 import static java.lang.String.format;
-import static org.lightcouch.CouchDbUtil.*;
+import static org.lightcouch.internal.CouchDbUtil.*;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -31,6 +31,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.lightcouch.DesignDocument.MapReduce;
+import org.lightcouch.internal.URIBuilder;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;

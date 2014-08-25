@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package org.lightcouch;
+package org.lightcouch.internal;
 
 import static java.lang.String.format;
 
 import java.io.Closeable;
 import java.io.File;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -35,16 +38,21 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.lightcouch.CouchDbException;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 /**
  * Provides various utility methods, for internal use.
  * @author Ahmed Yehia
  */
-final class CouchDbUtil {
+final public class CouchDbUtil {
 
 	private CouchDbUtil() {
 		// Utility class
@@ -202,5 +210,46 @@ final class CouchDbUtil {
 		try {
 			c.close();
 		} catch (Exception e) {}
+	}
+	
+	
+	
+	/**
+	 * @return A JSON element as a String, or null if not found, from the response
+	 */
+	public static String getAsString(HttpResponse response, String e) {
+		InputStream instream = null;
+		
+		try {
+			instream = getStream(response);
+			Reader reader = new InputStreamReader(instream);
+			return getAsString(new JsonParser().parse(reader).getAsJsonObject(), e);
+		}
+		finally {
+			close(instream);
+		}
+		
+		
+	}
+	
+	/**
+	 * create a HTTP POST request.
+	 * @return {@link HttpResponse}
+	 */
+	public static HttpPost createPost(URI uri, String json) {
+		HttpPost post = new HttpPost(uri);
+		setEntity(post, json);
+		return post;
+	}
+	
+	/**
+	 * Sets a JSON String as a request entity.
+	 * @param httpRequest The request to set entity.
+	 * @param json The JSON String to set.
+	 */
+	private static void setEntity(HttpEntityEnclosingRequestBase httpRequest, String json) {
+		StringEntity entity = new StringEntity(json, "UTF-8");
+		entity.setContentType("application/json");
+		httpRequest.setEntity(entity);
 	}
 }

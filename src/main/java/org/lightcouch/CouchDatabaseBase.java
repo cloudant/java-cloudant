@@ -16,13 +16,13 @@
 
 package org.lightcouch;
 
-import static org.lightcouch.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.CouchDbUtil.close;
-import static org.lightcouch.CouchDbUtil.generateUUID;
-import static org.lightcouch.CouchDbUtil.getAsString;
-import static org.lightcouch.CouchDbUtil.getStream;
-import static org.lightcouch.CouchDbUtil.streamToString;
-import static org.lightcouch.URIBuilder.buildUri;
+import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static org.lightcouch.internal.CouchDbUtil.close;
+import static org.lightcouch.internal.CouchDbUtil.generateUUID;
+import static org.lightcouch.internal.CouchDbUtil.getAsString;
+import static org.lightcouch.internal.CouchDbUtil.getStream;
+import static org.lightcouch.internal.CouchDbUtil.streamToString;
+import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -50,12 +50,12 @@ public abstract class CouchDatabaseBase {
 	private URI dbURI;
 	
 	private CouchDbDesign design;
-	private String name;
+	private String dbName;
 	
 	
 	CouchDatabaseBase(CouchDbClientBase client, String name, boolean create) {
 		assertNotEmpty(name, "name");
-		this.name = name;
+		this.dbName = name;
 		this.client = client;
 		this.dbURI   = buildUri(client.getBaseUri()).path(name).path("/").build();
 		connect(create);
@@ -437,6 +437,15 @@ public abstract class CouchDatabaseBase {
 		}
 	}
 
+	
+	/**
+	 * @return the dbName
+	 */
+	public String getDbName() {
+		return dbName;
+	}
+
+
 	private void connect(boolean create) {
 		
 		InputStream getresp = null;
@@ -450,7 +459,7 @@ public abstract class CouchDatabaseBase {
 			}
 			final HttpPut put = new HttpPut(dbURI);
 			putresp = client.executeRequest(put);
-			log.info(String.format("Created Database: '%s'", name));
+			log.info(String.format("Created Database: '%s'", dbName));
 		} finally {
 			close(getresp);
 			close(putresp);

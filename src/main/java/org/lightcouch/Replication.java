@@ -16,10 +16,10 @@
 
 package org.lightcouch;
 
-import static org.lightcouch.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.CouchDbUtil.close;
-import static org.lightcouch.CouchDbUtil.getStream;
-import static org.lightcouch.URIBuilder.buildUri;
+import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static org.lightcouch.internal.CouchDbUtil.close;
+import static org.lightcouch.internal.CouchDbUtil.getStream;
+import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.io.InputStreamReader;
 import java.net.URI;
