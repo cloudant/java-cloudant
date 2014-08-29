@@ -20,8 +20,10 @@ import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static org.lightcouch.internal.CouchDbUtil.close;
 import static org.lightcouch.internal.CouchDbUtil.generateUUID;
 import static org.lightcouch.internal.CouchDbUtil.getAsString;
+import static org.lightcouch.internal.CouchDbUtil.getResponseList;
 import static org.lightcouch.internal.CouchDbUtil.getStream;
 import static org.lightcouch.internal.CouchDbUtil.streamToString;
+import static org.lightcouch.internal.CouchDbUtil.getResponse;
 import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.io.InputStream;
@@ -36,6 +38,7 @@ import org.apache.http.client.methods.HttpPut;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * Contains a Database Public API implementation.
@@ -218,7 +221,7 @@ public abstract class CouchDatabaseBase {
 		try { 
 			URI uri = buildUri(getDBUri()).build();
 			response = client.post(uri, getGson().toJson(object));
-			return client.getResponse(response,Response.class);
+			return getResponse(response,Response.class, client.getGson());
 		} finally {
 			close(response);
 		}
@@ -292,7 +295,8 @@ public abstract class CouchDatabaseBase {
 			final URI uri = buildUri(getDBUri()).path("_bulk_docs").build();
 			final String json = String.format("{%s%s%s}", allOrNothingVal, "\"docs\": ", getGson().toJson(objects));
 			response = client.post(uri, json);
-			return client.getResponseList(response);
+			return getResponseList(response, client.getGson(), Response.class,
+						new TypeToken<List<Response>>(){}.getType());
 		} finally {
 			close(response);
 		}

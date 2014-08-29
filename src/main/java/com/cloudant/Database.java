@@ -1,8 +1,11 @@
 package com.cloudant;
 
+import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static org.lightcouch.internal.CouchDbUtil.close;
 import static org.lightcouch.internal.CouchDbUtil.createPost;
 import static org.lightcouch.internal.CouchDbUtil.getAsString;
+import static org.lightcouch.internal.CouchDbUtil.getResponse;
+import static org.lightcouch.internal.CouchDbUtil.getResponseList;
 import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.io.InputStream;
@@ -13,7 +16,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpGet;
 import org.lightcouch.Changes;
 import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
@@ -22,6 +25,11 @@ import org.lightcouch.CouchDbInfo;
 import org.lightcouch.Params;
 import org.lightcouch.Response;
 import org.lightcouch.View;
+import org.lightcouch.internal.GsonHelper;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 
 
@@ -34,6 +42,10 @@ import org.lightcouch.View;
 
 public class Database {
 
+	private static Gson ownGSON;
+	static {
+		initGson();
+	}
 	private CouchDatabase db;
 	private CloudantAccount client;
 
@@ -65,23 +77,21 @@ public class Database {
 		this.db = db;
 	}
 	
-	
-	
 	/**
 	 * Set the permissions for the DB
 	 * @param userNameorApikey
 	 * @param permissions
 	 */
 	public void setPermissions(String userNameorApikey,  EnumSet<Permissions> permissions) {
+		assertNotEmpty(userNameorApikey,"userNameorApikey");
+		assertNotEmpty(permissions,"permissions");
 		HttpResponse response = null;
 		CouchDbClient tmp = new CouchDbClient("https", "cloudant.com", 443, client.getLoginUsername(), client.getPassword());		
 		URI uri = buildUri(tmp.getBaseUri()).path("/api/set_permissions").build();
 		String body = getPermissionsBody(userNameorApikey, permissions);
 				
 		try {
-			HttpPost post = createPost(uri,body);
-			post.setHeader("Content-Type", "application/x-www-form-urlencoded");
-			response = tmp.executeRequest(post);
+			response = tmp.executeRequest(createPost(uri,body,"application/x-www-form-urlencoded"));
 			String ok = getAsString(response,"ok");
 			if ( !ok.equalsIgnoreCase("true")) {
 				//raise exception
@@ -94,12 +104,39 @@ public class Database {
 	}
 	
 	/**
-	 * 
-	 
-	public String getShards() {
-		return client.get(buildUri(db.getDBUri()).path("/_shards").build(), String.class);
-	}*/
+	 * Get info about the shards in the database
+	 * @return List of shards
+	 */
+	 public List<Shard> getShards() {
+		HttpResponse response = null;
+		HttpGet get = new HttpGet(buildUri(db.getDBUri()).path("/_shards").build());
+		try {
+			response = client.executeRequest(get);
+			return getResponseList(response, ownGSON, Shard.class,
+							new TypeToken<List<Shard>>(){}.getType());
+		}
+		finally {
+			close(response);
+		}
+	}
 	
+	 /**
+		 * Get info about the shard a document belongs to 
+		 * @param String documentId
+		 * @return Shard info
+		 */
+		 public Shard getShard(String docId) {
+			assertNotEmpty(docId,"docId");
+			HttpResponse response = null;
+			HttpGet get = new HttpGet(buildUri(db.getDBUri()).path("_shards/").path(docId).build());
+			try {
+				response = client.executeRequest(get);
+				return getResponse(response, Shard.class,ownGSON);
+			}
+			finally {
+				close(response);
+			}
+		}
 	
 
 	/**
@@ -408,22 +445,17 @@ public class Database {
 	}
 	
 	
-	/**/
-	public static void main(String[] args) {
-		
-		CloudantAccount c = new CloudantAccount("mariobriggs","mariobriggs","cloudant" );//"utingentioneinamemaytold", "SqI5bNsVFhiRgPCy7Jn4g2xp");
-		System.out.println(c.getAllDbs());
-	/*	ApiKey key = c.generateApiKey();
-		System.out.println(key);
-		
-		
-		Database db = c.database("crud", false);
-		
-		EnumSet<Permissions> p = EnumSet.<Permissions>of( Permissions._writer, Permissions._reader);
-		db.setPermissions(key.getKey(), p);
-		*/
-		
+	/**
+	 * setup our own Deserializers
+	 */
+	private static void initGson() {
+		GsonBuilder builder = GsonHelper.initGson(new GsonBuilder());
+		builder.registerTypeAdapter(new TypeToken<List<Shard>>(){}.getType(), new ShardDeserializer());
+		ownGSON = builder.create();
 	}
+	
+	
+	
 	
 	
 }

@@ -146,14 +146,16 @@ public class CouchDbClient extends  CouchDbClientBase {
 							.setConnectTimeout(props.getConnectionTimeout()).build());
 			if (props.getProxyHost() != null) 
 				clientBuilder.setProxy(new HttpHost(props.getProxyHost(), props.getProxyPort()));
+			clientBuilder.setDefaultCookieStore(cookies); // use AUTH cookies
 			if (props.getUsername() != null) {
+				// this one is for non account endpoints.
 				CredentialsProvider credsProvider = new BasicCredentialsProvider();
 				credsProvider.setCredentials(new AuthScope(props.getHost(),
 						props.getPort()),
 						new UsernamePasswordCredentials(props.getUsername(),
 								props.getPassword()));
 				clientBuilder.setDefaultCredentialsProvider(credsProvider);
-				props.clearPassword();
+				//props.clearPassword();
 			}
 			registerInterceptors(clientBuilder);
 			return clientBuilder.build();
@@ -164,6 +166,7 @@ public class CouchDbClient extends  CouchDbClientBase {
 
 	@Override
 	HttpContext createContext() {
+		
 		AuthCache authCache = new BasicAuthCache();
 		authCache.put(host, new BasicScheme());
 		HttpContext context = new BasicHttpContext();

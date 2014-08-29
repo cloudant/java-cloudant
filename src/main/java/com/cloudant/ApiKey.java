@@ -18,7 +18,6 @@ public class ApiKey {
 		return password;
 	}
 
-
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */

@@ -6,6 +6,7 @@ import static org.lightcouch.internal.CouchDbUtil.close;
 import static org.lightcouch.internal.CouchDbUtil.generateUUID;
 import static org.lightcouch.internal.CouchDbUtil.getAsString;
 import static org.lightcouch.internal.CouchDbUtil.getStream;
+import static org.lightcouch.internal.CouchDbUtil.getResponse;
 import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.io.IOException;
@@ -18,9 +19,11 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
@@ -31,19 +34,17 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.cookie.BasicClientCookie2;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
+import org.lightcouch.internal.CouchDbUtil;
+import org.lightcouch.internal.GsonHelper;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 import com.ibm.xtq.ast.nodes.If;
 
@@ -63,6 +64,8 @@ public abstract class CouchDbClientBase {
 	final HttpHost host;
 	private Gson gson; 
 	
+	final CookieStore cookies = new BasicCookieStore();
+	
 	CouchDbClientBase() {
 		this(new CouchDbConfig());
 	}
@@ -72,10 +75,36 @@ public abstract class CouchDbClientBase {
 		final CouchDbProperties props = config.getProperties();
 		this.httpClient = createHttpClient(props);
 		this.host = new HttpHost(props.getHost(), props.getPort(), props.getProtocol());
-		this.gson = initGson(new GsonBuilder());
+		this.gson = GsonHelper.initGson(new GsonBuilder()).create();
 		final String path = props.getPath() != null ? props.getPath() : "";
         this.baseURI = buildUri().scheme(props.getProtocol()).host(props.getHost()).port(props.getPort()).path("/").path(path).build();
-		
+        
+        // for non account endpoints... do not get the cookie
+        if ( !props.getHost().equalsIgnoreCase("cloudant.com") ) {
+        	getCookie(props);
+        }
+        props.clearPassword();
+    }
+
+	private void getCookie(final CouchDbProperties props) {
+		URI uri = buildUri(baseURI).path("_session").build();
+        String body = "name=" +  props.getUsername() + "&password=" + props.getPassword();
+              
+        HttpResponse response = null;
+        try {
+        	response = executeRequest(CouchDbUtil.createPost(uri,body,"application/x-www-form-urlencoded"));
+        	for (Header h : response.getHeaders("set-cookie")) {
+             	if ( h.getName().equalsIgnoreCase("AuthSession")) {
+             		cookies.addCookie(new BasicClientCookie2("AuthSession", h.getValue()));
+             		break;
+             	}
+             }
+        }
+        finally {
+        	close(response);
+        }
+       
+        
 	}
 	// Client(s) provided implementation
 	
@@ -214,7 +243,7 @@ public abstract class CouchDbClientBase {
 		 */
 		public HttpResponse executeRequest(HttpRequestBase request) {
 			try {
-				return httpClient.execute(host, request, createContext());
+				return httpClient.execute(host, request,createContext());
 			} catch (IOException e) {
 				request.abort();
 				throw new CouchDbException("Error executing request. ", e);
@@ -233,7 +262,7 @@ public abstract class CouchDbClientBase {
 			try {
 				HttpDelete delete = new HttpDelete(uri);
 				response = executeRequest(delete); 
-				return getResponse(response,Response.class);
+				return getResponse(response,Response.class, getGson());
 			} finally {
 				close(response);
 			}
@@ -302,7 +331,7 @@ public abstract class CouchDbClientBase {
 				final HttpPut put = new HttpPut(buildUri(uri).pathToEncode(id).buildEncoded());
 				setEntity(put, json.toString());
 				response = executeRequest(put); 
-				return getResponse(response,Response.class);
+				return getResponse(response,Response.class,getGson());
 			} finally {
 				close(response);
 			}
@@ -320,7 +349,7 @@ public abstract class CouchDbClientBase {
 				entity.setContentType(contentType);
 				httpPut.setEntity(entity);
 				response = executeRequest(httpPut);
-				return getResponse(response, Response.class);
+				return getResponse(response, Response.class,getGson());
 			} finally {
 				close(response);
 			}
@@ -382,7 +411,7 @@ public abstract class CouchDbClientBase {
 		 * <p>Useful for registering custom serializers/deserializers, such as JodaTime classes.
 		 */
 		void setGsonBuilder(GsonBuilder gsonBuilder) {
-			this.gson = initGson(gsonBuilder);
+			this.gson = GsonHelper.initGson(gsonBuilder).create();
 		}
 		
 		
@@ -392,48 +421,9 @@ public abstract class CouchDbClientBase {
 		Gson getGson() {
 			return gson;
 		}
-		/**
-		 * Builds {@link Gson} and registers any required serializer/deserializer.
-		 * @return {@link Gson} instance
-		 */
-		private Gson initGson(GsonBuilder gsonBuilder) {
-			gsonBuilder.registerTypeAdapter(JsonObject.class, new JsonDeserializer<JsonObject>() {
-				public JsonObject deserialize(JsonElement json,
-						Type typeOfT, JsonDeserializationContext context)
-						throws JsonParseException {
-					return json.getAsJsonObject();
-				}
-			});
-			gsonBuilder.registerTypeAdapter(JsonObject.class, new JsonSerializer<JsonObject>() {
-				public JsonElement serialize(JsonObject src, Type typeOfSrc,
-						JsonSerializationContext context) {
-					return src.getAsJsonObject();
-				}
-				
-			});
-			return gsonBuilder.create();
-		}
+		
 		
 		/**
-		 * @param response The {@link HttpResponse}
-		 * @return {@link Response}
-		 */
-		List<Response> getResponseList(HttpResponse response) throws CouchDbException {
-			InputStream instream = getStream(response);
-			Reader reader = new InputStreamReader(instream);
-			return getGson().fromJson(reader, new TypeToken<List<Response>>(){}.getType());
-		}
-		
-		/**
-		 * @param response The {@link HttpResponse}
-		 * @return {@link Response}
-		 */
-		 <T> T getResponse(HttpResponse response, Class<T> classType) throws CouchDbException {
-			InputStreamReader reader = new InputStreamReader(getStream(response));
-			return getGson().fromJson(reader, classType);
-		}
-		 
-		 /**
 		 * Executes a HTTP request and return a domain object
 		 * @param request The HTTP request to execute.
 		 * @param Class<T> class of domain object to return
@@ -443,7 +433,7 @@ public abstract class CouchDbClientBase {
 			HttpResponse response = null;
 			try {
 				response =  executeRequest(request);
-				return getResponse(response, classType);
+				return getResponse(response, classType, getGson());
 			}
 			finally {
 				close(response);

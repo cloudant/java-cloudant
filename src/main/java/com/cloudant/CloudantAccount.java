@@ -1,6 +1,7 @@
 package com.cloudant;
 
 import static org.lightcouch.internal.CouchDbUtil.createPost;
+import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.net.URI;
@@ -34,6 +35,9 @@ public class CloudantAccount {
 	 */
 	public CloudantAccount(String account, String loginUsername, String password) {
 		super();
+		assertNotEmpty(account,"accountName");
+		assertNotEmpty(loginUsername,"loginUsername");
+		assertNotEmpty(password,"password");
 		this.accountName = account;
 		this.loginUsername = loginUsername;
 		this.password = password;
@@ -48,9 +52,8 @@ public class CloudantAccount {
 	 */
 	public ApiKey generateApiKey() {
 		CouchDbClient tmp = new CouchDbClient("https", "cloudant.com", 443, loginUsername, password);
-		URI uri = buildUri(tmp.getBaseUri()).path("/api/generate_api_key").build();
-		return tmp.executeRequest(createPost(uri,""), ApiKey.class);
-			
+		URI uri = buildUri(tmp.getBaseUri()).path("api/generate_api_key").build();
+		return tmp.executeRequest(createPost(uri,"",""), ApiKey.class);		
 	}
 	
 	/**
@@ -168,6 +171,7 @@ public class CloudantAccount {
 		return client.uuids(count);
 	}
 	
+	
 	String getLoginUsername() {
 		return loginUsername;
 	}
@@ -184,6 +188,6 @@ public class CloudantAccount {
 	String getAccountName() {
 		return accountName;
 	}
-	
+
 
 }

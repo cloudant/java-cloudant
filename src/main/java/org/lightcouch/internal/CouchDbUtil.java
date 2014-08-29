@@ -20,9 +20,11 @@ import static java.lang.String.format;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -42,6 +44,7 @@ import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.lightcouch.CouchDbException;
+import org.lightcouch.Response;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -236,9 +239,9 @@ final public class CouchDbUtil {
 	 * create a HTTP POST request.
 	 * @return {@link HttpResponse}
 	 */
-	public static HttpPost createPost(URI uri, String json) {
+	public static HttpPost createPost(URI uri, String body, String contentType) {
 		HttpPost post = new HttpPost(uri);
-		setEntity(post, json);
+		setEntity(post, body, contentType);
 		return post;
 	}
 	
@@ -247,9 +250,40 @@ final public class CouchDbUtil {
 	 * @param httpRequest The request to set entity.
 	 * @param json The JSON String to set.
 	 */
-	private static void setEntity(HttpEntityEnclosingRequestBase httpRequest, String json) {
-		StringEntity entity = new StringEntity(json, "UTF-8");
-		entity.setContentType("application/json");
+	private static void setEntity(HttpEntityEnclosingRequestBase httpRequest, String body, String contentType) {
+		StringEntity entity = new StringEntity(body, "UTF-8");
+		entity.setContentType(contentType);
 		httpRequest.setEntity(entity);
 	}
+	
+	/**
+	 * @param response The {@link HttpResponse}
+	 * @return {@link Response}
+	 */
+	public static  <T> List<T> getResponseList(HttpResponse response, Gson gson, Class<T> klazz, Type typeofT) throws CouchDbException {
+		InputStream instream = getStream(response);
+		Reader reader = new InputStreamReader(instream);
+		return gson.fromJson(reader,typeofT);
+	}
+	
+	/**
+	 * @param response The {@link HttpResponse}
+	 * @return {@link Response}
+	 */
+	public static <T> T getResponse(HttpResponse response, Class<T> classType, Gson gson) throws CouchDbException {
+		InputStreamReader reader = new InputStreamReader(getStream(response));
+		try {
+			int i;
+			String s = ""; 
+			while ( (i = reader.read()) != -1 ) {
+				s = s + (char)i;
+			}
+			System.out.println(s);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return gson.fromJson(reader, classType);
+	}
+	 
 }
