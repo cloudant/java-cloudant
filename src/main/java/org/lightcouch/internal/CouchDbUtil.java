@@ -272,17 +272,6 @@ final public class CouchDbUtil {
 	 */
 	public static <T> T getResponse(HttpResponse response, Class<T> classType, Gson gson) throws CouchDbException {
 		InputStreamReader reader = new InputStreamReader(getStream(response));
-		try {
-			int i;
-			String s = ""; 
-			while ( (i = reader.read()) != -1 ) {
-				s = s + (char)i;
-			}
-			System.out.println(s);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		return gson.fromJson(reader, classType);
 	}
 	 
