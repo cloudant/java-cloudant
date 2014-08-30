@@ -1,17 +1,22 @@
 package com.cloudant;
 
-import static org.lightcouch.internal.CouchDbUtil.createPost;
 import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static org.lightcouch.internal.CouchDbUtil.close;
+import static org.lightcouch.internal.CouchDbUtil.createPost;
+import static org.lightcouch.internal.CouchDbUtil.getResponseList;
 import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.net.URI;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.Replication;
 import org.lightcouch.Replicator;
+
+import com.google.gson.reflect.TypeToken;
 
 /**
  * 
@@ -55,6 +60,32 @@ public class CloudantAccount {
 		URI uri = buildUri(tmp.getBaseUri()).path("api/generate_api_key").build();
 		return tmp.executeRequest(createPost(uri,"",""), ApiKey.class);		
 	}
+
+	/**
+	 * Get all active tasks
+	 * @return List of tasks
+	 */
+	public List<Task> getActiveTasks() {
+		HttpResponse response = null;
+		HttpGet get = new HttpGet(buildUri(getBaseUri()).path("/_active_tasks").build());
+		try {
+			response = executeRequest(get);
+			return getResponseList(response, Database.getGson(), Task.class,
+							new TypeToken<List<Task>>(){}.getType());
+		}
+		finally {
+			close(response);
+		}
+	}
+	
+	/**
+	 * Get the list of nodes in a cluster
+	 * @return cluster nodes and all nodes
+	 */
+	public Membership getMembership() {
+		return client.get(buildUri(getBaseUri()).path("/_membership").build(), Membership.class);
+	}
+	
 	
 	/**
 	 * 
@@ -83,16 +114,6 @@ public class CloudantAccount {
 	 */
 	public void createDB(String dbName) {
 		client.createDB(dbName);
-	}
-
-
-	/**
-	 * @param obj
-	 * @return
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	public boolean equals(Object obj) {
-		return client.equals(obj);
 	}
 
 

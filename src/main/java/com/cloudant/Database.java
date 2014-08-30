@@ -454,8 +454,7 @@ public class Database {
 		ownGSON = builder.create();
 	}
 	
-	
-	
-	
-	
+	static Gson getGson() {
+		return ownGSON;
+	}
 }
