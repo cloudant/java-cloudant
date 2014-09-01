@@ -15,7 +15,10 @@ import java.net.URLEncoder;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.lightcouch.Changes;
 import org.lightcouch.CouchDatabase;
@@ -42,6 +45,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class Database {
 
+	static final Log log = LogFactory.getLog(Database.class);
 	private static Gson ownGSON;
 	static {
 		initGson();
@@ -121,24 +125,88 @@ public class Database {
 	}
 	
 	 /**
-		 * Get info about the shard a document belongs to 
-		 * @param String documentId
-		 * @return Shard info
-		 */
-		 public Shard getShard(String docId) {
-			assertNotEmpty(docId,"docId");
-			HttpResponse response = null;
-			HttpGet get = new HttpGet(buildUri(db.getDBUri()).path("_shards/").path(docId).build());
-			try {
-				response = client.executeRequest(get);
-				return getResponse(response, Shard.class,ownGSON);
-			}
-			finally {
-				close(response);
-			}
-		}
-	
+	 * Get info about the shard a document belongs to 
+	 * @param String documentId
+	 * @return Shard info
+	 */
+	 public Shard getShard(String docId) {
+		assertNotEmpty(docId,"docId");
+		return client.get(buildUri(getDBUri()).path("_shards/").path(docId).build(), Shard.class);
+	}
 
+
+	/**
+	 * Create a new index
+	 * @param indexName optional name of the index (if not provided one will be generated) 
+	 * @param designDocName optional name of the design doc in which the index will be created
+	 * @param indexType optional, type of index (only "json" as of now)
+	 * @param fields array of fields in the index
+	 */
+	 public void createIndex(String indexName, String designDocName, String indexType, IndexField[] fields) {
+		String indexDefn = getIndexDefinition(indexName,designDocName,indexType,fields);
+		 HttpResponse putresp = null;
+		 URI uri = buildUri(getDBUri()).path("_index").build();
+		 try {
+			 putresp = client.executeRequest(createPost(uri,indexDefn,"application/json"));
+			 log.info(String.format("Created Index: '%s'", indexDefn));
+		 }
+		 finally {
+			 close(putresp);
+		 }
+	 }
+	 
+	 /**
+	  * create a new Index
+	  * @param @see <a href="http://docs.cloudant.com/api/cloudant-query.html#creating-a-new-index">indexDefinition</a> 
+	  */
+	 public void createIndex(String indexDefinition) {
+		 assertNotEmpty(indexDefinition, "indexDefinition");
+		 HttpResponse putresp = null;
+		 URI uri = buildUri(getDBUri()).path("_index").build();
+		 try {
+			 putresp = client.executeRequest(createPost(uri,indexDefinition,"application/json"));
+			 log.info(String.format("Created Index: '%s'", indexDefinition));
+		 }
+		 finally {
+			 close(putresp);
+		 }
+	 }
+	 
+	 /**
+	  * List all indices
+	  * @return List of Index
+	  */
+	 public List<Index> listIndices() {
+		 HttpResponse response = null;
+		 try {
+			 response = client.executeRequest(new HttpGet(buildUri(getDBUri()).path("_index/").build()));
+			 return getResponseList(response, ownGSON, Index.class,
+							new TypeToken<List<Index>>(){}.getType());
+		 }
+		 finally {
+			 close(response);
+		 }
+	 }
+	 
+	 /**
+	  * Delete an index
+	  * @param indexName name of the index
+	  * @param designDocId ID of the design doc
+	  */
+	 public void deleteIndex(String indexName, String designDocId) {
+		 assertNotEmpty(indexName, "indexName");
+		 assertNotEmpty(designDocId, "designDocId");
+		 URI uri = buildUri(getDBUri()).path("_index/").path(designDocId).path("/json/").path(indexName).build();
+		 HttpResponse response = null;
+		try {
+			response = client.executeRequest(new HttpDelete(uri)); 
+			getResponse(response,Response.class, getGson());
+		} finally {
+			close(response);
+		}
+	 }
+	 
+	 
 	/**
 	 * @return
 	 * @see org.lightcouch.CouchDatabaseBase#design()
@@ -444,13 +512,55 @@ public class Database {
 		return body;
 	}
 	
+	/**
+	 * Form a create index json from parameters
+	 */
+	private String getIndexDefinition(String indexName, String designDocName,
+				String indexType, IndexField[] fields) {
+		assertNotEmpty(fields, "index fields");
+		boolean addComma = false;
+		String json = "{";
+		if ( !(indexName == null || indexName.isEmpty()) ) {
+			json += "\"name\": \"" + indexName + "\"";
+			addComma = true;
+		}
+		if ( !(designDocName == null || designDocName.isEmpty()) ) {
+			if (addComma) {
+				json += ",";
+			}
+			json += "\"ddoc\": \"" + designDocName + "\"";
+			addComma = true;
+		}
+		if ( !(indexType == null || indexType.isEmpty()) ) {
+			if (addComma) {
+				json += ",";
+			}
+			json += "\"type\": \"" + indexType + "\"";
+			addComma = true;
+		}
+		
+		if (addComma) {
+			json += ",";
+		}
+		json += "\"index\": { \"fields\": [";
+		for (int i = 0 ; i < fields.length; i++) {
+			json += "{\"" + fields[i].getName() + "\": " +  "\"" + fields[i].getOrder() + "\"}";
+			if ( i+1 < fields.length) {
+				json += ",";
+			}
+		}
+		
+		return json + "] }}";
+	}
+	 
 	
 	/**
 	 * setup our own Deserializers
 	 */
 	private static void initGson() {
 		GsonBuilder builder = GsonHelper.initGson(new GsonBuilder());
-		builder.registerTypeAdapter(new TypeToken<List<Shard>>(){}.getType(), new ShardDeserializer());
+		builder.registerTypeAdapter(new TypeToken<List<Shard>>(){}.getType(), new ShardDeserializer())
+			   .registerTypeAdapter(new TypeToken<List<Index>>(){}.getType(), new IndexDeserializer());
 		ownGSON = builder.create();
 	}
 	

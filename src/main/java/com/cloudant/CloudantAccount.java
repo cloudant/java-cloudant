@@ -209,6 +209,14 @@ public class CloudantAccount {
 	String getAccountName() {
 		return accountName;
 	}
+	
+	/**
+	 * Performs a HTTP GET request. 
+	 * @return An object of type T
+	 */
+	<T> T get(URI uri, Class<T> classType) {
+		return client.get(uri, classType);
+	}
 
 
 }
