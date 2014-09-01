@@ -191,6 +191,8 @@ public class Task {
 		return phase;
 	}
     
-	
+	Task() {
+		super();
+	}
     
 }

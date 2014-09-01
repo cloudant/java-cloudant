@@ -32,4 +32,8 @@ public class Membership {
 		}
 		return ret;
 	}
+	
+	Membership() {
+		super();
+	}
 }

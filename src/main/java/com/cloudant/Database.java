@@ -4,12 +4,11 @@ import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static org.lightcouch.internal.CouchDbUtil.close;
 import static org.lightcouch.internal.CouchDbUtil.createPost;
 import static org.lightcouch.internal.CouchDbUtil.getAsString;
-import static org.lightcouch.internal.CouchDbUtil.getStream;
 import static org.lightcouch.internal.CouchDbUtil.getResponse;
 import static org.lightcouch.internal.CouchDbUtil.getResponseList;
+import static org.lightcouch.internal.CouchDbUtil.getStream;
 import static org.lightcouch.internal.URIBuilder.buildUri;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -182,8 +181,7 @@ public class Database {
 	 /**
 	  * Find documents using an index 
 	  * @param selectorJson JSON object describing criteria used to select documents.
-	  *        Is of the form "selector": { <your data here> } "
-	  *        @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">selector syntax</a>
+	  *        Is of the form "selector": { <your data here> } @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">selector syntax</a>
 	  * @param classOfT The class of Java objects to be returned
 	  * @return List of classOfT objects
 	  */
@@ -194,8 +192,7 @@ public class Database {
 	 /**
 	  * Find documents using an index 
 	  * @param selectorJson JSON object describing criteria used to select documents.
-	  *        Is of the form "selector": { <your data here> } "
-	  *        @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">selector syntax</a>
+	  *        Is of the form "selector": { <your data here> }  @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">selector syntax</a>
 	  * @param limit optional, maximum number of results to be returned
 	  * @param skip optional, skip first n results, where n is the specified value
 	  * @param classOfT The class of Java objects to be returned
@@ -209,8 +206,7 @@ public class Database {
 	 /**
 	  * Find documents using an index 
 	  * @param selectorJson JSON object describing criteria used to select documents.
-	  *        Is of the form "selector": { <your data here> } "
-	  *        @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">selector syntax</a>
+	  *        Is of the form "selector": { <your data here> } @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">selector syntax</a>
 	  * @param sortOrder optional sort field order
 	  * @param limit optional, maximum number of results to be returned
 	  * @param skip optional, skip first n results, where n is the specified value
@@ -227,8 +223,7 @@ public class Database {
 	 /**
 	  * Find documents using an index 
 	  * @param selectorJson JSON object describing criteria used to select documents.
-	  *        Is of the form "selector": { <your data here> } "
-	  *        @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">selector syntax</a>
+	  *        Is of the form "selector": { <your data here> } @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">selector syntax</a>
 	  * @param sortOrder optional sort field order
 	  * @param limit optional, maximum number of results to be returned
 	  * @param skip optional, skip first n results, where n is the specified value

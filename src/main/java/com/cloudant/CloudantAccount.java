@@ -88,7 +88,7 @@ public class CloudantAccount {
 	
 	
 	/**
-	 * 
+	 * Get a database
 	 * @param name name of database to access
 	 * @param create flag indicating whether to create the database if doesnt exist.
 	 * @return Database object

@@ -231,7 +231,12 @@ public class CouchDbClient extends  CouchDbClientBase {
 	}
 	
 		
-	@Override
+	/**
+	 * Get a database
+	 * @param name name of database to access
+	 * @param create flag indicating whether to create the database if doesnt exist.
+	 * @return CouchDatabase object
+	 */
 	public CouchDatabase database(String name, boolean create) {
 		return new CouchDatabase(this,name,create);
 	}

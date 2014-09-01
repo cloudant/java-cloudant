@@ -25,6 +25,12 @@ public class IndexField {
 	}
 	
 	
+	/**
+	 * Represents a Cloudant Sort Syntax for a json field. Used to specify
+	 * an element of the 'index.fields' array (POST db/_index) and 'sort' array (db/_find) @see <a href = "http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-sort-syntax"> sort Syntax</a>  
+	 * @param name can be any field (dotted notation is available for sub-document fields)
+	 * @param order can be "asc" or "desc"
+	 */
 	public IndexField(String name, SortOrder order) {
 		this.name = name;
 		this.order = order;
