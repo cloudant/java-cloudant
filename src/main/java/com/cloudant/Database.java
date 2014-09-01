@@ -4,14 +4,19 @@ import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static org.lightcouch.internal.CouchDbUtil.close;
 import static org.lightcouch.internal.CouchDbUtil.createPost;
 import static org.lightcouch.internal.CouchDbUtil.getAsString;
+import static org.lightcouch.internal.CouchDbUtil.getStream;
 import static org.lightcouch.internal.CouchDbUtil.getResponse;
 import static org.lightcouch.internal.CouchDbUtil.getResponseList;
 import static org.lightcouch.internal.URIBuilder.buildUri;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -32,6 +37,9 @@ import org.lightcouch.internal.GsonHelper;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
 
@@ -144,15 +152,7 @@ public class Database {
 	 */
 	 public void createIndex(String indexName, String designDocName, String indexType, IndexField[] fields) {
 		String indexDefn = getIndexDefinition(indexName,designDocName,indexType,fields);
-		 HttpResponse putresp = null;
-		 URI uri = buildUri(getDBUri()).path("_index").build();
-		 try {
-			 putresp = client.executeRequest(createPost(uri,indexDefn,"application/json"));
-			 log.info(String.format("Created Index: '%s'", indexDefn));
-		 }
-		 finally {
-			 close(putresp);
-		 }
+		createIndex(indexDefn);
 	 }
 	 
 	 /**
@@ -165,11 +165,103 @@ public class Database {
 		 URI uri = buildUri(getDBUri()).path("_index").build();
 		 try {
 			 putresp = client.executeRequest(createPost(uri,indexDefinition,"application/json"));
-			 log.info(String.format("Created Index: '%s'", indexDefinition));
+			 String result = getAsString(putresp,"result");
+			 if  (result.equalsIgnoreCase("created")) {
+				 log.info(String.format("Created Index: '%s'", indexDefinition));
+			 }
+			 else {
+				 log.warn(String.format("Index already exists : '%s'", indexDefinition));
+			 }
 		 }
 		 finally {
 			 close(putresp);
 		 }
+	 }
+	 
+	  
+	 /**
+	  * Find documents using an index 
+	  * @param selectorJson JSON object describing criteria used to select documents.
+	  *        Is of the form "selector": { <your data here> } "
+	  *        @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">selector syntax</a>
+	  * @param classOfT The class of Java objects to be returned
+	  * @return List of classOfT objects
+	  */
+	 public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT) {
+		 return findByIndex(selectorJson, null, null, null, null , null, classOfT);
+	 }
+	 
+	 /**
+	  * Find documents using an index 
+	  * @param selectorJson JSON object describing criteria used to select documents.
+	  *        Is of the form "selector": { <your data here> } "
+	  *        @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">selector syntax</a>
+	  * @param limit optional, maximum number of results to be returned
+	  * @param skip optional, skip first n results, where n is the specified value
+	  * @param classOfT The class of Java objects to be returned
+	  * @return List of classOfT objects
+	  */
+	 public <T> List<T> findByIndex(String selectorJson, Integer limit,
+			 				Integer skip, Class<T> classOfT) {
+		 return findByIndex(selectorJson, null, limit, skip, null , null, classOfT);
+	}
+	 
+	 /**
+	  * Find documents using an index 
+	  * @param selectorJson JSON object describing criteria used to select documents.
+	  *        Is of the form "selector": { <your data here> } "
+	  *        @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">selector syntax</a>
+	  * @param sortOrder optional sort field order
+	  * @param limit optional, maximum number of results to be returned
+	  * @param skip optional, skip first n results, where n is the specified value
+	  * @param returnFields optional, specify which fields of an object should be returned. If it is omitted, the entire object is returned.
+	  * @param classOfT The class of Java objects to be returned
+	  * @return List of classOfT objects
+	  */
+	 public <T> List<T> findByIndex(String selectorJson, IndexField[] sortOrder,
+						Integer limit, Integer skip, String[] returnFields, Class<T> classOfT) {
+		 return findByIndex(selectorJson, sortOrder, limit, skip, returnFields , null, classOfT);
+	 }
+	 
+	 
+	 /**
+	  * Find documents using an index 
+	  * @param selectorJson JSON object describing criteria used to select documents.
+	  *        Is of the form "selector": { <your data here> } "
+	  *        @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">selector syntax</a>
+	  * @param sortOrder optional sort field order
+	  * @param limit optional, maximum number of results to be returned
+	  * @param skip optional, skip first n results, where n is the specified value
+	  * @param returnFields optional, specify which fields of an object should be returned. If it is omitted, the entire object is returned.
+	  * @param readQuorum optional, default = 1. Read quorum needed for the result
+	  * @param classOfT The class of Java objects to be returned
+	  * @return List of classOfT objects
+	  */
+	 public <T> List<T> findByIndex(String selectorJson, IndexField[] sortOrder,
+				Integer limit, Integer skip, String[] returnFields,
+				Integer readQuorum, Class<T> classOfT) {
+		 assertNotEmpty(selectorJson, "selectorJson");
+		 URI uri = buildUri(getDBUri()).path("_find").build();
+		 String body = getFindByIndexBody(selectorJson, sortOrder,
+	 								limit,  skip,  returnFields,  readQuorum);
+		 InputStream stream = null; 
+		 try {
+			 stream = getStream(client.executeRequest(createPost(uri, body, "application/json")));
+			 Reader reader = new InputStreamReader(stream);
+			 JsonArray jsonArray = new JsonParser().parse(reader)
+						.getAsJsonObject().getAsJsonArray("docs");
+			List<T> list = new ArrayList<T>();
+			for (JsonElement jsonElem : jsonArray) {
+				JsonElement elem = jsonElem.getAsJsonObject();
+				T t = ownGSON.fromJson(elem, classOfT);
+				list.add(t);
+			}
+			return list;
+		 }
+		 finally {
+			 close(stream);
+		 }
+		
 	 }
 	 
 	 /**
@@ -553,6 +645,79 @@ public class Database {
 		return json + "] }}";
 	}
 	 
+	/**
+	 * 
+	 * @param selectorJson
+	 * @param sortOrder
+	 * @param limit
+	 * @param skip
+	 * @param returnFields
+	 * @param readQuorum
+	 * @return
+	 */
+	private String getFindByIndexBody(String selectorJson,
+			IndexField[] sortOrder, Integer limit, Integer skip,
+			String[] returnFields, Integer readQuorum) {
+		
+		StringBuilder rf = null;
+		if ( !(returnFields == null || returnFields.length == 0) ) {
+			rf = new StringBuilder("\"fields\": [");
+			int i = 0;
+			for ( String s : returnFields ) {
+				if (i > 0 ) {
+					rf.append(",");
+				}
+				rf.append("\"").append(s).append("\"");
+				i++;
+			}
+			rf.append("]");
+		}
+		
+		StringBuilder so = null;
+		if ( !(sortOrder == null || sortOrder.length == 0) ) {
+			so = new StringBuilder("\"sort\": [");
+			int i = 0;
+			for ( IndexField idxfld : sortOrder ) {
+				if (i > 0 ) {
+					so.append(",");
+				}
+				so.append("{\"")
+					   .append(idxfld.getName())
+					   .append("\": \"")
+					   .append(idxfld.getOrder())
+					   .append("\"}");
+			}
+			so.append("]");
+		}
+		
+		StringBuilder finalbody = new StringBuilder("{" +selectorJson);
+		if ( rf != null ) {
+			finalbody.append(",")
+					 .append(rf.toString());
+		}
+		if ( so != null ) {
+			finalbody.append(",")
+					 .append(so.toString());
+		}
+		if ( limit != null ) {
+			finalbody.append(",")
+					 .append("\"limit\": ")
+					 .append(limit);
+		}
+		if ( skip != null ) {
+			finalbody.append(",")
+					 .append("\"skip\": ")
+					 .append(skip);
+		}
+		if ( readQuorum != null ) {
+			finalbody.append(",")
+					 .append("\"r\": ")
+					 .append(readQuorum);
+		}
+		finalbody.append("}");
+		
+		return finalbody.toString();
+	}
 	
 	/**
 	 * setup our own Deserializers
