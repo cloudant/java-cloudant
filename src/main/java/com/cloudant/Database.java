@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.lightcouch.Changes;
 import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
@@ -293,6 +294,14 @@ public class Database {
 		}
 	 }
 	 
+	 /**
+	  * /**
+	 * Provides access to Cloudant <tt>Search</tt> APIs.
+	 * @see Search
+	 */
+	 public Search search(String searchIndexId) {
+		 return new Search(this, searchIndexId);
+	 }
 	 
 	/**
 	 * @return
@@ -726,5 +735,10 @@ public class Database {
 	
 	static Gson getGson() {
 		return ownGSON;
+	}
+	
+	
+	HttpResponse executeRequest(HttpRequestBase request) {
+		return client.executeRequest(request);
 	}
 }
