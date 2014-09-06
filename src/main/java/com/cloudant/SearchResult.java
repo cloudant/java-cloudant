@@ -13,15 +13,14 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * Holds a search result entries
- * @author Administrator
+ * @author Mario Briggs
  *
- * @param <F> Object type F, an instance into which the rows[].fields/group[].rows[].fields
- *              attribute of the Search result response should be deserialized into
  * @param <T> Object type T, an instance into which the rows[].doc/group[].rows[].doc
  *             attribute of the Search result response should be deserialized into.
+ *             Same goes for the rows[].fields/group[].rows[].fields attribute
  *             
  */
-public class SearchResult<F, T> {
+public class SearchResult<T> {
 	
 	@SerializedName("total_rows")
 	private long totalRows; 
@@ -122,8 +121,8 @@ public class SearchResult<F, T> {
 	 */
 	public class SearchResultRows {
 		private String id;
-		private Number[] order;
-		private F fields ;
+		private Object[] order;
+		private T fields ;
 		private T doc;
 		/**
 		 * @param id the id to set
@@ -134,13 +133,13 @@ public class SearchResult<F, T> {
 		/**
 		 * @param order the order to set
 		 */
-		public void setOrder(Number[] order) {
+		public void setOrder(Object[] order) {
 			this.order = order;
 		}
 		/**
 		 * @param fields the fields to set
 		 */
-		public void setFields(F fields) {
+		public void setFields(T fields) {
 			this.fields = fields;
 		}
 		/**
@@ -156,15 +155,15 @@ public class SearchResult<F, T> {
 			return id;
 		}
 		/**
-		 * @return the order
+		 * @return the order (each element can be a String/Number)
 		 */
-		public Number[] getOrder() {
+		public Object[] getOrder() {
 			return order;
 		}
 		/**
 		 * @return the fields
 		 */
-		public F getFields() {
+		public T getFields() {
 			return fields;
 		}
 		/**

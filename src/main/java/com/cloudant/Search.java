@@ -13,11 +13,14 @@ import java.io.Reader;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.methods.HttpGet;
 import org.lightcouch.internal.URIBuilder;
 
@@ -32,16 +35,32 @@ import com.google.gson.JsonParser;
  * <h3>Usage Example:</h3>
  * <pre>
  * {@code
- *  SearchResult<Fields,Bird> result = db.search("views101/animals")
+ *  List<Bird> birds = db.search("views101/animals")
  *	.limit(10)
  *	.includeDocs(true)
- *	.query("class:bird",Fields.class, Bird.class);
+ *	.query("class:bird", Bird.class);
  *  
- * // pagination
- *  SearchResult<Fields,Bird> nextPage = db.search("views101/animals")
- *  .bookmark(result.bookmark)
- *  .query("class:bird",Fields.class, Bird.class);
- * }
+ * // groups
+ * Map<String,List<Bird>> birdGroups = db.search("views101/animals")
+ *	.limit(10)
+ *	.includeDocs(true)
+ *	.queryGroups("class:bird", Bird.class);
+ * for ( Entry<String, List<Bird>> group : birdGroups.entrySet()) {
+ *		System.out.println("Group Name : " +  group.getKey());
+ *		for ( Bird b : group.getValue() ) {
+ *			 System.out.println("\t" + b);
+ *		 }
+ *	}
+ *  
+ *  // search results object
+ *  SearchResult<Bird> result = db.search("views101/animals")
+ *   .querySearchResult("class:bird", Bird.class);
+ * 
+ *  // pagination
+ *  SearchResult<Bird> nextPage = db.search("views101/animals")
+ *   .bookmark(result.bookmark)
+ *   .querySearchResult("class:bird", Bird.class);
+ * 
  * </pre>
  * 
  * @see Database#search(String)
@@ -51,11 +70,12 @@ import com.google.gson.JsonParser;
  */
 public class Search {
 	
+	private static final Log log = LogFactory.getLog(Search.class);
 	
 	// search fields
 	private Integer limit;
 	private Integer skip;
-	private Boolean includeDocs;
+	private boolean includeDocs = false;
 	private String bookmark;
 	private Database db;
 	private URIBuilder uriBuilder;
@@ -90,32 +110,101 @@ public class Search {
 	}
 	
 	/**
-	 * Performs a Cloudant Search and returns the result as an {@link SearchResult}
-	 * @param <F> Object type F, an instance into which the rows[].fields/group[].rows[].fields
-	 *        attribute of the Search result response should be deserialized into. If not
-	 *        interested in this attribute, pass any user type  
-	 * @param <T> Object type T, an instance into which the rows[].doc/group[].rows[].doc
-	 *        attribute of the Search result response should be deserialized into. If not
-	 *        interested, do not set includeDocs(true) and pass any object type
+	 * Queries a Search Index and returns ungrouped results. In case the query
+	 *  used grouping, an empty list is returned
+	 * @param <T> Object type T
 	 * @param query the Lucene query to be passed to the Search index
-	 * @param classofF The class of type F.
-	 * @param classOfT The class of type T.
-	 * @return The Search result entries
+	 * @param classOfT The class of type T
+	 * @return The result of the search query as a {@code List<T> }
 	 */
-	public <F, T> SearchResult<F, T> query(String query, Class<F> classofF, Class<T> classOfT) {
+	public <T> List<T> query(String query, Class<T> classOfT) {
+		InputStream instream = null;
+		List<T> result = new ArrayList<T>();
+		try {  
+			Reader reader = new InputStreamReader(instream = queryForStream(query));
+			JsonObject json = new JsonParser().parse(reader).getAsJsonObject(); 
+			if ( json.has("rows") ) {
+				if (!includeDocs) {
+					log.warn("includeDocs set to false and attempting to retrieve doc. " +
+							"null object will be returned");
+				}
+				for (JsonElement e : json.getAsJsonArray("rows")) {
+					result.add(JsonToObject(Database.getGson(), e, "doc", classOfT));
+				}
+			}
+			else {
+				log.warn("No ungrouped result available. Use queryGroups() if grouping set");
+			}
+			return result;
+		}
+		finally {
+			close(instream);
+		}
+	}
+	
+	/**
+	 * Queries a Search Index and returns grouped results in a map where key
+	 *  of the map is the groupName. In case the query didnt use grouping,
+	 *  an empty map is returned
+	 * @param <T> Object type T
+	 * @param query the Lucene query to be passed to the Search index
+	 * @param classOfT The class of type T
+	 * @return The result of the grouped search query as a ordered {@code Map<String,T> }
+	 */
+	public <T> Map<String,List<T>> queryGroups(String query, Class<T> classOfT) {
 		InputStream instream = null;
 		try {  
 			Reader reader = new InputStreamReader(instream = queryForStream(query));
 			JsonObject json = new JsonParser().parse(reader).getAsJsonObject(); 
-			SearchResult<F,T> sr = new SearchResult<F,T>();
+			Map<String,List<T>> result = new LinkedHashMap<String, List<T>>();
+			if ( json.has("groups") ) 	{
+				for (JsonElement e : json.getAsJsonArray("groups")) {
+					String groupName = e.getAsJsonObject().get("by").getAsString();
+					List<T> orows = new ArrayList<T>();
+					if (!includeDocs) {
+						log.warn("includeDocs set to false and attempting to retrieve doc. " +
+								"null object will be returned");
+					}
+					for (JsonElement rows : e.getAsJsonObject().getAsJsonArray("rows")) {
+							orows.add(JsonToObject(Database.getGson(), rows, "doc", classOfT));
+					}
+					result.put(groupName, orows);
+				}// end for(groups)
+			}// end hasgroups
+			else {
+				log.warn("No grouped results available. Use query() if non grouped query");
+			}
+			return result;
+		}
+		finally {
+			close(instream);
+		}
+	}
+	
+	
+	/**
+	 * Performs a Cloudant Search and returns the result as an {@link SearchResult}
+	 * @param <T> Object type T, an instance into which the rows[].doc/group[].rows[].doc
+	 *        attribute of the Search result response should be deserialized into. Same
+	 *        goes for the rows[].fields/group[].rows[].fields attribute
+	 * @param query the Lucene query to be passed to the Search index
+	 * @param classOfT The class of type T.
+	 * @return The Search result entries
+	 */
+	public <T> SearchResult<T> querySearchResult(String query, Class<T> classOfT) {
+		InputStream instream = null;
+		try {  
+			Reader reader = new InputStreamReader(instream = queryForStream(query));
+			JsonObject json = new JsonParser().parse(reader).getAsJsonObject(); 
+			SearchResult<T> sr = new SearchResult<T>();
 			sr.setTotalRows(getAsLong(json, "total_rows")); 
 			sr.setBookmark(getAsString(json, "bookmark"));
 			if ( json.has("rows") )
 			{
-				sr.setRows(getRows(json.getAsJsonArray("rows"), sr, classofF, classOfT)); 
+				sr.setRows(getRows(json.getAsJsonArray("rows"), sr, classOfT)); 
 			}
 			else if (json.has("groups")) {
-				setGroups(json.getAsJsonArray("groups"), sr, classofF, classOfT);
+				setGroups(json.getAsJsonArray("groups"), sr, classOfT);
 			}
 			
 			if (json.has("counts") ) {
@@ -286,26 +375,28 @@ public class Search {
 		Map<String,Map<String,Long>> map = new HashMap<String, Map<String,Long>>();
 		for ( Entry<String,JsonElement> fld : fldset ) {
 			String field = fld.getKey();
-			Set<Map.Entry<String,JsonElement>> values = fld.getValue().getAsJsonObject().entrySet();
 			Map<String,Long> ovalues = new HashMap<String, Long>();
-			for ( Entry<String,JsonElement> value : values) {
-				ovalues.put(value.getKey(), value.getValue().getAsLong());
+			if ( fld.getValue().isJsonObject() ) {
+				Set<Map.Entry<String,JsonElement>> values = fld.getValue().getAsJsonObject().entrySet();
+				for ( Entry<String,JsonElement> value : values) {
+					ovalues.put(value.getKey(), value.getValue().getAsLong());
+				}
 			}
 			map.put(field, ovalues);
 		}
 		return map;
 	}
 	
-	private <F, T> List<SearchResult<F,T>.SearchResultRows> getRows(
-					JsonArray jsonrows, SearchResult<F, T> sr, Class<F> classOfF, Class<T> classOfT) {
+	private <T> List<SearchResult<T>.SearchResultRows> getRows(
+					JsonArray jsonrows, SearchResult<T> sr,  Class<T> classOfT) {
 		
-		List<SearchResult<F,T>.SearchResultRows> ret = new ArrayList<SearchResult<F,T>.SearchResultRows>();
+		List<SearchResult<T>.SearchResultRows> ret = new ArrayList<SearchResult<T>.SearchResultRows>();
 		for (JsonElement e : jsonrows) {
-			SearchResult<F,T>.SearchResultRows row = sr.new SearchResultRows();
+			SearchResult<T>.SearchResultRows row = sr.new SearchResultRows();
 			JsonObject oe = e.getAsJsonObject();
 			row.setId(oe.get("id").getAsString());
-			row.setOrder(JsonToObject(Database.getGson(), e, "order", Number[].class));
-			row.setFields(JsonToObject(Database.getGson(), e, "fields", classOfF));
+			row.setOrder(JsonToObject(Database.getGson(), e, "order", Object[].class));
+			row.setFields(JsonToObject(Database.getGson(), e, "fields", classOfT));
 			if (includeDocs) {
 				row.setDoc(JsonToObject(Database.getGson(), e, "doc", classOfT));
 			}
@@ -314,13 +405,13 @@ public class Search {
 		return ret;
 	}
 	
-	private <F, T> void setGroups(JsonArray jsongroups, SearchResult<F, T> sr, Class<F> classOfF, Class<T> classOfT) {
+	private <T> void setGroups(JsonArray jsongroups, SearchResult<T> sr, Class<T> classOfT) {
 		for (JsonElement e : jsongroups) {
-			SearchResult<F,T>.SearchResultGroups group = sr.new SearchResultGroups();
+			SearchResult<T>.SearchResultGroups group = sr.new SearchResultGroups();
 			JsonObject oe = e.getAsJsonObject();
 			group.setBy(oe.get("by").getAsString());
 			group.setTotalRows(oe.get("total_rows").getAsLong());
-			group.setRows(getRows(oe.getAsJsonArray("rows"), sr, classOfF, classOfT));
+			group.setRows(getRows(oe.getAsJsonArray("rows"), sr, classOfT));
 			sr.getGroups().add(group);
 		}
 	}
