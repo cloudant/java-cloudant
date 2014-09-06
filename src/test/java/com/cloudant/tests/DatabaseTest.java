@@ -3,7 +3,6 @@ package com.cloudant.tests;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -16,9 +15,6 @@ import com.cloudant.ApiKey;
 import com.cloudant.CloudantAccount;
 import com.cloudant.Database;
 import com.cloudant.Database.Permissions;
-import com.cloudant.Index;
-import com.cloudant.IndexField;
-import com.cloudant.IndexField.SortOrder;
 import com.cloudant.Shard;
 
 public class DatabaseTest {
