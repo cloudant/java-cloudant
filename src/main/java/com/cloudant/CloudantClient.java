@@ -12,20 +12,53 @@ import java.util.List;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.lightcouch.Changes;
 import org.lightcouch.CouchDbClient;
+import org.lightcouch.CouchDbDesign;
 import org.lightcouch.Replication;
 import org.lightcouch.Replicator;
+import org.lightcouch.View;
 
 import com.google.gson.reflect.TypeToken;
 
 /**
+ * Exposes the Cloudant client API
+ * <p>This class is the main object to use to gain access to the Cloudant APIs.
+ * <h3>Usage Example:</h3> 
+ * <p>Create a new Cloudant client instance:
+ * <pre>
+ * CloudantClient client = new CloudantClient("mycloudantaccount","myusername","mypassword");
+ * </pre>
  * 
- * CloudantAccount exposes Cloudant specific features.
- * This class would expose all the public methods of LightCouch's CouchDbClient that we want to expose
- * plus cloudant specific API's
+ * <p>Start using the API by the client:
+ * 
+ * <p>Server APIs is accessed by the client directly eg.: {@link CloudantClient#getAllDbs() client.getAllDbs()}
+ * <p>DB is accessed by getting to the Database from the client 
+ * <pre>
+ * Database db = client.database("customers",false);
+ * </pre>
+ * <p>Documents <code>CRUD</code> APIs is accessed from the Database eg.: {@link Database#find(Class, String) db.find(Foo.class, "doc-id")}
+ * <p>Cloudant Query 
+ * <p>		{@link Database#createIndex(String, String, String, IndexField[]) db.createIndex("Person_name", "Person_name", "json",
+				new IndexField[] { new IndexField("Person_name",SortOrder.asc)}) }
+ * <p>      {@link Database#findByIndex(String, Class) db.findByIndex(" "selector": { "Person_name": "Alec Guinness" }", Movie.class)}
+ * <p>      {@link Database#deleteIndex(String, String) db.deleteIndex("Person_name", "Person_name") }
+ * 
+ * <p>Cloudant Search {@link Search db.search("views101/animals)}
+ * <p>View APIs {@link View db.view()} 
+ * <p>Change Notifications {@link Changes db.changes()}
+ * <p>Design documents {@link CouchDbDesign db.design()}
+ *  
+ * <p>Replication {@link Replication account.replication()} and {@link Replicator account.replicator()} 
+ * 
+ * 
+ * <p>At the end of a client usage; it's useful to call: {@link #shutdown()} to ensure proper release of resources.
+ * 
+ * @since 0.0.1
+ * @author Mario Briggs
  *
  */
-public class CloudantAccount {
+public class CloudantClient {
 	
 	private CouchDbClient client;
 	
@@ -35,10 +68,12 @@ public class CloudantAccount {
 
 		
 	/**
-	 * This constructor is for Cloudant users with no LightCouch legacy
-	 * Here we will internally construct the CouchDbClient object and use it
+	 * Constructs a new instance of this class and connects to the cloudant account with the specified credentials
+	 * @param account The cloudant account to connect to
+	 * @param loginUsername The Username credential
+	 * @param password The Password credential
 	 */
-	public CloudantAccount(String account, String loginUsername, String password) {
+	public CloudantClient(String account, String loginUsername, String password) {
 		super();
 		assertNotEmpty(account,"accountName");
 		assertNotEmpty(loginUsername,"loginUsername");
@@ -99,9 +134,9 @@ public class CloudantAccount {
 
 
 	/**
-	 * @param dbName
-	 * @param confirm
-	 * @see org.lightcouch.CouchDbClientBase#deleteDB(java.lang.String, java.lang.String)
+	 * Request to  delete a database.
+	 * @param dbName The database name
+	 * @param confirm A confirmation string with the value: <tt>delete database</tt>
 	 */
 	public void deleteDB(String dbName, String confirm) {
 		client.deleteDB(dbName, confirm);
@@ -109,8 +144,8 @@ public class CloudantAccount {
 
 
 	/**
-	 * @param dbName
-	 * @see org.lightcouch.CouchDbClientBase#createDB(java.lang.String)
+	 * Request to create a new database; if one doesn't exist.
+	 * @param dbName The Database name
 	 */
 	public void createDB(String dbName) {
 		client.createDB(dbName);
@@ -118,8 +153,7 @@ public class CloudantAccount {
 
 
 	/**
-	 * @return
-	 * @see org.lightcouch.CouchDbClientBase#getBaseUri()
+	 * @return The base URI.
 	 */
 	public URI getBaseUri() {
 		return client.getBaseUri();
@@ -127,8 +161,7 @@ public class CloudantAccount {
 
 
 	/**
-	 * @return
-	 * @see org.lightcouch.CouchDbClientBase#getAllDbs()
+	 * @return All Server databases.
 	 */
 	public List<String> getAllDbs() {
 		return client.getAllDbs();
@@ -136,8 +169,7 @@ public class CloudantAccount {
 
 
 	/**
-	 * @return
-	 * @see org.lightcouch.CouchDbClientBase#serverVersion()
+	 * @return Cloudant Server version.
 	 */
 	public String serverVersion() {
 		return client.serverVersion();
@@ -145,8 +177,8 @@ public class CloudantAccount {
 
 
 	/**
-	 * @return
-	 * @see org.lightcouch.CouchDbClientBase#replication()
+	 * Provides access to Cloudant <tt>replication</tt> APIs.
+	 * @see Replication
 	 */
 	public Replication replication() {
 		return client.replication();
@@ -154,8 +186,8 @@ public class CloudantAccount {
 
 
 	/**
-	 * @return
-	 * @see org.lightcouch.CouchDbClientBase#replicator()
+	 * Provides access to Cloudant <tt>replication</tt> APIs.
+	 * @see Replication
 	 */
 	public Replicator replicator() {
 		return client.replicator();
@@ -163,9 +195,10 @@ public class CloudantAccount {
 
 
 	/**
-	 * @param request
-	 * @return
-	 * @see org.lightcouch.CouchDbClientBase#executeRequest(org.apache.http.client.methods.HttpRequestBase)
+	 * Executes a HTTP request. This method provides a mechanism to extend the API
+	 * <p><b>Note</b>: The response must be closed after use to release the connection.
+	 * @param request The HTTP request to execute.
+	 * @return {@link HttpResponse}
 	 */
 	public HttpResponse executeRequest(HttpRequestBase request) {
 		return client.executeRequest(request);
@@ -174,8 +207,7 @@ public class CloudantAccount {
 	
 
 	/**
-	 * 
-	 * @see org.lightcouch.CouchDbClient#shutdown()
+	 * Shuts down the connection manager used by this client instance.
 	 */
 	public void shutdown() {
 		client.shutdown();
@@ -184,14 +216,14 @@ public class CloudantAccount {
 
 	
 	/**
-	 * @param count
-	 * @return
-	 * @see org.lightcouch.CouchDbClientBase#uuids(long)
+	 * Request cloudant to send a list of UUIDs.
+	 * @param count The count of UUIDs.
 	 */
 	public List<String> uuids(long count) {
 		return client.uuids(count);
 	}
 	
+	// Helper methods
 	
 	String getLoginUsername() {
 		return loginUsername;

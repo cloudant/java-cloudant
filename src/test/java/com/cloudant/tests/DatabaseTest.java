@@ -12,23 +12,23 @@ import org.junit.Test;
 import org.lightcouch.Replication;
 
 import com.cloudant.ApiKey;
-import com.cloudant.CloudantAccount;
+import com.cloudant.CloudantClient;
 import com.cloudant.Database;
 import com.cloudant.Database.Permissions;
 import com.cloudant.Shard;
 
 public class DatabaseTest {
 
-	private static CloudantAccount account;
+	private static CloudantClient account;
 	private static Database db;
 	
 	@BeforeClass
 	public static void setUpClass() {
-		Properties props = CloudantAccountTests.getProperties("cloudant.properties");
+		Properties props = CloudantClientTests.getProperties("cloudant.properties");
 		String cloudantaccount = props.getProperty("cloudant.account");
 		String userName= props.getProperty("cloudant.username");
 		String password = props.getProperty("cloudant.password");
-		account = new CloudantAccount(cloudantaccount,userName,password);
+		account = new CloudantClient(cloudantaccount,userName,password);
 		
 		// replciate the animals db for search tests
 		Replication r = account.replication();

@@ -30,6 +30,8 @@ import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbDesign;
 import org.lightcouch.CouchDbInfo;
+import org.lightcouch.DocumentConflictException;
+import org.lightcouch.NoDocumentException;
 import org.lightcouch.Params;
 import org.lightcouch.Response;
 import org.lightcouch.View;
@@ -45,12 +47,10 @@ import com.google.gson.reflect.TypeToken;
 
 
 /**
- * Database  exposes Cloudant DB specific features.
- * This class would expose all the public methods of LightCouch's CouchDatabase that we want to expose
- * plus cloudant DB specific API's
- *
+ * Contains a Database Public API implementation.
+ * @since 0.0.1
+ * @author Mario Briggs
  */
-
 public class Database {
 
 	static final Log log = LogFactory.getLog(Database.class);
@@ -59,7 +59,7 @@ public class Database {
 		initGson();
 	}
 	private CouchDatabase db;
-	private CloudantAccount client;
+	private CloudantClient client;
 
 	public enum Permissions {
 		_admin,
@@ -70,27 +70,17 @@ public class Database {
 	
 	/**
 	 * 
-	 * This constructor is for the use-case where a customer is already using LightCouch 
-	 * and now upgrades to cloudant. So he already has a CouchDatabase object in his code
-	 *  and easily gets to Cloudant DB features without the need to change all his existing code to use
-	 *  Database/CloudantClient class
+	 * @param client
 	 * @param db
-	 
-	public Database(CouchDatabase db) {
-		super();
-		this.db = db;
-		// TODO need to instaniate a client
-	}
-	*/
-	
-	Database(CloudantAccount client, CouchDatabase db ) {
+	 */
+	Database(CloudantClient client, CouchDatabase db ) {
 		super();
 		this.client = client;
 		this.db = db;
 	}
 	
 	/**
-	 * Set the permissions for the DB
+	 * Set the permissions for this DB
 	 * @param userNameorApikey
 	 * @param permissions
 	 */
@@ -295,18 +285,17 @@ public class Database {
 	 }
 	 
 	 /**
-	  * /**
-	 * Provides access to Cloudant <tt>Search</tt> APIs.
-	 * @see Search
-	 */
+	  * Provides access to Cloudant <tt>Search</tt> APIs.
+	  * @see Search
+	  */
 	 public Search search(String searchIndexId) {
 		 return new Search(this, searchIndexId);
 	 }
 	 
-	/**
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#design()
-	 */
+	 /**
+	  * Provides access to CouchDB Design Documents.
+	  * @see CouchDbDesign
+	  */
 	public CouchDbDesign design() {
 		return db.design();
 	}
@@ -314,9 +303,8 @@ public class Database {
 
 
 	/**
-	 * @param viewId
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#view(java.lang.String)
+	 * Provides access to CouchDB <tt>View</tt> APIs.
+	 * @see View
 	 */
 	public View view(String viewId) {
 		return db.view(viewId);
@@ -325,8 +313,8 @@ public class Database {
 
 
 	/**
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#changes()
+	 * Provides access to <tt>Change Notifications</tt> API.
+	 * @see Changes
 	 */
 	public Changes changes() {
 		return db.changes();
@@ -335,10 +323,12 @@ public class Database {
 
 
 	/**
-	 * @param classType
-	 * @param id
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#find(java.lang.Class, java.lang.String)
+	 * Finds an Object of the specified type.
+	 * @param <T> Object type.
+	 * @param classType The class of type T.
+	 * @param id The document id.
+	 * @return An object of type T.
+	 * @throws NoDocumentException If the document is not found in the database.
 	 */
 	public <T> T find(Class<T> classType, String id) {
 		return db.find(classType, id);
@@ -347,11 +337,13 @@ public class Database {
 
 
 	/**
-	 * @param classType
-	 * @param id
-	 * @param params
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#find(java.lang.Class, java.lang.String, org.lightcouch.Params)
+	 * Finds an Object of the specified type.
+	 * @param <T> Object type.
+	 * @param classType The class of type T.
+	 * @param id The document id.
+	 * @param params Extra parameters to append.
+	 * @return An object of type T.
+	 * @throws NoDocumentException If the document is not found in the database.
 	 */
 	public <T> T find(Class<T> classType, String id, Params params) {
 		return db.find(classType, id, params);
@@ -360,11 +352,13 @@ public class Database {
 
 
 	/**
-	 * @param classType
-	 * @param id
-	 * @param rev
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#find(java.lang.Class, java.lang.String, java.lang.String)
+	 * Finds an Object of the specified type.
+	 * @param <T> Object type.
+	 * @param classType The class of type T.
+	 * @param id The document _id field.
+	 * @param rev The document _rev field.
+	 * @return An object of type T.
+	 * @throws NoDocumentException If the document is not found in the database.
 	 */
 	public <T> T find(Class<T> classType, String id, String rev) {
 		return db.find(classType, id, rev);
@@ -373,10 +367,11 @@ public class Database {
 
 
 	/**
-	 * @param classType
-	 * @param uri
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#findAny(java.lang.Class, java.lang.String)
+	 * This method finds any document given a URI.
+	 * <p>The URI must be URI-encoded.
+	 * @param classType The class of type T.
+	 * @param uri The URI as string.
+	 * @return An object of type T.
 	 */
 	public <T> T findAny(Class<T> classType, String uri) {
 		return db.findAny(classType, uri);
@@ -385,9 +380,12 @@ public class Database {
 
 
 	/**
-	 * @param id
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#find(java.lang.String)
+	 * Finds a document and return the result as {@link InputStream}.
+	 * <p><b>Note</b>: The stream must be closed after use to release the connection.
+	 * @param id The document _id field.
+	 * @return The result as {@link InputStream}
+	 * @throws NoDocumentException If the document is not found in the database.
+	 * @see #find(String, String)
 	 */
 	public InputStream find(String id) {
 		return db.find(id);
@@ -396,10 +394,12 @@ public class Database {
 
 
 	/**
-	 * @param id
-	 * @param rev
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#find(java.lang.String, java.lang.String)
+	 * Finds a document given id and revision and returns the result as {@link InputStream}.
+	 * <p><b>Note</b>: The stream must be closed after use to release the connection.
+	 * @param id The document _id field.
+	 * @param rev The document _rev field.
+	 * @return The result as {@link InputStream}
+	 * @throws NoDocumentException If the document is not found in the database.
 	 */
 	public InputStream find(String id, String rev) {
 		return db.find(id, rev);
@@ -408,20 +408,21 @@ public class Database {
 
 
 	/**
-	 * @param id
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#contains(java.lang.String)
+	 * Checks if a document exist in the database.
+	 * @param id The document _id field.
+	 * @return true If the document is found, false otherwise.
 	 */
 	public boolean contains(String id) {
 		return db.contains(id);
 	}
 
 
-
 	/**
-	 * @param object
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#save(java.lang.Object)
+	 * Saves an object in the database, using HTTP <tt>PUT</tt> request.
+	 * <p>If the object doesn't have an <code>_id</code> value, the code will assign a <code>UUID</code> as the document id.
+	 * @param object The object to save
+	 * @throws DocumentConflictException If a conflict is detected during the save.
+	 * @return {@link Response}
 	 */
 	public Response save(Object object) {
 		return db.save(object);
@@ -430,9 +431,10 @@ public class Database {
 
 
 	/**
-	 * @param object
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#post(java.lang.Object)
+	 * Saves an object in the database using HTTP <tt>POST</tt> request.
+	 * <p>The database will be responsible for generating the document id.
+	 * @param object The object to save
+	 * @return {@link Response}
 	 */
 	public Response post(Object object) {
 		return db.post(object);
@@ -441,8 +443,8 @@ public class Database {
 
 
 	/**
-	 * @param object
-	 * @see org.lightcouch.CouchDatabaseBase#batch(java.lang.Object)
+	 * Saves a document with <tt>batch=ok</tt> query param.
+	 * @param object The object to save.
 	 */
 	public void batch(Object object) {
 		db.batch(object);
@@ -451,9 +453,10 @@ public class Database {
 
 
 	/**
-	 * @param object
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#update(java.lang.Object)
+	 * Updates an object in the database, the object must have the correct <code>_id</code> and <code>_rev</code> values.
+	 * @param object The object to update
+	 * @throws DocumentConflictException If a conflict is detected during the update.
+	 * @return {@link Response}
 	 */
 	public Response update(Object object) {
 		return db.update(object);
@@ -462,9 +465,11 @@ public class Database {
 
 
 	/**
-	 * @param object
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#remove(java.lang.Object)
+	 * Removes a document from the database. 
+	 * <p>The object must have the correct <code>_id</code> and <code>_rev</code> values.
+	 * @param object The document to remove as object.
+	 * @throws NoDocumentException If the document is not found in the database.
+	 * @return {@link Response}
 	 */
 	public Response remove(Object object) {
 		return db.remove(object);
@@ -473,10 +478,11 @@ public class Database {
 
 
 	/**
-	 * @param id
-	 * @param rev
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#remove(java.lang.String, java.lang.String)
+	 * Removes a document from the database given both a document <code>_id</code> and <code>_rev</code> values.
+	 * @param id The document _id field.
+	 * @param rev The document _rev field.
+	 * @throws NoDocumentException If the document is not found in the database.
+	 * @return {@link Response}
 	 */
 	public Response remove(String id, String rev) {
 		return db.remove(id, rev);
@@ -485,23 +491,23 @@ public class Database {
 
 
 	/**
-	 * @param objects
-	 * @param allOrNothing
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#bulk(java.util.List, boolean)
+	 * Performs a Bulk Documents insert request.
+	 * @param objects The {@link List} of objects.
+	 * @return {@code List<Response>} Containing the resulted entries.
 	 */
-	public List<Response> bulk(List<?> objects, boolean allOrNothing) {
-		return db.bulk(objects, allOrNothing);
+	public List<Response> bulk(List<?> objects) {
+		return db.bulk(objects, false);
 	}
 
 
 
 	/**
-	 * @param in
-	 * @param name
-	 * @param contentType
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#saveAttachment(java.io.InputStream, java.lang.String, java.lang.String)
+	 * Saves an attachment to a new document with a generated <tt>UUID</tt> as the document id.
+	 * <p>To retrieve an attachment, see {@link #find(String)}.
+	 * @param instream The {@link InputStream} holding the binary data.
+	 * @param name The attachment name.
+	 * @param contentType The attachment "Content-Type".
+	 * @return {@link Response}
 	 */
 	public Response saveAttachment(InputStream in, String name,
 			String contentType) {
@@ -511,13 +517,16 @@ public class Database {
 
 
 	/**
-	 * @param in
-	 * @param name
-	 * @param contentType
-	 * @param docId
-	 * @param docRev
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#saveAttachment(java.io.InputStream, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	 * Saves an attachment to an existing document given both a document id
+	 * and revision, or save to a new document given only the id, and rev as {@code null}.
+	 * <p>To retrieve an attachment, see {@link #find(String)}.
+	 * @param instream The {@link InputStream} holding the binary data.
+	 * @param name The attachment name.
+	 * @param contentType The attachment "Content-Type".
+	 * @param docId The document id to save the attachment under, or {@code null} to save under a new document.
+	 * @param docRev The document revision to save the attachment under, or {@code null} when saving to a new document.
+	 * @throws DocumentConflictException 
+	 * @return {@link Response}
 	 */
 	public Response saveAttachment(InputStream in, String name,
 			String contentType, String docId, String docRev) {
@@ -527,11 +536,15 @@ public class Database {
 
 
 	/**
-	 * @param updateHandlerUri
-	 * @param docId
-	 * @param query
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#invokeUpdateHandler(java.lang.String, java.lang.String, java.lang.String)
+	 * Invokes an Update Handler.
+	 * <pre>
+	 * String query = "field=foo&value=bar";
+	 * String output = dbClient.invokeUpdateHandler("designDoc/update1", "docId", query);
+	 * </pre>
+	 * @param updateHandlerUri The Update Handler URI, in the format: <code>designDoc/update1</code>
+	 * @param docId The document id to update.
+	 * @param query The query string parameters, e.g, <code>field=field1&value=value1</code>
+	 * @return The output of the request.
 	 */
 	public String invokeUpdateHandler(String updateHandlerUri, String docId,
 			String query) {
@@ -541,11 +554,18 @@ public class Database {
 
 
 	/**
-	 * @param updateHandlerUri
-	 * @param docId
-	 * @param params
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#invokeUpdateHandler(java.lang.String, java.lang.String, org.lightcouch.Params)
+	 * Invokes an Update Handler.
+	 * <p>Use this method in particular when the docId contain special characters such as slashes (/).
+	 * <pre>
+	 * Params params = new Params()
+	 *	.addParam("field", "foo")
+	 *	.addParam("value", "bar"); 
+	 * String output = dbClient.invokeUpdateHandler("designDoc/update1", "docId", params);
+	 * </pre>
+	 * @param updateHandlerUri The Update Handler URI, in the format: <code>designDoc/update1</code>
+	 * @param docId The document id to update.
+	 * @param query The query parameters as {@link Params}.
+	 * @return The output of the request.
 	 */
 	public String invokeUpdateHandler(String updateHandlerUri, String docId,
 			Params params) {
@@ -555,8 +575,7 @@ public class Database {
 
 
 	/**
-	 * 
-	 * @see org.lightcouch.CouchDatabaseBase#syncDesignDocsWithDb()
+	 * Synchronize all design documents with the database.
 	 */
 	public void syncDesignDocsWithDb() {
 		db.syncDesignDocsWithDb();
@@ -565,8 +584,7 @@ public class Database {
 
 
 	/**
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#getDBUri()
+	 * @return The database URI.
 	 */
 	public URI getDBUri() {
 		return db.getDBUri();
@@ -575,8 +593,7 @@ public class Database {
 
 
 	/**
-	 * @return
-	 * @see org.lightcouch.CouchDatabaseBase#info()
+	 * @return {@link CouchDbInfo} Containing the DB info.
 	 */
 	public CouchDbInfo info() {
 		return db.info();
@@ -585,14 +602,14 @@ public class Database {
 
 
 	/**
-	 * 
-	 * @see org.lightcouch.CouchDatabaseBase#ensureFullCommit()
+	 * Requests the database commits any recent changes to disk.
 	 */
 	public void ensureFullCommit() {
 		db.ensureFullCommit();
 	}
 
 
+	// private helper methods
 
 	private String getPermissionsBody(String userNameorApikey, EnumSet<Permissions> permissions ) {
 		String body;

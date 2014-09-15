@@ -2,6 +2,12 @@ package com.cloudant;
 
 import java.util.Date;
 
+/**
+ * Encapsulates info about Cloudant Server Task
+ * @since 0.0.1
+ * @author Mario Briggs
+ *
+ */
 public class Task {
 
 	private String user;

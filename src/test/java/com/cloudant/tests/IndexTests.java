@@ -11,7 +11,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.lightcouch.Replication;
 
-import com.cloudant.CloudantAccount;
+import com.cloudant.CloudantClient;
 import com.cloudant.Database;
 import com.cloudant.Index;
 import com.cloudant.IndexField;
@@ -19,17 +19,17 @@ import com.cloudant.IndexField.SortOrder;
 
 public class IndexTests {
 
-	private static CloudantAccount account;
+	private static CloudantClient account;
 	private static Database db;
 	
 	@BeforeClass
 	public static void setUpClass() {
-		Properties props = CloudantAccountTests.getProperties("cloudant.properties");
+		Properties props = CloudantClientTests.getProperties("cloudant.properties");
 		String cloudantaccount = props.getProperty("cloudant.account");
 		String userName= props.getProperty("cloudant.username");
 		String password = props.getProperty("cloudant.password");
 		
-		account = new CloudantAccount(cloudantaccount,userName,password);
+		account = new CloudantClient(cloudantaccount,userName,password);
 		
 		// create the movies-demo db for our index tests
 		Replication r = account.replication();

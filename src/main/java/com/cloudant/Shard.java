@@ -15,6 +15,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 
+/**
+ * Encapsulates info about a Cloudant Shard
+ * @since 0.0.1
+ * @author Mario Briggs
+ *
+ */
 public class Shard {
 
 	private String range;
@@ -27,7 +33,7 @@ public class Shard {
 		return range;
 	}
 	/**
-	 * @return the nodeNames
+	 * @return the nodeNames in this shard
 	 */
 	public Iterator<String> getNodes() {
 		return nodes.iterator();

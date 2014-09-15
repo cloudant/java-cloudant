@@ -1,5 +1,11 @@
 package com.cloudant;
 
+/**
+ * Encapsulates a Cloudant IndexField definition
+ * @since 0.0.1
+ * @author Mario Briggs
+ *
+ */
 public class IndexField {
 	
 	public enum SortOrder {

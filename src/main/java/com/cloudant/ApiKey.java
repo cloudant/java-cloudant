@@ -1,6 +1,11 @@
 package com.cloudant;
 
-
+/**
+ * Encapsulates a ApiKey response from Cloudant
+ * @since 0.0.1
+ * @author Mario Briggs
+ *
+ */
 public class ApiKey {
 
 	//@SerializedName("db_name")
@@ -9,11 +14,19 @@ public class ApiKey {
 	private String password;
 	
 
+	/**
+	 * Return the Apikey
+	 * @return String
+	 */
 	public String getKey() {
 		return key;
 	}
 
 
+	/**
+	 * Return the password associated with the ApiKey
+	 * @return String
+	 */
 	public String getPassword() {
 		return password;
 	}

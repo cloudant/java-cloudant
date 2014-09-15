@@ -3,6 +3,12 @@ package com.cloudant;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Encapsulates the list of nodes in a Cloudant cluster
+ * @since 0.0.1
+ * @author Mario Briggs
+ *
+ */
 public class Membership {
 
 	private List<String> all_nodes;

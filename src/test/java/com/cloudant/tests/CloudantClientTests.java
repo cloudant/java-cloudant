@@ -13,22 +13,22 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.cloudant.ApiKey;
-import com.cloudant.CloudantAccount;
+import com.cloudant.CloudantClient;
 import com.cloudant.Membership;
 import com.cloudant.Task;
 
 
-public class CloudantAccountTests {
+public class CloudantClientTests {
 
-	private static final Log log = LogFactory.getLog(CloudantAccountTests.class);
-	private static CloudantAccount account;
+	private static final Log log = LogFactory.getLog(CloudantClientTests.class);
+	private static CloudantClient account;
 	
 	
 
 	@BeforeClass
 	public static void setUpClass() {
 		Properties props = getProperties("cloudant.properties");
-		account = new CloudantAccount(props.getProperty("cloudant.account"),
+		account = new CloudantClient(props.getProperty("cloudant.account"),
 									  props.getProperty("cloudant.username"),
 									  props.getProperty("cloudant.password"));
 		
@@ -67,7 +67,7 @@ public class CloudantAccountTests {
 	public static Properties getProperties(String configFile) {
 		Properties properties = new Properties();
 		try {
-			InputStream instream = CloudantAccount.class.getClassLoader().getResourceAsStream(configFile);
+			InputStream instream = CloudantClient.class.getClassLoader().getResourceAsStream(configFile);
 			properties.load(instream);
 		} catch (Exception e) {
 			String msg = "Could not read configuration file from the classpath: " + configFile;
