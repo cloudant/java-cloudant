@@ -60,7 +60,7 @@ import com.google.gson.JsonParser;
  *  SearchResult<Bird> nextPage = db.search("views101/animals")
  *   .bookmark(result.bookmark)
  *   .querySearchResult("class:bird", Bird.class);
- * 
+ * }
  * </pre>
  * 
  * @see Database#search(String)
