@@ -11,14 +11,19 @@ import java.util.List;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.lightcouch.Changes;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbDesign;
 import org.lightcouch.Replication;
 import org.lightcouch.Replicator;
+import org.lightcouch.Response;
 import org.lightcouch.View;
+import org.lightcouch.internal.CouchDbUtil;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 /**
@@ -251,4 +256,28 @@ public class CloudantClient {
 	}
 
 
+
+	Response put(URI uri, Object object, boolean newEntity, int writeQuorum, Gson gson) {
+			assertNotEmpty(object, "object");
+			HttpResponse response = null;
+			try {  
+				final JsonObject json = gson.toJsonTree(object).getAsJsonObject();
+				String id = CouchDbUtil.getAsString(json, "_id");
+				String rev = CouchDbUtil.getAsString(json, "_rev");
+				if(newEntity) { // save
+					CouchDbUtil.assertNull(rev, "rev");
+					id = (id == null) ? CouchDbUtil.generateUUID() : id;
+				} else { // update
+					assertNotEmpty(id, "id");
+					assertNotEmpty(rev, "rev");
+				}
+				final HttpPut put = new HttpPut(buildUri(uri).pathToEncode(id).query("w", writeQuorum).buildEncoded());
+				CouchDbUtil.setEntity(put, json.toString(),"application/json");
+				response = client.executeRequest(put); 
+				return CouchDbUtil.getResponse(response,Response.class,gson);
+			} finally {
+				close(response);
+			}
+		}
 }
+	

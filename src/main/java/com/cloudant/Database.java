@@ -32,7 +32,6 @@ import org.lightcouch.CouchDbDesign;
 import org.lightcouch.CouchDbInfo;
 import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
-import org.lightcouch.Params;
 import org.lightcouch.Response;
 import org.lightcouch.View;
 import org.lightcouch.internal.GsonHelper;
@@ -346,7 +345,8 @@ public class Database {
 	 * @throws NoDocumentException If the document is not found in the database.
 	 */
 	public <T> T find(Class<T> classType, String id, Params params) {
-		return db.find(classType, id, params);
+		assertNotEmpty(params, "params");
+		return db.find(classType, id, params.getInternalParams());
 	}
 
 
@@ -428,8 +428,19 @@ public class Database {
 		return db.save(object);
 	}
 
-
-
+	/**
+	 * Saves an object in the database, using HTTP <tt>PUT</tt> request.
+	 * <p>If the object doesn't have an <code>_id</code> value, the code will assign a <code>UUID</code> as the document id.
+	 * @param object The object to save
+	 * @param writeQuorum the write Quorum
+	 * @throws DocumentConflictException If a conflict is detected during the save.
+	 * @return {@link Response}
+	 */
+	public Response save(Object object, int writeQuorum) {
+		return client.put(getDBUri(), object, true, writeQuorum, getGson());
+	}
+	
+	
 	/**
 	 * Saves an object in the database using HTTP <tt>POST</tt> request.
 	 * <p>The database will be responsible for generating the document id.
@@ -438,6 +449,25 @@ public class Database {
 	 */
 	public Response post(Object object) {
 		return db.post(object);
+	}
+	
+	/**
+	 * Saves an object in the database using HTTP <tt>POST</tt> request with specificied write quorum
+	 * <p>The database will be responsible for generating the document id.
+	 * @param object The object to save
+	 * @param writeQuorum the write Quorum
+	 * @return {@link Response}
+	 */
+	public Response post(Object object, int writeQuorum) {
+		assertNotEmpty(object, "object");
+		HttpResponse response = null;
+		try { 
+			URI uri = buildUri(getDBUri()).query("w",writeQuorum).build();
+			response = client.executeRequest(createPost(uri, getGson().toJson(object),"application/json"));
+			return getResponse(response,Response.class, getGson());
+		} finally {
+			close(response);
+		}
 	}
 
 
@@ -462,6 +492,16 @@ public class Database {
 		return db.update(object);
 	}
 
+	/**
+	 * Updates an object in the database, the object must have the correct <code>_id</code> and <code>_rev</code> values.
+	 * @param object The object to update
+	 * @param writeQuorum the write Quorum
+	 * @throws DocumentConflictException If a conflict is detected during the update.
+	 * @return {@link Response}
+	 */
+	public Response update(Object object, int writeQuorum) {
+		return client.put(getDBUri(), object, false, writeQuorum,getGson());
+	}
 
 
 	/**
@@ -498,9 +538,7 @@ public class Database {
 	public List<Response> bulk(List<?> objects) {
 		return db.bulk(objects, false);
 	}
-
-
-
+	
 	/**
 	 * Saves an attachment to a new document with a generated <tt>UUID</tt> as the document id.
 	 * <p>To retrieve an attachment, see {@link #find(String)}.
@@ -569,7 +607,8 @@ public class Database {
 	 */
 	public String invokeUpdateHandler(String updateHandlerUri, String docId,
 			Params params) {
-		return db.invokeUpdateHandler(updateHandlerUri, docId, params);
+		assertNotEmpty(params, "params");
+		return db.invokeUpdateHandler(updateHandlerUri, docId, params.getInternalParams());
 	}
 
 

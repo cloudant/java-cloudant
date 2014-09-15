@@ -1,5 +1,6 @@
 package com.cloudant.tests;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.EnumSet;
@@ -73,5 +74,24 @@ public class DatabaseTest {
 		assert(s.getNodes().hasNext());
 	}
 	
+			
+	@Test
+	public void QuorumTests() {
 		
+		db.save(new Animal("human"), 2);
+		Animal h = db.find(Animal.class, "human", new com.cloudant.Params().readQuorum(2));
+		assertNotNull(h);
+		assertEquals("human", h.getId());
+		
+		db.update(h.setClass("inhuman"), 2);
+		h = db.find(Animal.class, "human", new com.cloudant.Params().readQuorum(2));
+		assertEquals("inhuman", h.getclass());
+		
+		db.post(new Animal("test"), 2);
+		h = db.find(Animal.class, "test", new com.cloudant.Params().readQuorum(3));
+		assertEquals("test", h.getId());
+		
+		
+		
+	}
 }

@@ -249,7 +249,7 @@ final public class CouchDbUtil {
 	 * @param httpRequest The request to set entity.
 	 * @param json The JSON String to set.
 	 */
-	private static void setEntity(HttpEntityEnclosingRequestBase httpRequest, String body, String contentType) {
+	public static void setEntity(HttpEntityEnclosingRequestBase httpRequest, String body, String contentType) {
 		StringEntity entity = new StringEntity(body, "UTF-8");
 		entity.setContentType(contentType);
 		httpRequest.setEntity(entity);
