@@ -176,59 +176,23 @@ public class Database {
 	  * @return List of classOfT objects
 	  */
 	 public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT) {
-		 return findByIndex(selectorJson, null, null, null, null , null, classOfT);
+		 return findByIndex(selectorJson, classOfT, new FindByIndexOptions());
 	 }
 	 
 	 /**
 	  * Find documents using an index 
 	  * @param selectorJson JSON object describing criteria used to select documents.
 	  *        Is of the form "selector": { <your data here> }  @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">selector syntax</a>
-	  * @param limit optional, maximum number of results to be returned
-	  * @param skip optional, skip first n results, where n is the specified value
+	  * @param options   {@link FindByIndexOptions query Index options} 
 	  * @param classOfT The class of Java objects to be returned
 	  * @return List of classOfT objects
 	  */
-	 public <T> List<T> findByIndex(String selectorJson, Integer limit,
-			 				Integer skip, Class<T> classOfT) {
-		 return findByIndex(selectorJson, null, limit, skip, null , null, classOfT);
-	}
-	 
-	 /**
-	  * Find documents using an index 
-	  * @param selectorJson JSON object describing criteria used to select documents.
-	  *        Is of the form "selector": { <your data here> } @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">selector syntax</a>
-	  * @param sortOrder optional sort field order
-	  * @param limit optional, maximum number of results to be returned
-	  * @param skip optional, skip first n results, where n is the specified value
-	  * @param returnFields optional, specify which fields of an object should be returned. If it is omitted, the entire object is returned.
-	  * @param classOfT The class of Java objects to be returned
-	  * @return List of classOfT objects
-	  */
-	 public <T> List<T> findByIndex(String selectorJson, IndexField[] sortOrder,
-						Integer limit, Integer skip, String[] returnFields, Class<T> classOfT) {
-		 return findByIndex(selectorJson, sortOrder, limit, skip, returnFields , null, classOfT);
-	 }
-	 
-	 
-	 /**
-	  * Find documents using an index 
-	  * @param selectorJson JSON object describing criteria used to select documents.
-	  *        Is of the form "selector": { <your data here> } @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">selector syntax</a>
-	  * @param sortOrder optional sort field order
-	  * @param limit optional, maximum number of results to be returned
-	  * @param skip optional, skip first n results, where n is the specified value
-	  * @param returnFields optional, specify which fields of an object should be returned. If it is omitted, the entire object is returned.
-	  * @param readQuorum optional, default = 1. Read quorum needed for the result
-	  * @param classOfT The class of Java objects to be returned
-	  * @return List of classOfT objects
-	  */
-	 public <T> List<T> findByIndex(String selectorJson, IndexField[] sortOrder,
-				Integer limit, Integer skip, String[] returnFields,
-				Integer readQuorum, Class<T> classOfT) {
+	 public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT, FindByIndexOptions options) {
 		 assertNotEmpty(selectorJson, "selectorJson");
+		 assertNotEmpty(options, "options");
+		 
 		 URI uri = buildUri(getDBUri()).path("_find").build();
-		 String body = getFindByIndexBody(selectorJson, sortOrder,
-	 								limit,  skip,  returnFields,  readQuorum);
+		 String body = getFindByIndexBody(selectorJson, options);
 		 InputStream stream = null; 
 		 try {
 			 stream = getStream(client.executeRequest(createPost(uri, body, "application/json")));
@@ -246,8 +210,7 @@ public class Database {
 		 finally {
 			 close(stream);
 		 }
-		
-	 }
+	}
 	 
 	 /**
 	  * List all indices
@@ -716,14 +679,13 @@ public class Database {
 	 * @return
 	 */
 	private String getFindByIndexBody(String selectorJson,
-			IndexField[] sortOrder, Integer limit, Integer skip,
-			String[] returnFields, Integer readQuorum) {
+						FindByIndexOptions options) {
 		
 		StringBuilder rf = null;
-		if ( !(returnFields == null || returnFields.length == 0) ) {
+		if ( options.getFields().size() > 0) {
 			rf = new StringBuilder("\"fields\": [");
 			int i = 0;
-			for ( String s : returnFields ) {
+			for ( String s : options.getFields() ) {
 				if (i > 0 ) {
 					rf.append(",");
 				}
@@ -732,12 +694,12 @@ public class Database {
 			}
 			rf.append("]");
 		}
-		
+				
 		StringBuilder so = null;
-		if ( !(sortOrder == null || sortOrder.length == 0) ) {
+		if ( options.getSort().size() > 0) {
 			so = new StringBuilder("\"sort\": [");
 			int i = 0;
-			for ( IndexField idxfld : sortOrder ) {
+			for ( IndexField idxfld : options.getSort() ) {
 				if (i > 0 ) {
 					so.append(",");
 				}
@@ -759,20 +721,20 @@ public class Database {
 			finalbody.append(",")
 					 .append(so.toString());
 		}
-		if ( limit != null ) {
+		if ( options.getLimit() != null ) {
 			finalbody.append(",")
 					 .append("\"limit\": ")
-					 .append(limit);
+					 .append(options.getLimit());
 		}
-		if ( skip != null ) {
+		if ( options.getSkip() != null ) {
 			finalbody.append(",")
 					 .append("\"skip\": ")
-					 .append(skip);
+					 .append(options.getSkip());
 		}
-		if ( readQuorum != null ) {
+		if ( options.getReadQuorum() != null ) {
 			finalbody.append(",")
 					 .append("\"r\": ")
-					 .append(readQuorum);
+					 .append(options.getReadQuorum());
 		}
 		finalbody.append("}");
 		

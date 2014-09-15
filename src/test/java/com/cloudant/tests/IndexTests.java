@@ -13,6 +13,7 @@ import org.lightcouch.Replication;
 
 import com.cloudant.CloudantClient;
 import com.cloudant.Database;
+import com.cloudant.FindByIndexOptions;
 import com.cloudant.Index;
 import com.cloudant.IndexField;
 import com.cloudant.IndexField.SortOrder;
@@ -75,12 +76,27 @@ public class IndexTests {
 		}
 		
 		List<Movie> movies = db.findByIndex("\"selector\": { \"Movie_year\": {\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\" }",
-				new IndexField[]{ new IndexField("Movie_year", SortOrder.desc)},
-				null, null, 
-				new String[]{"Movie_name","Movie_year"},
-				null, Movie.class);
+				Movie.class,
+				new FindByIndexOptions()
+					.sort(new IndexField("Movie_year", SortOrder.desc))
+					.fields("Movie_name").fields("Movie_year"));
 		assertNotNull(movies);
 		assert(movies.size() > 0);
+		for ( Movie m : movies ) {
+			assertNotNull(m.getMovie_name());
+			assertNotNull(m.getMovie_year());
+		}
+		
+		movies = db.findByIndex("\"selector\": { \"Movie_year\": {\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\" }",
+				Movie.class,
+				new FindByIndexOptions()
+					.sort(new IndexField("Movie_year", SortOrder.desc))
+					.fields("Movie_name").fields("Movie_year")
+					.limit(1)
+					.skip(1)
+					.readQuorum(2));
+		assertNotNull(movies);
+		assert(movies.size() == 1);
 		for ( Movie m : movies ) {
 			assertNotNull(m.getMovie_name());
 			assertNotNull(m.getMovie_year());
