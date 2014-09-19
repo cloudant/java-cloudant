@@ -102,6 +102,20 @@ public class CouchDbClient extends  CouchDbClientBase {
 	
 	/**
 	 * Constructs a new instance of this class.
+	 * @param protocol The protocol to use (i.e http or https)
+	 * @param host The database host address
+	 * @param port The database listening port
+	 * @param authCookie The cookie obtained from last login
+	 */
+	public CouchDbClient(String protocol, String host, int port,
+			String authCookie) {
+		super(new CouchDbConfig(new CouchDbProperties(protocol, host, port,
+				authCookie)));
+	}
+	
+	
+	/**
+	 * Constructs a new instance of this class.
 	 * @param configFileName The configuration file name.
 	 */
 	public CouchDbClient(String configFileName) {

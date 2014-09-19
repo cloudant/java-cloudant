@@ -16,6 +16,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.lightcouch.Changes;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbDesign;
+import org.lightcouch.CouchDbProperties;
 import org.lightcouch.Replication;
 import org.lightcouch.Replicator;
 import org.lightcouch.Response;
@@ -83,19 +84,87 @@ public class CloudantClient {
 		assertNotEmpty(account,"accountName");
 		assertNotEmpty(loginUsername,"loginUsername");
 		assertNotEmpty(password,"password");
+		
 		this.accountName = account;
 		this.loginUsername = loginUsername;
 		this.password = password;
 		this.client = new CouchDbClient("https", account + ".cloudant.com", 443, loginUsername, password);
 	}
-		
 	
+	/**
+	 * Constructs a new instance of this class and connects to the cloudant account with the specified credentials
+	 * @param account The cloudant account to connect to
+	 * @param loginUsername The Username credential
+	 * @param password The Password credential
+	 * @param connectOptions optional properties to connect e.g connectionTime,socketTimeout,etc 
+	 */
+	public CloudantClient(String account, String loginUsername, String password,ConnectOptions connectOptions){
+		super();
+		assertNotEmpty(account,"accountName");
+		assertNotEmpty(loginUsername,"loginUsername");
+		assertNotEmpty(password,"password");
+		
+		this.accountName = account;
+		this.loginUsername = loginUsername;
+		this.password = password;
+		
+		CouchDbProperties props = new CouchDbProperties("https",account+".cloudant.com",443,loginUsername,password);
+		if(connectOptions != null){
+			props.setConnectionTimeout(connectOptions.getConnectionTimeout());
+			props.setSocketTimeout(connectOptions.getSocketTimeout());
+			props.setMaxConnections(connectOptions.getMaxConnections());
+			
+			props.setProxyHost(connectOptions.getProxyHost());
+			props.setProxyPort(connectOptions.getProxyPort());
+		}
+		this.client = new CouchDbClient(props);
+		
+	}
+	
+	/**
+	 * Constructs a new instance of this class and connects to the cloudant account with the specified credentials
+	 * @param account The cloudant account to connect to
+	 * @param authCookie The cookie obtained from last login
+	 */
+	public CloudantClient(String account, String authCookie){
+		super();
+		assertNotEmpty(account,"accountName");
+		assertNotEmpty(authCookie, "AuthCookie");
+		
+		this.accountName = account ;
+		this.client = new CouchDbClient("https",account +".cloudant.com",443,authCookie);
+	}
+	
+	/**
+	 * Constructs a new instance of this class and connects to the cloudant account with the specified credentials
+	 * @param account The cloudant account to connect to
+	 * @param authCookie The cookie obtained from last login
+	 * @param connectOptions optional properties to connect e.g connectionTime,socketTimeout,etc 
+	 */
+	public CloudantClient(String account, String authCookie,ConnectOptions connectOptions){
+		super();
+		assertNotEmpty(account,"accountName");
+		assertNotEmpty(authCookie, "AuthCookie");
+		
+		CouchDbProperties props = new CouchDbProperties("https",account+".cloudant.com",443,authCookie);
+		if(connectOptions != null){
+			props.setConnectionTimeout(connectOptions.getConnectionTimeout());
+			props.setSocketTimeout(connectOptions.getSocketTimeout());
+			props.setMaxConnections(connectOptions.getMaxConnections());
+			
+			props.setProxyHost(connectOptions.getProxyHost());
+			props.setProxyPort(connectOptions.getProxyPort());
+		}		
+		this.client = new CouchDbClient(props);
+	}
 		
 	/**
 	 * Generate an API key
 	 * @return the generated key and password
 	 */
 	public ApiKey generateApiKey() {
+		assertNotEmpty(loginUsername,"loginUsername");
+		assertNotEmpty(password,"password");
 		CouchDbClient tmp = new CouchDbClient("https", "cloudant.com", 443, loginUsername, password);
 		URI uri = buildUri(tmp.getBaseUri()).path("api/generate_api_key").build();
 		return tmp.executeRequest(createPost(uri,"",""), ApiKey.class);		
@@ -116,6 +185,14 @@ public class CloudantClient {
 		finally {
 			close(response);
 		}
+	}
+	
+	/**
+	 * Get the cookieStore
+	 * @return cookieStore
+	 */
+	public String getCookie(){
+		return client.getCookie();
 	}
 	
 	/**
