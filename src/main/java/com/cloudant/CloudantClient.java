@@ -16,6 +16,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.lightcouch.Changes;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbDesign;
+import org.lightcouch.CouchDbProperties;
 import org.lightcouch.Replication;
 import org.lightcouch.Replicator;
 import org.lightcouch.Response;
@@ -89,13 +90,36 @@ public class CloudantClient {
 		this.client = new CouchDbClient("https", account + ".cloudant.com", 443, loginUsername, password);
 	}
 		
+	public CloudantClient(String account, String authCookie){
+		super();
+		assertNotEmpty(account,"accountName");
+		assertNotEmpty(authCookie, "AuthCookie");
+		this.accountName = account ;
+		this.client = new CouchDbClient("https",account +".cloudant.com",443,authCookie);
+	}
 	
+	public CloudantClient(String account, String authCookie,ConnectOptions connectOptions){
+		super();
+		assertNotEmpty(account,"accountName");
+		assertNotEmpty(authCookie, "AuthCookie");
+		
+		CouchDbProperties props = new CouchDbProperties("https",account+".cloudant.com",443,authCookie);
+		props.setConnectionTimeout(connectOptions.getConnectionTimeout());
+		props.setSocketTimeout(connectOptions.getSocketTimeout());
+		props.setMaxConnections(connectOptions.getMaxConnections());
+		
+		props.setProxyHost(connectOptions.getProxyHost());
+		props.setProxyPort(connectOptions.getProxyPort());
+		this.client = new CouchDbClient(props);
+	}
 		
 	/**
 	 * Generate an API key
 	 * @return the generated key and password
 	 */
 	public ApiKey generateApiKey() {
+		assertNotEmpty(loginUsername,"loginUsername");
+		assertNotEmpty(password,"password");
 		CouchDbClient tmp = new CouchDbClient("https", "cloudant.com", 443, loginUsername, password);
 		URI uri = buildUri(tmp.getBaseUri()).path("api/generate_api_key").build();
 		return tmp.executeRequest(createPost(uri,"",""), ApiKey.class);		
@@ -116,6 +140,14 @@ public class CloudantClient {
 		finally {
 			close(response);
 		}
+	}
+	
+	/**
+	 * Get the cookieStore
+	 * @return cookieStore
+	 */
+	public String getCookie(){
+		return client.getCookies();
 	}
 	
 	/**

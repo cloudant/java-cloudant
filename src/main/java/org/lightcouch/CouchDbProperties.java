@@ -31,6 +31,8 @@ public class CouchDbProperties {
 	private int port;
 	private String username;
 	private String password;
+	
+	private String authCookie;
 
 	// optional
 	private int socketTimeout;
@@ -43,6 +45,14 @@ public class CouchDbProperties {
 		// default constructor
 	}
 
+	public CouchDbProperties(String protocol, String host, int port,
+			String authCookie) {
+		this.protocol = protocol;
+		this.host = host;
+		this.port = port;
+		this.authCookie = authCookie;
+	}
+	
 	public CouchDbProperties(String protocol,
 			String host, int port, String username, String password) {
 		
@@ -150,6 +160,14 @@ public class CouchDbProperties {
 	public CouchDbProperties setProxyPort(int proxyPort) {
 		this.proxyPort = proxyPort;
 		return this;
+	}
+
+	public String getAuthCookie() {
+		return authCookie;
+	}
+
+	public void setAuthCookie(String authCookie) {
+		this.authCookie = authCookie;
 	}
 
 	public void clearPassword() {

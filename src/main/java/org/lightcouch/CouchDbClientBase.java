@@ -32,6 +32,7 @@ import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -73,19 +74,31 @@ public abstract class CouchDbClientBase {
 	CouchDbClientBase(CouchDbConfig config) {
 		
 		final CouchDbProperties props = config.getProperties();
+		if(props.getAuthCookie() != null){
+			setCookie(props);
+		}
 		this.httpClient = createHttpClient(props);
 		this.host = new HttpHost(props.getHost(), props.getPort(), props.getProtocol());
 		this.gson = GsonHelper.initGson(new GsonBuilder()).create();
 		final String path = props.getPath() != null ? props.getPath() : "";
         this.baseURI = buildUri().scheme(props.getProtocol()).host(props.getHost()).port(props.getPort()).path("/").path(path).build();
         
-        // for non account endpoints... do not get the cookie
-        if ( !props.getHost().equalsIgnoreCase("cloudant.com") ) {
+        // for non account endpoints..and for the authentication using previous session's cookie . do not get the cookie
+        if ( !props.getHost().equalsIgnoreCase("cloudant.com") && props.getAuthCookie() == null ) {
         	getCookie(props);
         }
         props.clearPassword();
     }
 
+	
+	private void setCookie(CouchDbProperties props){
+		BasicClientCookie2  cookie = new BasicClientCookie2("AuthSession", props.getAuthCookie());
+		cookie.setDomain(props.getHost());
+		cookies.addCookie(cookie);
+		
+	}
+	
+	
 	private void getCookie(final CouchDbProperties props) {
 		URI uri = buildUri(baseURI).path("_session").build();
         String body = "name=" +  props.getUsername() + "&password=" + props.getPassword();
@@ -130,6 +143,20 @@ public abstract class CouchDbClientBase {
 		public URI getBaseUri() {
 			return baseURI;
 		}
+		
+		/**
+		 * @return The cookies.
+		 */
+		public String getCookies(){
+			List<Cookie> cookies2 = cookies.getCookies();
+			for(Cookie cookie : cookies2){
+				if(cookie.getName().equalsIgnoreCase("AuthSession")){
+					return cookie.getValue();
+				}
+			}
+			return null ;
+		}
+		
 		
 
 		/**

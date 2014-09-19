@@ -22,15 +22,19 @@ public class CloudantClientTests {
 
 	private static final Log log = LogFactory.getLog(CloudantClientTests.class);
 	private static CloudantClient account;
+	public static CloudantClient cookieBasedClient ;
+	private static Properties props ;
 	
 	
 
 	@BeforeClass
 	public static void setUpClass() {
-		Properties props = getProperties("cloudant.properties");
+		props = getProperties("cloudant.properties");
 		account = new CloudantClient(props.getProperty("cloudant.account"),
 									  props.getProperty("cloudant.username"),
 									  props.getProperty("cloudant.password"));
+		String cookie = account.getCookie();
+		cookieBasedClient = new CloudantClient(props.getProperty("cloudant.account"), cookie);
 		
 	}
 
@@ -62,6 +66,18 @@ public class CloudantClientTests {
 		assertNotNull(mship.getClusterNodes().hasNext());
 		assertNotNull(mship.getAllNodes());
 		assertNotNull(mship.getAllNodes().hasNext());
+	}
+	
+	@Test
+	public void cookieTest(){		
+		Membership membership = cookieBasedClient.getMembership();
+		assertNotNull(membership);		
+	}
+	
+	@Test
+	public void cookieAPITest(){
+		ApiKey generateApiKey = cookieBasedClient.generateApiKey();
+		
 	}
 	
 	public static Properties getProperties(String configFile) {
