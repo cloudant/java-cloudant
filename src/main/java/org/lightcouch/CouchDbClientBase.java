@@ -145,9 +145,9 @@ public abstract class CouchDbClientBase {
 		}
 		
 		/**
-		 * @return The cookies.
+		 * @return The cookie.
 		 */
-		public String getCookies(){
+		public String getCookie(){
 			List<Cookie> cookies2 = cookies.getCookies();
 			for(Cookie cookie : cookies2){
 				if(cookie.getName().equalsIgnoreCase("AuthSession")){

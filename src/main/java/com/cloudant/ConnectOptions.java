@@ -1,5 +1,8 @@
 package com.cloudant;
-
+/**
+ * Represents optional configuration properties for connecting to CloudantDB.
+ * 
+ */
 public class ConnectOptions {
 
 	private int socketTimeout;
@@ -10,7 +13,7 @@ public class ConnectOptions {
 	private int proxyPort ;
 	
 	public ConnectOptions(){
-		
+		// default constructor
 	}
 
 	public ConnectOptions setSocketTimeout(int socketTimeout) {
