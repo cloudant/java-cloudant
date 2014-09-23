@@ -33,7 +33,7 @@ public class IndexTests {
 		account = new CloudantClient(cloudantaccount,userName,password);
 		
 		// create the movies-demo db for our index tests
-		Replication r = account.replication();
+		com.cloudant.Replication r = account.replication();
 		r.source("https://examples.cloudant.com/movies-demo");
 		r.createTarget(true);
 		r.target("https://"+ userName + ":" + password + "@" + cloudantaccount +  ".cloudant.com/movies-demo");

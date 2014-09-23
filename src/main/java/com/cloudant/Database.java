@@ -268,8 +268,11 @@ public class Database {
 	 * Provides access to CouchDB <tt>View</tt> APIs.
 	 * @see View
 	 */
-	public View view(String viewId) {
-		return db.view(viewId);
+	public com.cloudant.View view(String viewId) {
+		 View couchDbview = db.view(viewId);
+		 com.cloudant.View view = new com.cloudant.View();
+		 view.setView(couchDbview);
+		 return view ;
 	}
 
 
@@ -278,8 +281,10 @@ public class Database {
 	 * Provides access to <tt>Change Notifications</tt> API.
 	 * @see Changes
 	 */
-	public Changes changes() {
-		return db.changes();
+	public com.cloudant.Changes changes() {
+		Changes couchDbChanges = db.changes();
+		com.cloudant.Changes changes = new com.cloudant.Changes(couchDbChanges);
+		return changes ;
 	}
 
 
@@ -387,8 +392,10 @@ public class Database {
 	 * @throws DocumentConflictException If a conflict is detected during the save.
 	 * @return {@link Response}
 	 */
-	public Response save(Object object) {
-		return db.save(object);
+	public com.cloudant.Response save(Object object) {
+		Response couchDbResponse = db.save(object);
+		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		return response ; 
 	}
 
 	/**
@@ -399,8 +406,10 @@ public class Database {
 	 * @throws DocumentConflictException If a conflict is detected during the save.
 	 * @return {@link Response}
 	 */
-	public Response save(Object object, int writeQuorum) {
-		return client.put(getDBUri(), object, true, writeQuorum, getGson());
+	public com.cloudant.Response save(Object object, int writeQuorum) {
+		Response couchDbResponse = client.put(getDBUri(), object, true, writeQuorum, getGson());
+		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		return response ;
 	}
 	
 	
@@ -410,8 +419,10 @@ public class Database {
 	 * @param object The object to save
 	 * @return {@link Response}
 	 */
-	public Response post(Object object) {
-		return db.post(object);
+	public com.cloudant.Response post(Object object) {
+		Response couchDbResponse =db.post(object);
+		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		return response ;
 	}
 	
 	/**
@@ -421,13 +432,15 @@ public class Database {
 	 * @param writeQuorum the write Quorum
 	 * @return {@link Response}
 	 */
-	public Response post(Object object, int writeQuorum) {
+	public com.cloudant.Response post(Object object, int writeQuorum) {
 		assertNotEmpty(object, "object");
 		HttpResponse response = null;
 		try { 
 			URI uri = buildUri(getDBUri()).query("w",writeQuorum).build();
 			response = client.executeRequest(createPost(uri, getGson().toJson(object),"application/json"));
-			return getResponse(response,Response.class, getGson());
+			Response couchDbResponse =getResponse(response,Response.class, getGson());
+			com.cloudant.Response cloudantResponse = new com.cloudant.Response(couchDbResponse);
+			return cloudantResponse ;
 		} finally {
 			close(response);
 		}
@@ -451,8 +464,10 @@ public class Database {
 	 * @throws DocumentConflictException If a conflict is detected during the update.
 	 * @return {@link Response}
 	 */
-	public Response update(Object object) {
-		return db.update(object);
+	public com.cloudant.Response update(Object object) {
+		Response couchDbResponse = db.update(object);
+		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		return response ;
 	}
 
 	/**
@@ -462,8 +477,10 @@ public class Database {
 	 * @throws DocumentConflictException If a conflict is detected during the update.
 	 * @return {@link Response}
 	 */
-	public Response update(Object object, int writeQuorum) {
-		return client.put(getDBUri(), object, false, writeQuorum,getGson());
+	public com.cloudant.Response update(Object object, int writeQuorum) {
+		Response couchDbResponse =client.put(getDBUri(), object, false, writeQuorum,getGson());
+		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		return response ;
 	}
 
 
@@ -474,8 +491,10 @@ public class Database {
 	 * @throws NoDocumentException If the document is not found in the database.
 	 * @return {@link Response}
 	 */
-	public Response remove(Object object) {
-		return db.remove(object);
+	public com.cloudant.Response remove(Object object) {
+		Response couchDbResponse = db.remove(object);
+		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		return response ; 
 	}
 
 
@@ -487,8 +506,10 @@ public class Database {
 	 * @throws NoDocumentException If the document is not found in the database.
 	 * @return {@link Response}
 	 */
-	public Response remove(String id, String rev) {
-		return db.remove(id, rev);
+	public com.cloudant.Response remove(String id, String rev) {
+		Response couchDbResponse =  db.remove(id, rev);
+		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		return response ;  
 	}
 
 
@@ -498,8 +519,14 @@ public class Database {
 	 * @param objects The {@link List} of objects.
 	 * @return {@code List<Response>} Containing the resulted entries.
 	 */
-	public List<Response> bulk(List<?> objects) {
-		return db.bulk(objects, false);
+	public List<com.cloudant.Response> bulk(List<?> objects) {
+		List<Response> couchDbResponseList =  db.bulk(objects, false);
+		List<com.cloudant.Response> cloudantResponseList = new ArrayList<>();
+		for(Response couchDbResponse : couchDbResponseList){
+			com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+			cloudantResponseList.add(response);
+		}
+		return cloudantResponseList ;
 	}
 	
 	/**
@@ -510,9 +537,11 @@ public class Database {
 	 * @param contentType The attachment "Content-Type".
 	 * @return {@link Response}
 	 */
-	public Response saveAttachment(InputStream in, String name,
+	public com.cloudant.Response saveAttachment(InputStream in, String name,
 			String contentType) {
-		return db.saveAttachment(in, name, contentType);
+		Response couchDbResponse =  db.saveAttachment(in, name, contentType);
+		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		return response ;   
 	}
 
 
@@ -529,9 +558,11 @@ public class Database {
 	 * @throws DocumentConflictException 
 	 * @return {@link Response}
 	 */
-	public Response saveAttachment(InputStream in, String name,
+	public com.cloudant.Response saveAttachment(InputStream in, String name,
 			String contentType, String docId, String docRev) {
-		return db.saveAttachment(in, name, contentType, docId, docRev);
+		Response couchDbResponse =  db.saveAttachment(in, name, contentType, docId, docRev);
+		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		return response ;   
 	}
 
 
