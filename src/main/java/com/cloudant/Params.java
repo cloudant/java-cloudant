@@ -18,10 +18,6 @@ public class Params  {
 
 	private org.lightcouch.Params params = new org.lightcouch.Params();
 	
-	public Params(){
-		this.params = new org.lightcouch.Params();
-	}
-	
 	public Params readQuorum(int quorum) {
 		params.addParam("r", new Integer(quorum).toString());
 		return this;

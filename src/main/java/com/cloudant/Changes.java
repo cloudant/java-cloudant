@@ -1,10 +1,42 @@
 package com.cloudant;
 
-import org.lightcouch.ChangesResult;
-import org.lightcouch.CouchDatabaseBase;
-import org.lightcouch.ChangesResult.Row;
-import org.lightcouch.internal.URIBuilder;
 
+
+import com.cloudant.ChangesResult.Row;
+/**
+ * <p>Contains the Change Notifications API, supports <i>normal</i> and <i>continuous</i> feed Changes. 
+ * <h3>Usage Example:</h3>
+ * <pre>
+ * // feed type normal 
+ * String since = db.info().getUpdateSeq(); // latest update seq
+ * ChangesResult changeResult = db.changes()
+ *	.since(since) 
+ *	.limit(10)
+ *	.filter("example/filter")
+ *	.getChanges();
+ *
+ * for (ChangesResult.Row row : changeResult.getResults()) {
+ *   String docId = row.getId()
+ *   JsonObject doc = row.getDoc();
+ * }
+ *
+ * // feed type continuous
+ * Changes changes = db.changes()
+ *	.includeDocs(true) 
+ *	.heartBeat(30000)
+ *	.continuousChanges(); 
+ * 
+ * while (changes.hasNext()) { 
+ *	ChangesResult.Row feed = changes.next();
+ *  String docId = feed.getId();
+ *  JsonObject doc = feed.getDoc();
+ *	// changes.stop(); // stop continuous feed
+ * }
+ * </pre>
+ * @see ChangesResult
+ * @since 0.0.1
+ * @author Ganesh K Choudhary
+ */
 public class Changes {
 	private org.lightcouch.Changes changes ;
 	
@@ -13,8 +45,8 @@ public class Changes {
 	}
 	
 	/**
-	 * @return
-	 * @see org.lightcouch.Changes#continuousChanges()
+	 * Requests Change notifications of feed type continuous.
+	 * <p>Feed notifications are accessed in an <i>iterator</i> style.
 	 */
 	public Changes continuousChanges() {
 		changes = changes.continuousChanges();
@@ -22,131 +54,84 @@ public class Changes {
 	}
 
 	/**
-	 * @param obj
-	 * @return
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	public boolean equals(Object obj) {
-		return changes.equals(obj);
-	}
-
-	/**
-	 * @return
-	 * @see org.lightcouch.Changes#hasNext()
+	 * Checks whether a feed is available in the continuous stream, blocking 
+	 * until a feed is received. 
 	 */
 	public boolean hasNext() {
 		return changes.hasNext();
 	}
 
 	/**
-	 * @return
-	 * @see org.lightcouch.Changes#next()
+	 * @return The next feed in the stream.
 	 */
 	public Row next() {
-		return changes.next();
+		org.lightcouch.ChangesResult.Row next = changes.next();
+		Row row = new Row(next);
+		return row ;
 	}
 
 	/**
-	 * 
-	 * @see org.lightcouch.Changes#stop()
+	 * Stops a running continuous feed.
 	 */
 	public void stop() {
 		changes.stop();
 	}
 
 	/**
-	 * @return
-	 * @see org.lightcouch.Changes#getChanges()
-	 */
+	 * Requests Change notifications of feed type normal.
+	 */	 
 	public ChangesResult getChanges() {
-		return changes.getChanges();
+		org.lightcouch.ChangesResult couchDbChangesResult = changes.getChanges();
+		ChangesResult changeResult = new ChangesResult(couchDbChangesResult);
+		return changeResult ;
 	}
 
-	/**
-	 * @param since
-	 * @return
-	 * @see org.lightcouch.Changes#since(java.lang.String)
-	 */
+	// Query Params
+	
 	public Changes since(String since) {
 		changes = changes.since(since);
 		return this ;
 	}
 
-	/**
-	 * @param limit
-	 * @return
-	 * @see org.lightcouch.Changes#limit(int)
-	 */
+	
 	public Changes limit(int limit) {
 		changes =  changes.limit(limit);
 		return this ;
 	}
 
-	/**
-	 * @param filter
-	 * @return
-	 * @see org.lightcouch.Changes#filter(java.lang.String)
-	 */
+	
 	public Changes filter(String filter) {
 		changes = changes.filter(filter);
 		return this ;
 	}
 
-	/**
-	 * @return
-	 * @see java.lang.Object#hashCode()
-	 */
-	public int hashCode() {
-		return changes.hashCode();
-	}
-
-	/**
-	 * @param heartBeat
-	 * @return
-	 * @see org.lightcouch.Changes#heartBeat(long)
-	 */
+	
+	
 	public Changes heartBeat(long heartBeat) {
 		changes = changes.heartBeat(heartBeat);
 		return this ;
 	}
 
-	/**
-	 * @param timeout
-	 * @return
-	 * @see org.lightcouch.Changes#timeout(long)
-	 */
+	
 	public Changes timeout(long timeout) {
 		changes = changes.timeout(timeout);
 		return this ;
 	}
 
-	/**
-	 * @param includeDocs
-	 * @return
-	 * @see org.lightcouch.Changes#includeDocs(boolean)
-	 */
+	
 	public Changes includeDocs(boolean includeDocs) {
 		changes = changes.includeDocs(includeDocs);
 		return this ;
 	}
 
-	/**
-	 * @param style
-	 * @return
-	 * @see org.lightcouch.Changes#style(java.lang.String)
-	 */
+	
 	public Changes style(String style) {
 		changes = changes.style(style);
 		return this ;
 	}
 
-	/**
-	 * @return
-	 * @see java.lang.Object#toString()
-	 */
-	public String toString() {
-		return changes.toString();
-	}
+	
+	
 	
 	
 }

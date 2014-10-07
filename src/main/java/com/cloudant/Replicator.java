@@ -4,24 +4,58 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.lightcouch.CouchDatabaseBase;
 import org.lightcouch.CouchDbClientBase;
+import org.lightcouch.Replication;
 import org.lightcouch.ReplicatorDocument;
 import org.lightcouch.Response;
-
+/**
+ * This class provides access to the <tt>_replicator</tt> database introduced in CouchDB version 1.1.0
+ * <p>A replication is triggered by persisting a document, and cancelled by removing the document that triggered the replication.
+ * 
+ * <h3>Usage Example:</h3>
+ * <pre>
+ * Response response = db.replicator()
+ * 	.source("source-db")
+ * 	.target("target-db")
+ * 	.continuous(true)
+ * 	.createTarget(true)
+ * 	.replicatorDB("replicator-db-name") // optional, defaults to _replicator
+ * 	.replicatorDocId("doc-id")          // optional, defaults to UUID 
+ * 	.save(); // trigger replication
+ * 
+ * ReplicatorDocument replicatorDoc = db.replicator()
+ * 	.replicatorDocId("doc-id")
+ * 	.replicatorDocRev("doc-rev") // optional
+ * 	.find();
+ * 
+ * {@code 
+ * List<ReplicatorDocument> replicatorDocs = db.replicator().findAll();
+ * }
+ * 
+ * Response response = db.replicator()
+ * 	.replicatorDocId("doc-id")
+ * 	.replicatorDocRev("doc-rev")
+ * 	.remove(); // cancels a replication
+ * </pre>
+ * 
+ * @see CloudantClient#replicator()
+ * @see Replication 
+ * @see ReplicatorDocument
+ * @since 0.0.1
+ * @author Ganesh K Choudhary
+ *
+ */
 public class Replicator {
 	private org.lightcouch.Replicator replicator ;
-	
-	public Replicator(CouchDbClientBase client) {
-		this.replicator = new org.lightcouch.Replicator(client);
-	}
 	
 	Replicator(org.lightcouch.Replicator replicator){
 		this.replicator = replicator ;
 	}
 
 	/**
-	 * @return
-	 * @see org.lightcouch.Replicator#save()
+	 * Adds a new document to the replicator database. 
+	 * @return {@link Response}
 	 */
 	public com.cloudant.Response save() {
 		Response couchDbResponse = replicator.save();
@@ -30,8 +64,8 @@ public class Replicator {
 	}
 
 	/**
-	 * @return
-	 * @see org.lightcouch.Replicator#find()
+	 * Finds a document in the replicator database. 
+	 * @return {@link ReplicatorDocument}
 	 */
 	public com.cloudant.ReplicatorDocument find() {
 		ReplicatorDocument couchDbReplicatorDoc = replicator.find();
@@ -40,8 +74,7 @@ public class Replicator {
 	}
 
 	/**
-	 * @return
-	 * @see org.lightcouch.Replicator#findAll()
+	 * Finds all documents in the replicator database. 
 	 */
 	public List<com.cloudant.ReplicatorDocument> findAll() {
 		List<ReplicatorDocument> couchDbReplicatorDocList = replicator.findAll();
@@ -54,8 +87,8 @@ public class Replicator {
 	}
 
 	/**
-	 * @return
-	 * @see org.lightcouch.Replicator#remove()
+	 * Removes a document from the replicator database.  
+	 * @return {@link Response}
 	 */
 	public com.cloudant.Response remove() {
 		Response couchDbResponse = replicator.remove();
@@ -66,7 +99,6 @@ public class Replicator {
 	/**
 	 * @param source
 	 * @return
-	 * @see org.lightcouch.Replicator#source(java.lang.String)
 	 */
 	public Replicator source(String source) {
 		this.replicator = replicator.source(source);
@@ -76,7 +108,6 @@ public class Replicator {
 	/**
 	 * @param target
 	 * @return
-	 * @see org.lightcouch.Replicator#target(java.lang.String)
 	 */
 	public Replicator target(String target) {
 		this.replicator = replicator.target(target);
@@ -86,7 +117,6 @@ public class Replicator {
 	/**
 	 * @param continuous
 	 * @return
-	 * @see org.lightcouch.Replicator#continuous(boolean)
 	 */
 	public Replicator continuous(boolean continuous) {
 		this.replicator = replicator.continuous(continuous);
@@ -96,7 +126,6 @@ public class Replicator {
 	/**
 	 * @param filter
 	 * @return
-	 * @see org.lightcouch.Replicator#filter(java.lang.String)
 	 */
 	public Replicator filter(String filter) {
 		this.replicator = replicator.filter(filter);
@@ -106,7 +135,6 @@ public class Replicator {
 	/**
 	 * @param queryParams
 	 * @return
-	 * @see org.lightcouch.Replicator#queryParams(java.lang.String)
 	 */
 	public Replicator queryParams(String queryParams) {
 		this.replicator = replicator.queryParams(queryParams);
@@ -116,7 +144,6 @@ public class Replicator {
 	/**
 	 * @param queryParams
 	 * @return
-	 * @see org.lightcouch.Replicator#queryParams(java.util.Map)
 	 */
 	public Replicator queryParams(Map<String, Object> queryParams) {
 		this.replicator = replicator.queryParams(queryParams);
@@ -126,7 +153,6 @@ public class Replicator {
 	/**
 	 * @param docIds
 	 * @return
-	 * @see org.lightcouch.Replicator#docIds(java.lang.String[])
 	 */
 	public Replicator docIds(String... docIds) {
 		this.replicator = replicator.docIds(docIds);
@@ -136,7 +162,6 @@ public class Replicator {
 	/**
 	 * @param proxy
 	 * @return
-	 * @see org.lightcouch.Replicator#proxy(java.lang.String)
 	 */
 	public Replicator proxy(String proxy) {
 		this.replicator = replicator.proxy(proxy);
@@ -146,7 +171,6 @@ public class Replicator {
 	/**
 	 * @param createTarget
 	 * @return
-	 * @see org.lightcouch.Replicator#createTarget(java.lang.Boolean)
 	 */
 	public Replicator createTarget(Boolean createTarget) {
 		this.replicator = replicator.createTarget(createTarget);
@@ -156,7 +180,6 @@ public class Replicator {
 	/**
 	 * @param workerProcesses
 	 * @return
-	 * @see org.lightcouch.Replicator#workerProcesses(int)
 	 */
 	public Replicator workerProcesses(int workerProcesses) {
 		this.replicator = replicator.workerProcesses(workerProcesses);
@@ -166,7 +189,6 @@ public class Replicator {
 	/**
 	 * @param connectionTimeout
 	 * @return
-	 * @see org.lightcouch.Replicator#connectionTimeout(long)
 	 */
 	public Replicator connectionTimeout(long connectionTimeout) {
 		this.replicator = replicator.connectionTimeout(connectionTimeout);
@@ -174,26 +196,8 @@ public class Replicator {
 	}
 
 	/**
-	 * @param obj
-	 * @return
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	public boolean equals(Object obj) {
-		return replicator.equals(obj);
-	}
-
-	/**
-	 * @return
-	 * @see java.lang.Object#hashCode()
-	 */
-	public int hashCode() {
-		return replicator.hashCode();
-	}
-
-	/**
 	 * @param replicatorDB
 	 * @return
-	 * @see org.lightcouch.Replicator#replicatorDB(java.lang.String)
 	 */
 	public Replicator replicatorDB(String replicatorDB) {
 		this.replicator = replicator.replicatorDB(replicatorDB);
@@ -203,7 +207,6 @@ public class Replicator {
 	/**
 	 * @param replicatorDocId
 	 * @return
-	 * @see org.lightcouch.Replicator#replicatorDocId(java.lang.String)
 	 */
 	public Replicator replicatorDocId(String replicatorDocId) {
 		this.replicator = replicator.replicatorDocId(replicatorDocId);
@@ -213,7 +216,6 @@ public class Replicator {
 	/**
 	 * @param replicatorDocRev
 	 * @return
-	 * @see org.lightcouch.Replicator#replicatorDocRev(java.lang.String)
 	 */
 	public Replicator replicatorDocRev(String replicatorDocRev) {
 		this.replicator = replicator.replicatorDocRev(replicatorDocRev);
@@ -223,7 +225,6 @@ public class Replicator {
 	/**
 	 * @param workerBatchSize
 	 * @return
-	 * @see org.lightcouch.Replicator#workerBatchSize(int)
 	 */
 	public Replicator workerBatchSize(int workerBatchSize) {
 		this.replicator = replicator.workerBatchSize(workerBatchSize);
@@ -233,7 +234,6 @@ public class Replicator {
 	/**
 	 * @param httpConnections
 	 * @return
-	 * @see org.lightcouch.Replicator#httpConnections(int)
 	 */
 	public Replicator httpConnections(int httpConnections) {
 		this.replicator = replicator.httpConnections(httpConnections);
@@ -243,7 +243,6 @@ public class Replicator {
 	/**
 	 * @param retriesPerRequest
 	 * @return
-	 * @see org.lightcouch.Replicator#retriesPerRequest(int)
 	 */
 	public Replicator retriesPerRequest(int retriesPerRequest) {
 		this.replicator = replicator.retriesPerRequest(retriesPerRequest);
@@ -253,7 +252,6 @@ public class Replicator {
 	/**
 	 * @param userCtxRoles
 	 * @return
-	 * @see org.lightcouch.Replicator#userCtxRoles(java.lang.String[])
 	 */
 	public Replicator userCtxRoles(String... userCtxRoles) {
 		this.replicator = replicator.userCtxRoles(userCtxRoles);
@@ -263,7 +261,6 @@ public class Replicator {
 	/**
 	 * @param sinceSeq
 	 * @return
-	 * @see org.lightcouch.Replicator#sinceSeq(java.lang.Integer)
 	 */
 	public Replicator sinceSeq(Integer sinceSeq) {
 		this.replicator = replicator.sinceSeq(sinceSeq);
@@ -271,17 +268,8 @@ public class Replicator {
 	}
 
 	/**
-	 * @return
-	 * @see java.lang.Object#toString()
-	 */
-	public String toString() {
-		return replicator.toString();
-	}
-
-	/**
 	 * @param userCtxName
 	 * @return
-	 * @see org.lightcouch.Replicator#userCtxName(java.lang.String)
 	 */
 	public Replicator userCtxName(String userCtxName) {
 		this.replicator =  replicator.userCtxName(userCtxName);

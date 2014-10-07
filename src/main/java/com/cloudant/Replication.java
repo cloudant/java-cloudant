@@ -2,23 +2,51 @@ package com.cloudant;
 
 import java.util.Map;
 
+import org.lightcouch.CouchDatabaseBase;
 import org.lightcouch.CouchDbClientBase;
 import org.lightcouch.ReplicationResult;
+import org.lightcouch.Replicator;
+import org.lightcouch.ReplicationResult.ReplicationHistory;
 
+/**
+ * This class provides access to the database replication API; a replication request 
+ * is sent via HTTP POST to <code>_replicate</code> URI.
+ * 
+ * <h3>Usage Example:</h3>
+ * <pre>
+ * ReplicationResult replication = db.replication()
+ * 	.source("source-db")
+ * 	.target("target-db")
+ * 	.createTarget(true)
+ *	.filter("example/filter1")
+ * 	.trigger();
+ * 
+ * {@code
+ * List<ReplicationHistory> histories = replication.getHistories();
+ * }
+ * </pre>
+ * 
+ * @see CloudantClient#replication()
+ * @see ReplicationResult
+ * @see ReplicationHistory
+ * @see Replicator
+ * @since 0.0.1
+ * @author Ganesh K Choudhary
+ *
+ */
 public class Replication {
 	private org.lightcouch.Replication replication ;
 	
-	public Replication(CouchDbClientBase client) {
+	/*public Replication(CouchDbClientBase client) {
 		this.replication = new org.lightcouch.Replication(client);
-	}
+	}*/
 	
 	Replication(org.lightcouch.Replication replication){
 		this.replication = replication ;
 	}
 
 	/**
-	 * @return
-	 * @see org.lightcouch.Replication#trigger()
+	 * Triggers a replication request. 
 	 */
 	public com.cloudant.ReplicationResult trigger() {
 		ReplicationResult couchDbReplicationResult = replication.trigger();
@@ -29,7 +57,6 @@ public class Replication {
 	/**
 	 * @param source
 	 * @return
-	 * @see org.lightcouch.Replication#source(java.lang.String)
 	 */
 	public Replication source(String source) {
 		this.replication = replication.source(source);
@@ -39,7 +66,6 @@ public class Replication {
 	/**
 	 * @param target
 	 * @return
-	 * @see org.lightcouch.Replication#target(java.lang.String)
 	 */
 	public Replication target(String target) {
 		 this.replication = replication.target(target);
@@ -49,7 +75,6 @@ public class Replication {
 	/**
 	 * @param continuous
 	 * @return
-	 * @see org.lightcouch.Replication#continuous(java.lang.Boolean)
 	 */
 	public Replication continuous(Boolean continuous) {
 		this.replication = replication.continuous(continuous);
@@ -59,7 +84,6 @@ public class Replication {
 	/**
 	 * @param filter
 	 * @return
-	 * @see org.lightcouch.Replication#filter(java.lang.String)
 	 */
 	public Replication filter(String filter) {
 		this.replication =  replication.filter(filter);
@@ -69,7 +93,6 @@ public class Replication {
 	/**
 	 * @param queryParams
 	 * @return
-	 * @see org.lightcouch.Replication#queryParams(java.lang.String)
 	 */
 	public Replication queryParams(String queryParams) {
 		this.replication = replication.queryParams(queryParams);
@@ -79,7 +102,6 @@ public class Replication {
 	/**
 	 * @param queryParams
 	 * @return
-	 * @see org.lightcouch.Replication#queryParams(java.util.Map)
 	 */
 	public Replication queryParams(
 			Map<String, Object> queryParams) {
@@ -100,7 +122,6 @@ public class Replication {
 	/**
 	 * @param proxy
 	 * @return
-	 * @see org.lightcouch.Replication#proxy(java.lang.String)
 	 */
 	public Replication proxy(String proxy) {
 		this.replication = replication.proxy(proxy);
@@ -110,7 +131,6 @@ public class Replication {
 	/**
 	 * @param cancel
 	 * @return
-	 * @see org.lightcouch.Replication#cancel(java.lang.Boolean)
 	 */
 	public Replication cancel(Boolean cancel) {
 		this.replication = replication.cancel(cancel);
@@ -120,34 +140,15 @@ public class Replication {
 	/**
 	 * @param createTarget
 	 * @return
-	 * @see org.lightcouch.Replication#createTarget(java.lang.Boolean)
 	 */
 	public Replication createTarget(Boolean createTarget) {
 		this.replication = replication.createTarget(createTarget);
 		return this ;
 	}
 
-	/**
-	 * @param obj
-	 * @return
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	public boolean equals(Object obj) {
-		return replication.equals(obj);
-	}
 
 	/**
-	 * @return
-	 * @see java.lang.Object#hashCode()
-	 */
-	public int hashCode() {
-		return replication.hashCode();
-	}
-
-	/**
-	 * @param sinceSeq
-	 * @return
-	 * @see org.lightcouch.Replication#sinceSeq(java.lang.Integer)
+	 * Starts a replication since an update sequence.  
 	 */
 	public Replication sinceSeq(Integer sinceSeq) {
 		this.replication =  replication.sinceSeq(sinceSeq);
@@ -160,7 +161,6 @@ public class Replication {
 	 * @param tokenSecret
 	 * @param token
 	 * @return
-	 * @see org.lightcouch.Replication#targetOauth(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
 	 */
 	public Replication targetOauth(String consumerSecret,
 			String consumerKey, String tokenSecret, String token) {
@@ -169,13 +169,4 @@ public class Replication {
 		return this ;
 	}
 
-	/**
-	 * @return
-	 * @see java.lang.Object#toString()
-	 */
-	public String toString() {
-		return replication.toString();
-	}
-	
-	
 }

@@ -1,5 +1,12 @@
 package com.cloudant;
 
+
+import org.lightcouch.Document;
+
+/**
+ * Represents an in-line document attachment. 
+ * @see Document#addAttachment(String, Attachment)
+ */
 public class Attachment {
 	private org.lightcouch.Attachment attachement ;
 	
@@ -7,6 +14,10 @@ public class Attachment {
 		this.attachement = new org.lightcouch.Attachment();
 	}
 	
+	/**
+	 * @param data The base64 encoded data of the attachment.
+	 * @param contentType The Content-Type of the attachment.
+	 */
 	public Attachment(String data, String contentType) {
 		this.attachement = new org.lightcouch.Attachment(data,contentType);
 	}
@@ -16,17 +27,7 @@ public class Attachment {
 	}
 
 	/**
-	 * @param obj
-	 * @return
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	public boolean equals(Object obj) {
-		return attachement.equals(obj);
-	}
-
-	/**
-	 * @return
-	 * @see org.lightcouch.Attachment#getData()
+	 * @return The base64 encoded data of the attachment.
 	 */
 	public String getData() {
 		return attachement.getData();
@@ -34,7 +35,6 @@ public class Attachment {
 
 	/**
 	 * @return
-	 * @see org.lightcouch.Attachment#getContentType()
 	 */
 	public String getContentType() {
 		return attachement.getContentType();
@@ -42,7 +42,6 @@ public class Attachment {
 
 	/**
 	 * @return
-	 * @see org.lightcouch.Attachment#getRevpos()
 	 */
 	public int getRevpos() {
 		return attachement.getRevpos();
@@ -50,7 +49,6 @@ public class Attachment {
 
 	/**
 	 * @return
-	 * @see org.lightcouch.Attachment#getDigest()
 	 */
 	public String getDigest() {
 		return attachement.getDigest();
@@ -58,7 +56,6 @@ public class Attachment {
 
 	/**
 	 * @return
-	 * @see org.lightcouch.Attachment#getLength()
 	 */
 	public long getLength() {
 		return attachement.getLength();
@@ -66,15 +63,6 @@ public class Attachment {
 
 	/**
 	 * @return
-	 * @see java.lang.Object#hashCode()
-	 */
-	public int hashCode() {
-		return attachement.hashCode();
-	}
-
-	/**
-	 * @return
-	 * @see org.lightcouch.Attachment#isStub()
 	 */
 	public boolean isStub() {
 		return attachement.isStub();
@@ -82,27 +70,20 @@ public class Attachment {
 
 	/**
 	 * @param contentType
-	 * @see org.lightcouch.Attachment#setContentType(java.lang.String)
 	 */
 	public void setContentType(String contentType) {
 		attachement.setContentType(contentType);
 	}
 
 	/**
-	 * @param data
-	 * @see org.lightcouch.Attachment#setData(java.lang.String)
+	 * @param data The base64 encoded data of the attachment.
 	 */
 	public void setData(String data) {
 		attachement.setData(data);
 	}
-
-	/**
-	 * @return
-	 * @see java.lang.Object#toString()
-	 */
-	public String toString() {
-		return attachement.toString();
+	
+	org.lightcouch.Attachment getAttachement() {
+		return attachement;
 	}
-	
-	
+
 }

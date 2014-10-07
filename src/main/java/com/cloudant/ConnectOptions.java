@@ -1,7 +1,7 @@
 package com.cloudant;
 /**
  * Represents optional configuration properties for connecting to CloudantDB.
- * 
+ * @author Ganesh K Choudhary
  */
 public class ConnectOptions {
 

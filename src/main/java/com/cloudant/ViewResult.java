@@ -3,8 +3,14 @@ package com.cloudant;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.lightcouch.View;
 import org.lightcouch.ViewResult.Rows;
-
+/**
+ * Holds a view result entries. 
+ * @since 0.0.1
+ * @see View
+ * @author Ganesh K Choudhary
+ */
 public class ViewResult<K, V, T> {
 	private org.lightcouch.ViewResult<K, V, T> viewResult ;
 	
@@ -19,7 +25,6 @@ public class ViewResult<K, V, T> {
 	/**
 	 * @param obj
 	 * @return
-	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	public boolean equals(Object obj) {
 		return viewResult.equals(obj);
@@ -27,7 +32,6 @@ public class ViewResult<K, V, T> {
 
 	/**
 	 * @return
-	 * @see org.lightcouch.ViewResult#getTotalRows()
 	 */
 	public long getTotalRows() {
 		return viewResult.getTotalRows();
@@ -35,7 +39,6 @@ public class ViewResult<K, V, T> {
 
 	/**
 	 * @return
-	 * @see org.lightcouch.ViewResult#getUpdateSeq()
 	 */
 	public long getUpdateSeq() {
 		return viewResult.getUpdateSeq();
@@ -43,7 +46,6 @@ public class ViewResult<K, V, T> {
 
 	/**
 	 * @return
-	 * @see org.lightcouch.ViewResult#getOffset()
 	 */
 	public int getOffset() {
 		return viewResult.getOffset();
@@ -51,7 +53,6 @@ public class ViewResult<K, V, T> {
 
 	/**
 	 * @return
-	 * @see org.lightcouch.ViewResult#getRows()
 	 */
 	public List<Rows> getRows() {
 		List<Rows> rows = new ArrayList<Rows>();
@@ -65,16 +66,7 @@ public class ViewResult<K, V, T> {
 	}
 
 	/**
-	 * @return
-	 * @see java.lang.Object#hashCode()
-	 */
-	public int hashCode() {
-		return viewResult.hashCode();
-	}
-
-	/**
 	 * @param totalRows
-	 * @see org.lightcouch.ViewResult#setTotalRows(long)
 	 */
 	public void setTotalRows(long totalRows) {
 		viewResult.setTotalRows(totalRows);
@@ -82,7 +74,6 @@ public class ViewResult<K, V, T> {
 
 	/**
 	 * @param updateSeq
-	 * @see org.lightcouch.ViewResult#setUpdateSeq(long)
 	 */
 	public void setUpdateSeq(long updateSeq) {
 		viewResult.setUpdateSeq(updateSeq);
@@ -90,7 +81,6 @@ public class ViewResult<K, V, T> {
 
 	/**
 	 * @param offset
-	 * @see org.lightcouch.ViewResult#setOffset(int)
 	 */
 	public void setOffset(int offset) {
 		viewResult.setOffset(offset);
@@ -98,13 +88,12 @@ public class ViewResult<K, V, T> {
 
 	/**
 	 * @param rows
-	 * @see org.lightcouch.ViewResult#setRows(java.util.List)
 	 */
 	public void setRows(List<Rows> rows) {
 		List<org.lightcouch.ViewResult<K,V,T>.Rows> rowsList = new ArrayList<org.lightcouch.ViewResult<K,V,T>.Rows>();
 		for(int i = 0 ; i < rows.size() ; i++){
 			Rows row = rows.get(i);
-			org.lightcouch.ViewResult<K,V,T>.Rows lightcouchRows = row.getRows();
+			org.lightcouch.ViewResult<K,V,T>.Rows lightcouchRows = row.getRows().getrows();
 			rowsList.add(lightcouchRows);
 		}
 		viewResult.setRows(rowsList);
@@ -112,7 +101,6 @@ public class ViewResult<K, V, T> {
 
 	/**
 	 * @return
-	 * @see org.lightcouch.ViewResult#toString()
 	 */
 	public String toString() {
 		return viewResult.toString();
@@ -133,22 +121,12 @@ public class ViewResult<K, V, T> {
 		/**
 		 * @return the rows
 		 */
-		public org.lightcouch.ViewResult<K, V, T>.Rows getRows() {
-			return rows;
-		}
-
-		/**
-		 * @param obj
-		 * @return
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
-		public boolean equals(Object obj) {
-			return rows.equals(obj);
+		public ViewResult<K, V, T>.Rows getRows() {
+			return this;
 		}
 
 		/**
 		 * @return
-		 * @see org.lightcouch.ViewResult.Rows#getId()
 		 */
 		public String getId() {
 			return rows.getId();
@@ -156,7 +134,6 @@ public class ViewResult<K, V, T> {
 
 		/**
 		 * @return
-		 * @see org.lightcouch.ViewResult.Rows#getKey()
 		 */
 		public K getKey() {
 			return rows.getKey();
@@ -164,7 +141,6 @@ public class ViewResult<K, V, T> {
 
 		/**
 		 * @return
-		 * @see org.lightcouch.ViewResult.Rows#getValue()
 		 */
 		public V getValue() {
 			return rows.getValue();
@@ -172,23 +148,14 @@ public class ViewResult<K, V, T> {
 
 		/**
 		 * @return
-		 * @see org.lightcouch.ViewResult.Rows#getDoc()
 		 */
 		public T getDoc() {
 			return rows.getDoc();
 		}
 
-		/**
-		 * @return
-		 * @see java.lang.Object#hashCode()
-		 */
-		public int hashCode() {
-			return rows.hashCode();
-		}
 
 		/**
 		 * @param id
-		 * @see org.lightcouch.ViewResult.Rows#setId(java.lang.String)
 		 */
 		public void setId(String id) {
 			rows.setId(id);
@@ -196,7 +163,6 @@ public class ViewResult<K, V, T> {
 
 		/**
 		 * @param key
-		 * @see org.lightcouch.ViewResult.Rows#setKey(java.lang.Object)
 		 */
 		public void setKey(K key) {
 			rows.setKey(key);
@@ -204,7 +170,6 @@ public class ViewResult<K, V, T> {
 
 		/**
 		 * @param value
-		 * @see org.lightcouch.ViewResult.Rows#setValue(java.lang.Object)
 		 */
 		public void setValue(V value) {
 			rows.setValue(value);
@@ -212,7 +177,6 @@ public class ViewResult<K, V, T> {
 
 		/**
 		 * @param doc
-		 * @see org.lightcouch.ViewResult.Rows#setDoc(java.lang.Object)
 		 */
 		public void setDoc(T doc) {
 			rows.setDoc(doc);
@@ -220,13 +184,15 @@ public class ViewResult<K, V, T> {
 
 		/**
 		 * @return
-		 * @see org.lightcouch.ViewResult.Rows#toString()
 		 */
 		public String toString() {
 			return rows.toString();
 		}
 		
-		
+		org.lightcouch.ViewResult<K,V,T>.Rows getrows() {
+			return rows ;
+
+		}
 		
 	}
 	

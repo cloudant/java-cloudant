@@ -31,7 +31,7 @@ public class ApiKey {
 		return password;
 	}
 
-	/* (non-Javadoc)
+	/** (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
