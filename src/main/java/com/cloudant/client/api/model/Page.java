@@ -1,4 +1,4 @@
-package com.cloudant;
+package com.cloudant.client.api.model;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ import org.lightcouch.View;
 public class Page<T> {
 	private org.lightcouch.Page<T> page ;
 	
-	Page(org.lightcouch.Page<T> page){
+	public Page(org.lightcouch.Page<T> page){
 		this.page = page ;
 	}
 

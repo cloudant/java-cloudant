@@ -16,7 +16,9 @@
 
 package org.lightcouch;
 
-import static org.lightcouch.internal.CouchDbUtil.*;
+import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static org.lightcouch.internal.CouchDbUtil.close;
+import static org.lightcouch.internal.CouchDbUtil.getAsString;
 import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.io.InputStream;

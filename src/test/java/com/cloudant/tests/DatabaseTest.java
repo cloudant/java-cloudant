@@ -10,13 +10,12 @@ import java.util.Properties;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.lightcouch.Replication;
 
-import com.cloudant.ApiKey;
-import com.cloudant.CloudantClient;
-import com.cloudant.Database;
-import com.cloudant.Database.Permissions;
-import com.cloudant.Shard;
+import com.cloudant.client.api.CloudantClient;
+import com.cloudant.client.api.Database;
+import com.cloudant.client.api.Database.Permissions;
+import com.cloudant.client.api.model.ApiKey;
+import com.cloudant.client.api.model.Shard;
 
 public class DatabaseTest {
 
@@ -32,7 +31,7 @@ public class DatabaseTest {
 		account = new CloudantClient(cloudantaccount,userName,password);
 		
 		// replciate the animals db for search tests
-		com.cloudant.Replication r = account.replication();
+		com.cloudant.client.api.Replication r = account.replication();
 		r.source("https://examples.cloudant.com/animaldb");
 		r.createTarget(true);
 		r.target("https://"+ userName + ":" + password + "@" + cloudantaccount +  ".cloudant.com/animaldb");
@@ -79,16 +78,16 @@ public class DatabaseTest {
 	public void QuorumTests() {
 		
 		db.save(new Animal("human"), 2);
-		Animal h = db.find(Animal.class, "human", new com.cloudant.Params().readQuorum(2));
+		Animal h = db.find(Animal.class, "human", new com.cloudant.client.api.model.Params().readQuorum(2));
 		assertNotNull(h);
 		assertEquals("human", h.getId());
 		
 		db.update(h.setClass("inhuman"), 2);
-		h = db.find(Animal.class, "human", new com.cloudant.Params().readQuorum(2));
+		h = db.find(Animal.class, "human", new com.cloudant.client.api.model.Params().readQuorum(2));
 		assertEquals("inhuman", h.getclass());
 		
 		db.post(new Animal("test"), 2);
-		h = db.find(Animal.class, "test", new com.cloudant.Params().readQuorum(3));
+		h = db.find(Animal.class, "test", new com.cloudant.client.api.model.Params().readQuorum(3));
 		assertEquals("test", h.getId());
 		
 		

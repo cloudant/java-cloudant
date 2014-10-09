@@ -16,9 +16,9 @@
 
 package org.lightcouch;
 
-import com.google.gson.annotations.SerializedName;
-
 import java.util.List;
+
+import com.google.gson.annotations.SerializedName;
 
 /**
  * Holds the result of a replication request, along with previous sessions history.

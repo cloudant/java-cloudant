@@ -1,4 +1,4 @@
-package com.cloudant;
+package com.cloudant.client.api.model;
 
 /**
  * Encapsulates a ApiKey response from Cloudant

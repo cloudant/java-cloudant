@@ -20,10 +20,10 @@ import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static org.lightcouch.internal.CouchDbUtil.close;
 import static org.lightcouch.internal.CouchDbUtil.generateUUID;
 import static org.lightcouch.internal.CouchDbUtil.getAsString;
+import static org.lightcouch.internal.CouchDbUtil.getResponse;
 import static org.lightcouch.internal.CouchDbUtil.getResponseList;
 import static org.lightcouch.internal.CouchDbUtil.getStream;
 import static org.lightcouch.internal.CouchDbUtil.streamToString;
-import static org.lightcouch.internal.CouchDbUtil.getResponse;
 import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.io.InputStream;

@@ -16,7 +16,7 @@ Maven
 ~~~ xml
 
   <dependency>
-  <groupId>com.cloudant</groupId>
+  <groupId>com.cloudant.client.api</groupId>
   <artifactId>cloudant</artifactId> 
   <version>0.0.9</version>
 </dependency>
@@ -35,7 +35,7 @@ Alternately download the dependencies
 
 Now it's time to begin doing real work with Cloudant and Java
 
-Initialize your Cloudant connection by constructing a *com.cloudant.CloudantClient* supplying the *account* to connect to along with *userName or Apikey* and  *password*
+Initialize your Cloudant connection by constructing a *com.cloudant.client.api.CloudantClient* supplying the *account* to connect to along with *userName or Apikey* and  *password*
 
 ~~~ java
 String password = System.getProperty("cloudant_password");
@@ -57,7 +57,7 @@ Output:
     Server version = 1.0.2
     All my databases: example_db, jasons_stuff, scores
 
-When you instaniate a *com.cloudant.CloudantClient*, you are authenticating with cloudant using the [cookie authentication](http://guide.couchdb.org/editions/1/en/security.html#cookies) functionality 
+When you instaniate a *com.cloudant.client.api.CloudantClient*, you are authenticating with cloudant using the [cookie authentication](http://guide.couchdb.org/editions/1/en/security.html#cookies) functionality 
 
 ### Security Note
 
@@ -117,7 +117,7 @@ If you run this example, you will see:
 	- [CloudantClient.createDB(name)]()
 	- [CloudantClient.database(name, create)]()
 	- [CloudantClient.deleteDB(name, confirmFlag)]()
-	- [CloudantClient.getAllDbs()](#com.cloudant.CloudantClient.getAllDbs())
+	- [CloudantClient.getAllDbs()](#com.cloudant.client.api.CloudantClient.getAllDbs())
 	- [CloudantClient.getActiveTasks()]()
 	- [CloudantClient.getMembership()]()
 	- [CloudantClient.replicator()](#Cloudantdbreplicatesource-target-opts-callback)
@@ -161,7 +161,7 @@ If you run this example, you will see:
 
 ### Initialization
 
-To use Cloudant, initialize your Cloudant connection by constructing a *com.cloudant.CloudantClient* supplying the *account* to connect to along with *userName or Apikey* and  *password* (And see the [security note](#security-note) about placing your password into your source code.
+To use Cloudant, initialize your Cloudant connection by constructing a *com.cloudant.client.api.CloudantClient* supplying the *account* to connect to along with *userName or Apikey* and  *password* (And see the [security note](#security-note) about placing your password into your source code.
 
 ~~~ java
 String password = System.getProperty("cloudant_password");
@@ -209,7 +209,7 @@ Next, set access roles for this API key:
 
 Once CloudantClient is initialized without errors, the returned object is representing your connection to the server. To work with databases, use these database functions. (To work with data *inside* the databases, see below.)
 
-### com.cloudant.CloudantClient.createDB(name)
+### com.cloudant.client.api.CloudantClient.createDB(name)
 
 Create a Cloudant database with the given `name`.
 
@@ -218,7 +218,7 @@ client.createDB("alice");
 
 ~~~
 
-### com.cloudant.CloudantClient.database(name,create)
+### com.cloudant.client.api.CloudantClient.database(name,create)
 
 Get a Database reference
 
@@ -228,7 +228,7 @@ System.out.println("Database Name:" + db.info().getDbName() );
  
 ~~~
 
-### com.cloudant.CloudantClient.deleteDB(name, confirmDelete)
+### com.cloudant.client.api.CloudantClient.deleteDB(name, confirmDelete)
 
 Destroy database named `name`.
 
@@ -237,7 +237,7 @@ client.deleteDB("alice","delete database");
 
 ~~~
 
-### com.cloudant.CloudantClient.getAllDbs()
+### com.cloudant.client.api.CloudantClient.getAllDbs()
 
 List all the databases in Cloudant server.
 
@@ -250,7 +250,7 @@ for ( String db : databases ) {
 
 ~~~
 
-### com.cloudant.CloudantClient.replication() 
+### com.cloudant.client.api.CloudantClient.replication() 
 
 Replicates `source` to `target`. `target`
 must exist, add `createTarget(true)` to create it prior to
@@ -266,7 +266,7 @@ List<ReplicationHistory> histories = result.getHistories();
 
 ~~~
 
-### com.cloudant.Database.changes().getChanges()
+### com.cloudant.client.api.Database.changes().getChanges()
 
 Asks for the changes feed on the specified database. `includeDocs(true)` and `limit(1)` sets additional properties to the query string.
 
@@ -286,7 +286,7 @@ for (Row row : rows) {
 
 ~~~
 
-### com.cloudant.Database.changes().continuousChanges()
+### com.cloudant.client.api.Database.changes().continuousChanges()
 
 Asks for the continuous changes feed on the specified database. `since(since)`, `includeDocs(true)` and `limit(1)` sets additional properties to the query string.
 
@@ -309,7 +309,7 @@ while (changes.hasNext()) {
 
 
 
-### com.cloudant.CloudantClient.executeRequest()
+### com.cloudant.client.api.CloudantClient.executeRequest()
 
 This API enables extending Cloudant internal API by allowing a user-defined raw HTTP request to execute against a cloudant client. 
 ~~~ java
@@ -330,24 +330,24 @@ An object containing the Cloudant configurations, possible keys are:
 
 ## Document functions
 
-Once you run [com.cloudant.CloudantClient.database(name,create)](#cloudant-db-use-db-name), use the returned object to work with documents in the database.
+Once you run [com.cloudant.client.api.CloudantClient.database(name,create)](#cloudant-db-use-db-name), use the returned object to work with documents in the database.
 
-### com.cloudant.Database.save(pojo)
+### com.cloudant.client.api.Database.save(pojo)
 
 Insert `pojo` in the database. The parameter (an object) is the pojo. 
 
 ~~~ java
-com.cloudant.Database db = dbClient.database("alice", true);
+com.cloudant.client.api.Database db = dbClient.database("alice", true);
 Foo foo = new Foo(); 
 Response response = db.save(foo); 
 
 ~~~
 
-### com.cloudant.Database.save(map)
+### com.cloudant.client.api.Database.save(map)
 Insert `map` in the database. The parameter (map) is the key value presentation of a document.
 
 ~~~ java
-com.cloudant.Database db = dbClient.database("alice", true);
+com.cloudant.client.api.Database db = dbClient.database("alice", true);
 Map<String, Object> map = new HashMap<>();
 map.put("_id", "test-doc-id-1");
 map.put("title", "test-doc");
@@ -356,10 +356,10 @@ Response response =db.save(map);
 ~~~ 
 
 
-### com.cloudant.Database.save(jsonObject)
+### com.cloudant.client.api.Database.save(jsonObject)
 
 ~~~ java
-com.cloudant.Database db = dbClient.database("alice", true);
+com.cloudant.client.api.Database db = dbClient.database("alice", true);
 JsonObject json = new JsonObject();
 json.addProperty("_id", "test-doc-id-2");
 json.add("json-array", new JsonArray());
@@ -367,48 +367,48 @@ Response response =db.save(json);
 
 ~~~ 
 
-### com.cloudant.Database.find(class,doc-id)
+### com.cloudant.client.api.Database.find(class,doc-id)
 
 Retrieve the pojo from database by providing `doc_id`  .
 
 ~~~ java
-com.cloudant.Database db = dbClient.database("alice", true);
+com.cloudant.client.api.Database db = dbClient.database("alice", true);
 Foo foo = db.find(Foo.class, "doc-id");
 
 ~~~
 
-### com.cloudant.Database.find(class,doc-id,rev-id)
+### com.cloudant.client.api.Database.find(class,doc-id,rev-id)
 Retrieve the pojo from database by providing `doc_id`and `rev-id`  .
 
 ~~~ java
-com.cloudant.Database db = dbClient.database("alice", true);
+com.cloudant.client.api.Database db = dbClient.database("alice", true);
 Foo foo = db.find(Foo.class, "doc-id", "rev-id");
 
 ~~~
 
-### com.cloudant.Database.contains(doc-id)
+### com.cloudant.client.api.Database.contains(doc-id)
 returns true if the document exists with given `doc-id`
 
 ~~~ java
 
-com.cloudant.Database db = dbClient.database("alice", true);
+com.cloudant.client.api.Database db = dbClient.database("alice", true);
 boolean found = db.contains("doc-id");
 ~~~
 
-### com.cloudant.Database.remove(object)
+### com.cloudant.client.api.Database.remove(object)
 
 The API removes the `object` from database. The object should contain `_id` and `_rev` .
 
 ~~~ java
 
-com.cloudant.Database db = dbClient.database("alice", true);
+com.cloudant.client.api.Database db = dbClient.database("alice", true);
 Response response = db.remove(foo);
 ~~~
 
-### com.cloudant.Database.remove(doc-id,rev-id)
+### com.cloudant.client.api.Database.remove(doc-id,rev-id)
 ~~~ java
 
-com.cloudant.Database db = dbClient.database("alice", true);
+com.cloudant.client.api.Database db = dbClient.database("alice", true);
 Response response = db.remove("doc-id", "doc-rev");
 ~~~
 ## Bulk Documents
@@ -443,11 +443,11 @@ List<Foo> docs = dbClient.view("_all_docs")
 ## Attachment Functions
 
 ### Inline attachment
- com.cloudant.Attachment represents an inline attachment enclosed in a document.
+ com.cloudant.client.api.model.Attachment represents an inline attachment enclosed in a document.
 
 The base64 data of an attachment may be encoded utilizing the included dependency on Apache Codec Base64.encodeBase64String(bytes).
 
-Model classes that extend com.cloudant.Document inherit the support for inline attachments. 
+Model classes that extend com.cloudant.client.api.model.Document inherit the support for inline attachments. 
 ~~~ java
 
 Attachment attachment = new Attachment();
@@ -612,7 +612,7 @@ DesignDocument designDoc = db.design().getFromDesk("views101");
 db.design().synchronizeWithDb(designDoc);
 ~~~
 
-To query this index, create instance of `com.cloudant.Search`  by calling the database `.search()` method. The argument of `.search()` method is the design document name. The other criterion can be set by calling different methods on `search` object.
+To query this index, create instance of `com.cloudant.client.api.Search`  by calling the database `.search()` method. The argument of `.search()` method is the design document name. The other criterion can be set by calling different methods on `search` object.
 
 ~~~ java
 
@@ -648,7 +648,7 @@ CloudantClient cookieBasedClient = new
 
 ### Advanced Configuration
 
-Besides the account and password options, you can add an optional `com.cloudant.ConnectOptions` value, which will initialize Request (the underlying HTTP library) as you need it.
+Besides the account and password options, you can add an optional `com.cloudant.client.api.model.ConnectOptions` value, which will initialize Request (the underlying HTTP library) as you need it.
 
 ~~~ java
 ConnectOptions connectOptions = new ConnectOptions()

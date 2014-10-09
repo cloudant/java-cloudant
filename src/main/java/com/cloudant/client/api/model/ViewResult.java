@@ -1,4 +1,4 @@
-package com.cloudant;
+package com.cloudant.client.api.model;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ public class ViewResult<K, V, T> {
 		viewResult = new org.lightcouch.ViewResult<>();
 	}
 	
-	ViewResult(org.lightcouch.ViewResult<K, V, T> viewResult){
+	public ViewResult(org.lightcouch.ViewResult<K, V, T> viewResult){
 		this.viewResult = viewResult ;
 	}
 

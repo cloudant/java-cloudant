@@ -1,4 +1,4 @@
-package com.cloudant;
+package com.cloudant.client.api;
 
 import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static org.lightcouch.internal.CouchDbUtil.close;
@@ -23,6 +23,11 @@ import org.lightcouch.Response;
 import org.lightcouch.View;
 import org.lightcouch.internal.CouchDbUtil;
 
+import com.cloudant.client.api.model.ApiKey;
+import com.cloudant.client.api.model.ConnectOptions;
+import com.cloudant.client.api.model.IndexField;
+import com.cloudant.client.api.model.Membership;
+import com.cloudant.client.api.model.Task;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -263,9 +268,9 @@ public class CloudantClient {
 	 * Provides access to Cloudant <tt>replication</tt> APIs.
 	 * @see Replication
 	 */
-	public com.cloudant.Replication replication() {
+	public com.cloudant.client.api.Replication replication() {
 		Replication couchDbReplication = client.replication();
-		com.cloudant.Replication replication = new com.cloudant.Replication(couchDbReplication);
+		com.cloudant.client.api.Replication replication = new com.cloudant.client.api.Replication(couchDbReplication);
 		return replication;
 	}
 
@@ -274,9 +279,9 @@ public class CloudantClient {
 	 * Provides access to Cloudant <tt>replication</tt> APIs.
 	 * @see Replication
 	 */
-	public com.cloudant.Replicator replicator() {
+	public com.cloudant.client.api.Replicator replicator() {
 		Replicator couchDbReplicator = client.replicator();
-		com.cloudant.Replicator replicator = new com.cloudant.Replicator(couchDbReplicator);
+		com.cloudant.client.api.Replicator replicator = new com.cloudant.client.api.Replicator(couchDbReplicator);
 		return replicator ;
 	}
 

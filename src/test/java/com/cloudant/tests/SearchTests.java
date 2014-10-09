@@ -13,13 +13,12 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.lightcouch.DesignDocument;
-import org.lightcouch.Replication;
 
-import com.cloudant.CloudantClient;
-import com.cloudant.Database;
-import com.cloudant.Search;
-import com.cloudant.SearchResult;
-import com.cloudant.SearchResult.SearchResultRows;
+import com.cloudant.client.api.CloudantClient;
+import com.cloudant.client.api.Database;
+import com.cloudant.client.api.Search;
+import com.cloudant.client.api.model.SearchResult;
+import com.cloudant.client.api.model.SearchResult.SearchResultRows;
 
 public class SearchTests {
 
@@ -36,7 +35,7 @@ public class SearchTests {
 		account = new CloudantClient(cloudantaccount,userName,password);
 		
 		// replciate the animals db for search tests
-		com.cloudant.Replication r = account.replication();
+		com.cloudant.client.api.Replication r = account.replication();
 		r.source("https://examples.cloudant.com/animaldb");
 		r.createTarget(true);
 		r.target("https://"+ userName + ":" + password + "@" + cloudantaccount +  ".cloudant.com/animaldb");

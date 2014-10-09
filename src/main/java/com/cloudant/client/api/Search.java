@@ -1,4 +1,4 @@
-package com.cloudant;
+package com.cloudant.client.api;
 
 import static org.lightcouch.internal.CouchDbUtil.JsonToObject;
 import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.methods.HttpGet;
 import org.lightcouch.internal.URIBuilder;
 
+import com.cloudant.client.api.model.SearchResult;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

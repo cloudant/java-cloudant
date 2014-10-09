@@ -1,8 +1,9 @@
-package com.cloudant;
+package com.cloudant.client.api;
 
 
 
-import com.cloudant.ChangesResult.Row;
+import com.cloudant.client.api.model.ChangesResult;
+import com.cloudant.client.api.model.ChangesResult.Row;
 /**
  * <p>Contains the Change Notifications API, supports <i>normal</i> and <i>continuous</i> feed Changes. 
  * <h3>Usage Example:</h3>

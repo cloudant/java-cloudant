@@ -1,11 +1,7 @@
-package com.cloudant;
+package com.cloudant.client.api.model;
 
 import java.util.ArrayList;
 import java.util.List;
-
-
-
-
 
 import org.lightcouch.Changes;
 
@@ -25,7 +21,7 @@ public class ChangesResult {
 		this.changesResult = new org.lightcouch.ChangesResult();
 	}
 	
-	ChangesResult(org.lightcouch.ChangesResult changesResult){
+	public ChangesResult(org.lightcouch.ChangesResult changesResult){
 		this.changesResult = changesResult ;
 	}
 

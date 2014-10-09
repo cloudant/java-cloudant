@@ -17,7 +17,14 @@
 package org.lightcouch;
 
 import static java.lang.String.format;
-import static org.lightcouch.internal.CouchDbUtil.*;
+import static org.lightcouch.internal.CouchDbUtil.JsonToObject;
+import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static org.lightcouch.internal.CouchDbUtil.close;
+import static org.lightcouch.internal.CouchDbUtil.getAsInt;
+import static org.lightcouch.internal.CouchDbUtil.getAsLong;
+import static org.lightcouch.internal.CouchDbUtil.getStream;
+import static org.lightcouch.internal.CouchDbUtil.listResources;
+import static org.lightcouch.internal.CouchDbUtil.readFile;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;

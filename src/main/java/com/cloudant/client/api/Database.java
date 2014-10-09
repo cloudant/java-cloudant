@@ -1,4 +1,4 @@
-package com.cloudant;
+package com.cloudant.client.api;
 
 import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static org.lightcouch.internal.CouchDbUtil.close;
@@ -13,11 +13,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,10 +40,21 @@ import org.lightcouch.Response;
 import org.lightcouch.View;
 import org.lightcouch.internal.GsonHelper;
 
+import com.cloudant.client.api.model.DbInfo;
+import com.cloudant.client.api.model.FindByIndexOptions;
+import com.cloudant.client.api.model.Index;
+import com.cloudant.client.api.model.IndexField;
+import com.cloudant.client.api.model.IndexField.SortOrder;
+import com.cloudant.client.api.model.Params;
+import com.cloudant.client.api.model.Shard;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
@@ -271,9 +286,9 @@ public class Database {
 	 * Provides access to CouchDB <tt>View</tt> APIs.
 	 * @see View
 	 */
-	public com.cloudant.View view(String viewId) {
+	public com.cloudant.client.api.View view(String viewId) {
 		 View couchDbview = db.view(viewId);
-		 com.cloudant.View view = new com.cloudant.View();
+		 com.cloudant.client.api.View view = new com.cloudant.client.api.View();
 		 view.setView(couchDbview);
 		 return view ;
 	}
@@ -284,9 +299,9 @@ public class Database {
 	 * Provides access to <tt>Change Notifications</tt> API.
 	 * @see Changes
 	 */
-	public com.cloudant.Changes changes() {
+	public com.cloudant.client.api.Changes changes() {
 		Changes couchDbChanges = db.changes();
-		com.cloudant.Changes changes = new com.cloudant.Changes(couchDbChanges);
+		com.cloudant.client.api.Changes changes = new com.cloudant.client.api.Changes(couchDbChanges);
 		return changes ;
 	}
 
@@ -395,9 +410,9 @@ public class Database {
 	 * @throws DocumentConflictException If a conflict is detected during the save.
 	 * @return {@link Response}
 	 */
-	public com.cloudant.Response save(Object object) {
+	public com.cloudant.client.api.model.Response save(Object object) {
 		Response couchDbResponse = db.save(object);
-		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 		return response ; 
 	}
 
@@ -409,9 +424,9 @@ public class Database {
 	 * @throws DocumentConflictException If a conflict is detected during the save.
 	 * @return {@link Response}
 	 */
-	public com.cloudant.Response save(Object object, int writeQuorum) {
+	public com.cloudant.client.api.model.Response save(Object object, int writeQuorum) {
 		Response couchDbResponse = client.put(getDBUri(), object, true, writeQuorum, getGson());
-		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 		return response ;
 	}
 	
@@ -422,9 +437,9 @@ public class Database {
 	 * @param object The object to save
 	 * @return {@link Response}
 	 */
-	public com.cloudant.Response post(Object object) {
+	public com.cloudant.client.api.model.Response post(Object object) {
 		Response couchDbResponse =db.post(object);
-		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 		return response ;
 	}
 	
@@ -435,14 +450,14 @@ public class Database {
 	 * @param writeQuorum the write Quorum
 	 * @return {@link Response}
 	 */
-	public com.cloudant.Response post(Object object, int writeQuorum) {
+	public com.cloudant.client.api.model.Response post(Object object, int writeQuorum) {
 		assertNotEmpty(object, "object");
 		HttpResponse response = null;
 		try { 
 			URI uri = buildUri(getDBUri()).query("w",writeQuorum).build();
 			response = client.executeRequest(createPost(uri, getGson().toJson(object),"application/json"));
 			Response couchDbResponse =getResponse(response,Response.class, getGson());
-			com.cloudant.Response cloudantResponse = new com.cloudant.Response(couchDbResponse);
+			com.cloudant.client.api.model.Response cloudantResponse = new com.cloudant.client.api.model.Response(couchDbResponse);
 			return cloudantResponse ;
 		} finally {
 			close(response);
@@ -467,9 +482,9 @@ public class Database {
 	 * @throws DocumentConflictException If a conflict is detected during the update.
 	 * @return {@link Response}
 	 */
-	public com.cloudant.Response update(Object object) {
+	public com.cloudant.client.api.model.Response update(Object object) {
 		Response couchDbResponse = db.update(object);
-		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 		return response ;
 	}
 
@@ -480,9 +495,9 @@ public class Database {
 	 * @throws DocumentConflictException If a conflict is detected during the update.
 	 * @return {@link Response}
 	 */
-	public com.cloudant.Response update(Object object, int writeQuorum) {
+	public com.cloudant.client.api.model.Response update(Object object, int writeQuorum) {
 		Response couchDbResponse =client.put(getDBUri(), object, false, writeQuorum,getGson());
-		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 		return response ;
 	}
 
@@ -494,9 +509,9 @@ public class Database {
 	 * @throws NoDocumentException If the document is not found in the database.
 	 * @return {@link Response}
 	 */
-	public com.cloudant.Response remove(Object object) {
+	public com.cloudant.client.api.model.Response remove(Object object) {
 		Response couchDbResponse = db.remove(object);
-		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 		return response ; 
 	}
 
@@ -509,9 +524,9 @@ public class Database {
 	 * @throws NoDocumentException If the document is not found in the database.
 	 * @return {@link Response}
 	 */
-	public com.cloudant.Response remove(String id, String rev) {
+	public com.cloudant.client.api.model.Response remove(String id, String rev) {
 		Response couchDbResponse =  db.remove(id, rev);
-		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 		return response ;  
 	}
 
@@ -522,11 +537,11 @@ public class Database {
 	 * @param objects The {@link List} of objects.
 	 * @return {@code List<Response>} Containing the resulted entries.
 	 */
-	public List<com.cloudant.Response> bulk(List<?> objects) {
+	public List<com.cloudant.client.api.model.Response> bulk(List<?> objects) {
 		List<Response> couchDbResponseList =  db.bulk(objects, false);
-		List<com.cloudant.Response> cloudantResponseList = new ArrayList<>();
+		List<com.cloudant.client.api.model.Response> cloudantResponseList = new ArrayList<>();
 		for(Response couchDbResponse : couchDbResponseList){
-			com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+			com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 			cloudantResponseList.add(response);
 		}
 		return cloudantResponseList ;
@@ -540,10 +555,10 @@ public class Database {
 	 * @param contentType The attachment "Content-Type".
 	 * @return {@link Response}
 	 */
-	public com.cloudant.Response saveAttachment(InputStream in, String name,
+	public com.cloudant.client.api.model.Response saveAttachment(InputStream in, String name,
 			String contentType) {
 		Response couchDbResponse =  db.saveAttachment(in, name, contentType);
-		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 		return response ;   
 	}
 
@@ -561,10 +576,10 @@ public class Database {
 	 * @throws DocumentConflictException 
 	 * @return {@link Response}
 	 */
-	public com.cloudant.Response saveAttachment(InputStream in, String name,
+	public com.cloudant.client.api.model.Response saveAttachment(InputStream in, String name,
 			String contentType, String docId, String docRev) {
 		Response couchDbResponse =  db.saveAttachment(in, name, contentType, docId, docRev);
-		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 		return response ;   
 	}
 
@@ -632,9 +647,7 @@ public class Database {
 	 * @return {@link CouchDbInfo} Containing the DB info.
 	 */
 	public DbInfo info() {
-		CouchDbInfo couchDbInfo = db.info();
-		DbInfo info = new DbInfo(couchDbInfo);
-		return info ;
+		return client.get(buildUri(getDBUri()).build(), DbInfo.class);
 	}
 
 
@@ -796,3 +809,60 @@ public class Database {
 		return client.executeRequest(request);
 	}
 }
+
+class ShardDeserializer implements JsonDeserializer<List<Shard>> {
+
+	@Override
+	public List<Shard> deserialize(JsonElement json, Type typeOfT,
+			JsonDeserializationContext context) throws JsonParseException {
+		
+		final List<Shard> shards = new ArrayList<Shard>();
+		
+		final JsonObject jsonObject = json.getAsJsonObject();
+		Set<Map.Entry<String,JsonElement>> shardsObj = jsonObject.get("shards").getAsJsonObject().entrySet();
+		
+		for ( Entry<String,JsonElement> entry : shardsObj ) {
+			String range = entry.getKey();
+			List<String> nodeNames = context.deserialize(entry.getValue(), new TypeToken<List<String>>(){}.getType());
+			shards.add( new Shard(range,nodeNames) );
+		}
+		
+		return shards;
+	}
+  }
+
+
+class IndexDeserializer implements JsonDeserializer<List<Index>> {
+
+	@Override
+	public List<Index> deserialize(JsonElement json, Type typeOfT,
+			JsonDeserializationContext context) throws JsonParseException {
+		
+		final List<Index> indices = new ArrayList<Index>();
+		
+		final JsonObject jsonObject = json.getAsJsonObject();
+		JsonArray indArray = jsonObject.get("indexes").getAsJsonArray();
+		for ( int i = 0; i < indArray.size(); i++ ) {
+			JsonObject ind = indArray.get(i).getAsJsonObject();
+			String ddoc = null;
+			if ( !ind.get("ddoc").isJsonNull() ) { // ddoc is optional
+				ddoc = ind.get("ddoc").getAsString();
+			}
+			Index idx = new Index(ddoc,ind.get("name").getAsString(),
+								ind.get("type").getAsString());
+			JsonArray fldArray = ind.get("def").getAsJsonObject().get("fields").getAsJsonArray();
+			for ( int j = 0; j < fldArray.size(); j++ ) {
+				Set<Map.Entry<String,JsonElement>>  fld = fldArray.get(j).getAsJsonObject().entrySet();
+				for ( Entry<String,JsonElement> entry : fld ) {
+					idx.addIndexField(entry.getKey(),
+								SortOrder.valueOf(entry.getValue().getAsString())
+								);
+				}
+			}//end fldArray
+			indices.add(idx);
+			
+		}// end indexes
+		
+		return indices;
+	}
+  }
