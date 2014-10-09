@@ -14,11 +14,13 @@ This is the official Cloudant library for Java
 
 Maven
 ~~~ xml
+
   <dependency>
   <groupId>com.cloudant</groupId>
   <artifactId>cloudant</artifactId> 
   <version>0.0.9</version>
 </dependency>
+
 ~~~
 
 Alternately download the dependencies  
@@ -111,11 +113,11 @@ If you run this example, you will see:
 - [Initialization](#initialization)
 - [Authorization](#authorization)
 - [Server Functions](#server-functions)
-  - [CloudantClient.getServerVersion()]()
+	- [CloudantClient.getServerVersion()]()
 	- [CloudantClient.createDB(name)]()
 	- [CloudantClient.database(name, create)]()
 	- [CloudantClient.deleteDB(name, confirmFlag)]()
-	- [CloudantClient.getAllDbs()]()
+	- [CloudantClient.getAllDbs()](#com.cloudant.CloudantClient.getAllDbs())
 	- [CloudantClient.getActiveTasks()]()
 	- [CloudantClient.getMembership()]()
 	- [CloudantClient.replicator()](#Cloudantdbreplicatesource-target-opts-callback)
@@ -232,6 +234,7 @@ Destroy database named `name`.
 
 ~~~ java
 client.deleteDB("alice","delete database");
+
 ~~~
 
 ### com.cloudant.CloudantClient.getAllDbs()
@@ -244,452 +247,349 @@ System.out.println("All my databases : ");
 for ( String db : databases ) {
 	System.out.println(db);
 }
+
 ~~~
 
-### cloudant.db.replicate(source, target, [opts], [callback])
+### com.cloudant.CloudantClient.replication() 
 
-Replicates `source` to `target` with options `opts`. `target`
-must exist, add `create_target:true` to `opts` to create it prior to
+Replicates `source` to `target`. `target`
+must exist, add `createTarget(true)` to create it prior to
 replication.
 
-~~~ js
-cloudant.db.replicate('alice', 'http://admin:password@otherhost.com:5984/alice',
-                  { create_target:true }, function(err, body) {
-    if (!err)
-      console.log(body)
-})
+~~~ java
+ReplicationResult result = client.replication()
+					.createTarget(true)
+					.source(db1.getDBUri().toString())
+					.target(db2.getDBUri().toString())
+					.trigger();
+List<ReplicationHistory> histories = result.getHistories();				
+
 ~~~
 
-### cloudant.db.changes(name, [params], [callback])
+### com.cloudant.Database.changes().getChanges()
 
-Asks for the changes feed of `name`, `params` contains additions
-to the query string.
+Asks for the changes feed on the specified database. `includeDocs(true)` and `limit(1)` sets additional properties to the query string.
 
-~~~ js
-cloudant.db.changes('alice', function(err, body) {
-  if (!err)
-    console.log(body)
-})
+~~~ java
+ChangesResult changes = db.changes()
+				.includeDocs(true)
+				.limit(1)
+				.getChanges();
+		
+List<ChangesResult.Row> rows = changes.getResults();
+		
+for (Row row : rows) {
+	List<ChangesResult.Row.Rev> revs = row.getChanges();
+	String docId = row.getId();
+	JsonObject doc = row.getDoc();
+}
+
 ~~~
 
-### cloudant.db.follow(name, [params], [callback])
+### com.cloudant.Database.changes().continuousChanges()
 
-Use [Follow][follow] to create a solid changes feed. Please consult the Follow documentation for more information as this is a very complete api on it's own.
+Asks for the continuous changes feed on the specified database. `since(since)`, `includeDocs(true)` and `limit(1)` sets additional properties to the query string.
 
-~~~ js
-var feed = db.follow({since: "now"})
-feed.on('change', function (change) {
-  console.log("change: ", change);
-})
-feed.follow();
-process.nextTick(function () {
-  db.insert({"bar": "baz"}, "bar");
-});
+~~~ java
+CouchDbInfo dbInfo = db.info();
+String since = dbInfo.getUpdateSeq();
+Changes changes = db.changes()
+				.includeDocs(true)
+				.since(since)
+				.heartBeat(30000)
+				.continuousChanges();
+
+while (changes.hasNext()) {
+	ChangesResult.Row feed = changes.next();
+	final JsonObject feedObject = feed.getDoc();
+	final String docId = feed.getId();
+	changes.stop();
+}
 ~~~
 
-### cloudant.db.use(name)
 
-Create a new database object for operating within the scope of a specific database.
 
-~~~ js
-var alice = cloudant.db.use('alice')
-alice.insert({ crazy: true }, 'rabbit', function(err, body) {
-  // do something
-})
-~~~
+### com.cloudant.CloudantClient.executeRequest()
 
-### cloudant.request(opts, [callback])
+This API enables extending Cloudant internal API by allowing a user-defined raw HTTP request to execute against a cloudant client. 
+~~~ java
 
-Make a custom request to Cloudant, the available `opts` are:
+HttpHead head = new HttpHead(dbClient.getDBUri() + "doc-id");
+HttpResponse response = dbClient.executeRequest(head);
+String revision = response.getFirstHeader("ETAG").getValue();
+HttpClientUtils.closeQuietly(response); 
 
-* `opts.db` – the database name
-* `opts.method` – the http method, defaults to `get`
-* `opts.path` – the full path of the request, overrides `opts.doc` and
-  `opts.att`
-* `opts.doc` – the document name
-* `opts.att` – the attachment name
-* `opts.params` – query string parameters, appended after any existing `opts.path`, `opts.doc`, or `opts.att`
-* `opts.content_type` – the content type of the request, default to `json`
-* `opts.headers` – additional http headers, overrides existing ones
-* `opts.body` – the document or attachment body
-* `opts.encoding` – the encoding for attachments
-* `opts.multipart` – array of objects for multipart request
-
-### cloudant.config
+~~~ 
+### org.lightcouch.CouchDbConfig
 
 An object containing the Cloudant configurations, possible keys are:
 
 * `url` - the Cloudant url
 * `db` - the database name
 
-### cloudant.updates([params], [callback])
-
-Listen to db updates, the available `params` are:
-
-* `params.feed` – Type of feed. Can be one of
- * `longpoll`: Closes the connection after the first event.
- * `continuous`: Send a line of JSON per event. Keeps the socket open until timeout.
- * `eventsource`: Like, continuous, but sends the events in EventSource format.
-* `params.timeout` – Number of seconds until CouchDB closes the connection. Default is 60.
-* `params.heartbeat` – Whether CouchDB will send a newline character (\n) on timeout. Default is true.
-
-### Cloudant.follow_updates([params], [callback])
-
-Uses [follow](https://github.com/iriscouch/follow) to create a solid
-[`_db_updates`](http://docs.couchdb.org/en/latest/api/server/common.html?highlight=db_updates#get--_db_updates) feed.
-please consult follow documentation for more information as this is a very complete api on it's own
-
-~~~js
-var feed = Cloudant.follow_updates({since: "now"})
-feed.on('change', function (change) {
-  console.log("change: ", change)
-})
-feed.follow()
-process.nextTick(function () {
-  cloudant.db.create('alice')
-})
-~~~
 
 ## Document functions
 
-Once you run [cloudant.db.use('db_name')](#cloudant-db-use-db-name), use the returned object to work with documents in the database.
+Once you run [com.cloudant.CloudantClient.database(name,create)](#cloudant-db-use-db-name), use the returned object to work with documents in the database.
 
-### db.insert(doc, doc_id, [callback])
+### com.cloudant.Database.save(pojo)
 
-Insert `doc` in the database. The first parameter (an object) is the document body. The second parameter is the document ID.
+Insert `pojo` in the database. The parameter (an object) is the pojo. 
 
-~~~ js
-var alice = cloudant.use('alice')
-alice.insert({ crazy: true }, 'rabbit', function(err, body) {
-  if (!err)
-    console.log(body)
-})
-~~~
-
-### db.get(doc_id, [params], [callback])
-
-Get `doc_id` from the database with optional query string additions `params`.
-
-~~~ js
-alice.get('rabbit', { revs_info: true }, function(err, body) {
-  if (!err)
-    console.log(body);
-});
-~~~
-
-### db.destroy(doc_id, rev, [callback])
-
-Remove revision `rev` of `doc_id` from the Cloudant database.
-
-~~~ js
-alice.destroy('rabbit', '3-66c01cdf99e84c83a9b3fe65b88db8c0', function(err, body) {
-  if (!err)
-    console.log(body)
-})
-~~~
-
-### db.head(doc_id, [callback])
-
-Same as `get` but lightweight version that returns headers only.
-
-~~~ js
-alice.head('rabbit', function(err, _body, headers) {
-  // In fact, _body is empty.
-
-  if (!err)
-    console.log(headers)
-})
+~~~ java
+com.cloudant.Database db = dbClient.database("alice", true);
+Foo foo = new Foo(); 
+Response response = db.save(foo); 
 
 ~~~
 
-### db.copy(src_doc, dest_doc, opts, [callback])
+### com.cloudant.Database.save(map)
+Insert `map` in the database. The parameter (map) is the key value presentation of a document.
 
-`copy` the contents (and attachments) of a document
-to a new document, or overwrite an existing target document
+~~~ java
+com.cloudant.Database db = dbClient.database("alice", true);
+Map<String, Object> map = new HashMap<>();
+map.put("_id", "test-doc-id-1");
+map.put("title", "test-doc");
+Response response =db.save(map);
 
-~~~ js
-alice.copy('rabbit', 'rabbit2', { overwrite: true }, function(err, _, headers) {
-  if (!err)
-    console.log(headers)
-})
+~~~ 
+
+
+### com.cloudant.Database.save(jsonObject)
+
+~~~ java
+com.cloudant.Database db = dbClient.database("alice", true);
+JsonObject json = new JsonObject();
+json.addProperty("_id", "test-doc-id-2");
+json.add("json-array", new JsonArray());
+Response response =db.save(json); 
+
+~~~ 
+
+### com.cloudant.Database.find(class,doc-id)
+
+Retrieve the pojo from database by providing `doc_id`  .
+
+~~~ java
+com.cloudant.Database db = dbClient.database("alice", true);
+Foo foo = db.find(Foo.class, "doc-id");
+
 ~~~
 
+### com.cloudant.Database.find(class,doc-id,rev-id)
+Retrieve the pojo from database by providing `doc_id`and `rev-id`  .
 
-### db.bulk(docs, [params], [callback])
+~~~ java
+com.cloudant.Database db = dbClient.database("alice", true);
+Foo foo = db.find(Foo.class, "doc-id", "rev-id");
 
-Bulk operations(update/delete/insert) on the database, refer to the
-[Documentation](http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API).
+~~~
 
-### db.list([params], [callback])
+### com.cloudant.Database.contains(doc-id)
+returns true if the document exists with given `doc-id`
+
+~~~ java
+
+com.cloudant.Database db = dbClient.database("alice", true);
+boolean found = db.contains("doc-id");
+~~~
+
+### com.cloudant.Database.remove(object)
+
+The API removes the `object` from database. The object should contain `_id` and `_rev` .
+
+~~~ java
+
+com.cloudant.Database db = dbClient.database("alice", true);
+Response response = db.remove(foo);
+~~~
+
+### com.cloudant.Database.remove(doc-id,rev-id)
+~~~ java
+
+com.cloudant.Database db = dbClient.database("alice", true);
+Response response = db.remove("doc-id", "doc-rev");
+~~~
+## Bulk Documents
+
+Bulk documents API performs two operations: Modify & Fetch for bulk documents. 
+
+### Insert/Update docs 
+
+~~~ java
+
+List<Object> newDocs = new ArrayList<Object>();
+newDocs.add(new Foo());
+newDocs.add(new JsonObject());
+boolean allOrNothing = true;
+List<Response> responses = db.bulk(newDocs, allOrNothing);
+~~~
+
+### Fetch multiple documents
 
 List all the docs in the database with optional query string additions `params`.
 
-~~~ js
-alice.list(function(err, body) {
-  if (!err) {
-    body.rows.forEach(function(doc) {
-      console.log(doc)
-    })
-  }
-})
-~~~
+~~~ java
 
-### db.fetch(doc_ids, [params], [callback])
-
-Bulk fetch of the database documents, `doc_ids` are specified as per
-[CouchDB doc](http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API).
-Additional query string `params` can be specified, `include_docs` is always set
-to `true`.
-
-### db.fetch_revs(doc_ids, [params], [callback])
-
-Bulk fetch of the revisions of the database documents, `doc_ids` are specified as per
-[CouchDB doc](http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API).
-Additional query string `params` can be specified, this is the same method as fetch but
- `include_docs` is not automatically set to `true`.
-
-## Multipart Functions
-
-The multipart functions are for efficiently working with documents and attachments, by using a special feature of HTTP: the "multipart/related" content type. Requests that use multipart/related separate the content into different pieces, with each piece encoded in a different way. In practice, this means sending a JSON document plus binary attachments to Cloudant in a single, efficient, request.
-
-### db.multipart.insert(doc, attachments, doc_id, [callback])
-
-Insert a `doc` together with `attachments` and optional `params`.  Refer to the [CouchDB multipart documentation](http://wiki.apache.org/couchdb/HTTP_Document_API#Multiple_Attachments) for more details.
-
-`attachments` must be an array of objects with `name`, `data` and `content_type` properties. For example:
-
-~~~ js
-var fs = require('fs')
-
-fs.readFile('rabbit.png', function(err, data) {
-  if (!err) {
-    var img = {name:'rabbit.png', content_type:'image/png', data:data}
-    var attachments = [img] // An array with one attachment, the rabbit image
-    alice.multipart.insert({ ears: 2 }, attachments, 'rabbit', function(err, body) {
-      if (!err)
-        console.log(body)
-    })
-  }
-})
-~~~
-
-### db.multipart.get(doc_id, [params], [callback])
-
-Get `doc_id` together with its attachments via `multipart/related` request with optional query string additions
-`params`. Refer to the [doc](http://wiki.apache.org/Cloudant/HTTP_Document_API#Getting_Attachments_With_a_Document) for more details. The multipart response body is a `Buffer`.
-
-~~~ js
-alice.multipart.get('rabbit', function(err, buffer) {
-  if (!err)
-    console.log(buffer.toString())
-})
+List<String> keys = Arrays.asList(new String[]{"doc-id-1", "doc-id-2"});
+List<Foo> docs = dbClient.view("_all_docs")
+					  .includeDocs(true)
+					  .keys(keys)
+					  .query(Foo.class);
+					  
 ~~~
 
 ## Attachment Functions
 
-### db.attachment.insert(doc_id, attname, att, contenttype, [params], [callback])
+### Inline attachment
+ com.cloudant.Attachment represents an inline attachment enclosed in a document.
 
-Inserts an attachment `attname` to `doc_id`. In most cases `params.rev` is required. Refer to the [doc](http://wiki.apache.org/Cloudant/HTTP_Document_API) for more details.
+The base64 data of an attachment may be encoded utilizing the included dependency on Apache Codec Base64.encodeBase64String(bytes).
 
-~~~ js
-var fs = require('fs')
+Model classes that extend com.cloudant.Document inherit the support for inline attachments. 
+~~~ java
 
-fs.readFile('rabbit.png', function(err, data) {
-  if (!err) {
-    alice.attachment.insert('rabbit', 'rabbit.png', data, 'image/png',
-      { rev: '12-150985a725ec88be471921a54ce91452' }, function(err, body) {
-        if (!err)
-          console.log(body)
-    })
-  }
-})
+Attachment attachment = new Attachment();
+attachment.setData(Base64.encodeBase64String("attachment test string".getBytes()));
+attachment.setContentType("text/plain");
+Foo foo = new Foo(); // Foo extends Document
+foo.addAttachment("attachment.txt", attachment);
+db.save(foo);
 ~~~
 
-If you use `null` as the data parameter, then this function returns a writable stream, to which you can pipe the attachment data.
+To retrieve the base64 data of an attachment, include a parameter to the find()
 
-~~~ js
-var fs = require('fs')
+~~~ java
 
-var img_stream = fs.createReadStream('rabbit.png')
-var attachment = alice.attachment.insert('new', 'rabbit.png', null, 'image/png')
-
-img_stream.pipe(attachment)
+Foo foo = db.find(Foo.class, "doc-id", new Params().attachments());
+String attachmentData = foo.getAttachments().get("attachment.txt").getData();
 ~~~
 
-### db.attachment.get(doc_id, attname, [params], [callback])
+### Standalone Attachments
+Standalone attachments could be saved to an existing, or to a new document. The attachment data is provided as `InputStream`
 
-Get `doc_id`'s attachment `attname` with optional query string additions `params`.
+~~~ java
 
-~~~ js
-var fs = require('fs')
-
-alice.attachment.get('rabbit', 'rabbit.png', function(err, body) {
-  if (!err)
-    fs.writeFile('rabbit.png', body)
-})
-~~~
-
-This function also returns a readable stream, which you may pipe to a writable stream.
-Or using `pipe`:
-
-~~~ js
-var fs = require('fs')
-
-var img_stream = fs.createWriteStream('rabbit.png')
-var attachment = alice.attachment.get('rabbit', 'rabbit.png')
-
-attachment.pipe(img_stream)
-~~~
-
-### db.attachment.destroy(doc_id, attname, rev, [callback])
-
-Destroy attachment `attname` of `doc_id`'s revision `rev`.
-
-~~~ js
-var rev = '1-4701d73a08ce5c2f2983bf7c9ffd3320'
-alice.attachment.destroy('rabbit', 'rabbit.png', rev, function(err, body) {
-  if (!err)
-    console.log(body)
-})
+byte[] bytesToDB = "binary attachment data".getBytes();
+ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain");
+InputStream in = db.find( "doc_id/foo.txt");
 ~~~
 
 ## Design Document Functions
 
 These functions are for working with views and design documents, including querying the database using map-reduce views, [Cloudant Search](#cloudant-search), and [Cloudant Query](#cloudant-query).
 
-### db.view(designname, viewname, [params], [callback])
+### query on a view
 
-Call a view of the specified design with optional query string additions
-`params`. If you're looking to filter the view results by key(s) pass an array of keys, e.g
-`{ keys: ['key1', 'key2', 'key_n'] }`, as `params`.
+Call a view of the specified design to get the list of documents.
 
-~~~ js
-alice.view('characters', 'crazy_ones', function(err, body) {
-  if (!err)
-    body.rows.forEach(function(doc) {
-      console.log(doc.value)
-    })
-})
+~~~ java
+
+List<Foo> foos = db.view("example/foo")
+			        .includeDocs(true)
+				.query(Foo.class);
+~~~
+ If you're looking to filter the view results by key(s), pass multiple keys as the argument of key() function
+ 
+~~~ java
+
+List<Foo> foos = db.view("example/foo")
+				.includeDocs(true)
+				.key("key-1","key-2")
+				.query(Foo.class);
 ~~~
 
-### db.view_with_list(designname, viewname, listname, [params], [callback])
+If you're looking to filter the view results by a range of keys, call startKey(key) and endKey(key) method
 
-Call a list function feeded by the given view of the specified design document.
+~~~ java
 
-~~~ js
-alice.view_with_list('characters', 'crazy_ones', 'my_list', function(err, body) {
-  if (!err)
-    console.log(body)
-})
+List<Foo> foos = db.view("example/foo")
+				.startKey("key-1")
+				.endKey("key-2")
+				.includeDocs(true)
+				.query(Foo.class);
+				
 ~~~
 
-### db.show(designname, showname, doc_id, [params], [callback])
+To get the primitive value  call the scalar methods e.g queryForInt() or queryForLong()
 
-Call a show function of the specified design for the document specified by doc_id with
-optional query string additions `params`.
+~~~ java
 
-~~~ js
-alice.show('characters', 'format_doc', '3621898430', function(err, doc) {
-  if (!err)
-    console.log(doc)
-})
+int count = dbClient.view("example/by_tag").key("cloudantdb").queryForInt(); 
 ~~~
+### retrieving the design doc from server
+call getFromDb(design-doc) to retrieve the server copy .
+~~~ java
+
+DesignDocument designDoc = db.design().getFromDb("_design/example");
+~~~
+### synchronizing design doc 
+
+call synchronizeWithDb(design-doc) method to synchronize the server copy with local one.
+
+~~~ java
+
+DesignDocument designDoc = db.design().getFromDesk("example");
+db.design().synchronizeWithDb(designDoc);
+~~~
+
+All the design documents can be synchronized in a single attempt
+
+~~~ java
+
+db.syncDesignDocsWithDb();
+~~~
+
+
 
 Take a look at the [CouchDB wiki](http://wiki.apache.org/couchdb/Formatting_with_Show_and_List#Showing_Documents) for possible query paramaters and more information on show functions.
 
-### db.atomic(designname, updatename, doc_id, [body], [callback])
 
-Call the design's update function with the specified doc in input.
-
-~~~ js
-db.atomic("update", "inplace", "foobar", {field: "foo", value: "bar"}, function (error, response) {
-  assert.equal(error, undefined, "failed to update")
-  assert.equal(response.foo, "bar", "update worked")
-})
-~~~
-
-Note that the data is sent in the body of the request.  An example update handler follows:
-
-~~~ js
-"updates": {
-  "in-place" : "function(doc, req) {
-      var field = req.form.field;
-      var value = req.form.value;
-      var message = 'set '+field+' to '+value;
-      doc[field] = value;
-      return [doc, message];
-  }"
-~~~
-
-### db.search(designname, searchname, [params], [callback])
-
-Call a view of the specified design with optional query string additions `params`. See the [Cloudant Search](#cloudant-search) section below for more details.
-
-~~~ js
-alice.search('characters', 'crazy_ones', { q: 'cat' }, function(err, doc) {
-  if (!err) {
-    console.log(doc);
-  }
-});
-~~~
 
 ## Cloudant Query
 
 This feature interfaces with Cloudant's query functionality. See the [Cloudant Query documentation][query] for details.
 
-As with Nano, when working with a database (as opposed to the root server), run the `.use()` method.
+As with Nano, when working with a database (as opposed to the root server), call the `.database()` method.
 
-~~~ js
-var db = cloudant.use('my_db')
+~~~ java
+
+Database db = dbClient.database("movies-demo", false);
 ~~~
 
-To see all the indexes in a database, call the database `.index()` method with a callback function.
+To see all the indexes in a database, call the database `.listIndices()` method .
 
-~~~ js
-db.index(function(er, result) {
-  if (er)
-    throw er
+~~~ java
 
-  console.log('The database has %d indexes', result.indexes.length)
-  for (var i = 0; i < result.indexes.length; i++)
-    console.log('  %s (%s): %j', result.indexes[i].name, result.indexes[i].type, result.indexes[i].def)
-})
+List<Index> indices = db.listIndices();
 ~~~
 
-Example output:
+To create an index, use  `.createIndex()` method 
 
-    The database has 3 indexes
-      _all_docs (special): {"fields":[{"_id":"asc"}]}
-      first-name (json): {"fields":[{"name":"asc"}]}
-      last-name (json): {"fields":[{"name":"asc"}]}
+~~~ java
 
-To create an index, use the same `.index()` method but with an extra initial argument: the index definition. For example, to make an index on middle names in the data set:
-
-~~~ js
-var middle_name = {name:'middle-name', type:'json', index:{fields:['middle']}}
-db.index(middle_name, function(er, response) {
-  if (er)
-    throw er
-
-  console.log('Index creation result: %s', response.result)
-})
+db.createIndex("Person_name", "Person_name", null,
+				new IndexField[]{
+					new IndexField("Person_name",SortOrder.asc),
+					new IndexField("Movie_year",SortOrder.asc)});
+db.createIndex("Movie_year", "Movie_year", null,
+				new IndexField[]{
+				       new IndexField("Movie_year",SortOrder.asc)});
 ~~~
 
-Output:
 
-    Index creation result: created
 
-To query using the index, use the `.find()` method.
+To query using the index, use the `.findByIndex()` method.
 
-~~~ js
-db.find({selector:{name:'Alice'}}, function(er, result) {
-  if (er)
-    throw er
+~~~ java
 
-  console.log('Found %d documents with name Alice')
-  for (var i = 0; i < result.docs.length; i++)
-    console.log('  Doc id: %s', result.docs[i]._id)
-})
+List<Movie> movies = db.findByIndex("\"selector\": { \"Movie_year\": {\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\" }",
+				Movie.class,
+				new FindByIndexOptions()
+					.sort(new IndexField("Movie_year", SortOrder.desc))
+					.fields("Movie_name").fields("Movie_year"));
 ~~~
 
 
@@ -697,173 +597,72 @@ db.find({selector:{name:'Alice'}}, function(er, result) {
 
 This feature interfaces with Cloudant's search functionality. See the [Cloudant Search documentation][search] for details.
 
-First, when working with a database (as opposed to the root server), run the `.use()` method.
+First, when working with a database (as opposed to the root server), call the `.database()` method.
 
-~~~ js
-var db = cloudant.use('my_db')
+~~~ java
+
+Database db = dbClient.database("movies-demo", false);
 ~~~
 
-To create a Cloudant Search index, create a design document the normal way you would with Nano, the database `.insert()` method.
+To create a Cloudant Search index, create a design document and call `synchronizeWithDb()` method.
 
-To see all the indexes in a database, call the database `.index()` method with a callback function.
-             , {_id: '_design/library', indexes:{books:{analyzer:{name:'standard'}, index:index}}}
+~~~ java
 
-~~~ js
-// Note, you can make a normal JavaScript function. It is not necessary
-// for you to convert it to a string as with other languages and tools.
-var book_indexer = function(doc) {
-  // Index the title and author of books.
-  if (doc.type == 'book') {
-    index('title', doc.title)
-    index('author', doc.author)
-  }
-}
-
-var ddoc = { _id: '_design/library'
-           , indexes:
-             { books:
-               { analyzer: {name: 'standard'}
-               , index   : book_indexer
-               }
-             }
-           }
-
-db.insert(doc, function (er, result) {
-  if (er)
-    throw er
-  else
-    console.log('Created design document with books index')
-})
+DesignDocument designDoc = db.design().getFromDesk("views101");
+db.design().synchronizeWithDb(designDoc);
 ~~~
 
-To query this index, use the database `.search()` method. The first argument is the design document name, followed by the index name, and finally an object with your search parameters.
+To query this index, create instance of `com.cloudant.Search`  by calling the database `.search()` method. The argument of `.search()` method is the design document name. The other criterion can be set by calling different methods on `search` object.
 
-~~~ js
-db.search('library', 'books', {q:'author:dickens'}, function(er, result) {
-  if (er)
-    throw er
+~~~ java
 
-  console.log('Showing %d out of a total %d books by Dickens', result.rows.length, result.total_rows)
-  for (var i = 0; i < result.rows.length; i++)
-    console.log('Document id: %s', result.rows.id)
-})
+Search search = db.search("views101/animals");
+SearchResult<Animal> rslt= search.limit(10)
+				                       .includeDocs(true)
+                                 			.counts(new String[] {"class","diet"})
+				                        .querySearchResult("l*", Animal.class);
 ~~~
 
 ## Cookie Authentication
 
 Cloudant supports making requests using Cloudant's [cookie authentication](http://guide.couchdb.org/editions/1/en/security.html#cookies) functionality. there's a [step-by-step guide here](http://codetwizzle.com/articles/couchdb-cookie-authentication-nodejs-couchdb/), but essentially you just:
 
-~~~ js
-var Cloudant     = require('Cloudant')
-var username = 'user'
-var userpass = 'pass'
+~~~ java
 
-// A global variable to store the cookies. This can be on the filesystem or some other cache, too.
-var cookies = {}
-
-Cloudant({account:username, password:userpass}, function(err, cloudant) {
-  if (err)
-    return console.log('Failed to connect to Cloudant: ' + err.message)
-
-  // In this example, we authenticate using the same username/userpass as above.
-  // However, you can use a different combination to authenticate as other users
-  // in your database. This can be useful for using a less-privileged account.
-  cloudant.auth(username, userpass, function(err, body, headers) {
-    if (err)
-      return console.log('Error authenticating: ' + err.message)
-
-    console.log('Got cookie for %s: %s', username, headers['set-cookie'])
-
-    // Store the authentication cookie for later.
-    cookies[username] = headers['set-cookie']
-  })
-})
-~~~
+ CloudantClient client = new CloudantClient("cloudant.account",
+							 "cloudant.username",
+							 "cloudant.password"));
+String cookie = client.getCookie() ;
+  ~~~
 
 To reuse a cookie:
 
-~~~ js
+~~~ java
+
 // Make a new connection with the cookie.
-Cloudant({account:username, cookie:cookies[username]}, function(err, other_cloudant) {
-  if (err)
-    return console.log('Failed to connect to Cloudant: ' + err.message)
+CloudantClient cookieBasedClient = new 		     
+                          CloudantClient("cloudant.account", cookie);
 
-  console.log('Connected to Cloudant using a cookie!')
-
-  var alice = other_cloudant.use('alice')
-  alice.insert({_id:"my_doc"}, function (err, body, headers) {
-    if (err)
-      return console.log('Failed to insert into alice database: ' + err.message)
-
-    // Change the cookie if Cloudant tells us to.
-    if (headers && headers['set-cookie'])
-      cookies[username] = headers['set-cookie']
-  })
-})
 ~~~
 
-Getting current session:
-
-~~~javascript
-var Cloudant = require('Cloudant')({url: 'http://localhost:5984', cookie: 'AuthSession=' + auth});
-
-Cloudant.session(function(err, session) {
-  if (err) {
-    return console.log('oh noes!')
-  }
-
-  console.log('user is %s and has these roles: %j',
-    session.userCtx.user, session.userCtx.roles);
-});
-~~~
 
 ### Advanced Configuration
 
-Besides the account and password options, you can add an optionsl `request_defaults` value, which will initialize Request (the underlying HTTP library) as you need it.
+Besides the account and password options, you can add an optional `com.cloudant.ConnectOptions` value, which will initialize Request (the underlying HTTP library) as you need it.
 
-~~~ js
-var Cloudant = require('Cloudant')
-
-// Use an HTTP proxy to connect to Cloudant.
-var options =
-  { "account"         : "my_account"
-  , "password"        : "secret"
-  , "request_defaults": { "proxy": "http://localhost:8080" }
-  }
-
-Cloudant(options, function(err, cloudant) {
-  // Now using the HTTP proxy...
-})
+~~~ java
+ConnectOptions connectOptions = new ConnectOptions()
+                                                              . setSocketTimeout(50)
+                                                              . setConnectionTimeout(50)
+                                                              . setMaxConnections(100)
+                                                              .setProxyHost("http://localhost")
+                                                              .setProxyPort(8080);
+ CloudantClient client = new CloudantClient("cloudant.com","test","password",  
+                                                  connectOptions );
+                                                  
 ~~~
 
-Please check [request] for more information on the defaults. They support features like cookie jar, proxies, ssl, etc.
 
-### Pool size and open sockets
-
-A very important configuration parameter if you have a high traffic website and are using Cloudant is setting up the `pool.size`. By default, the node.js https global agent (client) has a certain size of active connections that can run simultaneously, while others are kept in a queue. Pooling can be disabled by setting the `agent` property in `request_defaults` to false, or adjust the global pool size using:
-
-~~~ js
-var https = require('https')
-https.globalAgent.maxSockets = 20
-~~~
-
-You can also increase the size in your calling context using `request_defaults` if this is problematic. refer to the [request] documentation and examples for further clarification.
-
-Here is an example of explicitly using the keep alive agent (installed using `npm install agentkeepalive`), especially useful to limit your open sockets when doing high-volume access to Cloudant:
-
-~~~ js
-var agentkeepalive = require('agentkeepalive')
-var myagent = new agentkeepalive({
-    maxSockets: 50
-  , maxKeepAliveRequests: 0
-  , maxKeepAliveTime: 30000
-  })
-
-var Cloudant = require('cloudant')
-Cloudant({account:"me", password:"secret", request_defaults:{agent:myagent}}, function(err, cloudant) {
-  // Using Cloudant with myagent...
-})
-~~~
 
 ## Advanced Features
 

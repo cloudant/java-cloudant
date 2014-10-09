@@ -23,20 +23,24 @@ public class Params  {
 		return this;
 	}
 
-	public org.lightcouch.Params attachments() {
-		return params.attachments();
+	public Params attachments() {
+		params =  params.attachments();
+		return this ;
 	}
 
-	public org.lightcouch.Params revisions() {
-		return params.revisions();
+	public Params revisions() {
+		params = params.revisions();
+		return this ;
 	}
 
-	public org.lightcouch.Params conflicts() {
-		return params.conflicts();
+	public Params conflicts() {
+		params = params.conflicts();
+		return this ;
 	}
 
-	public org.lightcouch.Params addParam(String name, String value) {
-		return params.addParam(name, value);
+	public Params addParam(String name, String value) {
+		params = params.addParam(name, value);
+		return this ;
 	}
 
 	public boolean equals(Object obj) {
@@ -51,16 +55,19 @@ public class Params  {
 		return params.hashCode();
 	}
 
-	public org.lightcouch.Params revsInfo() {
-		return params.revsInfo();
+	public Params revsInfo() {
+		params = params.revsInfo();
+		return this ;
 	}
 
-	public org.lightcouch.Params rev(String rev) {
-		return params.rev(rev);
+	public Params rev(String rev) {
+		params = params.rev(rev);
+		return this ;
 	}
 
-	public org.lightcouch.Params localSeq() {
-		return params.localSeq();
+	public Params localSeq() {
+		params = params.localSeq();
+		return this ;
 	}
 
 	public String toString() {

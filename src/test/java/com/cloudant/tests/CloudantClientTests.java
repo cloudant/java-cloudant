@@ -33,7 +33,7 @@ public class CloudantClientTests {
 		account = new CloudantClient(props.getProperty("cloudant.account"),
 									  props.getProperty("cloudant.username"),
 									  props.getProperty("cloudant.password"));
-		String cookie = account.getCookie();
+		String cookie = account.getCookie()+"XXX";
 		cookieBasedClient = new CloudantClient(props.getProperty("cloudant.account"), cookie);
 		
 	}

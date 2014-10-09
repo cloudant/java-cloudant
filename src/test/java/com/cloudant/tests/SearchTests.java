@@ -36,7 +36,7 @@ public class SearchTests {
 		account = new CloudantClient(cloudantaccount,userName,password);
 		
 		// replciate the animals db for search tests
-		Replication r = account.replication();
+		com.cloudant.Replication r = account.replication();
 		r.source("https://examples.cloudant.com/animaldb");
 		r.createTarget(true);
 		r.target("https://"+ userName + ":" + password + "@" + cloudantaccount +  ".cloudant.com/animaldb");

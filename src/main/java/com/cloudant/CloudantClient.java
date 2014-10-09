@@ -200,7 +200,8 @@ public class CloudantClient {
 	 * @return cluster nodes and all nodes
 	 */
 	public Membership getMembership() {
-		return client.get(buildUri(getBaseUri()).path("/_membership").build(), Membership.class);
+		Membership membership = client.get(buildUri(getBaseUri()).path("/_membership").build(), Membership.class);
+		return membership ;		
 	}
 	
 	
@@ -262,8 +263,10 @@ public class CloudantClient {
 	 * Provides access to Cloudant <tt>replication</tt> APIs.
 	 * @see Replication
 	 */
-	public Replication replication() {
-		return client.replication();
+	public com.cloudant.Replication replication() {
+		Replication couchDbReplication = client.replication();
+		com.cloudant.Replication replication = new com.cloudant.Replication(couchDbReplication);
+		return replication;
 	}
 
 
@@ -271,8 +274,10 @@ public class CloudantClient {
 	 * Provides access to Cloudant <tt>replication</tt> APIs.
 	 * @see Replication
 	 */
-	public Replicator replicator() {
-		return client.replicator();
+	public com.cloudant.Replicator replicator() {
+		Replicator couchDbReplicator = client.replicator();
+		com.cloudant.Replicator replicator = new com.cloudant.Replicator(couchDbReplicator);
+		return replicator ;
 	}
 
 
@@ -283,7 +288,10 @@ public class CloudantClient {
 	 * @return {@link HttpResponse}
 	 */
 	public HttpResponse executeRequest(HttpRequestBase request) {
-		return client.executeRequest(request);
+
+		HttpResponse response = client.executeRequest(request);
+		return response;
+
 	}
 
 	
