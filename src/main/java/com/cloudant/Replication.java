@@ -2,11 +2,9 @@ package com.cloudant;
 
 import java.util.Map;
 
-import org.lightcouch.CouchDatabaseBase;
-import org.lightcouch.CouchDbClientBase;
 import org.lightcouch.ReplicationResult;
-import org.lightcouch.Replicator;
 import org.lightcouch.ReplicationResult.ReplicationHistory;
+import org.lightcouch.Replicator;
 
 /**
  * This class provides access to the database replication API; a replication request 

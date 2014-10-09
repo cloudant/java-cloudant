@@ -60,7 +60,7 @@ public class Database {
 	private CouchDatabase db;
 	private CloudantClient client;
 	
-	private CloudantDbDesign design ;
+	private DbDesign design ;
 
 	public enum Permissions {
 		_admin,
@@ -78,7 +78,7 @@ public class Database {
 		super();
 		this.client = client;
 		this.db = db;
-		this.design = new CloudantDbDesign(db.design());
+		this.design = new DbDesign(db.design());
 	}
 	
 	/**
@@ -261,7 +261,7 @@ public class Database {
 	  * Provides access to CouchDB Design Documents.
 	  * @see CouchDbDesign
 	  */
-	public CloudantDbDesign design() {
+	public DbDesign design() {
 		return design ;
 	}
 
@@ -631,9 +631,9 @@ public class Database {
 	/**
 	 * @return {@link CouchDbInfo} Containing the DB info.
 	 */
-	public CloudantDbInfo info() {
+	public DbInfo info() {
 		CouchDbInfo couchDbInfo = db.info();
-		CloudantDbInfo info = new CloudantDbInfo(couchDbInfo);
+		DbInfo info = new DbInfo(couchDbInfo);
 		return info ;
 	}
 

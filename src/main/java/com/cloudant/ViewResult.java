@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.lightcouch.View;
-import org.lightcouch.ViewResult.Rows;
 /**
  * Holds a view result entries. 
  * @since 0.0.1

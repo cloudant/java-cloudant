@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.lightcouch.Attachment;
 import org.lightcouch.Replicator;
-import org.lightcouch.ReplicatorDocument.UserCtx;
 
 import com.google.gson.JsonObject;
 /**

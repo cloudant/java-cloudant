@@ -16,7 +16,6 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.lightcouch.Changes;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbDesign;
-import org.lightcouch.CouchDbException;
 import org.lightcouch.CouchDbProperties;
 import org.lightcouch.Replication;
 import org.lightcouch.Replicator;
@@ -201,12 +200,8 @@ public class CloudantClient {
 	 * @return cluster nodes and all nodes
 	 */
 	public Membership getMembership() {
-		try {
-			Membership membership = client.get(buildUri(getBaseUri()).path("/_membership").build(), Membership.class);
-			return membership ;
-		} catch (Exception e) {
-			throw new CloudantException(e);
-		}
+		Membership membership = client.get(buildUri(getBaseUri()).path("/_membership").build(), Membership.class);
+		return membership ;		
 	}
 	
 	
@@ -293,12 +288,10 @@ public class CloudantClient {
 	 * @return {@link HttpResponse}
 	 */
 	public HttpResponse executeRequest(HttpRequestBase request) {
-		try {
-			HttpResponse response = client.executeRequest(request);
-			return response ;
-		} catch (CouchDbException e) {
-			throw new CloudantException(e);
-		}
+
+		HttpResponse response = client.executeRequest(request);
+		return response;
+
 	}
 
 	

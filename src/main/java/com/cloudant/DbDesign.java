@@ -7,10 +7,10 @@ import org.lightcouch.CouchDbDesign;
 import org.lightcouch.DesignDocument;
 import org.lightcouch.Response;
 
-public class CloudantDbDesign {
+public class DbDesign {
 	private CouchDbDesign couchDbDesign ;
 	
-	CloudantDbDesign(CouchDbDesign couchDbDesign ){
+	DbDesign(CouchDbDesign couchDbDesign ){
 		this.couchDbDesign = couchDbDesign ;
 	}
 

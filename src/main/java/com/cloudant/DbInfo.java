@@ -5,14 +5,14 @@ import org.lightcouch.CouchDbInfo;
  * Holds information about a CouchDB database instance.
  * @author Ganesh K Choudhary
  */
-public class CloudantDbInfo {
+public class DbInfo {
 	private CouchDbInfo couchDbInfo ;
 	
-	public CloudantDbInfo(){
+	public DbInfo(){
 		this.couchDbInfo = new CouchDbInfo();
 	}
 	
-	CloudantDbInfo(CouchDbInfo couchDbInfo){
+	DbInfo(CouchDbInfo couchDbInfo){
 		this.couchDbInfo = couchDbInfo ;
 	}
 

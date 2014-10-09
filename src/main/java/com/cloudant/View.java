@@ -3,7 +3,6 @@ package com.cloudant;
 import java.io.InputStream;
 import java.util.List;
 
-import org.lightcouch.DesignDocument.MapReduce;
 import org.lightcouch.CouchDatabaseBase;
 import org.lightcouch.Page;
 import org.lightcouch.ViewResult;
@@ -272,24 +271,5 @@ public class View {
 		return this ;
 	}
 
-	/**
-	 * @param id
-	 * @return
-	 */
-	public View tempView(String id) {
-		this.view =  view.tempView(id);
-		return this ;
-	}
-
-	/**
-	 * @param mapReduce
-	 * @return
-	 */
-	public View tempView(com.cloudant.MapReduce mapReduce) {
-		this.view =  view.tempView(mapReduce.getMapReduce());
-		return this ;
-	}
-
-	
-	
+		
 }
