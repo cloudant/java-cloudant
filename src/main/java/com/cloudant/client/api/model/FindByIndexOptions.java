@@ -1,7 +1,9 @@
-package com.cloudant;
+package com.cloudant.client.api.model;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.cloudant.client.api.Database;
 
 /**
  * Options to set on findByIndex() request.
@@ -74,23 +76,23 @@ public class FindByIndexOptions {
 		return this;
 	}
 	
-	List<String> getFields() {
+	public List<String> getFields() {
 		return fields;
 	}
 	
-	List<IndexField> getSort() {
+	public List<IndexField> getSort() {
 		return sort;
 	}
 	
-	Integer getLimit() {
+	public Integer getLimit() {
 		return limit;
 	}
 	
-	Integer getSkip() {
+	public Integer getSkip() {
 		return skip;
 	}
 	
-	Integer getReadQuorum() {
+	public Integer getReadQuorum() {
 		return readQuorum;
 	}
 	

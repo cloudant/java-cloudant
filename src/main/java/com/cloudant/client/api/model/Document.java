@@ -1,4 +1,4 @@
-package com.cloudant;
+package com.cloudant.client.api.model;
 
 /**
  * Convenient base class for Cloudant documents, defines the basic 

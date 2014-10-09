@@ -9,14 +9,13 @@ import java.util.Properties;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.lightcouch.Replication;
 
-import com.cloudant.CloudantClient;
-import com.cloudant.Database;
-import com.cloudant.FindByIndexOptions;
-import com.cloudant.Index;
-import com.cloudant.IndexField;
-import com.cloudant.IndexField.SortOrder;
+import com.cloudant.client.api.CloudantClient;
+import com.cloudant.client.api.Database;
+import com.cloudant.client.api.model.FindByIndexOptions;
+import com.cloudant.client.api.model.Index;
+import com.cloudant.client.api.model.IndexField;
+import com.cloudant.client.api.model.IndexField.SortOrder;
 
 public class IndexTests {
 
@@ -33,7 +32,7 @@ public class IndexTests {
 		account = new CloudantClient(cloudantaccount,userName,password);
 		
 		// create the movies-demo db for our index tests
-		com.cloudant.Replication r = account.replication();
+		com.cloudant.client.api.Replication r = account.replication();
 		r.source("https://examples.cloudant.com/movies-demo");
 		r.createTarget(true);
 		r.target("https://"+ userName + ":" + password + "@" + cloudantaccount +  ".cloudant.com/movies-demo");

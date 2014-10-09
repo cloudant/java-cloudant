@@ -1,4 +1,4 @@
-package com.cloudant;
+package com.cloudant.client.api.model;
 
 
 /**
@@ -18,7 +18,7 @@ public class Response {
 		this.response = new org.lightcouch.Response();
 	}
 	
-	Response(org.lightcouch.Response response){
+	public Response(org.lightcouch.Response response){
 		this.response = response ;
 	}
 	

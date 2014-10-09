@@ -5,8 +5,8 @@ import static org.lightcouch.internal.CouchDbUtil.assertNull;
 import static org.lightcouch.internal.CouchDbUtil.close;
 import static org.lightcouch.internal.CouchDbUtil.generateUUID;
 import static org.lightcouch.internal.CouchDbUtil.getAsString;
-import static org.lightcouch.internal.CouchDbUtil.getStream;
 import static org.lightcouch.internal.CouchDbUtil.getResponse;
+import static org.lightcouch.internal.CouchDbUtil.getStream;
 import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package com.cloudant;
+package com.cloudant.client.api.model;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ public class ReplicationResult {
 		replicationResult = new org.lightcouch.ReplicationResult();
 	}
 	
-	ReplicationResult(org.lightcouch.ReplicationResult replicationResult){
+	public ReplicationResult(org.lightcouch.ReplicationResult replicationResult){
 		this.replicationResult = replicationResult ;
 	}
 

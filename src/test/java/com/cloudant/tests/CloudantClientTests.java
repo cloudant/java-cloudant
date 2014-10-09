@@ -12,10 +12,10 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.cloudant.ApiKey;
-import com.cloudant.CloudantClient;
-import com.cloudant.Membership;
-import com.cloudant.Task;
+import com.cloudant.client.api.CloudantClient;
+import com.cloudant.client.api.model.ApiKey;
+import com.cloudant.client.api.model.Membership;
+import com.cloudant.client.api.model.Task;
 
 
 public class CloudantClientTests {
@@ -76,7 +76,7 @@ public class CloudantClientTests {
 	
 	@Test
 	public void cookieAPITest(){
-		ApiKey generateApiKey = cookieBasedClient.generateApiKey();
+		cookieBasedClient.generateApiKey();
 		
 	}
 	

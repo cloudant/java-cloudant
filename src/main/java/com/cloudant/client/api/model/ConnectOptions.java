@@ -1,4 +1,4 @@
-package com.cloudant;
+package com.cloudant.client.api.model;
 /**
  * Represents optional configuration properties for connecting to CloudantDB.
  * @author Ganesh K Choudhary

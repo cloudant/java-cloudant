@@ -1,4 +1,6 @@
-package com.cloudant;
+package com.cloudant.client.api.model;
+
+import com.cloudant.client.api.DbDesign;
 
 
 /**

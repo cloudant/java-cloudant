@@ -1,4 +1,4 @@
-package com.cloudant;
+package com.cloudant.client.api;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,9 +55,9 @@ public class Replicator {
 	 * Adds a new document to the replicator database. 
 	 * @return {@link Response}
 	 */
-	public com.cloudant.Response save() {
+	public com.cloudant.client.api.model.Response save() {
 		Response couchDbResponse = replicator.save();
-		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 		return response ;
 	}
 
@@ -65,20 +65,20 @@ public class Replicator {
 	 * Finds a document in the replicator database. 
 	 * @return {@link ReplicatorDocument}
 	 */
-	public com.cloudant.ReplicatorDocument find() {
+	public com.cloudant.client.api.model.ReplicatorDocument find() {
 		ReplicatorDocument couchDbReplicatorDoc = replicator.find();
-		com.cloudant.ReplicatorDocument replicatorDoc = new com.cloudant.ReplicatorDocument(couchDbReplicatorDoc);
+		com.cloudant.client.api.model.ReplicatorDocument replicatorDoc = new com.cloudant.client.api.model.ReplicatorDocument(couchDbReplicatorDoc);
 		return replicatorDoc ;
 	}
 
 	/**
 	 * Finds all documents in the replicator database. 
 	 */
-	public List<com.cloudant.ReplicatorDocument> findAll() {
+	public List<com.cloudant.client.api.model.ReplicatorDocument> findAll() {
 		List<ReplicatorDocument> couchDbReplicatorDocList = replicator.findAll();
-		List<com.cloudant.ReplicatorDocument> replicatorDocList = new ArrayList<>();
+		List<com.cloudant.client.api.model.ReplicatorDocument> replicatorDocList = new ArrayList<>();
 		for(ReplicatorDocument couchDbReplicatorDoc : couchDbReplicatorDocList){
-			com.cloudant.ReplicatorDocument replicatorDoc = new com.cloudant.ReplicatorDocument(couchDbReplicatorDoc);
+			com.cloudant.client.api.model.ReplicatorDocument replicatorDoc = new com.cloudant.client.api.model.ReplicatorDocument(couchDbReplicatorDoc);
 			replicatorDocList.add(replicatorDoc);
 		}
 		return replicatorDocList ;
@@ -88,9 +88,9 @@ public class Replicator {
 	 * Removes a document from the replicator database.  
 	 * @return {@link Response}
 	 */
-	public com.cloudant.Response remove() {
+	public com.cloudant.client.api.model.Response remove() {
 		Response couchDbResponse = replicator.remove();
-		com.cloudant.Response response = new com.cloudant.Response(couchDbResponse);
+		com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 		return response ;
 	}
 

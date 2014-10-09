@@ -1,4 +1,4 @@
-package com.cloudant;
+package com.cloudant.client.api;
 
 import java.io.InputStream;
 import java.util.List;
@@ -79,10 +79,10 @@ public class View {
 	 * @param classOfT The class of type T.
 	 * @return The View result entries.
 	 */
-	public <K, V, T> com.cloudant.ViewResult<K, V, T> queryView(Class<K> classOfK,
+	public <K, V, T> com.cloudant.client.api.model.ViewResult<K, V, T> queryView(Class<K> classOfK,
 			Class<V> classOfV, Class<T> classOfT) {
 		 ViewResult<K,V,T> lightCouchQueryView = view.queryView(classOfK, classOfV, classOfT);
-		 com.cloudant.ViewResult<K, V, T> queryView = new com.cloudant.ViewResult<>(lightCouchQueryView);
+		 com.cloudant.client.api.model.ViewResult<K, V, T> queryView = new com.cloudant.client.api.model.ViewResult<K,V,T>(lightCouchQueryView);
 		 return queryView ;
 	}
 
@@ -202,10 +202,10 @@ public class View {
 	 * @param classOfT The class of type T.
 	 * @return {@link Page}
 	 */
-	public <T> com.cloudant.Page<T> queryPage(int rowsPerPage, String param,
+	public <T> com.cloudant.client.api.model.Page<T> queryPage(int rowsPerPage, String param,
 			Class<T> classOfT) {
 		Page<T> lightCouchPage = view.queryPage(rowsPerPage, param, classOfT);
-		com.cloudant.Page<T> page = new com.cloudant.Page<>(lightCouchPage);
+		com.cloudant.client.api.model.Page<T> page = new com.cloudant.client.api.model.Page<T>(lightCouchPage);
 		return page ;
 	}
 

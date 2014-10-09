@@ -1,6 +1,8 @@
-package com.cloudant;
+package com.cloudant.client.api.model;
 
 import java.util.List;
+
+import com.cloudant.client.api.Database;
 
 
 /**
@@ -74,7 +76,7 @@ public class Params  {
 		return params.toString();
 	}
 	
-	org.lightcouch.Params getInternalParams() {
+	public org.lightcouch.Params getInternalParams() {
 		return params;
 	}
 	

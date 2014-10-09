@@ -1,4 +1,4 @@
-package com.cloudant;
+package com.cloudant.client.api;
 
 import java.util.Map;
 
@@ -46,9 +46,9 @@ public class Replication {
 	/**
 	 * Triggers a replication request. 
 	 */
-	public com.cloudant.ReplicationResult trigger() {
+	public com.cloudant.client.api.model.ReplicationResult trigger() {
 		ReplicationResult couchDbReplicationResult = replication.trigger();
-		com.cloudant.ReplicationResult replicationResult = new com.cloudant.ReplicationResult(couchDbReplicationResult);
+		com.cloudant.client.api.model.ReplicationResult replicationResult = new com.cloudant.client.api.model.ReplicationResult(couchDbReplicationResult);
 		return replicationResult ;
 	}
 
