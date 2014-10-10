@@ -57,7 +57,7 @@ Output:
     Server version = 1.0.2
     All my databases: example_db, jasons_stuff, scores
 
-When you instaniate a *com.cloudant.client.api.CloudantClient*, you are authenticating with cloudant using the [cookie authentication](http://guide.couchdb.org/editions/1/en/security.html#cookies) functionality 
+When you instaniate a `CloudantClient`, you are authenticating with cloudant using the [cookie authentication](http://guide.couchdb.org/editions/1/en/security.html#cookies) functionality 
 
 ### Security Note
 
@@ -112,56 +112,51 @@ If you run this example, you will see:
 
 - [Initialization](#initialization)
 - [Authorization](#authorization)
-- [Server Functions](#server-functions)
-	- [CloudantClient.getServerVersion()]()
-	- [CloudantClient.createDB(name)]()
-	- [CloudantClient.database(name, create)]()
-	- [CloudantClient.deleteDB(name, confirmFlag)]()
+- [Server Functions](#Server Functions)
+	- [CloudantClient.createDB(name)](#com.cloudant.client.api.CloudantClient.createDB(name))
+	- [CloudantClient.database(name, create)](#com.cloudant.client.api.CloudantClient.database(name,create))
+	- [CloudantClient.deleteDB(name, confirmFlag)](com.cloudant.client.api.CloudantClient.deleteDB(name, confirmDelete))
 	- [CloudantClient.getAllDbs()](#com.cloudant.client.api.CloudantClient.getAllDbs())
-	- [CloudantClient.getActiveTasks()]()
-	- [CloudantClient.getMembership()]()
-	- [CloudantClient.replicator()](#Cloudantdbreplicatesource-target-opts-callback)
-	- [CloudantClient.replication()](#Cloudantdbreplicatesource-target-opts-callback)
-	- [CloudantClient.uuids(number)](#Cloudantdbreplicatesource-target-opts-callback)  
-- [Database Functions](#database-functions)
-	- [Database.changes()](#Cloudantdbchangesname-params-callback)
-	- [Database.getShards()](#Cloudantdbfollowname-params-callback)
-	- [Database.getShard(documentId)](#Cloudantusename)
-	- [Database.info()](#Cloudantconfig)
-- [Document Functions](#document-functions)
-	- [db.insert(doc, [params], [callback])](#dbinsertdoc-params-callback)
-	- [db.destroy(doc_id, rev, [callback])](#dbdestroydoc_id-rev-callback)
-	- [db.get(doc_id, [params], [callback])](#dbgetdoc_id-params-callback)
-	- [db.head(doc_id, [callback])](#dbheaddoc_id-callback)
-	- [db.copy(src_doc, dest_doc, opts, [callback])](#dbcopysrc_doc-dest_doc-opts-callback)
-	- [db.bulk(docs, [params], [callback])](#dbbulkdocs-params-callback)
-	- [db.list([params], [callback])](#dblistparams-callback)
-	- [db.fetch(doc_ids, [params], [callback])](#dbfetchdoc_ids-params-callback)
-  - [db.fetch_revs(doc_ids, [params], [callback])](#dbfetch_revsdoc_ids-params-callback)
-- [Multipart Functions](#multipart-functions)
-	- [db.multipart.insert(doc, attachments, [params], [callback])](#dbmultipartinsertdoc-attachments-params-callback)
-	- [db.multipart.get(doc_id, [params], [callback])](#dbmultipartgetdoc_id-params-callback)
-- [Attachment Functions](#attachments-functions)
-	- [db.attachment.insert(doc_id, attname, att, contenttype, [params], [callback])](#dbattachmentinsertdoc_id-attname-att-contenttype-params-callback)
-	- [db.attachment.get(doc_id, attname, [params], [callback])](#dbattachmentgetdoc_id-attname-params-callback)
-	- [db.attachment.destroy(doc_id, attname, rev, [callback])](#dbattachmentdestroydoc_id-attname-rev-callback)
-- [Design Document Functions](#design-document-functions)
-	- [db.view(designname, viewname, [params], [callback])](#dbviewdesignname-viewname-params-callback)
-	- [db.show(designname, showname, doc_id, [params], [callback])](#dbshowdesignname-showname-doc_id-params-callback)
-	- [db.atomic(designname, updatename, doc_id, [body], [callback])](#dbatomicdesignname-updatename-doc_id-body-callback)
-	- [db.search(designname, viewname, [params], [callback])](#dbsearchdesignname-searchname-params-callback)
-- [Cloudant Search](#cloudant-search)
-- [Cloudant Query](#cloudant-query)
-- [Cookie Authentication](#cookie-authentication)
-- [Advanced Configuration](#advanced-configuration)
-- [Advanced Features](#advanced-features)
-	- [Extending the Cloudant Library](#extending-the-cloudant-library)
-	- [Pipes](#pipes)
+	- [CloudantClient.getMembership()](#com.cloudant.client.api.CloudantClient.getMembership())
+	- [CloudantClient.getActiveTasks()](#com.cloudant.client.api.CloudantClient.getActiveTasks())	
+	- [CloudantClient.replicator()](#com.cloudant.client.api.CloudantClient.replicator())
+	- [CloudantClient.replication()](#com.cloudant.client.api.CloudantClient.replication() )
+	- [CloudantClient.executeRequest()](#com.cloudant.client.api.CloudantClient.executeRequest())
+	- [CloudantClient.uuids(number)](#com.cloudant.client.api.CloudantClient.uuids())  
+	- [CloudantClient.getServerVersion()](#com.cloudant.client.api.CloudantClient.getServerVersion())
+- [Database Functions](#Database Functions)
+	- [Database.changes()](#com.cloudant.client.api.Database.changes())
+	- [Database.getShard(documentId)](#com.cloudant.client.api.Database.Database.getShard(documentId))
+	- [Database.info()](#com.cloudant.client.api.Database.Database.info())
+	- [Database.setPermissions()](#com.cloudant.client.api.Database.Database.setPermissions())
+- [Document Functions](#Document functions)
+	- [Database.save(pojo)](#com.cloudant.client.api.Database.save(pojo))
+	- [Database.save(map)](#com.cloudant.client.api.Database.save(map))
+	- [Database.save(jsonObject)](#com.cloudant.client.api.Database.save(jsonObject))
+	- [Database.find(class,doc-id)](#com.cloudant.client.api.Database.find(class,doc-id))
+	- [Database.find(class,doc-id,rev-id)](#com.cloudant.client.api.Database.find(class,doc-id,rev-id))
+	- [Database.contains(doc-id)](#com.cloudant.client.api.Database.contains(doc-id))
+	- [Database.remove(object)](#com.cloudant.client.api.Database.remove(object))
+	- [Database.remove(doc-id,rev-id)](#com.cloudant.client.api.Database.remove(doc-id,rev-id))
+- [Bulk Documents](#Bulk Documents)
+	- [Insert/Update docs ](#Insert/Update docs )
+	- [Fetch multiple documents](#Fetch multiple documents)
+- [Attachment Functions](#Attachment Functions)
+	- [Inline attachment](#Inline attachment)
+	- [Standalone Attachments](#Standalone Attachments)	
+- [Design Document Functions](#Design Document Functions)
+	- [query on a view](#query on a view)
+	- [retrieving the design doc from server](#retrieving the design doc from server)
+	- [synchronizing design doc ](#synchronizing design doc)
+- [Cloudant Query](#Cloudant Query)
+- [Cloudant Search](#Cloudant Search)
+- [Cookie Authentication](#Cookie Authentication)
+- [Advanced Configuration](#Advanced Configuration)
 - [tests](#tests)
 
 ### Initialization
 
-To use Cloudant, initialize your Cloudant connection by constructing a *com.cloudant.client.api.CloudantClient* supplying the *account* to connect to along with *userName or Apikey* and  *password* (And see the [security note](#security-note) about placing your password into your source code.
+To use Cloudant, initialize your Cloudant connection by constructing a `CloudantClient` supplying the `account` to connect to along with `userName or Apikey` and  `password` (And see the [security note](#security-note) about placing your password into your source code.
 
 ~~~ java
 String password = System.getProperty("cloudant_password");
@@ -250,6 +245,28 @@ for ( String db : databases ) {
 
 ~~~
 
+### com.cloudant.client.api.CloudantClient.getMembership()
+`getMembership()` returns the list of nodes in a cluster
+
+~~~ java
+	Membership membership = client.getMembership();
+~~~
+
+### com.cloudant.client.api.CloudantClient.getActiveTasks()
+`getActiveTasks()` returns all active tasks 
+
+~~~ java
+	List<Task> tasks = client.getActiveTasks();
+~~~
+
+### com.cloudant.client.api.CloudantClient.replicator() 
+
+`replicator()` provides access to Cloudant `com.cloudant.client.api.Replicator` APIs
+
+~~~ java
+Replicator replicator = client.replicator()
+~~~
+
 ### com.cloudant.client.api.CloudantClient.replication() 
 
 Replicates `source` to `target`. `target`
@@ -266,9 +283,37 @@ List<ReplicationHistory> histories = result.getHistories();
 
 ~~~
 
-### com.cloudant.client.api.Database.changes().getChanges()
+### com.cloudant.client.api.CloudantClient.executeRequest()
 
-Asks for the changes feed on the specified database. `includeDocs(true)` and `limit(1)` sets additional properties to the query string.
+This API enables extending Cloudant internal API by allowing a user-defined raw HTTP request to execute against a cloudant client. 
+~~~ java
+
+HttpHead head = new HttpHead(dbClient.getDBUri() + "doc-id");
+HttpResponse response = dbClient.executeRequest(head);
+String revision = response.getFirstHeader("ETAG").getValue();
+HttpClientUtils.closeQuietly(response); 
+
+~~~
+
+### com.cloudant.client.api.CloudantClient.uuids()
+`uuids()` request cloudant to send a list of UUIDs.
+
+~~~ java
+	List<String> uuids = client.uuids(count);
+~~~
+
+### com.cloudant.client.api.CloudantClient.getServerVersion()
+`getServerVersion()` returns Cloudant Server version.
+
+~~~ java
+	String serverVersion = client.serverVersion();
+~~~
+
+## Database Functions
+
+### com.cloudant.client.api.Database.changes()
+
+`com.cloudant.client.api.Database.changes().getChanges()` asks for the changes feed on the specified database. `includeDocs(true)` and `limit(1)` sets additional properties to the query string.
 
 ~~~ java
 ChangesResult changes = db.changes()
@@ -286,9 +331,7 @@ for (Row row : rows) {
 
 ~~~
 
-### com.cloudant.client.api.Database.changes().continuousChanges()
-
-Asks for the continuous changes feed on the specified database. `since(since)`, `includeDocs(true)` and `limit(1)` sets additional properties to the query string.
+`com.cloudant.client.api.Database.changes().continuousChanges()` asks for the continuous changes feed on the specified database. `since(since)`, `includeDocs(true)` and `limit(1)` sets additional properties to the query string.
 
 ~~~ java
 CouchDbInfo dbInfo = db.info();
@@ -307,30 +350,40 @@ while (changes.hasNext()) {
 }
 ~~~
 
+### com.cloudant.client.api.Database.Database.getShard(documentId)
+`getShard(documentId)` gets info about the shard this document belongs to .
 
-
-### com.cloudant.client.api.CloudantClient.executeRequest()
-
-This API enables extending Cloudant internal API by allowing a user-defined raw HTTP request to execute against a cloudant client. 
 ~~~ java
+	Shard s = db.getShard("snipe");
+~~~
 
-HttpHead head = new HttpHead(dbClient.getDBUri() + "doc-id");
-HttpResponse response = dbClient.executeRequest(head);
-String revision = response.getFirstHeader("ETAG").getValue();
-HttpClientUtils.closeQuietly(response); 
+`getShards()`get info about the shards in the database.
 
-~~~ 
-### org.lightcouch.CouchDbConfig
+~~~ java
+	List<Shard> shards = db.getShards();
+~~~
 
-An object containing the Cloudant configurations, possible keys are:
+### com.cloudant.client.api.Database.Database.info()
 
-* `url` - the Cloudant url
-* `db` - the database name
+`.info()` returns the DB info for this db.
 
+~~~ java
+	DbInfo dbInfo = db.info();
+~~~
 
+### com.cloudant.client.api.Database.Database.setPermissions()
+
+`.setPermissions()` sets the permissions for the DB.
+~~~ java
+	ApiKey key = client.generateApiKey();
+	EnumSet<Permissions> p = EnumSet.<Permissions>of( Permissions._writer, Permissions._reader);
+	db.setPermissions(key.getKey(), p);
+~~~
+
+ 
 ## Document functions
 
-Once you run [com.cloudant.client.api.CloudantClient.database(name,create)](#cloudant-db-use-db-name), use the returned object to work with documents in the database.
+Once you run `com.cloudant.client.api.CloudantClient.database(name,create)`, use the returned object to work with documents in the database.
 
 ### com.cloudant.client.api.Database.save(pojo)
 
@@ -664,36 +717,6 @@ ConnectOptions connectOptions = new ConnectOptions()
 
 
 
-## Advanced Features
-
-### Extending the Cloudant Library
-
-Cloudant is minimalistic but you can add your own features with `cloudant.request(opts, callback)`
-
-For example, to create a function to retrieve a specific revision of the `rabbit` document:
-
-~~~ js
-function getrabbitrev(rev, callback) {
-  cloudant.request({ db: 'alice',
-                     doc: 'rabbit',
-                     method: 'get',
-                     params: { rev: rev }
-                   }, callback)
-}
-
-getrabbitrev('4-2e6cdc4c7e26b745c2881a24e0eeece2', function(err, body) {
-  if (!err)
-    console.log(body)
-})
-~~~
-
-### Pipes
-
-You can pipe in Cloudant like in any other stream.  for example if our `rabbit` document has an attachment with name `picture.png` (with a picture of our white rabbit, of course!) you can pipe it to a `writable
-stream`
-
-See the [Attachment Functions](#attachment-functions) section for examples of piping to and from attachments.
-
 ## tests
 
 to run (and configure) the test suite simply:
@@ -711,15 +734,6 @@ Cloudant_env=testing node tests/doc/list.js list_doc_params
 ~~~
 
 where `list_doc_params` is the test name.
-
-## Development
-
-To join the effort developing this project, start from our GitHub page: https://github.com/cloudant/nodejs-cloudant
-
-First clone this project from GitHub, and then install its dependencies using npm.
-
-    $ git clone https://github.com/cloudant/nodejs-cloudant
-    $ npm install
 
 ## Test Suite
 
@@ -776,24 +790,6 @@ Get the password from Jason somehow, and set it as an npm variable.
     $  npm config set cloudant_password "ask jason for the password" # <- Not the real password
     $ npm run test-cloudant-live
     <...cut successful test suite run...>
-
-## Using in Other Projects
-
-If you work on this project plus another one, your best bet is to clone from GitHub and then *link* this project to your other one. With linking, your other project depends on this one; but instead of a proper install, npm basically symlinks this project into the right place.
-
-Go to this project and "link" it into the global namespace (sort of an "export").
-
-    $ cd cloudant
-    $ npm link
-    /Users/jhs/.nvm/v0.10.25/lib/node_modules/cloudant -> /Users/jhs/src/cloudant/nodejs-cloudant
-
-Go to your project and "link" it into there (sort of an "import").
-
-    $ cd ../my-project
-    $ npm link cloudant
-    /Users/jhs/src/my-project/node_modules/cloudant -> /Users/jhs/.nvm/v0.10.25/lib/node_modules/cloudant -> /Users/jhs/src/cloudant/nodejs-cloudant
-
-Now your project has the dependency in place, however you can work on both of them in tandem.
 
 ## License
 
