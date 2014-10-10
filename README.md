@@ -223,7 +223,7 @@ System.out.println("Database Name:" + db.info().getDbName() );
  
 ~~~
 
-### com.cloudant.client.api.CloudantClient.deleteDB(name, confirmDelete)
+### com.cloudant.client.api.CloudantClient.deleteDB(name,confirmDelete)
 
 Destroy database named `name`.
 
