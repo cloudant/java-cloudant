@@ -112,7 +112,7 @@ If you run this example, you will see:
 
 - [Initialization](#initialization)
 - [Authorization](#authorization)
-- [Server Functions](#server)
+- [Server Functions](#server-functions)
 	- [CloudantClient.createDB(name)](#com.cloudant.client.api.CloudantClient.createDB(name))
 	- [CloudantClient.database(name, create)](#com.cloudant.client.api.CloudantClient.database(name,create))
 	- [CloudantClient.deleteDB(name, confirmFlag)](com.cloudant.client.api.CloudantClient.deleteDB(name, confirmDelete))
@@ -124,12 +124,12 @@ If you run this example, you will see:
 	- [CloudantClient.executeRequest()](#com.cloudant.client.api.CloudantClient.executeRequest())
 	- [CloudantClient.uuids(number)](#com.cloudant.client.api.CloudantClient.uuids())  
 	- [CloudantClient.getServerVersion()](#com.cloudant.client.api.CloudantClient.getServerVersion())
-- [Database Functions](#Database Functions)
+- [Database Functions](#Database-Functions)
 	- [Database.changes()](#com.cloudant.client.api.Database.changes())
 	- [Database.getShard(documentId)](#com.cloudant.client.api.Database.getShard(documentId))
 	- [Database.info()](#com.cloudant.client.api.Database.Database.info())
 	- [Database.setPermissions()](#com.cloudant.client.api.Database.setPermissions())
-- [Document Functions](#Document functions)
+- [Document Functions](#Document-Functions)
 	- [Database.save(pojo)](#com.cloudant.client.api.Database.save(pojo))
 	- [Database.save(map)](#com.cloudant.client.api.Database.save(map))
 	- [Database.save(jsonObject)](#com.cloudant.client.api.Database.save(jsonObject))
@@ -138,20 +138,20 @@ If you run this example, you will see:
 	- [Database.contains(doc-id)](#com.cloudant.client.api.Database.contains(doc-id))
 	- [Database.remove(object)](#com.cloudant.client.api.Database.remove(object))
 	- [Database.remove(doc-id,rev-id)](#com.cloudant.client.api.Database.remove(doc-id,rev-id))
-- [Bulk Documents](#Bulk Documents)
-	- [Insert/Update docs ](#Insert/Update docs )
-	- [Fetch multiple documents](#Fetch multiple documents)
-- [Attachment Functions](#Attachment Functions)
-	- [Inline attachment](#Inline attachment)
-	- [Standalone Attachments](#Standalone Attachments)	
-- [Design Document Functions](#Design Document Functions)
-	- [query on a view](#query on a view)
-	- [retrieving the design doc from server](#retrieving the design doc from server)
-	- [synchronizing design doc ](#synchronizing design doc)
-- [Cloudant Query](#Cloudant Query)
-- [Cloudant Search](#Cloudant Search)
-- [Cookie Authentication](#Cookie Authentication)
-- [Advanced Configuration](#Advanced Configuration)
+- [Bulk Documents](#Bulk-Documents)
+	- [Insert/Update docs ](#Insert/Update-docs )
+	- [Fetch multiple documents](#Fetch-multiple-documents)
+- [Attachment Functions](#Attachment-Functions)
+	- [Inline attachment](#Inline-attachment)
+	- [Standalone Attachments](#Standalone-Attachments)	
+- [Design Document Functions](#Design-Document-Functions)
+	- [query on a view](#query-on-a-view)
+	- [retrieving the design doc from server](#retrieving-the-design-doc-from-server)
+	- [synchronizing design doc ](#synchronizing-design-doc)
+- [Cloudant Query](#Cloudant-Query)
+- [Cloudant Search](#Cloudant-Search)
+- [Cookie Authentication](#Cookie-Authentication)
+- [Advanced Configuration](#Advanced-Configuration)
 - [tests](#tests)
 
 ### Initialization
@@ -381,7 +381,7 @@ while (changes.hasNext()) {
 ~~~
 
  
-## Document functions
+## Document Functions
 
 Once you run `com.cloudant.client.api.CloudantClient.database(name,create)`, use the returned object to work with documents in the database.
 
