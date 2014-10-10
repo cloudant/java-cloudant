@@ -113,7 +113,7 @@ If you run this example, you will see:
 - [Initialization](#initialization)
 - [Authorization](#authorization)
 - [Server Functions](#server-functions)
-	- [CloudantClient.createDB(name)](#ComcloudantclientapiCloudantClientcreateDBname)
+	- [CloudantClient.createDB(name)](#Comcloudantclientapicloudantclientcreatedbname)
 	- [CloudantClient.database(name, create)](#com.cloudant.client.api.CloudantClient.database(name,create))
 	- [CloudantClient.deleteDB(name, confirmFlag)](com.cloudant.client.api.CloudantClient.deleteDB(name, confirmDelete))
 	- [CloudantClient.getAllDbs()](#com.cloudant.client.api.CloudantClient.getAllDbs())
