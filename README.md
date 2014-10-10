@@ -116,7 +116,7 @@ If you run this example, you will see:
 	- [CloudantClient.createDB(name)](#comcloudantclientapicloudantclientcreatedbname)
 	- [CloudantClient.database(name, create)](#comcloudantclientapicloudantclientdatabasename-create)
 	- [CloudantClient.deleteDB(name, confirmFlag)](com.cloudant.client.api.CloudantClient.deleteDB(name, confirmDelete))
-	- [CloudantClient.getAllDbs()](#com.cloudant.client.api.CloudantClient.getAllDbs())
+	- [CloudantClient.getAllDbs()](#comcloudantclientapicloudantclientgetAllDbs)
 	- [CloudantClient.getMembership()](#com.cloudant.client.api.CloudantClient.getMembership())
 	- [CloudantClient.getActiveTasks()](#com.cloudant.client.api.CloudantClient.getActiveTasks())	
 	- [CloudantClient.replicator()](#com.cloudant.client.api.CloudantClient.replicator())
