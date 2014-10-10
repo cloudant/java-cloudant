@@ -112,7 +112,7 @@ If you run this example, you will see:
 
 - [Initialization](#initialization)
 - [Authorization](#authorization)
-- [Server Functions](#server functions)
+- [Server Functions](#server)
 	- [CloudantClient.createDB(name)](#com.cloudant.client.api.CloudantClient.createDB(name))
 	- [CloudantClient.database(name, create)](#com.cloudant.client.api.CloudantClient.database(name,create))
 	- [CloudantClient.deleteDB(name, confirmFlag)](com.cloudant.client.api.CloudantClient.deleteDB(name, confirmDelete))
