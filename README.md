@@ -126,9 +126,9 @@ If you run this example, you will see:
 	- [CloudantClient.getServerVersion()](#com.cloudant.client.api.CloudantClient.getServerVersion())
 - [Database Functions](#Database Functions)
 	- [Database.changes()](#com.cloudant.client.api.Database.changes())
-	- [Database.getShard(documentId)](#com.cloudant.client.api.Database.Database.getShard(documentId))
+	- [Database.getShard(documentId)](#com.cloudant.client.api.Database.getShard(documentId))
 	- [Database.info()](#com.cloudant.client.api.Database.Database.info())
-	- [Database.setPermissions()](#com.cloudant.client.api.Database.Database.setPermissions())
+	- [Database.setPermissions()](#com.cloudant.client.api.Database.setPermissions())
 - [Document Functions](#Document functions)
 	- [Database.save(pojo)](#com.cloudant.client.api.Database.save(pojo))
 	- [Database.save(map)](#com.cloudant.client.api.Database.save(map))
@@ -350,7 +350,7 @@ while (changes.hasNext()) {
 }
 ~~~
 
-### com.cloudant.client.api.Database.Database.getShard(documentId)
+### com.cloudant.client.api.Database.getShard(documentId)
 `getShard(documentId)` gets info about the shard this document belongs to .
 
 ~~~ java
@@ -371,7 +371,7 @@ while (changes.hasNext()) {
 	DbInfo dbInfo = db.info();
 ~~~
 
-### com.cloudant.client.api.Database.Database.setPermissions()
+### com.cloudant.client.api.Database.setPermissions()
 
 `.setPermissions()` sets the permissions for the DB.
 ~~~ java
