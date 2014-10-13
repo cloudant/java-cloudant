@@ -133,7 +133,7 @@ If you run this example, you will see:
 	- [Database.save(pojo)](#comcloudantclientapidatabasesavepojo)
 	- [Database.save(map)](#comcloudantclientapidatabasesavemap)
 	- [Database.save(jsonObject)](#comcloudantclientapidatabasesavejsonobject)
-	- [Database.saveAttachment(inputStream,name,contentType)](#comcloudantclientapidatabasesaveattachmentinputstreamnamecontentType)
+	- [Database.saveAttachment(inputStream,name,contentType)](#comcloudantclientapidatabasesaveattachmentinputstreamnamecontenttype)
 	- [Database.saveAttachment(inputStream,name,contentType,docId,docRev)](#comcloudantclientapidatabasesaveattachmentinputstreamnamecontenttypedociddocrev)
 	- [Database.find(class,doc-id)](#comcloudantclientapidatabasefindclassdoc-id)
 	- [Database.find(class,doc-id,rev-id)](#comcloudantclientapidatabasefindclassdoc-idrev-id)
