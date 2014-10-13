@@ -18,9 +18,9 @@ import com.cloudant.client.api.model.ConnectOptions;
 import com.cloudant.tests.util.Utils;
 
 @Ignore
-public class CouchDbClientLoadTest {
+public class ClientLoadTest {
 	
-	private static final Log log = LogFactory.getLog(CouchDbClientLoadTest.class);
+	private static final Log log = LogFactory.getLog(ClientLoadTest.class);
 	private static CloudantClient dbClient;
 	private static Properties props ;
 	private static Database db;
