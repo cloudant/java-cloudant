@@ -33,7 +33,7 @@ Alternately download the dependencies
   
 ### Getting Started
 
-Now it's time to begin doing real work with Cloudant and Java
+Now it's time to begin doing real work with Cloudant and Java. For detail code example for any API please go through the Test suite.
 
 Initialize your Cloudant connection by constructing a *com.cloudant.client.api.CloudantClient* supplying the *account* to connect to along with *userName or Apikey* and  *password*
 
@@ -133,9 +133,13 @@ If you run this example, you will see:
 	- [Database.save(pojo)](#comcloudantclientapidatabasesavepojo)
 	- [Database.save(map)](#comcloudantclientapidatabasesavemap)
 	- [Database.save(jsonObject)](#comcloudantclientapidatabasesavejsonobject)
+	- [Database.saveAttachment(inputStream,name,contentType)](#comcloudantclientapidatabasesaveattachmentinputstreamnamecontentType)
+	- [Database.saveAttachment(inputStream,name,contentType,docId,docRev)](#comcloudantclientapidatabasesaveattachmentinputstreamnamecontenttypedociddocrev)
 	- [Database.find(class,doc-id)](#comcloudantclientapidatabasefindclassdoc-id)
 	- [Database.find(class,doc-id,rev-id)](#comcloudantclientapidatabasefindclassdoc-idrev-id)
 	- [Database.contains(doc-id)](#comcloudantclientapidatabasecontainsdoc-id)
+	- [Database.update(object)](#comcloudantclientapidatabaseupdateobject)
+	- [Database.update(object,writeQuorum)](#comcloudantclientapidatabaseupdateobjectwritequorum)
 	- [Database.remove(object)](#comcloudantclientapidatabaseremoveobject)
 	- [Database.remove(doc-id,rev-id)](#comcloudantclientapidatabaseremovedoc-idrev-id)
 - [Bulk Documents](#bulk-documents)
@@ -390,7 +394,7 @@ Once you run `com.cloudant.client.api.CloudantClient.database(name,create)`, use
 Insert `pojo` in the database. The parameter (an object) is the pojo. 
 
 ~~~ java
-com.cloudant.client.api.Database db = dbClient.database("alice", true);
+Database db = dbClient.database("alice", true);
 Foo foo = new Foo(); 
 Response response = db.save(foo); 
 
@@ -400,7 +404,7 @@ Response response = db.save(foo);
 Insert `map` in the database. The parameter (map) is the key value presentation of a document.
 
 ~~~ java
-com.cloudant.client.api.Database db = dbClient.database("alice", true);
+Database db = dbClient.database("alice", true);
 Map<String, Object> map = new HashMap<>();
 map.put("_id", "test-doc-id-1");
 map.put("title", "test-doc");
@@ -412,7 +416,7 @@ Response response =db.save(map);
 ### com.cloudant.client.api.Database.save(jsonObject)
 
 ~~~ java
-com.cloudant.client.api.Database db = dbClient.database("alice", true);
+Database db = dbClient.database("alice", true);
 JsonObject json = new JsonObject();
 json.addProperty("_id", "test-doc-id-2");
 json.add("json-array", new JsonArray());
@@ -420,12 +424,31 @@ Response response =db.save(json);
 
 ~~~ 
 
+### com.cloudant.client.api.Database.saveAttachment(inputStream,name,contentType)
+ Saves an attachment to a new document with a generated UUID as the document id. 
+ 
+~~~ java
+byte[] bytesToDB = "binary data".getBytes();
+ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain");
+~~~
+
+
+### com.cloudant.client.api.Database.saveAttachment(inputStream,name,contentType,docId,docRev)
+Saves an attachment to an existing document given both a document id and revision, or save to a new document given only the id, and rev as null.
+
+~~~ java
+byte[] bytesToDB = "binary data".getBytes();
+ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain","abcd12345",null);
+~~~
+
 ### com.cloudant.client.api.Database.find(class,doc-id)
 
 Retrieve the pojo from database by providing `doc_id`  .
 
 ~~~ java
-com.cloudant.client.api.Database db = dbClient.database("alice", true);
+Database db = dbClient.database("alice", true);
 Foo foo = db.find(Foo.class, "doc-id");
 
 ~~~
@@ -434,7 +457,7 @@ Foo foo = db.find(Foo.class, "doc-id");
 Retrieve the pojo from database by providing `doc_id`and `rev-id`  .
 
 ~~~ java
-com.cloudant.client.api.Database db = dbClient.database("alice", true);
+Database db = dbClient.database("alice", true);
 Foo foo = db.find(Foo.class, "doc-id", "rev-id");
 
 ~~~
@@ -444,9 +467,32 @@ returns true if the document exists with given `doc-id`
 
 ~~~ java
 
-com.cloudant.client.api.Database db = dbClient.database("alice", true);
+Database db = dbClient.database("alice", true);
 boolean found = db.contains("doc-id");
 ~~~
+
+### com.cloudant.client.api.Database.update(object)
+Updates an object in the database, the object must have the correct `_id` and `_rev` values.
+
+~~~ java
+Database db = dbClient.database("alice", true);
+String idWithSlash = "a/" + generateUUID();
+Response response = db.save(new Bar(idWithSlash));
+		
+Bar bar = db.find(Bar.class, response.getId());
+Response responseUpdate = db.update(bar);
+~~~
+
+### com.cloudant.client.api.Database.update(object,writeQuorum)
+Updates an object in the database, the object must have the correct `_id` and `_rev` values. The second argument is number of quorum.
+
+~~~ java
+db.save(new Animal("human"), 2);
+Animal h = db.find(Animal.class, "human", new com.cloudant.client.api.model.Params().readQuorum(2));
+db.update(h.setClass("inhuman"), 2);
+
+~~~
+
 
 ### com.cloudant.client.api.Database.remove(object)
 
@@ -454,14 +500,14 @@ The API removes the `object` from database. The object should contain `_id` and 
 
 ~~~ java
 
-com.cloudant.client.api.Database db = dbClient.database("alice", true);
+Database db = dbClient.database("alice", true);
 Response response = db.remove(foo);
 ~~~
 
 ### com.cloudant.client.api.Database.remove(doc-id,rev-id)
 ~~~ java
 
-com.cloudant.client.api.Database db = dbClient.database("alice", true);
+Database db = dbClient.database("alice", true);
 Response response = db.remove("doc-id", "doc-rev");
 ~~~
 ## Bulk Documents
@@ -475,8 +521,7 @@ Bulk documents API performs two operations: Modify & Fetch for bulk documents.
 List<Object> newDocs = new ArrayList<Object>();
 newDocs.add(new Foo());
 newDocs.add(new JsonObject());
-boolean allOrNothing = true;
-List<Response> responses = db.bulk(newDocs, allOrNothing);
+List<Response> responses = db.bulk(newDocs);
 ~~~
 
 ### Fetch multiple documents
@@ -605,7 +650,7 @@ Take a look at the [CouchDB wiki](http://wiki.apache.org/couchdb/Formatting_with
 
 This feature interfaces with Cloudant's query functionality. See the [Cloudant Query documentation][query] for details.
 
-As with Nano, when working with a database (as opposed to the root server), call the `.database()` method.
+when working with a database (as opposed to the root server), call the `.database()` method.
 
 ~~~ java
 
@@ -801,10 +846,9 @@ Licensed under the apache license, version 2.0 (the "license"); you may not use 
 
 Unless required by applicable law or agreed to in writing, software distributed under the license is distributed on an "as is" basis, without warranties or conditions of any kind, either express or implied. See the license for the specific language governing permissions and limitations under the license.
 
-[nano]: https://github.com/dscape/nano
 [query]: http://docs.cloudant.com/api/cloudant-query.html
 [search]: http://docs.cloudant.com/api/search.html
 [auth]: http://docs.cloudant.com/api/authz.html
-[issues]: https://github.com/cloudant/nodejs-cloudant/issues
+[issues]: https://github.com/cloudant/java-cloudant /issues
 [follow]: https://github.com/iriscouch/follow
 [request]:  https://github.com/mikeal/request
