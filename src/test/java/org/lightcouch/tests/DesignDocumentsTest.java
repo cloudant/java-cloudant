@@ -21,23 +21,36 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.Properties;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.lightcouch.CouchDatabase;
+
+import com.cloudant.client.api.CloudantClient;
+import com.cloudant.client.api.Database;
+/*import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
-import org.lightcouch.DesignDocument;
+import org.lightcouch.DesignDocument;*/
+import com.cloudant.client.api.model.DesignDocument;
+import com.cloudant.tests.util.Utils;
 
 public class DesignDocumentsTest {
-
-	private static CouchDbClient dbClient;
-	private static CouchDatabase db;
+	private static final Log log = LogFactory.getLog(DesignDocumentsTest.class);
+	private static Properties props ;
+	private static CloudantClient dbClient;
+	private static Database db;
 	
 
 	@BeforeClass
 	public static void setUpClass() {
-		dbClient = new CouchDbClient();
+	//	dbClient = new CouchDbClient();
+		props = Utils.getProperties("cloudant.properties",log);
+		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
+									  props.getProperty("cloudant.username"),
+									  props.getProperty("cloudant.password"));
 		db = dbClient.database("lightcouch-db-test", true);
 	}
 
