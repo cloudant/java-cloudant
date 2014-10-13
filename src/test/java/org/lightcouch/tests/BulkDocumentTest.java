@@ -22,40 +22,24 @@ import static org.junit.Assert.assertThat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-/*import org.lightcouch.CouchDatabase;
+import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
-import org.lightcouch.Response;*/
+import org.lightcouch.Response;
 
-
-
-
-
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
-import com.cloudant.client.api.model.Response;
-import com.cloudant.tests.util.Utils;
 import com.google.gson.JsonObject;
 
 public class BulkDocumentTest {
 
-	private static final Log log = LogFactory.getLog(BulkDocumentTest.class);
-	private static CloudantClient dbClient;
-	private static Properties props ;
-	private static Database db;
+	private static CouchDbClient dbClient;
+	private static CouchDatabase db;
 
 	@BeforeClass
 	public static void setUpClass() {
-		props = Utils.getProperties("cloudant.properties",log);
-		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
-									  props.getProperty("cloudant.username"),
-									  props.getProperty("cloudant.password"));
+		dbClient = new CouchDbClient();
 		db = dbClient.database("lightcouch-db-test", true);
 	}
 
@@ -70,11 +54,9 @@ public class BulkDocumentTest {
 		newDocs.add(new Foo());
 		newDocs.add(new JsonObject());
 
-	//	boolean allOrNothing = true;
+		boolean allOrNothing = true;
 		
-		// allorNothing is not supported in cloudant
-	//	List<Response> responses = db.bulk(newDocs, allOrNothing);
-		List<Response> responses = db.bulk(newDocs);
+		List<Response> responses = db.bulk(newDocs, allOrNothing);
 		
 		assertThat(responses.size(), is(2));
 	}

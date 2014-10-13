@@ -24,50 +24,29 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 import java.util.UUID;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-/*import org.lightcouch.CouchDatabase;
+import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
 import org.lightcouch.Page;
-import org.lightcouch.ViewResult;*/
+import org.lightcouch.ViewResult;
 
-
-
-
-import org.lightcouch.DocumentConflictException;
-import org.lightcouch.NoDocumentException;
-
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
-import com.cloudant.client.api.model.Page;
-import com.cloudant.client.api.model.ViewResult;
-import com.cloudant.tests.util.Utils;
 import com.google.gson.JsonObject;
 
 public class ViewsTest {
 
-	private static final Log log = LogFactory.getLog(ViewsTest.class);
-	private static Properties props ;
-	
-	private static CloudantClient dbClient;
-	private static Database db;
+	private static CouchDbClient dbClient;
+	private static CouchDatabase db;
 	
 
 	@BeforeClass
 	public static void setUpClass() {
-		props = Utils.getProperties("cloudant.properties",log);
-		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
-									  props.getProperty("cloudant.username"),
-									  props.getProperty("cloudant.password"));
-		//dbClient = new CouchDbClient();
+		dbClient = new CouchDbClient();
 		db = dbClient.database("lightcouch-db-test", true);
 
 		db.syncDesignDocsWithDb();
@@ -159,8 +138,7 @@ public class ViewsTest {
 		assertThat(viewResult.getRows().size(), is(2));
 	}
 
-	/* Not supported in cloudant
-	 * @Test()
+	@Test()
 	public void tempViews() {
 		db.save(new Foo(generateUUID(), "some-val"));
 		List<Foo> list = db.view("_temp_view")
@@ -169,7 +147,7 @@ public class ViewsTest {
 				.reduce(false)
 				.query(Foo.class);
 		assertThat(list.size(), not(0));
-	}*/
+	}
 
 	@Test
 	public void allDocs() {

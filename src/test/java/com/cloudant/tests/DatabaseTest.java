@@ -7,8 +7,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -18,16 +16,15 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.api.Database.Permissions;
 import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.Shard;
-import com.cloudant.tests.util.Utils;
 
 public class DatabaseTest {
-	private static final Log log = LogFactory.getLog(DatabaseTest.class);
+
 	private static CloudantClient account;
 	private static Database db;
 	
 	@BeforeClass
 	public static void setUpClass() {
-		Properties props = Utils.getProperties("cloudant.properties",log);
+		Properties props = CloudantClientTests.getProperties("cloudant.properties");
 		String cloudantaccount = props.getProperty("cloudant.account");
 		String userName= props.getProperty("cloudant.username");
 		String password = props.getProperty("cloudant.password");

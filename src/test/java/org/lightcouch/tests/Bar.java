@@ -1,8 +1,6 @@
 package org.lightcouch.tests;
 
-import com.cloudant.client.api.model.Document;
-
-
+import org.lightcouch.Document;
 
 public class Bar extends Document {
 	private String bar;

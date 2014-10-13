@@ -22,47 +22,29 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 import java.util.List;
-import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-/*import org.lightcouch.Changes;
+import org.lightcouch.Changes;
 import org.lightcouch.ChangesResult;
 import org.lightcouch.ChangesResult.Row;
 import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbInfo;
-import org.lightcouch.Response;*/
+import org.lightcouch.Response;
 
-import com.cloudant.client.api.Changes;
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
-import com.cloudant.client.api.model.ChangesResult;
-import com.cloudant.client.api.model.ChangesResult.Row;
-import com.cloudant.client.api.model.DbInfo;
-import com.cloudant.client.api.model.Response;
-import com.cloudant.tests.util.Utils;
 import com.google.gson.JsonObject;
 
 public class ChangeNotificationsTest {
 	
-	private static final Log log = LogFactory.getLog(ChangeNotificationsTest.class);
-	private static CloudantClient dbClient;
-	private static Properties props ;
-	private static Database db;
-
+	private static CouchDbClient dbClient;
+	private static CouchDatabase db;
 	
 
 	@BeforeClass
 	public static void setUpClass() {
-		props = Utils.getProperties("cloudant.properties",log);
-		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
-									  props.getProperty("cloudant.username"),
-									  props.getProperty("cloudant.password"));
-		
+		dbClient = new CouchDbClient();
 		db = dbClient.database("lightcouch-db-test", true);
 	}
 
@@ -99,7 +81,7 @@ public class ChangeNotificationsTest {
 	public void changes_continuousFeed() {
 		db.save(new Foo()); 
 
-		DbInfo dbInfo = db.info();
+		CouchDbInfo dbInfo = db.info();
 		String since = dbInfo.getUpdateSeq();
 
 		Changes changes = db.changes()

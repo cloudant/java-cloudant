@@ -19,40 +19,23 @@ package org.lightcouch.tests;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.Properties;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
-import com.cloudant.client.api.model.Params;
-/*import org.lightcouch.CouchDatabase;
+import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.Params;
-import org.lightcouch.Response;*/
-import com.cloudant.client.api.model.Response;
-import com.cloudant.tests.util.Utils;
+import org.lightcouch.Response;
 
 public class UpdateHandlerTest {
-	
-	private static final Log log = LogFactory.getLog(UpdateHandlerTest.class);
-	private static Properties props ;
 
-	private static CloudantClient dbClient;
-	private static Database db;
+	private static CouchDbClient dbClient;
+	private static CouchDatabase db;
 	
 
 	@BeforeClass
 	public static void setUpClass() {
-		//dbClient = new CouchDbClient();
-		props = Utils.getProperties("cloudant.properties",log);
-		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
-									  props.getProperty("cloudant.username"),
-									  props.getProperty("cloudant.password"));
+		dbClient = new CouchDbClient();
 		db = dbClient.database("lightcouch-db-test", true);
 		db.syncDesignDocsWithDb();
 	}

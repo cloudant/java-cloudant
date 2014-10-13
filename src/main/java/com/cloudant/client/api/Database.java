@@ -75,7 +75,7 @@ public class Database {
 	private CouchDatabase db;
 	private CloudantClient client;
 	
-//	private DbDesign design ;
+	private DbDesign design ;
 
 	public enum Permissions {
 		_admin,
@@ -92,7 +92,8 @@ public class Database {
 	Database(CloudantClient client, CouchDatabase db ) {
 		super();
 		this.client = client;
-		this.db = db;		
+		this.db = db;
+		this.design = new DbDesign(db.design());
 	}
 	
 	/**
@@ -276,7 +277,7 @@ public class Database {
 	  * @see CouchDbDesign
 	  */
 	public DbDesign design() {
-		return new DbDesign(db,client);
+		return design ;
 	}
 
 

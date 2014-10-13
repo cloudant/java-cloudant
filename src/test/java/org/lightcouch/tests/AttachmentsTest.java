@@ -23,48 +23,25 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Properties;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-/*import org.lightcouch.Attachment;
+import org.lightcouch.Attachment;
 import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.Params;
-import org.lightcouch.Response;*/
-
-
-
-
-
-
-
-
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
-import com.cloudant.client.api.model.Attachment;
-import com.cloudant.client.api.model.Params;
-import com.cloudant.client.api.model.Response;
-import com.cloudant.tests.util.Utils;
+import org.lightcouch.Response;
 
 public class AttachmentsTest {
 
-	private static final Log log = LogFactory.getLog(AttachmentsTest.class);
-	
-	private static CloudantClient dbClient;
-	private static Database db;
-	private static Properties props ;
+	private static CouchDbClient dbClient;
+	private static CouchDatabase db;
 
 	@BeforeClass
 	public static void setUpClass() {
-		props = Utils.getProperties("cloudant.properties",log);
-		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
-				  props.getProperty("cloudant.username"),
-				  props.getProperty("cloudant.password"));
+		dbClient = new CouchDbClient();
 		db = dbClient.database("lightcouch-db-test", true);
 	}
 

@@ -9,30 +9,25 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-//import org.lightcouch.DesignDocument;
+import org.lightcouch.DesignDocument;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.Search;
-import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.api.model.SearchResult;
 import com.cloudant.client.api.model.SearchResult.SearchResultRows;
-import com.cloudant.tests.util.Utils;
 
 public class SearchTests {
 
-	private static final Log log = LogFactory.getLog(SearchTests.class);
 	private static CloudantClient account;
 	private static Database db;
 	
 	@BeforeClass
 	public static void setUpClass() {
-		Properties props = Utils.getProperties("cloudant.properties",log);
+		Properties props = CloudantClientTests.getProperties("cloudant.properties");
 		String cloudantaccount = props.getProperty("cloudant.account");
 		String userName= props.getProperty("cloudant.username");
 		String password = props.getProperty("cloudant.password");

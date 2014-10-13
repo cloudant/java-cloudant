@@ -6,8 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -18,17 +16,15 @@ import com.cloudant.client.api.model.FindByIndexOptions;
 import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.IndexField.SortOrder;
-import com.cloudant.tests.util.Utils;
 
 public class IndexTests {
 
-	private static final Log log = LogFactory.getLog(IndexTests.class);
 	private static CloudantClient account;
 	private static Database db;
 	
 	@BeforeClass
 	public static void setUpClass() {
-		Properties props = Utils.getProperties("cloudant.properties",log);
+		Properties props = CloudantClientTests.getProperties("cloudant.properties");
 		String cloudantaccount = props.getProperty("cloudant.account");
 		String userName= props.getProperty("cloudant.username");
 		String password = props.getProperty("cloudant.password");
