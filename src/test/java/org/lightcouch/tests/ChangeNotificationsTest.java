@@ -29,14 +29,6 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-/*import org.lightcouch.Changes;
-import org.lightcouch.ChangesResult;
-import org.lightcouch.ChangesResult.Row;
-import org.lightcouch.CouchDatabase;
-import org.lightcouch.CouchDbClient;
-import org.lightcouch.CouchDbInfo;
-import org.lightcouch.Response;*/
-
 import com.cloudant.client.api.Changes;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;

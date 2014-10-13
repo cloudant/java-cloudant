@@ -32,16 +32,6 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-/*import org.lightcouch.CouchDatabase;
-import org.lightcouch.CouchDbClient;
-import org.lightcouch.DocumentConflictException;
-import org.lightcouch.NoDocumentException;
-import org.lightcouch.Page;
-import org.lightcouch.ViewResult;*/
-
-
-
-
 import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
 

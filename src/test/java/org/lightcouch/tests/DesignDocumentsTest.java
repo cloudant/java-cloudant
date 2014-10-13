@@ -31,9 +31,6 @@ import org.junit.Test;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
-/*import org.lightcouch.CouchDatabase;
-import org.lightcouch.CouchDbClient;
-import org.lightcouch.DesignDocument;*/
 import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.tests.util.Utils;
 

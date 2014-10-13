@@ -35,13 +35,6 @@ import org.junit.Test;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
-/*import org.lightcouch.CouchDatabase;
-import org.lightcouch.CouchDbClient;
-import org.lightcouch.ReplicationResult;
-import org.lightcouch.ReplicatorDocument;
-import org.lightcouch.Response;
-import org.lightcouch.ViewResult;
-import org.lightcouch.ReplicationResult.ReplicationHistory;*/
 import com.cloudant.client.api.model.ReplicationResult;
 import com.cloudant.client.api.model.ReplicationResult.ReplicationHistory;
 import com.cloudant.client.api.model.ReplicatorDocument;

@@ -26,13 +26,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-/*import org.lightcouch.CouchDatabase;
-import org.lightcouch.CouchDbClient;
-import org.lightcouch.CouchDbProperties;*/
-
-
-
-
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ConnectOptions;
@@ -41,9 +34,9 @@ import com.cloudant.tests.util.Utils;
 /**
  * {@link CouchDbClient} load test.
  * 
- * <p> Unignore test then run: <tt>$ mvn test -Dtest=org.lightcouch.tests.CouchDbClientLoadTest</tt>
+ *
  * 
- * @author ahmed
+ * @author Ganesh K Choudhary
  *
  */
 @Ignore
