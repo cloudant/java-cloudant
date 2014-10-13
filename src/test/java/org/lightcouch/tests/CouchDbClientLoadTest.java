@@ -16,16 +16,27 @@
 
 package org.lightcouch.tests;
 
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.lightcouch.CouchDatabase;
+/*import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
-import org.lightcouch.CouchDbProperties;
+import org.lightcouch.CouchDbProperties;*/
+
+
+
+
+import com.cloudant.client.api.CloudantClient;
+import com.cloudant.client.api.Database;
+import com.cloudant.client.api.model.ConnectOptions;
+import com.cloudant.tests.util.Utils;
 
 /**
  * {@link CouchDbClient} load test.
@@ -38,8 +49,10 @@ import org.lightcouch.CouchDbProperties;
 @Ignore
 public class CouchDbClientLoadTest {
 	
-	private static CouchDbClient dbClient;
-	private static CouchDatabase db;
+	private static final Log log = LogFactory.getLog(CouchDbClientLoadTest.class);
+	private static CloudantClient dbClient;
+	private static Properties props ;
+	private static Database db;
 	
 
 	private static final int NUM_THREADS     = 500; 
@@ -50,7 +63,7 @@ public class CouchDbClientLoadTest {
 	
 	@BeforeClass 
 	public static void setUpClass() {
-		CouchDbProperties properties = new CouchDbProperties()
+	/*	CouchDbProperties properties = new CouchDbProperties()
 		  //.setDbName("lightcouch-db-load")
 		  //.setCreateDbIfNotExist(true)
 		  .setProtocol("https")
@@ -58,10 +71,17 @@ public class CouchDbClientLoadTest {
 		  .setPort(443)
 		  .setUsername("")
 		  .setPassword("")
-		  .setMaxConnections(MAX_CONNECTIONS);
+		  .setMaxConnections(MAX_CONNECTIONS);*/
 		
+		props = Utils.getProperties("cloudant.properties",log);
 		
-		dbClient = new CouchDbClient(properties);
+		ConnectOptions connectionoptions = new ConnectOptions();
+		connectionoptions.setMaxConnections(MAX_CONNECTIONS);
+		
+		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
+									  props.getProperty("cloudant.username"),
+									  props.getProperty("cloudant.password"),connectionoptions);
+	//	dbClient = new CouchDbClient(properties);
 		db = dbClient.database("lightcouch-db-load", true);
 	}
 	

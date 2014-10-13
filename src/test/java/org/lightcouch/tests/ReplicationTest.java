@@ -23,35 +23,58 @@ import static org.junit.Assert.assertThat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.lightcouch.CouchDatabase;
+
+import com.cloudant.client.api.CloudantClient;
+import com.cloudant.client.api.Database;
+/*import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.ReplicationResult;
 import org.lightcouch.ReplicatorDocument;
 import org.lightcouch.Response;
 import org.lightcouch.ViewResult;
-import org.lightcouch.ReplicationResult.ReplicationHistory;
+import org.lightcouch.ReplicationResult.ReplicationHistory;*/
+import com.cloudant.client.api.model.ReplicationResult;
+import com.cloudant.client.api.model.ReplicationResult.ReplicationHistory;
+import com.cloudant.client.api.model.ReplicatorDocument;
+import com.cloudant.client.api.model.Response;
+import com.cloudant.client.api.model.ViewResult;
+import com.cloudant.tests.util.Utils;
 
 @Ignore
 public class ReplicationTest {
+	private static final Log log = LogFactory.getLog(ReplicationTest.class);
 	
-	private static CouchDbClient dbClient;
-	private static CouchDatabase db1;
+	private static Properties props ;
+	private static CloudantClient dbClient;
+	private static Database db1;
 	
-	private static CouchDbClient dbClient2;
-	private static CouchDatabase db2;
+	private static CloudantClient dbClient2;
+	private static Database db2;
 	
 	@BeforeClass
 	public static void setUpClass() {
-		dbClient = new CouchDbClient();
+		props = Utils.getProperties("cloudant.properties",log);
+		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
+									  props.getProperty("cloudant.username"),
+									  props.getProperty("cloudant.password"));
+		//dbClient = new CouchDbClient();
 		db1 = dbClient.database("lightcouch-db-test", true);
 		
-		dbClient2 = new CouchDbClient("couchdb-2.properties");
+	
+		props = Utils.getProperties("couchdb-2.properties",log);
+		dbClient2 = new CloudantClient(props.getProperty("cloudant.account"),
+									  props.getProperty("cloudant.username"),
+									  props.getProperty("cloudant.password"));
+	//	dbClient2 = new CouchDbClient("couchdb-2.properties");
 		db2 = dbClient.database("lightcouch-db-test-2", true);
 		
 		db1.syncDesignDocsWithDb();
