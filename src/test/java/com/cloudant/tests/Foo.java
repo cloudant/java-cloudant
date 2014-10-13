@@ -1,4 +1,4 @@
-package org.lightcouch.tests;
+package com.cloudant.tests;
 
 import java.util.Arrays;
 import java.util.Date;

@@ -1,20 +1,6 @@
-/*
- * Copyright (C) 2011 lightcouch.org
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
-package org.lightcouch.tests;
+
+package com.cloudant.tests;
 
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -31,14 +17,6 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ConnectOptions;
 import com.cloudant.tests.util.Utils;
 
-/**
- * {@link CouchDbClient} load test.
- * 
- *
- * 
- * @author Ganesh K Choudhary
- *
- */
 @Ignore
 public class CouchDbClientLoadTest {
 	
@@ -56,16 +34,6 @@ public class CouchDbClientLoadTest {
 	
 	@BeforeClass 
 	public static void setUpClass() {
-	/*	CouchDbProperties properties = new CouchDbProperties()
-		  //.setDbName("lightcouch-db-load")
-		  //.setCreateDbIfNotExist(true)
-		  .setProtocol("https")
-		  .setHost("localhost")
-		  .setPort(443)
-		  .setUsername("")
-		  .setPassword("")
-		  .setMaxConnections(MAX_CONNECTIONS);*/
-		
 		props = Utils.getProperties("cloudant.properties",log);
 		
 		ConnectOptions connectionoptions = new ConnectOptions();
@@ -74,7 +42,6 @@ public class CouchDbClientLoadTest {
 		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
 									  props.getProperty("cloudant.username"),
 									  props.getProperty("cloudant.password"),connectionoptions);
-	//	dbClient = new CouchDbClient(properties);
 		db = dbClient.database("lightcouch-db-load", true);
 	}
 	

@@ -1,4 +1,4 @@
-package org.lightcouch.tests;
+package com.cloudant.tests;
 
 import com.cloudant.client.api.model.Document;
 
