@@ -2,7 +2,6 @@ package com.cloudant.tests;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
 
@@ -16,6 +15,7 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
+import com.cloudant.tests.util.Utils;
 
 
 public class CloudantClientTests {
@@ -29,7 +29,7 @@ public class CloudantClientTests {
 
 	@BeforeClass
 	public static void setUpClass() {
-		props = getProperties("cloudant.properties");
+		props = Utils.getProperties("cloudant.properties",log);
 		account = new CloudantClient(props.getProperty("cloudant.account"),
 									  props.getProperty("cloudant.username"),
 									  props.getProperty("cloudant.password"));
@@ -80,17 +80,5 @@ public class CloudantClientTests {
 		
 	}
 	
-	public static Properties getProperties(String configFile) {
-		Properties properties = new Properties();
-		try {
-			InputStream instream = CloudantClient.class.getClassLoader().getResourceAsStream(configFile);
-			properties.load(instream);
-		} catch (Exception e) {
-			String msg = "Could not read configuration file from the classpath: " + configFile;
-			log.error(msg);
-			throw new IllegalStateException(msg, e);
-		}
-		return properties;
 	
-	}
 }

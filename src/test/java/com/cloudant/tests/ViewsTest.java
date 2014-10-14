@@ -1,20 +1,4 @@
-/*
- * Copyright (C) 2011 lightcouch.org
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-package org.lightcouch.tests;
+package com.cloudant.tests;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -24,29 +8,40 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.lightcouch.CouchDatabase;
-import org.lightcouch.CouchDbClient;
 import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
-import org.lightcouch.Page;
-import org.lightcouch.ViewResult;
 
+import com.cloudant.client.api.CloudantClient;
+import com.cloudant.client.api.Database;
+import com.cloudant.client.api.model.Page;
+import com.cloudant.client.api.model.ViewResult;
+import com.cloudant.tests.util.Utils;
 import com.google.gson.JsonObject;
 
 public class ViewsTest {
 
-	private static CouchDbClient dbClient;
-	private static CouchDatabase db;
+	private static final Log log = LogFactory.getLog(ViewsTest.class);
+	private static Properties props ;
+	
+	private static CloudantClient dbClient;
+	private static Database db;
 	
 
 	@BeforeClass
 	public static void setUpClass() {
-		dbClient = new CouchDbClient();
+		props = Utils.getProperties("cloudant.properties",log);
+		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
+									  props.getProperty("cloudant.username"),
+									  props.getProperty("cloudant.password"));
+		//dbClient = new CouchDbClient();
 		db = dbClient.database("lightcouch-db-test", true);
 
 		db.syncDesignDocsWithDb();
@@ -136,17 +131,6 @@ public class ViewsTest {
 				.groupLevel(2)
 				.queryView(int[].class, Integer.class, Foo.class);
 		assertThat(viewResult.getRows().size(), is(2));
-	}
-
-	@Test()
-	public void tempViews() {
-		db.save(new Foo(generateUUID(), "some-val"));
-		List<Foo> list = db.view("_temp_view")
-				.tempView("temp_1")
-				.includeDocs(true)
-				.reduce(false)
-				.query(Foo.class);
-		assertThat(list.size(), not(0));
 	}
 
 	@Test

@@ -764,77 +764,15 @@ ConnectOptions connectOptions = new ConnectOptions()
 
 ## tests
 
-to run (and configure) the test suite simply:
+To run the test suite first edit the cloudant properties. Open the file `src/test/resources/cloudant.properties` and `src/test/resources/cloudant-2.properties`,edit the properties e.g account,username,etc.
 
-~~~ sh
-cd Cloudant
-npm install
-npm test
+~~~ java
+cloudant.account=testaccount
+cloudant.username=testuser
+cloudant.password=testpassword
 ~~~
 
-after adding a new test you can run it individually (with verbose output) using:
-
-~~~ sh
-Cloudant_env=testing node tests/doc/list.js list_doc_params
-~~~
-
-where `list_doc_params` is the test name.
-
-## Test Suite
-
-We use npm to handle running the test suite. To run the comprehensive test suite, just run `npm test`. However, to run only the Cloudant-specific bits, we have a custom `test-cloudant` script.
-
-    $ npm run test-cloudant
-
-    > cloudant@5.10.1 test-cloudant /Users/jhs/src/cloudant/nodejs-cloudant
-    > env NOCK=on sh tests/cloudant/run-tests.sh
-
-    Test against mocked local database
-
-      /tests/cloudant/auth.js
-
-    ? 5/5 cloudant:generate_api_key took 196ms
-    ? 3/3 cloudant:set_permissions took 7ms
-    ? 8/8 summary took 224ms
-    <...cut a bunch of test output...>
-
-This runs against a local "mock" web server, called Nock. However the test suite can also run against a live Cloudant service. I have registered "nodejs.cloudant.com" for this purpose. To use it, run the `test-cloudant-live` script.
-
-    $ npm run test-cloudant-live
-
-    > cloudant@5.10.1 test-cloudant-live /Users/jhs/src/cloudant/nodejs-cloudant
-    > sh tests/cloudant/run-tests.sh
-
-    Test against mocked local database
-
-      /tests/cloudant/auth.js
-
-    ? 5/5 cloudant:generate_api_key took 192ms
-    ? 3/3 cloudant:set_permissions took 7ms
-    ? 8/8 summary took 221ms
-    <...cut a bunch of test output...>
-
-Unfortunately you need to know the password.
-
-    $ npm run test-cloudant-live
-
-    > cloudant@5.10.1 test-cloudant-live /Users/jhs/src/cloudant/nodejs-cloudant
-    > sh tests/cloudant/run-tests.sh
-
-    Test against remote Cloudant database
-    No password configured for remote Cloudant database. Please run:
-
-    npm config set cloudant_password "<your-password>"
-
-    npm ERR! cloudant@5.10.1 test-cloudant-live: `sh tests/cloudant/run-tests.sh`
-    <...cut npm error messages...>
-
-Get the password from Jason somehow, and set it as an npm variable.
-
-    # Note the leading space to keep this command out of the Bash history.
-    $  npm config set cloudant_password "ask jason for the password" # <- Not the real password
-    $ npm run test-cloudant-live
-    <...cut successful test suite run...>
+Once all the required properties are listed in the properties file run `com.cloudant.test.main.CloudantTestSuite` test class.
 
 ## License
 
