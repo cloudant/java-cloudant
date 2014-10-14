@@ -84,7 +84,7 @@ public class CloudantClientTests {
 		String cookie = account.getCookie() + "XXX";
 		boolean exceptionRaised = true;
 		try {
-			cookieBasedClient = new CloudantClient(
+			CloudantClient cookieBasedClient = new CloudantClient(
 					props.getProperty("cloudant.account"), cookie);
 			exceptionRaised = false;
 		} catch (Exception e) {
