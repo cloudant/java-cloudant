@@ -46,7 +46,7 @@ public class ReplicationTest {
 		db1 = dbClient.database("lightcouch-db-test", true);
 		
 	
-		props = Utils.getProperties("couchdb-2.properties",log);
+		props = Utils.getProperties("cloudant-2.properties",log);
 		dbClient2 = new CloudantClient(props.getProperty("cloudant.account"),
 									  props.getProperty("cloudant.username"),
 									  props.getProperty("cloudant.password"));
