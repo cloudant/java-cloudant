@@ -544,7 +544,8 @@ Updates an object in the database, the object must have the correct `_id` and `_
 
 ~~~ java
 db.save(new Animal("human"), 2);
-Animal h = db.find(Animal.class, "human", new com.cloudant.client.api.model.Params().readQuorum(2));
+Animal h = db.find(Animal.class, "human", 
+				new com.cloudant.client.api.model.Params().readQuorum(2));
 db.update(h.setClass("inhuman"), 2);
 
 ~~~
