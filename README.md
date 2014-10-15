@@ -516,7 +516,8 @@ This method finds any document given a URI.The URI must be URI-encoded.
 
 ~~~ java
 Database db = dbClient.database("alice", true);
-Foo foo = db.findAny(Foo.class,"https://mdb.cloudant.com/alice/03c6a4619b9e42d68db0e592757747fe");
+Foo foo = db.findAny(Foo.class,
+				"https://mdb.cloudant.com/alice/03c6a4619b9e42d68db0e592757747fe");
 ~~~
 
 ### com.cloudant.client.api.Database.contains(doc-id)
