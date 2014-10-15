@@ -130,13 +130,16 @@ If you run this example, you will see:
 	- [Database.info()](#comcloudantclientapidatabasedatabaseinfo)
 	- [Database.setPermissions()](#comcloudantclientapidatabasesetpermissions)
 - [Document Functions](#document-functions)
-	- [Database.save(pojo)](#comcloudantclientapidatabasesavepojo)
-	- [Database.save(map)](#comcloudantclientapidatabasesavemap)
-	- [Database.save(jsonObject)](#comcloudantclientapidatabasesavejsonobject)
+	- [Database.save(object)](#comcloudantclientapidatabasesaveobject)
+	- [Database.save(object,writeQuorum)](#comcloudantclientapidatabasesaveobjectwritequorum)
+	- [Database.post(object)](#comcloudantclientapidatabasepostobject)
+	- [Database.post(object,writeQuorum)](#comcloudantclientapidatabasepostobjectwritequorum)
 	- [Database.saveAttachment(inputStream,name,contentType)](#comcloudantclientapidatabasesaveattachmentinputstreamnamecontenttype)
 	- [Database.saveAttachment(inputStream,name,contentType,docId,docRev)](#comcloudantclientapidatabasesaveattachmentinputstreamnamecontenttypedociddocrev)
+	- [Database.batch(obect)](#comcloudantclientapidatabasebatchobject)
 	- [Database.find(class,doc-id)](#comcloudantclientapidatabasefindclassdoc-id)
 	- [Database.find(class,doc-id,rev-id)](#comcloudantclientapidatabasefindclassdoc-idrev-id)
+	- [Database.find(class,doc-id,params)](#comcloudantclientapidatabasefindclassdoc-idparams)
 	- [Database.contains(doc-id)](#comcloudantclientapidatabasecontainsdoc-id)
 	- [Database.update(object)](#comcloudantclientapidatabaseupdateobject)
 	- [Database.update(object,writeQuorum)](#comcloudantclientapidatabaseupdateobjectwritequorum)
@@ -389,7 +392,16 @@ while (changes.hasNext()) {
 
 Once you run `com.cloudant.client.api.CloudantClient.database(name,create)`, use the returned object to work with documents in the database.
 
-### com.cloudant.client.api.Database.save(pojo)
+### com.cloudant.client.api.Database.save(object)
+
+~~~ java
+Database db = dbClient.database("alice", true);
+JsonObject json = new JsonObject();
+json.addProperty("_id", "test-doc-id-2");
+json.add("json-array", new JsonArray());
+Response response =db.save(json); 
+
+~~~ 
 
 Insert `pojo` in the database. The parameter (an object) is the pojo. 
 
@@ -400,7 +412,6 @@ Response response = db.save(foo);
 
 ~~~
 
-### com.cloudant.client.api.Database.save(map)
 Insert `map` in the database. The parameter (map) is the key value presentation of a document.
 
 ~~~ java
@@ -413,16 +424,25 @@ Response response =db.save(map);
 ~~~ 
 
 
-### com.cloudant.client.api.Database.save(jsonObject)
+### com.cloudant.client.api.Database.save(object,writeQuorum)
+Saves an object in the database, using HTTP PUT request.If the object doesn't have an `_id` value, we will assign a `UUID` as the document id.
+~~~ java
+put code here
+~~~
+
+### com.cloudant.client.api.Database.post(object)
+Saves an object in the database using HTTP POST request.The database will be responsible for generating the document id.
 
 ~~~ java
-Database db = dbClient.database("alice", true);
-JsonObject json = new JsonObject();
-json.addProperty("_id", "test-doc-id-2");
-json.add("json-array", new JsonArray());
-Response response =db.save(json); 
+put code here
+~~~
 
-~~~ 
+### com.cloudant.client.api.Database.post(object,writeQuorum)
+Saves an object in the database using HTTP POST request with specificied write quorum.The database will be responsible for generating the document id.
+
+~~~ java
+put code here
+~~~
 
 ### com.cloudant.client.api.Database.saveAttachment(inputStream,name,contentType)
  Saves an attachment to a new document with a generated UUID as the document id. 
@@ -441,6 +461,13 @@ Saves an attachment to an existing document given both a document id and revisio
 byte[] bytesToDB = "binary data".getBytes();
 ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
 Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain","abcd12345",null);
+~~~
+
+### com.cloudant.client.api.Database.batch(obect)
+Saves a document with batch.
+
+~~~ java
+put code here
 ~~~
 
 ### com.cloudant.client.api.Database.find(class,doc-id)
@@ -462,6 +489,12 @@ Foo foo = db.find(Foo.class, "doc-id", "rev-id");
 
 ~~~
 
+### com.cloudant.client.api.Database.find(class,doc-id,params)
+Finds an Object of the specified type by providing `doc_id`.Extra parameters can be appended in `params` argument
+
+~~~ java
+put code here
+~~~
 ### com.cloudant.client.api.Database.contains(doc-id)
 returns true if the document exists with given `doc-id`
 
