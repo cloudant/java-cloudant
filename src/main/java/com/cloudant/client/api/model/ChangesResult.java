@@ -44,7 +44,7 @@ public class ChangesResult {
 	 * Represent a row in Changes result. 
 	 */
 	public static class Row {
-		private org.lightcouch.ChangesResult.Row row ;
+		public org.lightcouch.ChangesResult.Row row ;
 		
 		public Row(org.lightcouch.ChangesResult.Row row){
 			this.row = row ;

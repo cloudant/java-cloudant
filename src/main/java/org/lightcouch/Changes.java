@@ -168,11 +168,17 @@ public class Changes {
 		boolean hasNext = false;
 		try {
 			if(!stop) {
-				String row = getReader().readLine(); 
-				if(row != null && !row.startsWith("{\"last_seq\":")) { 
-					setNextRow(gson.fromJson(row, Row.class));
-					hasNext = true;
-				} 
+				while (true) {
+					String row = getReader().readLine();
+					if(row.isEmpty()){
+						continue ;
+					}
+					if(row != null && !row.startsWith("{\"last_seq\":")) { 
+						setNextRow(gson.fromJson(row, Row.class));
+						hasNext = true;
+						break ;
+					}
+				}				 
 			} 
 		} catch (Exception e) {
 			terminate();
