@@ -474,7 +474,7 @@ Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain","abcd1234
 ~~~
 
 ### com.cloudant.client.api.Database.batch(object)
-Saves a document with batch.
+Saves a document with batch. You can write documents to the database at a higher rate by using the batch option. This collects document writes together in memory (on a user-by-user basis) before they are committed to disk. This increases the risk of the documents not being stored in the event of a failure, since the documents are not written to disk immediately.
 
 ~~~ java
 Database db = dbClient.database("alice", true);
@@ -515,7 +515,8 @@ Foo foo = db.find(Foo.class, response.getId(), new Params().revsInfo());
 This method finds any document given a URI.The URI must be URI-encoded.
 
 ~~~ java
-put code here
+Database db = dbClient.database("alice", true);
+Foo foo = db.findAny(Foo.class,"https://mdb.cloudant.com/alice/03c6a4619b9e42d68db0e592757747fe");
 ~~~
 
 ### com.cloudant.client.api.Database.contains(doc-id)
