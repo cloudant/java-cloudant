@@ -84,12 +84,13 @@ public class DocumentsCRUDTest {
 		assertNotNull(jsonObject);
 	}
 
-	@Test
+	/* not supported in cloudant
+	 * @Test
 	public void findAny() {
 		String uri = dbClient.getBaseUri() + "_stats";
 		JsonObject jsonObject = db.findAny(JsonObject.class, uri);
 		assertNotNull(jsonObject);
-	}
+	}*/
 
 	@Test
 	public void findInputstream() throws IOException {

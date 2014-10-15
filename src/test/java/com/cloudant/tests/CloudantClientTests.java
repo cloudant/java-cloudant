@@ -75,16 +75,25 @@ public class CloudantClientTests {
 
 	@Test
 	public void cookieAPITest() {
-		cookieBasedClient.generateApiKey();
+		boolean exceptionRaised = false;
+		try{
+			cookieBasedClient.generateApiKey();
+			exceptionRaised = false ;
+		}catch(Exception e){
+			exceptionRaised = true ;
+		}
+		if(exceptionRaised == false){
+			Assert.fail("Need to connect from cloudant using UserName & Password");
+		}
 
 	}
 
 	@Test
 	public void cookieNegativeTest() {
 		String cookie = account.getCookie() + "XXX";
-		boolean exceptionRaised = true;
+		boolean exceptionRaised = false;
 		try {
-			CloudantClient cookieBasedClient = new CloudantClient(
+			cookieBasedClient = new CloudantClient(
 					props.getProperty("cloudant.account"), cookie);
 			exceptionRaised = false;
 		} catch (Exception e) {
