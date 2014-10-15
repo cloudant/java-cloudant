@@ -403,7 +403,7 @@ Response response =db.save(json);
 
 ~~~ 
 
-Insert `pojo` in the database. The parameter (an object) is the pojo. 
+Insert `pojo` in the database. The parameter `object` can be a pojo. 
 
 ~~~ java
 Database db = dbClient.database("alice", true);
@@ -412,7 +412,7 @@ Response response = db.save(foo);
 
 ~~~
 
-Insert `map` in the database. The parameter (map) is the key value presentation of a document.
+Insert `map` in the database. The parameter `object`  can be a `map` having key value presentation of a document.
 
 ~~~ java
 Database db = dbClient.database("alice", true);
@@ -463,7 +463,7 @@ ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
 Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain","abcd12345",null);
 ~~~
 
-### com.cloudant.client.api.Database.batch(obect)
+### com.cloudant.client.api.Database.batch(object)
 Saves a document with batch.
 
 ~~~ java
