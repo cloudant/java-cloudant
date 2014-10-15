@@ -129,6 +129,7 @@ If you run this example, you will see:
 	- [Database.getShard(documentId)](#comcloudantclientapidatabasegetsharddocumentid)
 	- [Database.info()](#comcloudantclientapidatabasedatabaseinfo)
 	- [Database.setPermissions()](#comcloudantclientapidatabasesetpermissions)
+	- [Database.ensureFullCommit()](#comcloudantclientapidatabaseensurefullcommit)
 - [Document Functions](#document-functions)
 	- [Database.save(object)](#comcloudantclientapidatabasesaveobject)
 	- [Database.save(object,writeQuorum)](#comcloudantclientapidatabasesaveobjectwritequorum)
@@ -137,6 +138,8 @@ If you run this example, you will see:
 	- [Database.saveAttachment(inputStream,name,contentType)](#comcloudantclientapidatabasesaveattachmentinputstreamnamecontenttype)
 	- [Database.saveAttachment(inputStream,name,contentType,docId,docRev)](#comcloudantclientapidatabasesaveattachmentinputstreamnamecontenttypedociddocrev)
 	- [Database.batch(obect)](#comcloudantclientapidatabasebatchobject)
+	- [Database.find(doc-id)](#comcloudantclientapidatabasefinddocid)
+	- [Database.find(doc-id,rev)](#comcloudantclientapidatabasefinddocidrev)
 	- [Database.find(class,doc-id)](#comcloudantclientapidatabasefindclassdoc-id)
 	- [Database.find(class,doc-id,rev-id)](#comcloudantclientapidatabasefindclassdoc-idrev-id)
 	- [Database.find(class,doc-id,params)](#comcloudantclientapidatabasefindclassdoc-idparams)
@@ -390,7 +393,13 @@ EnumSet<Permissions> p = EnumSet.<Permissions>of( Permissions._writer, Permissio
 db.setPermissions(key.getKey(), p);
 ~~~
 
- 
+### com.cloudant.client.api.Database.ensureFullCommit() 
+Requests the database commits any recent changes to disk
+
+~~~ java
+db.ensureFullCommit();
+~~~
+
 ## Document Functions
 
 Once you run `com.cloudant.client.api.CloudantClient.database(name,create)`, use the returned object to work with documents in the database.
@@ -482,6 +491,25 @@ db.batch(new Foo());
 
 ~~~
 
+### com.cloudant.client.api.Database.find(doc-id)
+Finds a document based on the provided `doc-id` and return the result as `InputStream`
+
+~~~ java
+Database db = dbClient.database("alice", true);
+Response response = db.save(new Foo());
+InputStream inputStream = db.find(response.getId());
+
+~~~
+
+### com.cloudant.client.api.Database.find(doc-id,rev)
+Finds a document based on the provided `doc-id` and `rev`,return the result as `InputStream`
+
+~~~ java
+Database db = dbClient.database("alice", true);
+Response response = db.save(new Foo());
+InputStream inputStream = db.find(response.getId(),response.getRev());
+
+~~~
 ### com.cloudant.client.api.Database.find(class,doc-id)
 
 Retrieve the pojo from database by providing `doc_id`  .
