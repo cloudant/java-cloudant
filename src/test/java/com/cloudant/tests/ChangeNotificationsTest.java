@@ -38,7 +38,7 @@ public class ChangeNotificationsTest {
 		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
 									  props.getProperty("cloudant.username"),
 									  props.getProperty("cloudant.password"));
-		dbClient.deleteDB("lightcouch-db-test", "delete database");
+		
 		db = dbClient.database("lightcouch-db-test", true);
 	}
 
@@ -73,9 +73,11 @@ public class ChangeNotificationsTest {
 
 	@Test
 	public void changes_continuousFeed() {
-	
+		db.save(new Foo()); 
+
 		DbInfo dbInfo = db.info();
 		String since = dbInfo.getUpdateSeq();
+
 		Changes changes = db.changes()
 				.includeDocs(true)
 				.since(since)
@@ -83,11 +85,12 @@ public class ChangeNotificationsTest {
 				.continuousChanges();
 
 		Response response = db.save(new Foo());
-		
+
 		while (changes.hasNext()) {
-			ChangesResult.Row feed = changes.next();			
+			ChangesResult.Row feed = changes.next();
 			final JsonObject feedObject = feed.getDoc();
 			final String docId = feed.getId();
+			
 			assertEquals(response.getId(), docId);
 			assertNotNull(feedObject);
 			
