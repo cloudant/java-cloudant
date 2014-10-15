@@ -764,11 +764,12 @@ To query using the index, use the `.findByIndex()` method.
 
 ~~~ java
 
-List<Movie> movies = db.findByIndex("\"selector\": { \"Movie_year\": {\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\" }",
-				Movie.class,
-				new FindByIndexOptions()
-					.sort(new IndexField("Movie_year", SortOrder.desc))
-					.fields("Movie_name").fields("Movie_year"));
+List<Movie> movies = db.findByIndex("\"selector\": 
+				{ \"Movie_year\": {\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\" }",
+					Movie.class,
+					new FindByIndexOptions()
+						.sort(new IndexField("Movie_year", SortOrder.desc))
+						.fields("Movie_name").fields("Movie_year"));
 ~~~
 
 
@@ -831,11 +832,11 @@ Besides the account and password options, you can add an optional `com.cloudant.
 
 ~~~ java
 ConnectOptions connectOptions = new ConnectOptions()
-                                                              . setSocketTimeout(50)
-                                                              . setConnectionTimeout(50)
-                                                              . setMaxConnections(100)
-                                                              .setProxyHost("http://localhost")
-                                                              .setProxyPort(8080);
+										. setSocketTimeout(50)
+                                        . setConnectionTimeout(50)
+                                        . setMaxConnections(100)
+                                        . setProxyHost("http://localhost")
+                                        . setProxyPort(8080);
  CloudantClient client = new CloudantClient("cloudant.com","test","password",  
                                                   connectOptions );
                                                   
