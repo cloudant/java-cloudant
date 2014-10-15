@@ -433,7 +433,6 @@ Saves an object in the database, using HTTP PUT request.If the object doesn't ha
 Database db = dbClient.database("alice", true);
 Response response = db.save(new Animal("human"), 2);
 
-
 ~~~
 
 ### com.cloudant.client.api.Database.post(object)
@@ -451,7 +450,8 @@ Saves an object in the database using HTTP POST request with specificied write q
 ~~~ java
 Database db = dbClient.database("alice", true);
 db.post(new Animal("test"), 2);
-Animal h = db.find(Animal.class, "test", new com.cloudant.client.api.model.Params().readQuorum(3));
+Animal h = db.find(Animal.class, "test", 
+				new com.cloudant.client.api.model.Params().readQuorum(3));
 ~~~
 
 ### com.cloudant.client.api.Database.saveAttachment(inputStream,name,contentType)
