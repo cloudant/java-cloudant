@@ -129,19 +129,28 @@ If you run this example, you will see:
 	- [Database.getShard(documentId)](#comcloudantclientapidatabasegetsharddocumentid)
 	- [Database.info()](#comcloudantclientapidatabasedatabaseinfo)
 	- [Database.setPermissions()](#comcloudantclientapidatabasesetpermissions)
+	- [Database.ensureFullCommit()](#comcloudantclientapidatabaseensurefullcommit)
 - [Document Functions](#document-functions)
-	- [Database.save(pojo)](#comcloudantclientapidatabasesavepojo)
-	- [Database.save(map)](#comcloudantclientapidatabasesavemap)
-	- [Database.save(jsonObject)](#comcloudantclientapidatabasesavejsonobject)
+	- [Database.save(object)](#comcloudantclientapidatabasesaveobject)
+	- [Database.save(object,writeQuorum)](#comcloudantclientapidatabasesaveobjectwritequorum)
+	- [Database.post(object)](#comcloudantclientapidatabasepostobject)
+	- [Database.post(object,writeQuorum)](#comcloudantclientapidatabasepostobjectwritequorum)
 	- [Database.saveAttachment(inputStream,name,contentType)](#comcloudantclientapidatabasesaveattachmentinputstreamnamecontenttype)
 	- [Database.saveAttachment(inputStream,name,contentType,docId,docRev)](#comcloudantclientapidatabasesaveattachmentinputstreamnamecontenttypedociddocrev)
+	- [Database.batch(obect)](#comcloudantclientapidatabasebatchobject)
+	- [Database.find(doc-id)](#comcloudantclientapidatabasefinddoc-id)
+	- [Database.find(doc-id,rev)](#comcloudantclientapidatabasefinddoc-idrev)
 	- [Database.find(class,doc-id)](#comcloudantclientapidatabasefindclassdoc-id)
 	- [Database.find(class,doc-id,rev-id)](#comcloudantclientapidatabasefindclassdoc-idrev-id)
+	- [Database.find(class,doc-id,params)](#comcloudantclientapidatabasefindclassdoc-idparams)
+	- [Database.findAny(class,uri)](#comcloudantclientapidatabasefindanyclassuri)
 	- [Database.contains(doc-id)](#comcloudantclientapidatabasecontainsdoc-id)
 	- [Database.update(object)](#comcloudantclientapidatabaseupdateobject)
 	- [Database.update(object,writeQuorum)](#comcloudantclientapidatabaseupdateobjectwritequorum)
 	- [Database.remove(object)](#comcloudantclientapidatabaseremoveobject)
 	- [Database.remove(doc-id,rev-id)](#comcloudantclientapidatabaseremovedoc-idrev-id)
+	- [Database.invokeUpdateHandler(updateHandlerUri,docId,query)](#comcloudantclientapidatabaseinvokeupdatehandlerupdatehandleruridocidquery)
+	- [Database.invokeUpdateHandler(updateHandlerUri,docId,params)](#comcloudantclientapidatabaseinvokeupdatehandlerupdatehandleruridocidparams)
 - [Bulk Documents](#bulk-documents)
 	- [Insert/Update docs ](#insertupdate-docs )
 	- [Fetch multiple documents](#fetch-multiple-documents)
@@ -197,10 +206,10 @@ Output:
 Next, set access roles for this API key:
 
 ~~~ java
-  // Set read-only access for this key.
-  Database db = client.database("alice", false);
-  db.setPermissions(key.getKey(), EnumSet.<Permissions>of(Permissions._reader));
-  System.out.println(key.getKey() + " now has read-only access to alice")
+// Set read-only access for this key.
+Database db = client.database("alice", false);
+db.setPermissions(key.getKey(), EnumSet.<Permissions>of(Permissions._reader));
+System.out.println(key.getKey() + " now has read-only access to alice")
   
 ~~~
 
@@ -379,19 +388,34 @@ while (changes.hasNext()) {
 
 `.setPermissions()` sets the permissions for the DB.
 ~~~ java
-	ApiKey key = client.generateApiKey();
-	EnumSet<Permissions> p = EnumSet.<Permissions>of( Permissions._writer, Permissions._reader);
-	db.setPermissions(key.getKey(), p);
+ApiKey key = client.generateApiKey();
+EnumSet<Permissions> p = EnumSet.<Permissions>of( Permissions._writer, Permissions._reader);
+db.setPermissions(key.getKey(), p);
 ~~~
 
- 
+### com.cloudant.client.api.Database.ensureFullCommit() 
+Requests the database commits any recent changes to disk
+
+~~~ java
+db.ensureFullCommit();
+~~~
+
 ## Document Functions
 
 Once you run `com.cloudant.client.api.CloudantClient.database(name,create)`, use the returned object to work with documents in the database.
 
-### com.cloudant.client.api.Database.save(pojo)
+### com.cloudant.client.api.Database.save(object)
 
-Insert `pojo` in the database. The parameter (an object) is the pojo. 
+~~~ java
+Database db = dbClient.database("alice", true);
+JsonObject json = new JsonObject();
+json.addProperty("_id", "test-doc-id-2");
+json.add("json-array", new JsonArray());
+Response response =db.save(json); 
+
+~~~ 
+
+Insert `pojo` in the database. The parameter `object` can be a pojo. 
 
 ~~~ java
 Database db = dbClient.database("alice", true);
@@ -400,8 +424,7 @@ Response response = db.save(foo);
 
 ~~~
 
-### com.cloudant.client.api.Database.save(map)
-Insert `map` in the database. The parameter (map) is the key value presentation of a document.
+Insert `map` in the database. The parameter `object`  can be a `map` having key value presentation of a document.
 
 ~~~ java
 Database db = dbClient.database("alice", true);
@@ -413,16 +436,32 @@ Response response =db.save(map);
 ~~~ 
 
 
-### com.cloudant.client.api.Database.save(jsonObject)
+### com.cloudant.client.api.Database.save(object,writeQuorum)
+Saves an object in the database, using HTTP PUT request.If the object doesn't have an `_id` value, we will assign a `UUID` as the document id.
+~~~ java
+Database db = dbClient.database("alice", true);
+Response response = db.save(new Animal("human"), 2);
+
+~~~
+
+### com.cloudant.client.api.Database.post(object)
+Saves an object in the database using HTTP POST request.The database will be responsible for generating the document id.
 
 ~~~ java
 Database db = dbClient.database("alice", true);
-JsonObject json = new JsonObject();
-json.addProperty("_id", "test-doc-id-2");
-json.add("json-array", new JsonArray());
-Response response =db.save(json); 
+Response response = db.post(new Foo());
 
-~~~ 
+~~~
+
+### com.cloudant.client.api.Database.post(object,writeQuorum)
+Saves an object in the database using HTTP POST request with specificied write quorum.The database will be responsible for generating the document id.
+
+~~~ java
+Database db = dbClient.database("alice", true);
+db.post(new Animal("test"), 2);
+Animal h = db.find(Animal.class, "test", 
+				new com.cloudant.client.api.model.Params().readQuorum(3));
+~~~
 
 ### com.cloudant.client.api.Database.saveAttachment(inputStream,name,contentType)
  Saves an attachment to a new document with a generated UUID as the document id. 
@@ -443,6 +482,34 @@ ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
 Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain","abcd12345",null);
 ~~~
 
+### com.cloudant.client.api.Database.batch(object)
+Saves a document with batch. You can write documents to the database at a higher rate by using the batch option. This collects document writes together in memory (on a user-by-user basis) before they are committed to disk. This increases the risk of the documents not being stored in the event of a failure, since the documents are not written to disk immediately.
+
+~~~ java
+Database db = dbClient.database("alice", true);
+db.batch(new Foo());
+
+~~~
+
+### com.cloudant.client.api.Database.find(doc-id)
+Finds a document based on the provided `doc-id` and return the result as `InputStream`
+
+~~~ java
+Database db = dbClient.database("alice", true);
+Response response = db.save(new Foo());
+InputStream inputStream = db.find(response.getId());
+
+~~~
+
+### com.cloudant.client.api.Database.find(doc-id,rev)
+Finds a document based on the provided `doc-id` and `rev`,return the result as `InputStream`
+
+~~~ java
+Database db = dbClient.database("alice", true);
+Response response = db.save(new Foo());
+InputStream inputStream = db.find(response.getId(),response.getRev());
+
+~~~
 ### com.cloudant.client.api.Database.find(class,doc-id)
 
 Retrieve the pojo from database by providing `doc_id`  .
@@ -460,6 +527,25 @@ Retrieve the pojo from database by providing `doc_id`and `rev-id`  .
 Database db = dbClient.database("alice", true);
 Foo foo = db.find(Foo.class, "doc-id", "rev-id");
 
+~~~
+
+### com.cloudant.client.api.Database.find(class,doc-id,params)
+Finds an Object of the specified type by providing `doc_id`.Extra parameters can be appended in `params` argument
+
+~~~ java
+Database db = dbClient.database("alice", true);
+Response response = db.save(new Foo());
+Foo foo = db.find(Foo.class, response.getId(), new Params().revsInfo());
+
+~~~
+
+### com.cloudant.client.api.Database.findAny(class,uri)
+This method finds any document given a URI.The URI must be URI-encoded.
+
+~~~ java
+Database db = dbClient.database("alice", true);
+Foo foo = db.findAny(Foo.class,
+				"https://mdb.cloudant.com/alice/03c6a4619b9e42d68db0e592757747fe");
 ~~~
 
 ### com.cloudant.client.api.Database.contains(doc-id)
@@ -488,7 +574,8 @@ Updates an object in the database, the object must have the correct `_id` and `_
 
 ~~~ java
 db.save(new Animal("human"), 2);
-Animal h = db.find(Animal.class, "human", new com.cloudant.client.api.model.Params().readQuorum(2));
+Animal h = db.find(Animal.class, "human", 
+				new com.cloudant.client.api.model.Params().readQuorum(2));
 db.update(h.setClass("inhuman"), 2);
 
 ~~~
@@ -510,6 +597,30 @@ Response response = db.remove(foo);
 Database db = dbClient.database("alice", true);
 Response response = db.remove("doc-id", "doc-rev");
 ~~~
+
+### com.cloudant.client.api.Database.invokeUpdateHandler(updateHandlerUri,docId,query)
+Invokes an Update Handler.Use this method in particular when the docId contain special characters such as slashes (/). The `updateHandlerUri` should be in the format: `designDoc/update1`.
+~~~ java
+final String oldValue = "foo";
+final String newValue = "foo bar";
+Response response = db.save(new Foo(null, oldValue));
+String query = "field=title&value=" + newValue;
+String output = db.invokeUpdateHandler("example/example_update", response.getId(), query);
+~~~
+
+### com.cloudant.client.api.Database.invokeUpdateHandler(updateHandlerUri,docId,params)
+This method can be used if the query is generated using `Params` API.
+
+~~~ java
+final String oldValue = "foo";
+final String newValue = "foo bar";
+Response response = db.save(new Foo(null, oldValue));
+Params params = new Params()
+				.addParam("field", "title")
+				.addParam("value", newValue);
+String output = db.invokeUpdateHandler("example/example_update", response.getId(), params);
+~~~
+
 ## Bulk Documents
 
 Bulk documents API performs two operations: Modify & Fetch for bulk documents. 
@@ -683,11 +794,12 @@ To query using the index, use the `.findByIndex()` method.
 
 ~~~ java
 
-List<Movie> movies = db.findByIndex("\"selector\": { \"Movie_year\": {\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\" }",
-				Movie.class,
-				new FindByIndexOptions()
-					.sort(new IndexField("Movie_year", SortOrder.desc))
-					.fields("Movie_name").fields("Movie_year"));
+List<Movie> movies = db.findByIndex("\"selector\": 
+				{ \"Movie_year\": {\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\" }",
+					Movie.class,
+					new FindByIndexOptions()
+						.sort(new IndexField("Movie_year", SortOrder.desc))
+						.fields("Movie_name").fields("Movie_year"));
 ~~~
 
 
@@ -750,11 +862,11 @@ Besides the account and password options, you can add an optional `com.cloudant.
 
 ~~~ java
 ConnectOptions connectOptions = new ConnectOptions()
-                                                              . setSocketTimeout(50)
-                                                              . setConnectionTimeout(50)
-                                                              . setMaxConnections(100)
-                                                              .setProxyHost("http://localhost")
-                                                              .setProxyPort(8080);
+										. setSocketTimeout(50)
+                                        . setConnectionTimeout(50)
+                                        . setMaxConnections(100)
+                                        . setProxyHost("http://localhost")
+                                        . setProxyPort(8080);
  CloudantClient client = new CloudantClient("cloudant.com","test","password",  
                                                   connectOptions );
                                                   
