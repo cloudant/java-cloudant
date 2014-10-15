@@ -12,6 +12,7 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.lightcouch.CouchDbException;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.model.ApiKey;
@@ -75,15 +76,12 @@ public class CloudantClientTests {
 
 	@Test
 	public void cookieAPITest() {
-		boolean exceptionRaised = false;
-		try{
+		try {
 			cookieBasedClient.generateApiKey();
-			exceptionRaised = false ;
-		}catch(Exception e){
-			exceptionRaised = true ;
+			Assert.fail("Passed cloudant.com based generateapikey without creds");
 		}
-		if(exceptionRaised == false){
-			Assert.fail("Need to connect from cloudant using UserName & Password");
+		catch(IllegalArgumentException e) {
+			
 		}
 
 	}
@@ -91,16 +89,18 @@ public class CloudantClientTests {
 	@Test
 	public void cookieNegativeTest() {
 		String cookie = account.getCookie() + "XXX";
-		boolean exceptionRaised = false;
+		boolean exceptionRaised = true;
 		try {
-			cookieBasedClient = new CloudantClient(
-					props.getProperty("cloudant.account"), cookie);
+			new CloudantClient(
+					props.getProperty("cloudant.account"), cookie).getAllDbs();
 			exceptionRaised = false;
-		} catch (Exception e) {
+		} catch (CouchDbException e) {
+			if ( e.getMessage().contains("Forbidden") ) {
 			exceptionRaised = true;
+			}
 		}
 		if (exceptionRaised == false) {
-			Assert.fail("could not connect to cloudant. Un-recognized cookie");
+			Assert.fail("could connect to cloudant with random AuthSession cookie");
 		}
 	}
 
