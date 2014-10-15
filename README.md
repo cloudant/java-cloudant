@@ -140,11 +140,14 @@ If you run this example, you will see:
 	- [Database.find(class,doc-id)](#comcloudantclientapidatabasefindclassdoc-id)
 	- [Database.find(class,doc-id,rev-id)](#comcloudantclientapidatabasefindclassdoc-idrev-id)
 	- [Database.find(class,doc-id,params)](#comcloudantclientapidatabasefindclassdoc-idparams)
+	- [Database.findAny(class,uri)](#comcloudantclientapidatabasefindanyclassuri)
 	- [Database.contains(doc-id)](#comcloudantclientapidatabasecontainsdoc-id)
 	- [Database.update(object)](#comcloudantclientapidatabaseupdateobject)
 	- [Database.update(object,writeQuorum)](#comcloudantclientapidatabaseupdateobjectwritequorum)
 	- [Database.remove(object)](#comcloudantclientapidatabaseremoveobject)
 	- [Database.remove(doc-id,rev-id)](#comcloudantclientapidatabaseremovedoc-idrev-id)
+	- [Database.invokeUpdateHandler(updateHandlerUri,docId,query)](#comcloudantclientapidatabaseinvokeupdatehandlerupdatehandleruridocidquery)
+	- [Database.invokeUpdateHandler(updateHandlerUri,docId,params)](#comcloudantclientapidatabaseinvokeupdatehandlerupdatehandleruridocidparams)
 - [Bulk Documents](#bulk-documents)
 	- [Insert/Update docs ](#insertupdate-docs )
 	- [Fetch multiple documents](#fetch-multiple-documents)
@@ -427,21 +430,28 @@ Response response =db.save(map);
 ### com.cloudant.client.api.Database.save(object,writeQuorum)
 Saves an object in the database, using HTTP PUT request.If the object doesn't have an `_id` value, we will assign a `UUID` as the document id.
 ~~~ java
-put code here
+Database db = dbClient.database("alice", true);
+Response response = db.save(new Animal("human"), 2);
+
+
 ~~~
 
 ### com.cloudant.client.api.Database.post(object)
 Saves an object in the database using HTTP POST request.The database will be responsible for generating the document id.
 
 ~~~ java
-put code here
+Database db = dbClient.database("alice", true);
+Response response = db.post(new Foo());
+
 ~~~
 
 ### com.cloudant.client.api.Database.post(object,writeQuorum)
 Saves an object in the database using HTTP POST request with specificied write quorum.The database will be responsible for generating the document id.
 
 ~~~ java
-put code here
+Database db = dbClient.database("alice", true);
+db.post(new Animal("test"), 2);
+Animal h = db.find(Animal.class, "test", new com.cloudant.client.api.model.Params().readQuorum(3));
 ~~~
 
 ### com.cloudant.client.api.Database.saveAttachment(inputStream,name,contentType)
@@ -467,7 +477,9 @@ Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain","abcd1234
 Saves a document with batch.
 
 ~~~ java
-put code here
+Database db = dbClient.database("alice", true);
+db.batch(new Foo());
+
 ~~~
 
 ### com.cloudant.client.api.Database.find(class,doc-id)
@@ -493,8 +505,19 @@ Foo foo = db.find(Foo.class, "doc-id", "rev-id");
 Finds an Object of the specified type by providing `doc_id`.Extra parameters can be appended in `params` argument
 
 ~~~ java
+Database db = dbClient.database("alice", true);
+Response response = db.save(new Foo());
+Foo foo = db.find(Foo.class, response.getId(), new Params().revsInfo());
+
+~~~
+
+### com.cloudant.client.api.Database.findAny(class,uri)
+This method finds any document given a URI.The URI must be URI-encoded.
+
+~~~ java
 put code here
 ~~~
+
 ### com.cloudant.client.api.Database.contains(doc-id)
 returns true if the document exists with given `doc-id`
 
@@ -543,6 +566,30 @@ Response response = db.remove(foo);
 Database db = dbClient.database("alice", true);
 Response response = db.remove("doc-id", "doc-rev");
 ~~~
+
+### com.cloudant.client.api.Database.invokeUpdateHandler(updateHandlerUri,docId,query)
+Invokes an Update Handler.Use this method in particular when the docId contain special characters such as slashes (/). The `updateHandlerUri` should be in the format: `designDoc/update1`.
+~~~ java
+final String oldValue = "foo";
+final String newValue = "foo bar";
+Response response = db.save(new Foo(null, oldValue));
+String query = "field=title&value=" + newValue;
+String output = db.invokeUpdateHandler("example/example_update", response.getId(), query);
+~~~
+
+### com.cloudant.client.api.Database.invokeUpdateHandler(updateHandlerUri,docId,params)
+This method can be used if the query is generated using `Params` API.
+
+~~~ java
+final String oldValue = "foo";
+final String newValue = "foo bar";
+Response response = db.save(new Foo(null, oldValue));
+Params params = new Params()
+				.addParam("field", "title")
+				.addParam("value", newValue);
+String output = db.invokeUpdateHandler("example/example_update", response.getId(), params);
+~~~
+
 ## Bulk Documents
 
 Bulk documents API performs two operations: Modify & Fetch for bulk documents. 
