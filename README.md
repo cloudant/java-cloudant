@@ -203,10 +203,10 @@ Output:
 Next, set access roles for this API key:
 
 ~~~ java
-  // Set read-only access for this key.
-  Database db = client.database("alice", false);
-  db.setPermissions(key.getKey(), EnumSet.<Permissions>of(Permissions._reader));
-  System.out.println(key.getKey() + " now has read-only access to alice")
+// Set read-only access for this key.
+Database db = client.database("alice", false);
+db.setPermissions(key.getKey(), EnumSet.<Permissions>of(Permissions._reader));
+System.out.println(key.getKey() + " now has read-only access to alice")
   
 ~~~
 
@@ -385,9 +385,9 @@ while (changes.hasNext()) {
 
 `.setPermissions()` sets the permissions for the DB.
 ~~~ java
-	ApiKey key = client.generateApiKey();
-	EnumSet<Permissions> p = EnumSet.<Permissions>of( Permissions._writer, Permissions._reader);
-	db.setPermissions(key.getKey(), p);
+ApiKey key = client.generateApiKey();
+EnumSet<Permissions> p = EnumSet.<Permissions>of( Permissions._writer, Permissions._reader);
+db.setPermissions(key.getKey(), p);
 ~~~
 
  
