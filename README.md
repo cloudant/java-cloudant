@@ -405,6 +405,7 @@ db.ensureFullCommit();
 Once you run `com.cloudant.client.api.CloudantClient.database(name,create)`, use the returned object to work with documents in the database.
 
 ### com.cloudant.client.api.Database.save(object)
+Saves an object in the database, using HTTP PUT request.If the object doesn't have an `_id` value, we will assign a `UUID` as the document id.
 
 ~~~ java
 Database db = dbClient.database("alice", true);
@@ -437,7 +438,7 @@ Response response =db.save(map);
 
 
 ### com.cloudant.client.api.Database.save(object,writeQuorum)
-Saves an object in the database, using HTTP PUT request.If the object doesn't have an `_id` value, we will assign a `UUID` as the document id.
+Saves an object in the database, using HTTP PUT request, with specified write quorum .If the object doesn't have an `_id` value, we will assign a `UUID` as the document id.
 ~~~ java
 Database db = dbClient.database("alice", true);
 Response response = db.save(new Animal("human"), 2);
@@ -530,7 +531,7 @@ Foo foo = db.find(Foo.class, "doc-id", "rev-id");
 ~~~
 
 ### com.cloudant.client.api.Database.find(class,doc-id,params)
-Finds an Object of the specified type by providing `doc_id`.Extra parameters can be appended in `params` argument
+Finds an Object of the specified type by providing `doc_id`.Extra query parameters can be specified via `params` argument
 
 ~~~ java
 Database db = dbClient.database("alice", true);
@@ -570,7 +571,7 @@ Response responseUpdate = db.update(bar);
 ~~~
 
 ### com.cloudant.client.api.Database.update(object,writeQuorum)
-Updates an object in the database, the object must have the correct `_id` and `_rev` values. The second argument is number of quorum.
+Updates an object in the database, the object must have the correct `_id` and `_rev` values. The second argument is the write quorum for the update.
 
 ~~~ java
 db.save(new Animal("human"), 2);
