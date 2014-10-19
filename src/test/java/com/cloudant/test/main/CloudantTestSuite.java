@@ -14,6 +14,7 @@ import com.cloudant.tests.DesignDocumentsTest;
 import com.cloudant.tests.DocumentsCRUDTest;
 import com.cloudant.tests.IndexTests;
 import com.cloudant.tests.ReplicationTest;
+import com.cloudant.tests.ReplicatorTest;
 import com.cloudant.tests.SearchTests;
 import com.cloudant.tests.UpdateHandlerTest;
 import com.cloudant.tests.ViewsTest;
@@ -31,6 +32,7 @@ import com.cloudant.tests.ViewsTest;
 	   DocumentsCRUDTest.class,
 	   IndexTests.class,
 	   ReplicationTest.class,
+	   ReplicatorTest.class,
 	   SearchTests.class,
 	   UpdateHandlerTest.class,
 	   ViewsTest.class

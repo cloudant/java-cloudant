@@ -14,7 +14,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.cloudant.client.api.CloudantClient;
@@ -26,7 +25,7 @@ import com.cloudant.client.api.model.Response;
 import com.cloudant.client.api.model.ViewResult;
 import com.cloudant.tests.util.Utils;
 
-@Ignore
+//@Ignore
 public class ReplicationTest {
 	private static final Log log = LogFactory.getLog(ReplicationTest.class);
 	
@@ -36,6 +35,9 @@ public class ReplicationTest {
 	
 	private static CloudantClient dbClient2;
 	private static Database db2;
+	
+	private static String db1URI ;
+	private static String db2URI ;
 	
 	@BeforeClass
 	public static void setUpClass() {
@@ -54,6 +56,16 @@ public class ReplicationTest {
 		
 		db1.syncDesignDocsWithDb();
 		db2.syncDesignDocsWithDb();
+		
+		db1URI = "https://" + props.getProperty("cloudant.username") + ":"
+				+ props.getProperty("cloudant.password") + "@"
+				+ props.getProperty("cloudant.account") + ".cloudant.com/"
+				+ "lightcouch-db-test";
+
+		db2URI = "https://" + props.getProperty("cloudant.username") + ":"
+				+ props.getProperty("cloudant.password") + "@"
+				+ props.getProperty("cloudant.account") + ".cloudant.com/"
+				+ "lightcouch-db-test-2";
 	}
 
 	@AfterClass
@@ -66,8 +78,8 @@ public class ReplicationTest {
 	public void replication() {
 		ReplicationResult result = dbClient.replication()
 				.createTarget(true)
-				.source(db1.getDBUri().toString())
-				.target(db2.getDBUri().toString())
+				.source(db1URI)
+				.target(db2URI)
 				.trigger();
 
 		List<ReplicationHistory> histories = result.getHistories();
@@ -81,8 +93,8 @@ public class ReplicationTest {
     	
 		dbClient.replication()
 				.createTarget(true)
-				.source(db1.getDBUri().toString())
-				.target(db2.getDBUri().toString())
+				.source(db1URI)
+				.target(db2URI)
 				.filter("example/example_filter")
 				.queryParams(queryParams)
 				.trigger();
@@ -97,8 +109,8 @@ public class ReplicationTest {
 
 		// trigger a replication
 		Response response = dbClient.replicator()
-				.source(db1.getDBUri().toString())
-				.target(db2.getDBUri().toString()).continuous(true)
+				.source(db1URI)
+				.target(db2URI).continuous(true)
 				.createTarget(true)
 				.save();
 		
@@ -129,8 +141,8 @@ public class ReplicationTest {
 		
 		db1.save(foodb1); 
 		
-		dbClient.replication().source(db1.getDBUri().toString())
-				.target(db2.getDBUri().toString()).trigger();
+		dbClient.replication().source(db1URI)
+				.target(db2URI).trigger();
 
 		foodb2 = db2.find(Foo.class, docId); 
 		foodb2.setTitle("titleY"); 
@@ -140,8 +152,8 @@ public class ReplicationTest {
 		foodb1.setTitle("titleZ"); 
 		db1.update(foodb1); 
 
-		dbClient.replication().source(db1.getDBUri().toString())
-				.target(db2.getDBUri().toString()).trigger();
+		dbClient.replication().source(db1URI)
+				.target(db2URI).trigger();
 
 		ViewResult<String[], String, Foo> conflicts = db2.view("conflicts/conflict")
 				.includeDocs(true).queryView(String[].class, String.class, Foo.class);
