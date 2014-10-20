@@ -33,7 +33,7 @@ Alternately download the dependencies
   
 ### Getting Started
 
-Now it's time to begin doing real work with Cloudant and Java. For detail code example for any API please go through the Test suite.
+Now it's time to begin doing real work with Cloudant and Java. For working code samples of any of the API's please go to our Test suite.
 
 Initialize your Cloudant connection by constructing a *com.cloudant.client.api.CloudantClient* supplying the *account* to connect to along with *userName or Apikey* and  *password*
 
@@ -877,15 +877,15 @@ ConnectOptions connectOptions = new ConnectOptions()
 
 ## tests
 
-To run the test suite first edit the cloudant properties. Open the file `src/test/resources/cloudant.properties` and `src/test/resources/cloudant-2.properties`,edit the properties e.g account,username,etc.
+To run the test suite first edit the cloudant properties. Open the file `src/test/resources/cloudant.properties` and `src/test/resources/cloudant-2.properties`, provide values for the following properties  
 
 ~~~ java
-cloudant.account=testaccount
+cloudant.account=myCloudantAccount
 cloudant.username=testuser
 cloudant.password=testpassword
 ~~~
 
-Once all the required properties are listed in the properties file run `com.cloudant.test.main.CloudantTestSuite` test class.
+Once all the required properties are provided in the properties file run `com.cloudant.test.main.CloudantTestSuite` test class.
 
 ## License
 
