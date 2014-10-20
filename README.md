@@ -27,7 +27,7 @@ Alternately download the dependencies
   [cloudant.jar](todo)    
   [HttpClient 4.3.3](http://hc.apache.org/downloads.cgi)  
   [HttpCore 4.3.2](http://hc.apache.org/downloads.cgi)  
-  [Commons Codec 1.](http://commons.apache.org/codec/download_codec.cgi)
+  [Commons Codec 1.6](http://commons.apache.org/codec/download_codec.cgi)  
   [Commons Logging 1.1.3](http://commons.apache.org/logging/download_logging.cgi)  
   [Gson 2.2.4](http://code.google.com/p/google-gson/downloads/list)  
   
