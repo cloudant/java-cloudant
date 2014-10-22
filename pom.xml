@@ -1,19 +1,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
-	<groupId>org.lightcouch</groupId>
-	<artifactId>lightcouch</artifactId>
-	<version>0.1.4-SNAPSHOT</version>
+	<groupId>com.cloudant</groupId> 
+	<artifactId>cloudant-client</artifactId>
+	<version>1.0.0-beta1</version>	
 	<packaging>jar</packaging>
-	<name>LightCouch</name>
-	<description>CouchDB Java API</description>
-	<inceptionYear>2011</inceptionYear>
-	<url>http://www.lightcouch.org</url>
+	<name>Cloudant Java Client</name>
+	<description> official Cloudant Client for Java</description>
+	<inceptionYear>2014</inceptionYear>
+	<url>http://www.cloudant.com</url>
+	
 	<parent>
 		<groupId>org.sonatype.oss</groupId>
 		<artifactId>oss-parent</artifactId>
-		<version>7</version>
+		<version>1</version>
 	</parent>
+	
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
@@ -22,23 +23,31 @@
 		</license>
 	</licenses>
 	<scm>
-		<connection>scm:git:git://github.com/lightcouch/LightCouch.git</connection>
-		<developerConnection>scm:git:git@github.com:lightcouch/LightCouch.git</developerConnection>
-		<url>https://lightcouch@github.com/lightcouch/LightCouch.git</url>
+		<connection>scm:git:git://github.com/cloudant/java-cloudant.git</connection>
+		<developerConnection>scm:git:git@github.com/cloudant/java-cloudant.git</developerConnection>
+		<url>https://java-cloudant@github.com/cloudant/java-cloudant.git</url>
 	</scm>
+		
 	<developers>
 		<developer>
-			<id>ahmedyha</id>
-			<name>Ahmed Yehia</name>
-			<email>ahmed.yehia.m@gmail.com</email>
+			<id>mariobriggs</id>
+			<name>Mario D Briggs</name>
+			<email>mario.briggs@in.ibm.com</email>
+		</developer>
+		<developer>
+			<id>ganeshkumarc</id>
+			<name>Ganesh K Choudhary</name>
+			<email>kumar.ganesh@in.ibm.com</email>
 		</developer>
 	</developers>
+		
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<httpclient.version>4.3.3</httpclient.version>
 		<gson.version>2.2.4</gson.version>
-		<junit.version>4.8.2</junit.version>
+	 	<junit.version>4.8.2</junit.version>
 	</properties>
+	
 	<dependencies>
 		<!-- Apache HttpComponents -->
 		<dependency>
