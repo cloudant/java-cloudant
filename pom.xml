@@ -4,7 +4,7 @@
 	<artifactId>cloudant-client</artifactId>
 	<version>1.0.0-beta1</version>	
 	<packaging>jar</packaging>
-	<name>Cloudant Java Client</name>
+	<name>java-cloudant</name>
 	<description> official Cloudant Client for Java</description>
 	<inceptionYear>2014</inceptionYear>
 	<url>http://www.cloudant.com</url>
