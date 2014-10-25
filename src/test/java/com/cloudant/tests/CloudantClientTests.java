@@ -75,18 +75,6 @@ public class CloudantClientTests {
 	}
 
 	@Test
-	public void cookieAPITest() {
-		try {
-			cookieBasedClient.generateApiKey();
-			Assert.fail("Passed cloudant.com based generateapikey without creds");
-		}
-		catch(IllegalArgumentException e) {
-			
-		}
-
-	}
-
-	@Test
 	public void cookieNegativeTest() {
 		String cookie = account.getCookie() + "XXX";
 		boolean exceptionRaised = true;

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
@@ -15,7 +16,7 @@ import org.junit.Test;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
-import com.cloudant.client.api.Database.Permissions;
+import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.Shard;
 import com.cloudant.tests.util.Utils;
@@ -52,8 +53,21 @@ public class DatabaseTest {
 	@Test
 	public void permissions() {
 		ApiKey key = account.generateApiKey();
-		EnumSet<Permissions> p = EnumSet.<Permissions>of( Permissions._writer, Permissions._reader);
+		EnumSet<Permissions> p = EnumSet.<Permissions>of( Permissions._reader, Permissions._writer);
 		db.setPermissions(key.getKey(), p);
+		Map<String,EnumSet<Permissions>> userPerms = db.getPermissions();
+		assertNotNull(userPerms);
+		assertEquals(userPerms.size(), 1);
+		assertEquals(userPerms.get(key.getKey()), p);
+		
+		p = EnumSet.noneOf( Permissions.class);
+		db.setPermissions(key.getKey(), p);
+		userPerms = db.getPermissions();
+		assertNotNull(userPerms);
+		assertEquals(userPerms.size(), 1);
+		assertEquals(userPerms.get(key.getKey()), p);
+		
+		
 	}
 	
 	@Test
@@ -95,5 +109,6 @@ public class DatabaseTest {
 		
 		
 		
-	}
+	} 
+	
 }

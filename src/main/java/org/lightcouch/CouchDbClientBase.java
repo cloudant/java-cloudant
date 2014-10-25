@@ -83,8 +83,8 @@ public abstract class CouchDbClientBase {
 		final String path = props.getPath() != null ? props.getPath() : "";
         this.baseURI = buildUri().scheme(props.getProtocol()).host(props.getHost()).port(props.getPort()).path("/").path(path).build();
         
-        // for non account endpoints..and for the authentication using previous session's cookie . do not get the cookie
-        if ( !props.getHost().equalsIgnoreCase("cloudant.com") && props.getAuthCookie() == null ) {
+        // for the authentication using previous session's cookie . do not get the cookie
+        if ( props.getAuthCookie() == null ) {
         	getCookie(props);
         }
         props.clearPassword();

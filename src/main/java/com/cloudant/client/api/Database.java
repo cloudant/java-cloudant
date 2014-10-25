@@ -7,17 +7,18 @@ import static org.lightcouch.internal.CouchDbUtil.getAsString;
 import static org.lightcouch.internal.CouchDbUtil.getResponse;
 import static org.lightcouch.internal.CouchDbUtil.getResponseList;
 import static org.lightcouch.internal.CouchDbUtil.getStream;
+import static org.lightcouch.internal.CouchDbUtil.setEntity;
+import static org.lightcouch.internal.CouchDbUtil.getResponseMap;
 import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -28,10 +29,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.lightcouch.Changes;
 import org.lightcouch.CouchDatabase;
-import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbDesign;
 import org.lightcouch.CouchDbInfo;
 import org.lightcouch.DocumentConflictException;
@@ -46,6 +47,7 @@ import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.IndexField.SortOrder;
 import com.cloudant.client.api.model.Params;
+import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.model.Shard;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -56,6 +58,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.reflect.TypeToken;
 
 
@@ -75,15 +78,6 @@ public class Database {
 	private CouchDatabase db;
 	private CloudantClient client;
 	
-//	private DbDesign design ;
-
-	public enum Permissions {
-		_admin,
-		_reader,
-		_writer
-	}
-	
-	
 	/**
 	 * 
 	 * @param client
@@ -96,20 +90,37 @@ public class Database {
 	}
 	
 	/**
-	 * Set the permissions for this DB
+	 * Set permissions for a user/apiKey on the database
 	 * @param userNameorApikey
-	 * @param permissions
+	 * @param permissions permissions to grant
 	 */
 	public void setPermissions(String userNameorApikey,  EnumSet<Permissions> permissions) {
 		assertNotEmpty(userNameorApikey,"userNameorApikey");
 		assertNotEmpty(permissions,"permissions");
-		HttpResponse response = null;
-		CouchDbClient tmp = new CouchDbClient("https", "cloudant.com", 443, client.getLoginUsername(), client.getPassword());		
-		URI uri = buildUri(tmp.getBaseUri()).path("/api/set_permissions").build();
-		String body = getPermissionsBody(userNameorApikey, permissions);
-				
+		final JsonArray jsonPermissions = new JsonArray();
+		for (Permissions s : permissions) {
+			final JsonPrimitive permission = new JsonPrimitive(s.toString());
+			jsonPermissions.add(permission);
+		}
+	    		
+	    // get existing permissions
+		URI uri = buildUri(getDBUri()).path("_security").build();
+		JsonObject perms =  client.get(uri, JsonObject.class);
+	 		
+	    // now set back
+		JsonElement elem = perms.getAsJsonObject().get("cloudant");
+		if ( elem == null) {
+			perms.addProperty("_id", "_security");
+			elem = new JsonObject();
+			perms.add("cloudant", elem);
+		}
+		elem.getAsJsonObject().add(userNameorApikey, jsonPermissions);
+		
+	    HttpResponse response = null;
+	    HttpPut put = new HttpPut(buildUri(uri).build());
+		setEntity(put, getGson().toJson(perms),"application/json");
 		try {
-			response = tmp.executeRequest(createPost(uri,body,"application/x-www-form-urlencoded"));
+			response = executeRequest(put);
 			String ok = getAsString(response,"ok");
 			if ( !ok.equalsIgnoreCase("true")) {
 				//raise exception
@@ -118,8 +129,25 @@ public class Database {
 		finally {
 			close(response);
 		}
-	
 	}
+	
+	/**
+	 * Returns the Permissions on the database from the /db/_security document
+	 * @return Map<String,EnumSet<Permissions>> the map of userNames to their Permissions
+	 */
+	public Map<String,EnumSet<Permissions>> getPermissions() {
+		HttpResponse resp = null;
+		HttpGet get = new HttpGet(buildUri(getDBUri()).path("_security").build());
+		try {
+			resp = client.executeRequest(get);
+			return getResponseMap(resp, ownGSON, 
+					new TypeToken<Map<String,EnumSet<Permissions>>>(){}.getType());
+		}
+		finally {
+			close(resp);
+		}
+	}
+		
 	
 	/**
 	 * Get info about the shards in the database
@@ -661,20 +689,6 @@ public class Database {
 
 	// private helper methods
 
-	private String getPermissionsBody(String userNameorApikey, EnumSet<Permissions> permissions ) {
-		String body;
-		try {
-			body = "username=" + URLEncoder.encode(userNameorApikey,"UTF-8") +
-						"&database=" + client.getAccountName() + "/" + URLEncoder.encode(db.getDbName(),"UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(e.getLocalizedMessage()); // TODO fix this
-		}
-		for (Permissions s : permissions) {
-			body += "&roles=" +  s.toString();
-		}
-		return body;
-	}
-	
 	/**
 	 * Form a create index json from parameters
 	 */
@@ -795,7 +809,9 @@ public class Database {
 	private static void initGson() {
 		GsonBuilder builder = GsonHelper.initGson(new GsonBuilder());
 		builder.registerTypeAdapter(new TypeToken<List<Shard>>(){}.getType(), new ShardDeserializer())
-			   .registerTypeAdapter(new TypeToken<List<Index>>(){}.getType(), new IndexDeserializer());
+			   .registerTypeAdapter(new TypeToken<List<Index>>(){}.getType(), new IndexDeserializer())
+			   .registerTypeAdapter(new TypeToken<Map<String,EnumSet<Permissions>>>(){}.getType(),
+					   						new SecurityDeserializer());
 		ownGSON = builder.create();
 	}
 	
@@ -865,3 +881,21 @@ class IndexDeserializer implements JsonDeserializer<List<Index>> {
 		return indices;
 	}
   }
+
+class SecurityDeserializer implements JsonDeserializer<Map<String,EnumSet<Permissions>>> {
+
+	@Override
+	public Map<String,EnumSet<Permissions>> deserialize(JsonElement json, Type typeOfT,
+			JsonDeserializationContext context) throws JsonParseException {
+		
+		Map<String,EnumSet<Permissions>> perms = new HashMap<String,EnumSet<Permissions>>();
+		Set<Map.Entry<String,JsonElement>> permList = json.getAsJsonObject().get("cloudant").getAsJsonObject().entrySet();
+		for ( Entry<String,JsonElement> entry : permList ) {
+			String user = entry.getKey();
+			EnumSet<Permissions> p= context.deserialize(entry.getValue(), new TypeToken<EnumSet<Permissions>>(){}.getType());
+			perms.put(user,  p);
+		}
+		return perms;
+		
+	}
+}

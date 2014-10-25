@@ -168,11 +168,8 @@ public class CloudantClient {
 	 * @return the generated key and password
 	 */
 	public ApiKey generateApiKey() {
-		assertNotEmpty(loginUsername,"loginUsername");
-		assertNotEmpty(password,"password");
-		CouchDbClient tmp = new CouchDbClient("https", "cloudant.com", 443, loginUsername, password);
-		URI uri = buildUri(tmp.getBaseUri()).path("api/generate_api_key").build();
-		return tmp.executeRequest(createPost(uri,"",""), ApiKey.class);		
+		URI uri = buildUri(getBaseUri()).path("_api/v2/api_keys").build();
+		return client.executeRequest(createPost(uri,"",""), ApiKey.class);		
 	}
 
 	/**

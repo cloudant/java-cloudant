@@ -29,9 +29,11 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.UUID;
@@ -45,6 +47,7 @@ import org.apache.http.entity.StringEntity;
 import org.lightcouch.CouchDbException;
 import org.lightcouch.Response;
 
+import com.cloudant.client.api.model.Permissions;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -274,4 +277,13 @@ final public class CouchDbUtil {
 		return gson.fromJson(reader, classType);
 	}
 	 
+	/**
+	 * @param response The {@link HttpResponse}
+	 * @return {@link Response}
+	 */
+	public static  Map<String,EnumSet<Permissions>> getResponseMap(HttpResponse response, Gson gson, Type typeofT) throws CouchDbException {
+		InputStream instream = getStream(response);
+		Reader reader = new InputStreamReader(instream);
+		return gson.fromJson(reader,typeofT);
+	}
 }
