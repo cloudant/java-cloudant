@@ -16,15 +16,15 @@ Maven
 ~~~ xml
 
   <dependency>
-  <groupId>com.cloudant.client.api</groupId>
-  <artifactId>cloudant</artifactId> 
-  <version>0.0.9</version>
+  <groupId>com.cloudant</groupId>
+  <artifactId>cloudant-client</artifactId> 
+  <version>1.0.0-beta1</version>
 </dependency>
 
 ~~~
 
 Alternately download the dependencies  
-  [cloudant.jar](todo)    
+  [cloudant.jar](http://search.maven.org/remotecontent?filepath=com/cloudant/cloudant-client/1.0.0-beta1/cloudant-client-1.0.0-beta1.jar)    
   [HttpClient 4.3.3](http://hc.apache.org/downloads.cgi)  
   [HttpCore 4.3.2](http://hc.apache.org/downloads.cgi)  
   [Commons Codec 1.6](http://commons.apache.org/codec/download_codec.cgi)  
@@ -187,7 +187,7 @@ System.out.println("Connected to Cloudant");
 
 ## Authorization
 
-This feature interfaces with the Cloudant [authorization API][auth].
+This feature interfaces with the Cloudant authorization API
 
 Use the authorization feature to generate new API keys to access your data. An API key is basically a username/password pair for granting others access to your data, without giving them the keys to the castle.
 
@@ -386,7 +386,7 @@ while (changes.hasNext()) {
 
 ### com.cloudant.client.api.Database.setPermissions()
 
-`.setPermissions()` sets the permissions for the DB.
+`.setPermissions()` sets the permissions for a user/apiKey on the DB.
 ~~~ java
 ApiKey key = client.generateApiKey();
 EnumSet<Permissions> p = EnumSet.<Permissions>of( Permissions._writer, Permissions._reader);
