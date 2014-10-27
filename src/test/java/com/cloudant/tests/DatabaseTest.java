@@ -52,10 +52,12 @@ public class DatabaseTest {
 	
 	@Test
 	public void permissions() {
+		Map<String,EnumSet<Permissions>> userPerms = db.getPermissions();
+		assertNotNull(userPerms);
 		ApiKey key = account.generateApiKey();
 		EnumSet<Permissions> p = EnumSet.<Permissions>of( Permissions._reader, Permissions._writer);
 		db.setPermissions(key.getKey(), p);
-		Map<String,EnumSet<Permissions>> userPerms = db.getPermissions();
+		userPerms = db.getPermissions();
 		assertNotNull(userPerms);
 		assertEquals(userPerms.size(), 1);
 		assertEquals(userPerms.get(key.getKey()), p);

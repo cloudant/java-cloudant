@@ -889,7 +889,11 @@ class SecurityDeserializer implements JsonDeserializer<Map<String,EnumSet<Permis
 			JsonDeserializationContext context) throws JsonParseException {
 		
 		Map<String,EnumSet<Permissions>> perms = new HashMap<String,EnumSet<Permissions>>();
-		Set<Map.Entry<String,JsonElement>> permList = json.getAsJsonObject().get("cloudant").getAsJsonObject().entrySet();
+		JsonElement elem = json.getAsJsonObject().get("cloudant");
+		if ( elem == null ) {
+			return perms;
+		}
+		Set<Map.Entry<String,JsonElement>> permList = elem.getAsJsonObject().entrySet();
 		for ( Entry<String,JsonElement> entry : permList ) {
 			String user = entry.getKey();
 			EnumSet<Permissions> p= context.deserialize(entry.getValue(), new TypeToken<EnumSet<Permissions>>(){}.getType());
