@@ -46,6 +46,10 @@ public class ReplicationTest {
 									  props.getProperty("cloudant.username"),
 									  props.getProperty("cloudant.password"));
 		db1 = dbClient.database("lightcouch-db-test", true);
+		db1URI = "https://" + props.getProperty("cloudant.username") + ":"
+				+ props.getProperty("cloudant.password") + "@"
+				+  Utils.getHostName(props.getProperty("cloudant.account"))
+				+ "/lightcouch-db-test";
 		
 	
 		props = Utils.getProperties("cloudant-2.properties",log);
@@ -57,15 +61,12 @@ public class ReplicationTest {
 		db1.syncDesignDocsWithDb();
 		db2.syncDesignDocsWithDb();
 		
-		db1URI = "https://" + props.getProperty("cloudant.username") + ":"
-				+ props.getProperty("cloudant.password") + "@"
-				+ props.getProperty("cloudant.account") + ".cloudant.com/"
-				+ "lightcouch-db-test";
+		
 
 		db2URI = "https://" + props.getProperty("cloudant.username") + ":"
 				+ props.getProperty("cloudant.password") + "@"
-				+ props.getProperty("cloudant.account") + ".cloudant.com/"
-				+ "lightcouch-db-test-2";
+				+ Utils.getHostName(props.getProperty("cloudant.account"))
+				+ "/lightcouch-db-test-2";
 	}
 
 	@AfterClass

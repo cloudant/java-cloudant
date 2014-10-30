@@ -1,6 +1,8 @@
 package com.cloudant.tests.util;
 
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
@@ -20,5 +22,18 @@ public class Utils {
 		}
 		return properties;
 	
+	}
+	
+	public static String getHostName(String account) {
+		if (account.startsWith("http://") ) {
+			return account.substring(7);
+		}
+		else if ( account.startsWith("https://")) {
+			return account.substring(8);
+		}
+		else {
+			return account + ".cloudant.com";
+		}
+				
 	}
 }
