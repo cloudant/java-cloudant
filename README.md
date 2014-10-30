@@ -153,7 +153,7 @@ If you run this example, you will see:
 	- [Database.invokeUpdateHandler(updateHandlerUri,docId,params)](#comcloudantclientapidatabaseinvokeupdatehandlerupdatehandleruridocidparams)
 - [Bulk Documents](#bulk-documents)
 	- [Insert/Update docs ](#insertupdate-docs )
-	- [Fetch All/multiple documents](#fetch-allmultiple-documents)
+	- [Fetch All/multiple documents](#fetch-all/multiple-documents)
 - [Attachment Functions](#attachment-functions)
 	- [Inline attachment](#inline-attachment)
 	- [Standalone Attachments](#standalone-attachments)	
