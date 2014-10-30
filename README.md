@@ -636,7 +636,7 @@ newDocs.add(new JsonObject());
 List<Response> responses = db.bulk(newDocs);
 ~~~
 
-### Fetch allmultiple documents
+### Fetch all/multiple documents
 
 List all the docs in the database with optional query string additions `params`.
 
