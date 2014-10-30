@@ -153,7 +153,7 @@ If you run this example, you will see:
 	- [Database.invokeUpdateHandler(updateHandlerUri,docId,params)](#comcloudantclientapidatabaseinvokeupdatehandlerupdatehandleruridocidparams)
 - [Bulk Documents](#bulk-documents)
 	- [Insert/Update docs ](#insertupdate-docs )
-	- [Fetch multiple documents](#fetch-multiple-documents)
+	- [Fetch All/multiple documents](#fetch-allmultiple-documents)
 - [Attachment Functions](#attachment-functions)
 	- [Inline attachment](#inline-attachment)
 	- [Standalone Attachments](#standalone-attachments)	
@@ -636,10 +636,19 @@ newDocs.add(new JsonObject());
 List<Response> responses = db.bulk(newDocs);
 ~~~
 
-### Fetch multiple documents
+### Fetch allmultiple documents
 
 List all the docs in the database with optional query string additions `params`.
 
+~~~ java
+
+List<Foo> docs = dbClient.view("_all_docs")
+					  .includeDocs(true)
+					  .query(Foo.class);
+					  
+~~~
+
+List multiple documents specified by docID's in the database .
 ~~~ java
 
 List<String> keys = Arrays.asList(new String[]{"doc-id-1", "doc-id-2"});
@@ -649,6 +658,7 @@ List<Foo> docs = dbClient.view("_all_docs")
 					  .query(Foo.class);
 					  
 ~~~
+
 
 ## Attachment Functions
 
