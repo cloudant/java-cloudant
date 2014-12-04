@@ -12,16 +12,25 @@ This is the official Cloudant library for Java
 
 ## Installation and Usage
 
-Maven
+Maven:
+
 ~~~ xml
 
-  <dependency>
+<dependency>
   <groupId>com.cloudant</groupId>
   <artifactId>cloudant-client</artifactId> 
   <version>1.0.0-beta1</version>
 </dependency>
 
 ~~~
+
+Gradle:
+
+```groovy
+dependencies {
+    compile group: 'com.cloudant', name: 'cloudant-client', version:'1.0.0-beta1'
+}
+```
 
 Alternately download the dependencies  
   [cloudant.jar](http://search.maven.org/remotecontent?filepath=com/cloudant/cloudant-client/1.0.0-beta1/cloudant-client-1.0.0-beta1.jar)    
