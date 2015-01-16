@@ -3,9 +3,9 @@ package com.cloudant.client.api;
 import java.io.InputStream;
 import java.util.List;
 
-import org.lightcouch.CouchDatabaseBase;
-import org.lightcouch.Page;
-import org.lightcouch.ViewResult;
+import com.cloudant.client.org.lightcouch.CouchDatabaseBase;
+import com.cloudant.client.org.lightcouch.Page;
+import com.cloudant.client.org.lightcouch.ViewResult;
 /**
  * This class provides access to the <tt>View</tt> APIs.
  * 
@@ -35,19 +35,19 @@ import org.lightcouch.ViewResult;
  * @author Ganesh K Choudhary
  */
 public class View {
-	private org.lightcouch.View view ;
+	private com.cloudant.client.org.lightcouch.View view ;
 	
 	/**
 	 * @return the view
 	 */
-	org.lightcouch.View getView() {
+	com.cloudant.client.org.lightcouch.View getView() {
 		return view;
 	}
 
 	/**
 	 * @param view the view to set
 	 */
-	void setView(org.lightcouch.View view) {
+	void setView(com.cloudant.client.org.lightcouch.View view) {
 		this.view = view;
 	}
 

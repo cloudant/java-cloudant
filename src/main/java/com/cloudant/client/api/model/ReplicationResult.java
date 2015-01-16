@@ -3,7 +3,7 @@ package com.cloudant.client.api.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.lightcouch.Replication;
+import com.cloudant.client.org.lightcouch.Replication;
 /**
  * Holds the result of a replication request, along with previous sessions history.
  * @see Replication
@@ -11,13 +11,13 @@ import org.lightcouch.Replication;
  * @author Ganesh K Choudhary
  */
 public class ReplicationResult {
-	private org.lightcouch.ReplicationResult replicationResult ;
+	private com.cloudant.client.org.lightcouch.ReplicationResult replicationResult ;
 	
 	public ReplicationResult(){
-		replicationResult = new org.lightcouch.ReplicationResult();
+		replicationResult = new com.cloudant.client.org.lightcouch.ReplicationResult();
 	}
 	
-	public ReplicationResult(org.lightcouch.ReplicationResult replicationResult){
+	public ReplicationResult(com.cloudant.client.org.lightcouch.ReplicationResult replicationResult){
 		this.replicationResult = replicationResult ;
 	}
 
@@ -53,9 +53,9 @@ public class ReplicationResult {
 	 * @return
 	 */
 	public List<ReplicationHistory> getHistories() {
-		List<org.lightcouch.ReplicationResult.ReplicationHistory> couchDbreplicationHistories = replicationResult.getHistories();
+		List<com.cloudant.client.org.lightcouch.ReplicationResult.ReplicationHistory> couchDbreplicationHistories = replicationResult.getHistories();
 		List<ReplicationHistory> histories = new ArrayList<ReplicationHistory>();
-		for(org.lightcouch.ReplicationResult.ReplicationHistory couchDbReplicationHistory : couchDbreplicationHistories){
+		for(com.cloudant.client.org.lightcouch.ReplicationResult.ReplicationHistory couchDbReplicationHistory : couchDbreplicationHistories){
 		ReplicationHistory replicationHistory = new ReplicationHistory(couchDbReplicationHistory);
 			histories.add(replicationHistory);
 		}
@@ -70,14 +70,14 @@ public class ReplicationResult {
 	 * @author Ganesh K Choudhary
 	 */
 	public static class ReplicationHistory {
-		private org.lightcouch.ReplicationResult.ReplicationHistory replicationHistory ;
+		private com.cloudant.client.org.lightcouch.ReplicationResult.ReplicationHistory replicationHistory ;
 		
 		public ReplicationHistory(){
 			// default constructor
 		}
 		
 		public ReplicationHistory(
-				org.lightcouch.ReplicationResult.ReplicationHistory replicationHistory) {
+				com.cloudant.client.org.lightcouch.ReplicationResult.ReplicationHistory replicationHistory) {
 			this.replicationHistory = replicationHistory;
 		}
 

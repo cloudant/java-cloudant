@@ -2,9 +2,9 @@ package com.cloudant.client.api;
 
 import java.util.Map;
 
-import org.lightcouch.ReplicationResult;
-import org.lightcouch.ReplicationResult.ReplicationHistory;
-import org.lightcouch.Replicator;
+import com.cloudant.client.org.lightcouch.ReplicationResult;
+import com.cloudant.client.org.lightcouch.Replicator;
+import com.cloudant.client.org.lightcouch.ReplicationResult.ReplicationHistory;
 
 /**
  * This class provides access to the database replication API; a replication request 
@@ -33,13 +33,13 @@ import org.lightcouch.Replicator;
  *
  */
 public class Replication {
-	private org.lightcouch.Replication replication ;
+	private com.cloudant.client.org.lightcouch.Replication replication ;
 	
 	/*public Replication(CouchDbClientBase client) {
 		this.replication = new org.lightcouch.Replication(client);
 	}*/
 	
-	Replication(org.lightcouch.Replication replication){
+	Replication(com.cloudant.client.org.lightcouch.Replication replication){
 		this.replication = replication ;
 	}
 
@@ -110,7 +110,7 @@ public class Replication {
 	/**
 	 * @param docIds
 	 * @return
-	 * @see org.lightcouch.Replication#docIds(java.lang.String[])
+	 * @see com.cloudant.client.org.lightcouch.Replication#docIds(java.lang.String[])
 	 */
 	public Replication docIds(String... docIds) {
 		this.replication =  replication.docIds(docIds);

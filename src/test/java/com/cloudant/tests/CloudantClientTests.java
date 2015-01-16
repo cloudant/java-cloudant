@@ -12,12 +12,12 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.lightcouch.CouchDbException;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
+import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.tests.util.Utils;
 
 public class CloudantClientTests {

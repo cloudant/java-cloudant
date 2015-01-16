@@ -39,9 +39,9 @@ import com.cloudant.client.api.model.ChangesResult.Row;
  * @author Ganesh K Choudhary
  */
 public class Changes {
-	private org.lightcouch.Changes changes ;
+	private com.cloudant.client.org.lightcouch.Changes changes ;
 	
-	Changes(org.lightcouch.Changes changes) {
+	Changes(com.cloudant.client.org.lightcouch.Changes changes) {
 		this.changes = changes ;
 	}
 	
@@ -66,7 +66,7 @@ public class Changes {
 	 * @return The next feed in the stream.
 	 */
 	public Row next() {
-		org.lightcouch.ChangesResult.Row next = changes.next();
+		com.cloudant.client.org.lightcouch.ChangesResult.Row next = changes.next();
 		Row row = new Row(next);
 		return row ;
 	}
@@ -82,7 +82,7 @@ public class Changes {
 	 * Requests Change notifications of feed type normal.
 	 */	 
 	public ChangesResult getChanges() {
-		org.lightcouch.ChangesResult couchDbChangesResult = changes.getChanges();
+		com.cloudant.client.org.lightcouch.ChangesResult couchDbChangesResult = changes.getChanges();
 		ChangesResult changeResult = new ChangesResult(couchDbChangesResult);
 		return changeResult ;
 	}

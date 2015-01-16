@@ -18,7 +18,7 @@ import com.cloudant.client.api.Database;
  */
 public class Params  {
 
-	private org.lightcouch.Params params = new org.lightcouch.Params();
+	private com.cloudant.client.org.lightcouch.Params params = new com.cloudant.client.org.lightcouch.Params();
 	
 	public Params readQuorum(int quorum) {
 		params.addParam("r", new Integer(quorum).toString());
@@ -76,7 +76,7 @@ public class Params  {
 		return params.toString();
 	}
 	
-	public org.lightcouch.Params getInternalParams() {
+	public com.cloudant.client.org.lightcouch.Params getInternalParams() {
 		return params;
 	}
 	

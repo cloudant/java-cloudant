@@ -3,8 +3,7 @@ package com.cloudant.client.api.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.lightcouch.Changes;
-
+import com.cloudant.client.org.lightcouch.Changes;
 import com.google.gson.JsonObject;
 /**
  * Represents Changes feed result of type <i>normal</i>.
@@ -15,20 +14,20 @@ import com.google.gson.JsonObject;
  */
 public class ChangesResult {
 	
-	private org.lightcouch.ChangesResult changesResult ;
+	private com.cloudant.client.org.lightcouch.ChangesResult changesResult ;
 	
 	public ChangesResult(){
-		this.changesResult = new org.lightcouch.ChangesResult();
+		this.changesResult = new com.cloudant.client.org.lightcouch.ChangesResult();
 	}
 	
-	public ChangesResult(org.lightcouch.ChangesResult changesResult){
+	public ChangesResult(com.cloudant.client.org.lightcouch.ChangesResult changesResult){
 		this.changesResult = changesResult ;
 	}
 
 	public List<Row> getResults() {
-		List<org.lightcouch.ChangesResult.Row> lightCouchResults = changesResult.getResults();
+		List<com.cloudant.client.org.lightcouch.ChangesResult.Row> lightCouchResults = changesResult.getResults();
 		List<Row> rows = new ArrayList<Row>();
-		for(org.lightcouch.ChangesResult.Row couchRow : lightCouchResults ){
+		for(com.cloudant.client.org.lightcouch.ChangesResult.Row couchRow : lightCouchResults ){
 			Row row = new Row(couchRow);
 			rows.add(row);
 		}
@@ -44,9 +43,9 @@ public class ChangesResult {
 	 * Represent a row in Changes result. 
 	 */
 	public static class Row {
-		private org.lightcouch.ChangesResult.Row row ;
+		private com.cloudant.client.org.lightcouch.ChangesResult.Row row ;
 		
-		public Row(org.lightcouch.ChangesResult.Row row){
+		public Row(com.cloudant.client.org.lightcouch.ChangesResult.Row row){
 			this.row = row ;
 		}
 		
@@ -64,9 +63,9 @@ public class ChangesResult {
 
 
 		public List<Rev> getChanges() {
-			List<org.lightcouch.ChangesResult.Row.Rev> lightCouchChanges = row.getChanges();
+			List<com.cloudant.client.org.lightcouch.ChangesResult.Row.Rev> lightCouchChanges = row.getChanges();
 			List<Rev> changes = new ArrayList<Rev>();
-			for(org.lightcouch.ChangesResult.Row.Rev rev : lightCouchChanges){
+			for(com.cloudant.client.org.lightcouch.ChangesResult.Row.Rev rev : lightCouchChanges){
 				changes.add(new Rev(rev));
 			}
 			return changes ;
@@ -85,9 +84,9 @@ public class ChangesResult {
 		 * Represent a Change rev. 
 		 */
 		public static class Rev {
-			private org.lightcouch.ChangesResult.Row.Rev rev ;
+			private com.cloudant.client.org.lightcouch.ChangesResult.Row.Rev rev ;
 			
-			public Rev(org.lightcouch.ChangesResult.Row.Rev rev){
+			public Rev(com.cloudant.client.org.lightcouch.ChangesResult.Row.Rev rev){
 				this.rev = rev ;
 			}
 

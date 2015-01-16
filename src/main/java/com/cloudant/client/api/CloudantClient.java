@@ -1,10 +1,10 @@
 package com.cloudant.client.api;
 
-import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.internal.CouchDbUtil.close;
-import static org.lightcouch.internal.CouchDbUtil.createPost;
-import static org.lightcouch.internal.CouchDbUtil.getResponseList;
-import static org.lightcouch.internal.URIBuilder.buildUri;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponseList;
+import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.net.URI;
 import java.util.List;
@@ -13,21 +13,21 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.lightcouch.Changes;
-import org.lightcouch.CouchDbClient;
-import org.lightcouch.CouchDbDesign;
-import org.lightcouch.CouchDbProperties;
-import org.lightcouch.Replication;
-import org.lightcouch.Replicator;
-import org.lightcouch.Response;
-import org.lightcouch.View;
-import org.lightcouch.internal.CouchDbUtil;
 
 import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.ConnectOptions;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
+import com.cloudant.client.org.lightcouch.Changes;
+import com.cloudant.client.org.lightcouch.CouchDbClient;
+import com.cloudant.client.org.lightcouch.CouchDbDesign;
+import com.cloudant.client.org.lightcouch.CouchDbProperties;
+import com.cloudant.client.org.lightcouch.Replication;
+import com.cloudant.client.org.lightcouch.Replicator;
+import com.cloudant.client.org.lightcouch.Response;
+import com.cloudant.client.org.lightcouch.View;
+import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
