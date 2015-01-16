@@ -1,11 +1,11 @@
 package com.cloudant.client.api;
 
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.listResources;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.readFile;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.removeExtension;
+import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 import static java.lang.String.format;
-import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.internal.CouchDbUtil.listResources;
-import static org.lightcouch.internal.CouchDbUtil.readFile;
-import static org.lightcouch.internal.CouchDbUtil.removeExtension;
-import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -13,16 +13,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.lightcouch.CouchDatabase;
-import org.lightcouch.CouchDatabaseBase;
-import org.lightcouch.CouchDbClient;
-import org.lightcouch.CouchDbDesign;
 //import org.lightcouch.DesignDocument;
-import org.lightcouch.Response;
-import org.lightcouch.DesignDocument.MapReduce;
-import org.lightcouch.internal.GsonHelper;
 
 import com.cloudant.client.api.model.DesignDocument;
+import com.cloudant.client.org.lightcouch.CouchDatabase;
+import com.cloudant.client.org.lightcouch.CouchDatabaseBase;
+import com.cloudant.client.org.lightcouch.CouchDbClient;
+import com.cloudant.client.org.lightcouch.CouchDbDesign;
+import com.cloudant.client.org.lightcouch.Response;
+import com.cloudant.client.org.lightcouch.DesignDocument.MapReduce;
+import com.cloudant.client.org.lightcouch.internal.GsonHelper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;

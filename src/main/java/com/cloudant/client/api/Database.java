@@ -1,15 +1,15 @@
 package com.cloudant.client.api;
 
-import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.internal.CouchDbUtil.close;
-import static org.lightcouch.internal.CouchDbUtil.createPost;
-import static org.lightcouch.internal.CouchDbUtil.getAsString;
-import static org.lightcouch.internal.CouchDbUtil.getResponse;
-import static org.lightcouch.internal.CouchDbUtil.getResponseList;
-import static org.lightcouch.internal.CouchDbUtil.getStream;
-import static org.lightcouch.internal.CouchDbUtil.setEntity;
-import static org.lightcouch.internal.CouchDbUtil.getResponseMap;
-import static org.lightcouch.internal.URIBuilder.buildUri;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponseList;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponseMap;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getStream;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.setEntity;
+import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -31,15 +31,6 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.lightcouch.Changes;
-import org.lightcouch.CouchDatabase;
-import org.lightcouch.CouchDbDesign;
-import org.lightcouch.CouchDbInfo;
-import org.lightcouch.DocumentConflictException;
-import org.lightcouch.NoDocumentException;
-import org.lightcouch.Response;
-import org.lightcouch.View;
-import org.lightcouch.internal.GsonHelper;
 
 import com.cloudant.client.api.model.DbInfo;
 import com.cloudant.client.api.model.FindByIndexOptions;
@@ -49,6 +40,15 @@ import com.cloudant.client.api.model.IndexField.SortOrder;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.model.Shard;
+import com.cloudant.client.org.lightcouch.Changes;
+import com.cloudant.client.org.lightcouch.CouchDatabase;
+import com.cloudant.client.org.lightcouch.CouchDbDesign;
+import com.cloudant.client.org.lightcouch.CouchDbInfo;
+import com.cloudant.client.org.lightcouch.DocumentConflictException;
+import com.cloudant.client.org.lightcouch.NoDocumentException;
+import com.cloudant.client.org.lightcouch.Response;
+import com.cloudant.client.org.lightcouch.View;
+import com.cloudant.client.org.lightcouch.internal.GsonHelper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -566,7 +566,7 @@ public class Database {
 	 */
 	public List<com.cloudant.client.api.model.Response> bulk(List<?> objects) {
 		List<Response> couchDbResponseList =  db.bulk(objects, false);
-		List<com.cloudant.client.api.model.Response> cloudantResponseList = new ArrayList<>();
+		List<com.cloudant.client.api.model.Response> cloudantResponseList = new ArrayList<com.cloudant.client.api.model.Response>();
 		for(Response couchDbResponse : couchDbResponseList){
 			com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 			cloudantResponseList.add(response);
@@ -827,7 +827,6 @@ public class Database {
 
 class ShardDeserializer implements JsonDeserializer<List<Shard>> {
 
-	@Override
 	public List<Shard> deserialize(JsonElement json, Type typeOfT,
 			JsonDeserializationContext context) throws JsonParseException {
 		
@@ -849,7 +848,6 @@ class ShardDeserializer implements JsonDeserializer<List<Shard>> {
 
 class IndexDeserializer implements JsonDeserializer<List<Index>> {
 
-	@Override
 	public List<Index> deserialize(JsonElement json, Type typeOfT,
 			JsonDeserializationContext context) throws JsonParseException {
 		
@@ -884,7 +882,6 @@ class IndexDeserializer implements JsonDeserializer<List<Index>> {
 
 class SecurityDeserializer implements JsonDeserializer<Map<String,EnumSet<Permissions>>> {
 
-	@Override
 	public Map<String,EnumSet<Permissions>> deserialize(JsonElement json, Type typeOfT,
 			JsonDeserializationContext context) throws JsonParseException {
 		

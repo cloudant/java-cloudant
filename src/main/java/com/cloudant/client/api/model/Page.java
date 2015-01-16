@@ -2,7 +2,7 @@ package com.cloudant.client.api.model;
 
 import java.util.List;
 
-import org.lightcouch.View;
+import com.cloudant.client.org.lightcouch.View;
 
 /**
  * Holds data of a page as result of a view pagination query. 
@@ -11,9 +11,9 @@ import org.lightcouch.View;
  * @author Ganesh K Choudhary
  */
 public class Page<T> {
-	private org.lightcouch.Page<T> page ;
+	private com.cloudant.client.org.lightcouch.Page<T> page ;
 	
-	public Page(org.lightcouch.Page<T> page){
+	public Page(com.cloudant.client.org.lightcouch.Page<T> page){
 		this.page = page ;
 	}
 

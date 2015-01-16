@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.lightcouch.Attachment;
+import com.cloudant.client.org.lightcouch.Attachment;
 
 public class Foo {
 	

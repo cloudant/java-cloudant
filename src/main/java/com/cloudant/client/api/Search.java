@@ -1,11 +1,11 @@
 package com.cloudant.client.api;
 
-import static org.lightcouch.internal.CouchDbUtil.JsonToObject;
-import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.internal.CouchDbUtil.close;
-import static org.lightcouch.internal.CouchDbUtil.getAsLong;
-import static org.lightcouch.internal.CouchDbUtil.getAsString;
-import static org.lightcouch.internal.CouchDbUtil.getStream;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.JsonToObject;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsLong;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getStream;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -22,9 +22,9 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.methods.HttpGet;
-import org.lightcouch.internal.URIBuilder;
 
 import com.cloudant.client.api.model.SearchResult;
+import com.cloudant.client.org.lightcouch.internal.URIBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

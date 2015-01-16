@@ -9,7 +9,7 @@ package com.cloudant.client.api.model;
  * @author Ganesh K Choudhary
  *
  */
-public class Document extends org.lightcouch.Document{
+public class Document extends com.cloudant.client.org.lightcouch.Document{
 	
 	public void addAttachment(String name, Attachment attachment) {
 		// TODO Auto-generated method stub

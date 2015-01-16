@@ -1,17 +1,17 @@
 package com.cloudant.client.api.model;
 
 
-import org.lightcouch.Document;
+import com.cloudant.client.org.lightcouch.Document;
 
 /**
  * Represents an in-line document attachment. 
  * @see Document#addAttachment(String, Attachment)
  */
 public class Attachment {
-	private org.lightcouch.Attachment attachement ;
+	private com.cloudant.client.org.lightcouch.Attachment attachement ;
 	
 	public Attachment(){
-		this.attachement = new org.lightcouch.Attachment();
+		this.attachement = new com.cloudant.client.org.lightcouch.Attachment();
 	}
 	
 	/**
@@ -19,10 +19,10 @@ public class Attachment {
 	 * @param contentType The Content-Type of the attachment.
 	 */
 	public Attachment(String data, String contentType) {
-		this.attachement = new org.lightcouch.Attachment(data,contentType);
+		this.attachement = new com.cloudant.client.org.lightcouch.Attachment(data,contentType);
 	}
 	
-	Attachment(org.lightcouch.Attachment attachement){
+	Attachment(com.cloudant.client.org.lightcouch.Attachment attachement){
 		this.attachement = attachement ;
 	}
 
@@ -82,7 +82,7 @@ public class Attachment {
 		attachement.setData(data);
 	}
 	
-	org.lightcouch.Attachment getAttachement() {
+	com.cloudant.client.org.lightcouch.Attachment getAttachement() {
 		return attachement;
 	}
 

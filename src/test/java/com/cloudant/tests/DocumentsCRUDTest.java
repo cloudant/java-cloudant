@@ -17,13 +17,13 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.lightcouch.DocumentConflictException;
-import org.lightcouch.NoDocumentException;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
+import com.cloudant.client.org.lightcouch.DocumentConflictException;
+import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

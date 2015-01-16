@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.lightcouch.Replication;
-import org.lightcouch.ReplicatorDocument;
-import org.lightcouch.Response;
+import com.cloudant.client.org.lightcouch.Replication;
+import com.cloudant.client.org.lightcouch.ReplicatorDocument;
+import com.cloudant.client.org.lightcouch.Response;
 /**
  * This class provides access to the <tt>_replicator</tt> database introduced in CouchDB version 1.1.0
  * <p>A replication is triggered by persisting a document, and cancelled by removing the document that triggered the replication.
@@ -45,9 +45,9 @@ import org.lightcouch.Response;
  *
  */
 public class Replicator {
-	private org.lightcouch.Replicator replicator ;
+	private com.cloudant.client.org.lightcouch.Replicator replicator ;
 	
-	Replicator(org.lightcouch.Replicator replicator){
+	Replicator(com.cloudant.client.org.lightcouch.Replicator replicator){
 		this.replicator = replicator ;
 	}
 
@@ -76,7 +76,7 @@ public class Replicator {
 	 */
 	public List<com.cloudant.client.api.model.ReplicatorDocument> findAll() {
 		List<ReplicatorDocument> couchDbReplicatorDocList = replicator.findAll();
-		List<com.cloudant.client.api.model.ReplicatorDocument> replicatorDocList = new ArrayList<>();
+		List<com.cloudant.client.api.model.ReplicatorDocument> replicatorDocList = new ArrayList<com.cloudant.client.api.model.ReplicatorDocument>();
 		for(ReplicatorDocument couchDbReplicatorDoc : couchDbReplicatorDocList){
 			com.cloudant.client.api.model.ReplicatorDocument replicatorDoc = new com.cloudant.client.api.model.ReplicatorDocument(couchDbReplicatorDoc);
 			replicatorDocList.add(replicatorDoc);
