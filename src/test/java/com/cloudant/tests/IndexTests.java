@@ -39,7 +39,7 @@ public class IndexTests {
 		com.cloudant.client.api.Replication r = account.replication();
 		r.source("https://examples.cloudant.com/movies-demo");
 		r.createTarget(true);
-		r.target("https://"+ userName + ":" + password + "@" + cloudantaccount +  ".cloudant.com/movies-demo");
+		r.target("https://"+ userName + ":" + password + "@" +   Utils.getHostName(cloudantaccount) +"/movies-demo");
 		r.trigger();
 		db = account.database("movies-demo", false);
 		

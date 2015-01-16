@@ -38,7 +38,7 @@ public class DatabaseTest {
 		com.cloudant.client.api.Replication r = account.replication();
 		r.source("https://examples.cloudant.com/animaldb");
 		r.createTarget(true);
-		r.target("https://"+ userName + ":" + password + "@" + cloudantaccount +  ".cloudant.com/animaldb");
+		r.target("https://"+ userName + ":" + password + "@" +  Utils.getHostName(cloudantaccount) + "/animaldb");
 		r.trigger();
 		db = account.database("animaldb", false);
 	}

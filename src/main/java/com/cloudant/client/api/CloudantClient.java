@@ -7,7 +7,10 @@ import static org.lightcouch.internal.CouchDbUtil.getResponseList;
 import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -86,14 +89,17 @@ public class CloudantClient {
 	 */
 	public CloudantClient(String account, String loginUsername, String password) {
 		super();
-		assertNotEmpty(account,"accountName");
+		Map<String,String> h = parseAccount(account);
 		assertNotEmpty(loginUsername,"loginUsername");
 		assertNotEmpty(password,"password");
-		
-		this.accountName = account;
 		this.loginUsername = loginUsername;
 		this.password = password;
-		this.client = new CouchDbClient("https", account + ".cloudant.com", 443, loginUsername, password);
+		
+		client = new CouchDbClient(h.get("scheme"),
+						h.get("hostname"),
+						new Integer(h.get("port")).intValue(),
+						loginUsername,
+						password);
 	}
 	
 	/**
@@ -105,15 +111,17 @@ public class CloudantClient {
 	 */
 	public CloudantClient(String account, String loginUsername, String password,ConnectOptions connectOptions){
 		super();
-		assertNotEmpty(account,"accountName");
+		Map<String,String> h = parseAccount(account);
 		assertNotEmpty(loginUsername,"loginUsername");
 		assertNotEmpty(password,"password");
-		
-		this.accountName = account;
 		this.loginUsername = loginUsername;
 		this.password = password;
 		
-		CouchDbProperties props = new CouchDbProperties("https",account+".cloudant.com",443,loginUsername,password);
+		CouchDbProperties props = new CouchDbProperties(
+							h.get("scheme"),
+							h.get("hostname"),
+							new Integer(h.get("port")).intValue(),
+							loginUsername,password);
 		if(connectOptions != null){
 			props.setConnectionTimeout(connectOptions.getConnectionTimeout());
 			props.setSocketTimeout(connectOptions.getSocketTimeout());
@@ -133,11 +141,14 @@ public class CloudantClient {
 	 */
 	public CloudantClient(String account, String authCookie){
 		super();
-		assertNotEmpty(account,"accountName");
+		Map<String,String> h = parseAccount(account);
 		assertNotEmpty(authCookie, "AuthCookie");
 		
-		this.accountName = account ;
-		this.client = new CouchDbClient("https",account +".cloudant.com",443,authCookie);
+		this.client = new CouchDbClient(h.get("scheme"),
+				h.get("hostname"),
+				new Integer(h.get("port")).intValue(),
+				authCookie);
+		
 	}
 	
 	/**
@@ -148,10 +159,14 @@ public class CloudantClient {
 	 */
 	public CloudantClient(String account, String authCookie,ConnectOptions connectOptions){
 		super();
-		assertNotEmpty(account,"accountName");
+		Map<String,String> h = parseAccount(account);
 		assertNotEmpty(authCookie, "AuthCookie");
 		
-		CouchDbProperties props = new CouchDbProperties("https",account+".cloudant.com",443,authCookie);
+		CouchDbProperties props = new CouchDbProperties(
+							h.get("scheme"),
+							h.get("hostname"),
+							new Integer(h.get("port")).intValue(),
+							authCookie);
 		if(connectOptions != null){
 			props.setConnectionTimeout(connectOptions.getConnectionTimeout());
 			props.setSocketTimeout(connectOptions.getSocketTimeout());
@@ -366,5 +381,32 @@ public class CloudantClient {
 				close(response);
 			}
 		}
+	
+	private Map<String,String> parseAccount(String account) {
+		assertNotEmpty(account,"accountName");
+		this.accountName = account;
+		Map<String,String> h = new HashMap<String,String>();
+		if (account.startsWith("http://") || account.startsWith("https://")) {
+			// user is specifying a uri
+			try {
+				URI uri = new URI(account);
+				uri.getPort();
+				h.put("scheme", uri.getScheme());
+				h.put("hostname", uri.getHost());
+				h.put("port", new Integer(uri.getPort()).toString());
+			} catch (URISyntaxException e) {
+				
+			}
+		}
+		else {
+			h.put("scheme", "https");
+			h.put("hostname", account + ".cloudant.com");
+			h.put("port", "443");
+		}
+		return h;
+		
+		
+		
+	}
 }
 	
