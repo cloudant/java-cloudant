@@ -19,7 +19,7 @@ Maven:
 <dependency>
   <groupId>com.cloudant</groupId>
   <artifactId>cloudant-client</artifactId> 
-  <version>1.0.0-beta1</version>
+  <version>1.0.0</version>
 </dependency>
 
 ~~~
@@ -28,12 +28,12 @@ Gradle:
 
 ```groovy
 dependencies {
-    compile group: 'com.cloudant', name: 'cloudant-client', version:'1.0.0-beta1'
+    compile group: 'com.cloudant', name: 'cloudant-client', version:'1.0.0'
 }
 ```
 
 Alternately download the dependencies  
-  [cloudant.jar](http://search.maven.org/remotecontent?filepath=com/cloudant/cloudant-client/1.0.0-beta1/cloudant-client-1.0.0-beta1.jar)    
+  [cloudant.jar](http://search.maven.org/remotecontent?filepath=com/cloudant/cloudant-client/1.0.0/cloudant-client-1.0.0.jar)    
   [HttpClient 4.3.3](http://hc.apache.org/downloads.cgi)  
   [HttpCore 4.3.2](http://hc.apache.org/downloads.cgi)  
   [Commons Codec 1.6](http://commons.apache.org/codec/download_codec.cgi)  
@@ -44,11 +44,27 @@ Alternately download the dependencies
 
 Now it's time to begin doing real work with Cloudant and Java. For working code samples of any of the API's please go to our Test suite.
 
-Initialize your Cloudant connection by constructing a *com.cloudant.client.api.CloudantClient* supplying the *account* to connect to along with *userName or Apikey* and  *password*
+Initialize your Cloudant connection by constructing a *com.cloudant.client.api.CloudantClient* . If you are connecting the managed service on cloudant.com, supply the *account* to connect. If you are connecting to Cloudant Local supply its URL. Additionally supply the *userName or Apikey* and  *password*
 
+Connecting to the managed service at cloudant.com example
 ~~~ java
 String password = System.getProperty("cloudant_password");
 CloudantClient client = new CloudantClient("mdb","mdb",password);
+
+System.out.println("Connected to Cloudant");
+System.out.println("Server Version: " + client.serverVersion());
+
+List<String> databases = client.getAllDbs();
+System.out.println("All my databases : ");
+for ( String db : databases ) {
+	System.out.println(db);
+}
+~~~
+
+Connecting to Cloudant Local example
+~~~ java
+String password = System.getProperty("cloudant_password");
+CloudantClient client = new CloudantClient("httos://9.149.23.12","mdb",password);
 
 System.out.println("Connected to Cloudant");
 System.out.println("Server Version: " + client.serverVersion());
@@ -178,7 +194,7 @@ If you run this example, you will see:
 
 ### Initialization
 
-To use Cloudant, initialize your Cloudant connection by constructing a `CloudantClient` supplying the `account` to connect to along with `userName or Apikey` and  `password` (And see the [security note](#security-note) about placing your password into your source code.
+When using the managed service at cloudant.com, initialize your Cloudant connection by constructing a `CloudantClient` supplying the `account` to connect to along with `userName or Apikey` and  `password` (And see the [security note](#security-note) about placing your password into your source code.
 
 ~~~ java
 String password = System.getProperty("cloudant_password");
@@ -192,6 +208,19 @@ System.out.println("Connected to Cloudant");
 })
 ~~~
 
+When using Cloudant Local, initialize your Cloudant connection by constructing a `CloudantClient` supplying the URL of the Cloudant Local along with `userName or Apikey` and  `password` (And see the [security note](#security-note) about placing your password into your source code.
+
+~~~ java
+String password = System.getProperty("cloudant_password");
+CloudantClient client = new CloudantClient("https://9.123.45.64","mdb",password);
+
+System.out.println("Connected to Cloudant");
+
+  /*
+   * The rest of my code goes here.
+   */
+})
+~~~
 
 
 ## Authorization
