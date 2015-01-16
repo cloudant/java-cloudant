@@ -54,7 +54,7 @@ public class ReplicationResult {
 	 */
 	public List<ReplicationHistory> getHistories() {
 		List<org.lightcouch.ReplicationResult.ReplicationHistory> couchDbreplicationHistories = replicationResult.getHistories();
-		List<ReplicationHistory> histories = new ArrayList<>();
+		List<ReplicationHistory> histories = new ArrayList<ReplicationHistory>();
 		for(org.lightcouch.ReplicationResult.ReplicationHistory couchDbReplicationHistory : couchDbreplicationHistories){
 		ReplicationHistory replicationHistory = new ReplicationHistory(couchDbReplicationHistory);
 			histories.add(replicationHistory);

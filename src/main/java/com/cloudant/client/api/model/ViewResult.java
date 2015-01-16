@@ -14,7 +14,7 @@ public class ViewResult<K, V, T> {
 	private org.lightcouch.ViewResult<K, V, T> viewResult ;
 	
 	public ViewResult(){
-		viewResult = new org.lightcouch.ViewResult<>();
+		viewResult = new org.lightcouch.ViewResult<K, V, T>();
 	}
 	
 	public ViewResult(org.lightcouch.ViewResult<K, V, T> viewResult){

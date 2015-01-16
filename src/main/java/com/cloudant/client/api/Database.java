@@ -566,7 +566,7 @@ public class Database {
 	 */
 	public List<com.cloudant.client.api.model.Response> bulk(List<?> objects) {
 		List<Response> couchDbResponseList =  db.bulk(objects, false);
-		List<com.cloudant.client.api.model.Response> cloudantResponseList = new ArrayList<>();
+		List<com.cloudant.client.api.model.Response> cloudantResponseList = new ArrayList<com.cloudant.client.api.model.Response>();
 		for(Response couchDbResponse : couchDbResponseList){
 			com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 			cloudantResponseList.add(response);
@@ -827,7 +827,6 @@ public class Database {
 
 class ShardDeserializer implements JsonDeserializer<List<Shard>> {
 
-	@Override
 	public List<Shard> deserialize(JsonElement json, Type typeOfT,
 			JsonDeserializationContext context) throws JsonParseException {
 		
@@ -849,7 +848,6 @@ class ShardDeserializer implements JsonDeserializer<List<Shard>> {
 
 class IndexDeserializer implements JsonDeserializer<List<Index>> {
 
-	@Override
 	public List<Index> deserialize(JsonElement json, Type typeOfT,
 			JsonDeserializationContext context) throws JsonParseException {
 		
@@ -884,7 +882,6 @@ class IndexDeserializer implements JsonDeserializer<List<Index>> {
 
 class SecurityDeserializer implements JsonDeserializer<Map<String,EnumSet<Permissions>>> {
 
-	@Override
 	public Map<String,EnumSet<Permissions>> deserialize(JsonElement json, Type typeOfT,
 			JsonDeserializationContext context) throws JsonParseException {
 		
