@@ -77,6 +77,15 @@ public class CloudantClient {
 	private String loginUsername;
 	private String password;
 
+	/**
+	 * Constructs a new instance of this class. The caller has to provide a properly configured LightCouch client.
+	 * 
+	 * @param client
+	 */
+	public CloudantClient(CouchDbClient client) {
+		super();
+		this.client = client;
+	}
 		
 	/**
 	 * Constructs a new instance of this class and connects to the cloudant account with the specified credentials
