@@ -227,17 +227,17 @@ public class CouchDbClient extends  CouchDbClientBase {
 		clientBuilder.addInterceptorFirst(new HttpRequestInterceptor() {
 			public void process(final HttpRequest request,
 					final HttpContext context) throws IOException {
-				if (log.isInfoEnabled()) {
+				if (log.isDebugEnabled()) {
 					RequestLine req = request.getRequestLine();
-					log.info("> " + req.getMethod() + " " + URLDecoder.decode(req.getUri(), "UTF-8"));
+					log.debug("> " + req.getMethod() + " " + URLDecoder.decode(req.getUri(), "UTF-8"));
 				}
 			}
 		});
 		clientBuilder.addInterceptorFirst(new HttpResponseInterceptor() {
 			public void process(final HttpResponse response,
 					final HttpContext context) throws IOException {
-				if (log.isInfoEnabled()) {
-					log.info("< Status: " + response.getStatusLine().getStatusCode());
+				if (log.isDebugEnabled()) {
+					log.debug("< Status: " + response.getStatusLine().getStatusCode());
 				}
 				validate(response);
 			}

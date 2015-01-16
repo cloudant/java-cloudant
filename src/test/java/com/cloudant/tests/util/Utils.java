@@ -1,8 +1,6 @@
 package com.cloudant.tests.util;
 
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
