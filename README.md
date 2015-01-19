@@ -64,7 +64,7 @@ for ( String db : databases ) {
 Connecting to Cloudant Local example
 ~~~ java
 String password = System.getProperty("cloudant_password");
-CloudantClient client = new CloudantClient("httos://9.149.23.12","mdb",password);
+CloudantClient client = new CloudantClient("https://9.149.23.12","mdb",password);
 
 System.out.println("Connected to Cloudant");
 System.out.println("Server Version: " + client.serverVersion());
