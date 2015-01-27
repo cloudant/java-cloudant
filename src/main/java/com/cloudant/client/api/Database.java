@@ -774,7 +774,32 @@ public class Database {
 			so.append("]");
 		}
 		
-		StringBuilder finalbody = new StringBuilder("{" +selectorJson);
+		//parse and find if valid json issue #28
+		boolean isObject = true;
+		try {
+			getGson().fromJson(selectorJson, JsonObject.class );
+		}
+		catch(JsonParseException e) {
+			isObject = false;
+		}
+		
+		if (!isObject) {
+			// needs to start with selector
+			if ( !(selectorJson.trim().startsWith("\"selector\"")) ) {
+				throw new JsonParseException("selectorJson should be valid json or like \"selector\": {...} ");
+			}
+		}
+		
+		StringBuilder finalbody = new StringBuilder();
+		if ( isObject ) {
+			finalbody.append("{\"selector\": ")
+				.append(selectorJson);
+		}
+		else {
+			//old support
+			finalbody.append("{" + selectorJson);
+		}
+		
 		if ( rf != null ) {
 			finalbody.append(",")
 					 .append(rf.toString());

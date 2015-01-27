@@ -2,8 +2,10 @@ package com.cloudant.tests;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
@@ -19,6 +21,7 @@ import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.IndexField.SortOrder;
 import com.cloudant.tests.util.Utils;
+import com.google.gson.GsonBuilder;
 
 public class IndexTests {
 
@@ -91,6 +94,27 @@ public class IndexTests {
 		}
 		
 		movies = db.findByIndex("\"selector\": { \"Movie_year\": {\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\" }",
+				Movie.class,
+				new FindByIndexOptions()
+					.sort(new IndexField("Movie_year", SortOrder.desc))
+					.fields("Movie_name").fields("Movie_year")
+					.limit(1)
+					.skip(1)
+					.readQuorum(2));
+		assertNotNull(movies);
+		assert(movies.size() == 1);
+		for ( Movie m : movies ) {
+			assertNotNull(m.getMovie_name());
+			assertNotNull(m.getMovie_year());
+		}
+		
+		// selectorJson as a proper json object
+		Map<String,Object> year = new HashMap<String,Object>();
+		year.put("$gt", new Integer(1960));
+		Map<String,Object> selector = new HashMap<String,Object>();
+		selector.put("Movie_year", year);
+		selector.put("Person_name", "Alec Guinness");
+		movies = db.findByIndex(new GsonBuilder().create().toJson(selector),
 				Movie.class,
 				new FindByIndexOptions()
 					.sort(new IndexField("Movie_year", SortOrder.desc))

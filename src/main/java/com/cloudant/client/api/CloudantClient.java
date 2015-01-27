@@ -82,9 +82,9 @@ public class CloudantClient {
 
 		
 	/**
-	 * Constructs a new instance of this class and connects to the cloudant account with the specified credentials
-	 * @param account The cloudant account to connect to
-	 * @param loginUsername The Username credential
+	 * Constructs a new instance of this class and connects to the cloudant server with the specified credentials
+	 * @param account For cloudant.com, the cloudant account to connect to. For Cloudant local, the server URL
+	 * @param loginUsername The apiKey (if using an APIKey, else pass in the account for this parameter also)
 	 * @param password The Password credential
 	 */
 	public CloudantClient(String account, String loginUsername, String password) {
@@ -104,8 +104,8 @@ public class CloudantClient {
 	
 	/**
 	 * Constructs a new instance of this class and connects to the cloudant account with the specified credentials
-	 * @param account The cloudant account to connect to
-	 * @param loginUsername The Username credential
+	 * @param account For cloudant.com, the cloudant account to connect to. For Cloudant local, the server URL
+	 * @param loginUsername The apiKey (if using an APIKey, else pass in the account for this parameter also)
 	 * @param password The Password credential
 	 * @param connectOptions optional properties to connect e.g connectionTime,socketTimeout,etc 
 	 */
@@ -136,7 +136,7 @@ public class CloudantClient {
 	
 	/**
 	 * Constructs a new instance of this class and connects to the cloudant account with the specified credentials
-	 * @param account The cloudant account to connect to
+	 * @param account For cloudant.com, the cloudant account to connect to. For Cloudant local, the server URL
 	 * @param authCookie The cookie obtained from last login
 	 */
 	public CloudantClient(String account, String authCookie){
@@ -153,6 +153,7 @@ public class CloudantClient {
 	
 	/**
 	 * Constructs a new instance of this class and connects to the cloudant account with the specified credentials
+	 * @param account For cloudant.com, the cloudant account to connect to. For Cloudant local, the server URL
 	 * @param account The cloudant account to connect to
 	 * @param authCookie The cookie obtained from last login
 	 * @param connectOptions optional properties to connect e.g connectionTime,socketTimeout,etc 
