@@ -44,7 +44,7 @@ Alternately download the dependencies
 
 Now it's time to begin doing real work with Cloudant and Java. For working code samples of any of the API's please go to our Test suite.
 
-Initialize your Cloudant connection by constructing a *com.cloudant.client.api.CloudantClient* . If you are connecting the managed service on cloudant.com, supply the *account* to connect. If you are connecting to Cloudant Local supply its URL. Additionally supply the *userName or Apikey* and  *password*
+Initialize your Cloudant connection by constructing a *com.cloudant.client.api.CloudantClient* . If you are connecting the managed service on cloudant.com, supply the *account* to connect to, *api key* ( if using an API key, otherwise pass in the account for this parameter also) and *password*. If you are connecting to Cloudant Local supply its URL, the *userName or Apikey* and  *password*
 
 Connecting to the managed service at cloudant.com example
 ~~~ java
@@ -194,7 +194,7 @@ If you run this example, you will see:
 
 ### Initialization
 
-When using the managed service at cloudant.com, initialize your Cloudant connection by constructing a `CloudantClient` supplying the `account` to connect to along with `userName or Apikey` and  `password` (And see the [security note](#security-note) about placing your password into your source code.
+When using the managed service at cloudant.com, initialize your Cloudant connection by constructing a `CloudantClient` supplying the `account` to connect to, `api key` ( if using an API key, otherwise pass in the account for this parameter also) and `password`  (And see the [security note](#security-note) about placing your password into your source code.
 
 ~~~ java
 String password = System.getProperty("cloudant_password");
