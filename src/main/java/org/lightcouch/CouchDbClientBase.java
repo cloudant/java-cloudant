@@ -437,7 +437,7 @@ public abstract class CouchDbClientBase {
 		 * Sets a {@link GsonBuilder} to create {@link Gson} instance.
 		 * <p>Useful for registering custom serializers/deserializers, such as JodaTime classes.
 		 */
-		void setGsonBuilder(GsonBuilder gsonBuilder) {
+		public void setGsonBuilder(GsonBuilder gsonBuilder) {
 			this.gson = GsonHelper.initGson(gsonBuilder).create();
 		}
 		
@@ -445,7 +445,7 @@ public abstract class CouchDbClientBase {
 		/**
 		 * @return The Gson instance.
 		 */
-		Gson getGson() {
+		public Gson getGson() {
 			return gson;
 		}
 		
