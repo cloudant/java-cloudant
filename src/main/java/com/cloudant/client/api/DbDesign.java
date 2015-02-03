@@ -17,14 +17,11 @@ import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDatabaseBase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbDesign;
+import org.lightcouch.DesignDocument.MapReduce;
 //import org.lightcouch.DesignDocument;
 import org.lightcouch.Response;
-import org.lightcouch.DesignDocument.MapReduce;
-import org.lightcouch.internal.GsonHelper;
 
 import com.cloudant.client.api.model.DesignDocument;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
