@@ -6,9 +6,9 @@ import static org.lightcouch.internal.CouchDbUtil.createPost;
 import static org.lightcouch.internal.CouchDbUtil.getAsString;
 import static org.lightcouch.internal.CouchDbUtil.getResponse;
 import static org.lightcouch.internal.CouchDbUtil.getResponseList;
+import static org.lightcouch.internal.CouchDbUtil.getResponseMap;
 import static org.lightcouch.internal.CouchDbUtil.getStream;
 import static org.lightcouch.internal.CouchDbUtil.setEntity;
-import static org.lightcouch.internal.CouchDbUtil.getResponseMap;
 import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.io.InputStream;
@@ -39,7 +39,6 @@ import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
 import org.lightcouch.Response;
 import org.lightcouch.View;
-import org.lightcouch.internal.GsonHelper;
 
 import com.cloudant.client.api.model.DbInfo;
 import com.cloudant.client.api.model.FindByIndexOptions;
@@ -50,7 +49,6 @@ import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.model.Shard;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -71,10 +69,6 @@ import com.google.gson.reflect.TypeToken;
 public class Database {
 
 	static final Log log = LogFactory.getLog(Database.class);
-	private static Gson ownGSON;
-	static {
-		initGson();
-	}
 	private CouchDatabase db;
 	private CloudantClient client;
 	
@@ -118,7 +112,7 @@ public class Database {
 		
 	    HttpResponse response = null;
 	    HttpPut put = new HttpPut(buildUri(uri).build());
-		setEntity(put, getGson().toJson(perms),"application/json");
+		setEntity(put, client.getGson().toJson(perms),"application/json");
 		try {
 			response = executeRequest(put);
 			String ok = getAsString(response,"ok");
@@ -140,7 +134,7 @@ public class Database {
 		HttpGet get = new HttpGet(buildUri(getDBUri()).path("_security").build());
 		try {
 			resp = client.executeRequest(get);
-			return getResponseMap(resp, ownGSON, 
+			return getResponseMap(resp, client.getGson(), 
 					new TypeToken<Map<String,EnumSet<Permissions>>>(){}.getType());
 		}
 		finally {
@@ -158,7 +152,7 @@ public class Database {
 		HttpGet get = new HttpGet(buildUri(db.getDBUri()).path("/_shards").build());
 		try {
 			response = client.executeRequest(get);
-			return getResponseList(response, ownGSON, Shard.class,
+			return getResponseList(response, client.getGson(), Shard.class,
 							new TypeToken<List<Shard>>(){}.getType());
 		}
 		finally {
@@ -247,7 +241,7 @@ public class Database {
 			List<T> list = new ArrayList<T>();
 			for (JsonElement jsonElem : jsonArray) {
 				JsonElement elem = jsonElem.getAsJsonObject();
-				T t = ownGSON.fromJson(elem, classOfT);
+				T t = client.getGson().fromJson(elem, classOfT);
 				list.add(t);
 			}
 			return list;
@@ -265,7 +259,7 @@ public class Database {
 		 HttpResponse response = null;
 		 try {
 			 response = client.executeRequest(new HttpGet(buildUri(getDBUri()).path("_index/").build()));
-			 return getResponseList(response, ownGSON, Index.class,
+			 return getResponseList(response, client.getGson(), Index.class,
 							new TypeToken<List<Index>>(){}.getType());
 		 }
 		 finally {
@@ -285,7 +279,7 @@ public class Database {
 		 HttpResponse response = null;
 		try {
 			response = client.executeRequest(new HttpDelete(uri)); 
-			getResponse(response,Response.class, getGson());
+			getResponse(response,Response.class, client.getGson());
 		} finally {
 			close(response);
 		}
@@ -452,7 +446,7 @@ public class Database {
 	 * @return {@link Response}
 	 */
 	public com.cloudant.client.api.model.Response save(Object object, int writeQuorum) {
-		Response couchDbResponse = client.put(getDBUri(), object, true, writeQuorum, getGson());
+		Response couchDbResponse = client.put(getDBUri(), object, true, writeQuorum, client.getGson());
 		com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 		return response ;
 	}
@@ -482,8 +476,8 @@ public class Database {
 		HttpResponse response = null;
 		try { 
 			URI uri = buildUri(getDBUri()).query("w",writeQuorum).build();
-			response = client.executeRequest(createPost(uri, getGson().toJson(object),"application/json"));
-			Response couchDbResponse =getResponse(response,Response.class, getGson());
+			response = client.executeRequest(createPost(uri, client.getGson().toJson(object),"application/json"));
+			Response couchDbResponse =getResponse(response,Response.class, client.getGson());
 			com.cloudant.client.api.model.Response cloudantResponse = new com.cloudant.client.api.model.Response(couchDbResponse);
 			return cloudantResponse ;
 		} finally {
@@ -523,7 +517,7 @@ public class Database {
 	 * @return {@link Response}
 	 */
 	public com.cloudant.client.api.model.Response update(Object object, int writeQuorum) {
-		Response couchDbResponse =client.put(getDBUri(), object, false, writeQuorum,getGson());
+		Response couchDbResponse =client.put(getDBUri(), object, false, writeQuorum,client.getGson());
 		com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model.Response(couchDbResponse);
 		return response ;
 	}
@@ -777,7 +771,7 @@ public class Database {
 		//parse and find if valid json issue #28
 		boolean isObject = true;
 		try {
-			getGson().fromJson(selectorJson, JsonObject.class );
+			client.getGson().fromJson(selectorJson, JsonObject.class );
 		}
 		catch(JsonParseException e) {
 			isObject = false;
@@ -828,26 +822,14 @@ public class Database {
 		return finalbody.toString();
 	}
 	
-	/**
-	 * setup our own Deserializers
-	 */
-	private static void initGson() {
-		GsonBuilder builder = GsonHelper.initGson(new GsonBuilder());
-		builder.registerTypeAdapter(new TypeToken<List<Shard>>(){}.getType(), new ShardDeserializer())
-			   .registerTypeAdapter(new TypeToken<List<Index>>(){}.getType(), new IndexDeserializer())
-			   .registerTypeAdapter(new TypeToken<Map<String,EnumSet<Permissions>>>(){}.getType(),
-					   						new SecurityDeserializer());
-		ownGSON = builder.create();
-	}
-	
-	static Gson getGson() {
-		return ownGSON;
-	}
-	
-	
 	HttpResponse executeRequest(HttpRequestBase request) {
 		return client.executeRequest(request);
 	}
+	
+	Gson getGson() {
+		return client.getGson();
+	}
+	
 }
 
 class ShardDeserializer implements JsonDeserializer<List<Shard>> {

@@ -8,6 +8,7 @@ import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,10 +29,14 @@ import org.lightcouch.internal.CouchDbUtil;
 
 import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.ConnectOptions;
+import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.Membership;
+import com.cloudant.client.api.model.Permissions;
+import com.cloudant.client.api.model.Shard;
 import com.cloudant.client.api.model.Task;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
@@ -95,11 +100,14 @@ public class CloudantClient {
 		this.loginUsername = loginUsername;
 		this.password = password;
 		
-		client = new CouchDbClient(h.get("scheme"),
-						h.get("hostname"),
-						new Integer(h.get("port")).intValue(),
-						loginUsername,
-						password);
+		doInit(h.get("scheme"),
+				h.get("hostname"),
+				new Integer(h.get("port")).intValue(),
+				loginUsername,
+				password,
+				null, //connectoptions
+				null //authcookie
+				);
 	}
 	
 	/**
@@ -117,22 +125,15 @@ public class CloudantClient {
 		this.loginUsername = loginUsername;
 		this.password = password;
 		
-		CouchDbProperties props = new CouchDbProperties(
-							h.get("scheme"),
-							h.get("hostname"),
-							new Integer(h.get("port")).intValue(),
-							loginUsername,password);
-		if(connectOptions != null){
-			props.setConnectionTimeout(connectOptions.getConnectionTimeout());
-			props.setSocketTimeout(connectOptions.getSocketTimeout());
-			props.setMaxConnections(connectOptions.getMaxConnections());
-			
-			props.setProxyHost(connectOptions.getProxyHost());
-			props.setProxyPort(connectOptions.getProxyPort());
+		doInit(h.get("scheme"),
+				h.get("hostname"),
+				new Integer(h.get("port")).intValue(),
+				loginUsername,
+				password,
+				connectOptions,
+				null //authcookie
+				);
 		}
-		this.client = new CouchDbClient(props);
-		
-	}
 	
 	/**
 	 * Constructs a new instance of this class and connects to the cloudant account with the specified credentials
@@ -144,11 +145,11 @@ public class CloudantClient {
 		Map<String,String> h = parseAccount(account);
 		assertNotEmpty(authCookie, "AuthCookie");
 		
-		this.client = new CouchDbClient(h.get("scheme"),
+		doInit(h.get("scheme"),
 				h.get("hostname"),
 				new Integer(h.get("port")).intValue(),
+				null,null,null,
 				authCookie);
-		
 	}
 	
 	/**
@@ -163,21 +164,13 @@ public class CloudantClient {
 		Map<String,String> h = parseAccount(account);
 		assertNotEmpty(authCookie, "AuthCookie");
 		
-		CouchDbProperties props = new CouchDbProperties(
-							h.get("scheme"),
-							h.get("hostname"),
-							new Integer(h.get("port")).intValue(),
-							authCookie);
-		if(connectOptions != null){
-			props.setConnectionTimeout(connectOptions.getConnectionTimeout());
-			props.setSocketTimeout(connectOptions.getSocketTimeout());
-			props.setMaxConnections(connectOptions.getMaxConnections());
-			
-			props.setProxyHost(connectOptions.getProxyHost());
-			props.setProxyPort(connectOptions.getProxyPort());
-		}		
-		this.client = new CouchDbClient(props);
+		doInit(h.get("scheme"),
+				h.get("hostname"),
+				new Integer(h.get("port")).intValue(),
+				null,null,connectOptions, authCookie);
 	}
+	
+	
 		
 	/**
 	 * Generate an API key
@@ -197,7 +190,7 @@ public class CloudantClient {
 		HttpGet get = new HttpGet(buildUri(getBaseUri()).path("/_active_tasks").build());
 		try {
 			response = executeRequest(get);
-			return getResponseList(response, Database.getGson(), Task.class,
+			return getResponseList(response, client.getGson(), Task.class,
 							new TypeToken<List<Task>>(){}.getType());
 		}
 		finally {
@@ -331,6 +324,29 @@ public class CloudantClient {
 		return client.uuids(count);
 	}
 	
+	
+	/**
+	 * Sets a {@link GsonBuilder} to create {@link Gson} instance.
+	 * <p>Useful for registering custom serializers/deserializers, such as Datetime formats.
+	 */
+	public void setGsonBuilder(GsonBuilder gsonBuilder) {
+		//register additional cloudant deserializers and then let lightcouch init too
+		gsonBuilder.registerTypeAdapter(new TypeToken<List<Shard>>(){}.getType(), new ShardDeserializer())
+		   .registerTypeAdapter(new TypeToken<List<Index>>(){}.getType(), new IndexDeserializer())
+		   .registerTypeAdapter(new TypeToken<Map<String,EnumSet<Permissions>>>(){}.getType(),
+				   						new SecurityDeserializer());
+		client.setGsonBuilder(gsonBuilder);
+	}
+	
+	
+	/**
+	 * @return The Gson instance.
+	 */
+	public Gson getGson() {
+		return client.getGson();
+	}
+	
+	
 	// Helper methods
 	
 	String getLoginUsername() {
@@ -405,9 +421,43 @@ public class CloudantClient {
 			h.put("port", "443");
 		}
 		return h;
+	}
+	
+	/**
+	 * Initializes the internal lightCouch client
+	 * @param scheme
+	 * @param hostname
+	 * @param port
+	 * @param loginUsername
+	 * @param password
+	 * @param connectOptions
+	 * @param authCookie
+	 */
+	private void doInit(String scheme, String hostname, int port,
+			String loginUsername, String password, ConnectOptions connectOptions, String authCookie) {
 		
+		CouchDbProperties props;
+		if (authCookie==null) {
+			 props = new CouchDbProperties(scheme,hostname,port,
+								loginUsername,password);
+		}
+		else {
+			props = new CouchDbProperties(scheme,hostname,port,
+					authCookie);
+		}
 		
+		if(connectOptions != null){
+			props.setConnectionTimeout(connectOptions.getConnectionTimeout());
+			props.setSocketTimeout(connectOptions.getSocketTimeout());
+			props.setMaxConnections(connectOptions.getMaxConnections());
+			
+			props.setProxyHost(connectOptions.getProxyHost());
+			props.setProxyPort(connectOptions.getProxyPort());
+		}
+		this.client = new CouchDbClient(props);
 		
+		// set a custom gsonbuilder that includes additional cloudant deserializers
+		setGsonBuilder(new GsonBuilder());
 	}
 }
 	

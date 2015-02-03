@@ -159,10 +159,9 @@ public class DbDesign {
 		dd.setLists(populateMap(rootPath, elements, LISTS));
 		dd.setUpdates(populateMap(rootPath, elements, UPDATES));
 		dd.setValidateDocUpdate(readContent(elements, rootPath, VALIDATE_DOC));
-		 Gson gson = GsonHelper.initGson(new GsonBuilder()).create();
-		dd.setRewrites(gson.fromJson(readContent(elements, rootPath, REWRITES), JsonArray.class));
-		dd.setFulltext(gson.fromJson(readContent(elements, rootPath, FULLTEXT), JsonObject.class));
-		dd.setIndexes(gson.fromJson(readContent(elements, rootPath, INDEXES), JsonObject.class));
+		dd.setRewrites(client.getGson().fromJson(readContent(elements, rootPath, REWRITES), JsonArray.class));
+		dd.setFulltext(client.getGson().fromJson(readContent(elements, rootPath, FULLTEXT), JsonObject.class));
+		dd.setIndexes(client.getGson().fromJson(readContent(elements, rootPath, INDEXES), JsonObject.class));
 		return dd;
 	}
 
