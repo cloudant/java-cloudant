@@ -47,7 +47,7 @@ public class ReplicatorDocument {
 	 */
 	public Map<String, com.cloudant.client.api.model.Attachment> getAttachments() {
 		Map<String, Attachment> couchDbAttachments = replicatorDocument.getAttachments();
-		Map<String, com.cloudant.client.api.model.Attachment> attachments = new HashMap<>();
+		Map<String, com.cloudant.client.api.model.Attachment> attachments = new HashMap<String, com.cloudant.client.api.model.Attachment>();
 		Iterator<String> iterator = couchDbAttachments.keySet().iterator();
 		while (iterator.hasNext()) {
 			String key = (String) iterator.next();

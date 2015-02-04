@@ -76,7 +76,7 @@ public class Replicator {
 	 */
 	public List<com.cloudant.client.api.model.ReplicatorDocument> findAll() {
 		List<ReplicatorDocument> couchDbReplicatorDocList = replicator.findAll();
-		List<com.cloudant.client.api.model.ReplicatorDocument> replicatorDocList = new ArrayList<>();
+		List<com.cloudant.client.api.model.ReplicatorDocument> replicatorDocList = new ArrayList<com.cloudant.client.api.model.ReplicatorDocument>();
 		for(ReplicatorDocument couchDbReplicatorDoc : couchDbReplicatorDocList){
 			com.cloudant.client.api.model.ReplicatorDocument replicatorDoc = new com.cloudant.client.api.model.ReplicatorDocument(couchDbReplicatorDoc);
 			replicatorDocList.add(replicatorDoc);
