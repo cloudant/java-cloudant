@@ -19,7 +19,7 @@ Maven:
 <dependency>
   <groupId>com.cloudant</groupId>
   <artifactId>cloudant-client</artifactId> 
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 
 ~~~
@@ -28,12 +28,12 @@ Gradle:
 
 ```groovy
 dependencies {
-    compile group: 'com.cloudant', name: 'cloudant-client', version:'1.0.0'
+    compile group: 'com.cloudant', name: 'cloudant-client', version:'1.0.1'
 }
 ```
 
 Alternately download the dependencies  
-  [cloudant.jar](http://search.maven.org/remotecontent?filepath=com/cloudant/cloudant-client/1.0.0/cloudant-client-1.0.0.jar)    
+  [cloudant.jar](http://search.maven.org/remotecontent?filepath=com/cloudant/cloudant-client/1.0.1/cloudant-client-1.0.1.jar)    
   [HttpClient 4.3.3](http://hc.apache.org/downloads.cgi)  
   [HttpCore 4.3.2](http://hc.apache.org/downloads.cgi)  
   [Commons Codec 1.6](http://commons.apache.org/codec/download_codec.cgi)  
@@ -908,7 +908,7 @@ CloudantClient cookieBasedClient = new
 
 ### Advanced Configuration
 
-Besides the account and password options, you can add an optional `com.cloudant.client.api.model.ConnectOptions` value, which will initialize Request (the underlying HTTP library) as you need it.
+Besides the account and password options, you can add an optional `com.cloudant.client.api.model.ConnectOptions` value, which will initialize HttpClient (the underlying HTTP library) as you need it.
 
 ~~~ java
 ConnectOptions connectOptions = new ConnectOptions()
@@ -922,6 +922,15 @@ ConnectOptions connectOptions = new ConnectOptions()
                                                   
 ~~~
 
+java-cloudant internally uses the Gson library to serialize/deserialize JSON to/from Java objects. You can register your custom de-serializers by providing the CloudantClient instance by with your own GsonBuilder instance
+
+~~~java
+GsonBuilder builder = new GsonBuilder();
+builder.setDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+ 
+CloudantClient account = new CloudantClient(cloudantaccount,userName,password);
+account.setGsonBuilder(builder); 
+~~~
 
 
 ## tests
