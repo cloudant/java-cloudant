@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -20,6 +21,7 @@ import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.Shard;
 import com.cloudant.tests.util.Utils;
+import com.google.gson.GsonBuilder;
 
 public class DatabaseTest {
 	private static final Log log = LogFactory.getLog(DatabaseTest.class);
@@ -113,4 +115,19 @@ public class DatabaseTest {
 		
 	} 
 	
+	//Test case for issue #31
+	@Test
+	public void customGsonDeserializerTest() {
+		Map<String, Object> h = new HashMap<String, Object>();
+		h.put("_id", "serializertest");
+		h.put("date", "2015-01-23T18:25:43.511Z");
+		db.save(h);
+		
+		GsonBuilder builder = new GsonBuilder();
+		builder.setDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+		account.setGsonBuilder(builder);
+		
+		db.find(Foo.class, "serializertest"); // should not throw a JsonSyntaxException
+		
+	}
 }

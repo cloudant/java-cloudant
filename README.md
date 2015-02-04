@@ -843,8 +843,9 @@ To query using the index, use the `.findByIndex()` method.
 
 ~~~ java
 
-List<Movie> movies = db.findByIndex("\"selector\": 
-				{ \"Movie_year\": {\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\" }",
+List<Movie> movies = db.findByIndex("{
+                     \"Movie_year\": {\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\"
+                     }",
 					Movie.class,
 					new FindByIndexOptions()
 						.sort(new IndexField("Movie_year", SortOrder.desc))

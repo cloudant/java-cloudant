@@ -130,7 +130,7 @@ public class Search {
 							"null object will be returned");
 				}
 				for (JsonElement e : json.getAsJsonArray("rows")) {
-					result.add(JsonToObject(Database.getGson(), e, "doc", classOfT));
+					result.add(JsonToObject(db.getGson(), e, "doc", classOfT));
 				}
 			}
 			else {
@@ -167,7 +167,7 @@ public class Search {
 								"null object will be returned");
 					}
 					for (JsonElement rows : e.getAsJsonObject().getAsJsonArray("rows")) {
-							orows.add(JsonToObject(Database.getGson(), rows, "doc", classOfT));
+							orows.add(JsonToObject(db.getGson(), rows, "doc", classOfT));
 					}
 					result.put(groupName, orows);
 				}// end for(groups)
@@ -396,10 +396,10 @@ public class Search {
 			SearchResult<T>.SearchResultRows row = sr.new SearchResultRows();
 			JsonObject oe = e.getAsJsonObject();
 			row.setId(oe.get("id").getAsString());
-			row.setOrder(JsonToObject(Database.getGson(), e, "order", Object[].class));
-			row.setFields(JsonToObject(Database.getGson(), e, "fields", classOfT));
+			row.setOrder(JsonToObject(db.getGson(), e, "order", Object[].class));
+			row.setFields(JsonToObject(db.getGson(), e, "fields", classOfT));
 			if (includeDocs) {
-				row.setDoc(JsonToObject(Database.getGson(), e, "doc", classOfT));
+				row.setDoc(JsonToObject(db.getGson(), e, "doc", classOfT));
 			}
 			ret.add(row);
 		}

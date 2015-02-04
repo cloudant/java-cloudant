@@ -17,14 +17,11 @@ import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDatabaseBase;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbDesign;
+import org.lightcouch.DesignDocument.MapReduce;
 //import org.lightcouch.DesignDocument;
 import org.lightcouch.Response;
-import org.lightcouch.DesignDocument.MapReduce;
-import org.lightcouch.internal.GsonHelper;
 
 import com.cloudant.client.api.model.DesignDocument;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -159,10 +156,9 @@ public class DbDesign {
 		dd.setLists(populateMap(rootPath, elements, LISTS));
 		dd.setUpdates(populateMap(rootPath, elements, UPDATES));
 		dd.setValidateDocUpdate(readContent(elements, rootPath, VALIDATE_DOC));
-		 Gson gson = GsonHelper.initGson(new GsonBuilder()).create();
-		dd.setRewrites(gson.fromJson(readContent(elements, rootPath, REWRITES), JsonArray.class));
-		dd.setFulltext(gson.fromJson(readContent(elements, rootPath, FULLTEXT), JsonObject.class));
-		dd.setIndexes(gson.fromJson(readContent(elements, rootPath, INDEXES), JsonObject.class));
+		dd.setRewrites(client.getGson().fromJson(readContent(elements, rootPath, REWRITES), JsonArray.class));
+		dd.setFulltext(client.getGson().fromJson(readContent(elements, rootPath, FULLTEXT), JsonObject.class));
+		dd.setIndexes(client.getGson().fromJson(readContent(elements, rootPath, INDEXES), JsonObject.class));
 		return dd;
 	}
 
