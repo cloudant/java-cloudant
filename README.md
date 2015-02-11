@@ -531,23 +531,28 @@ db.batch(new Foo());
 ~~~
 
 ### com.cloudant.client.api.Database.find(doc-id)
-Finds a document based on the provided `doc-id` and return the result as `InputStream`
+Finds a document based on the provided `doc-id` and return the result as `InputStream`. Make sure you close the stream when done, else you could lock up the client easily
 
 ~~~ java
 Database db = dbClient.database("alice", true);
 Response response = db.save(new Foo());
 InputStream inputStream = db.find(response.getId());
 
+// do stuff and finally dont forget to close the stream
+inputStream.close();
+
 ~~~
 
 ### com.cloudant.client.api.Database.find(doc-id,rev)
-Finds a document based on the provided `doc-id` and `rev`,return the result as `InputStream`
+Finds a document based on the provided `doc-id` and `rev`,return the result as `InputStream`. Make sure you close the stream when done, else you could lock up the client easily
 
 ~~~ java
 Database db = dbClient.database("alice", true);
 Response response = db.save(new Foo());
 InputStream inputStream = db.find(response.getId(),response.getRev());
 
+// do stuff and finally dont forget to close the stream
+inputStream.close();
 ~~~
 ### com.cloudant.client.api.Database.find(class,doc-id)
 
