@@ -940,7 +940,12 @@ account.setGsonBuilder(builder);
 
 ## tests
 
-To run the test suite first edit the cloudant properties. Open the file `src/test/resources/cloudant.properties` and `src/test/resources/cloudant-2.properties`, provide values for the following properties  
+The test suite needs access to cloudant account(s) to run.
+To run the test suite first edit the cloudant properties.
+Copy the files `src/test/resources/cloudant-sample.properties` and
+`src/test/resources/cloudant-2-sample.properties` to
+`src/test/resources/cloudant.properties` and
+`src/test/resources/cloudant-2.properties`, and then provide values for the following properties:
 
 ~~~ java
 cloudant.account=myCloudantAccount
@@ -948,11 +953,12 @@ cloudant.username=testuser
 cloudant.password=testpassword
 ~~~
 
-Once all the required properties are provided in the properties file run `com.cloudant.test.main.CloudantTestSuite` test class.
+Once all the required properties are provided in the properties file
+run the `com.cloudant.test.main.CloudantTestSuite` test class.
 
 ## License
 
-Copyright 2014 Cloudant, an IBM company.
+Copyright 2014-2015 Cloudant, an IBM company.
 
 Licensed under the apache license, version 2.0 (the "license"); you may not use this file except in compliance with the license.  you may obtain a copy of the license at
 
