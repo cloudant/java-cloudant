@@ -72,6 +72,15 @@ public class ViewsTest {
 	}
 
 	@Test
+	public void byKeys() {
+		List<Foo> foos = db.view("example/foo")
+				.includeDocs(true)
+				.keys(new Object[] {"key-1", "key-2"})
+				.query(Foo.class);
+		assertThat(foos.size(), is(2));
+	}
+
+	@Test
 	public void byStartAndEndKey() {
 		List<Foo> foos = db.view("example/foo")
 				.startKey("key-1")
@@ -91,6 +100,18 @@ public class ViewsTest {
 				.reduce(false)
 				.query(Foo.class);
 		assertThat(foos.size(), is(2));
+	}
+
+	@Test
+	public void byComplexKeys() {
+		int[] complexKey1 = new int[] { 2011, 10, 15 };
+		int[] complexKey2 = new int[] { 2013, 12, 17 };
+		List<Foo> foos = db.view("example/by_date")
+				.keys(new Object[] {complexKey1, complexKey2})
+				.includeDocs(true)
+				.reduce(false)
+				.query(Foo.class);
+		assertThat(foos.size(), is(3));
 	}
 
 	@Test
