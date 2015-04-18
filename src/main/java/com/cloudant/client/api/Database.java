@@ -764,6 +764,7 @@ public class Database {
 					   .append("\": \"")
 					   .append(idxfld.getOrder())
 					   .append("\"}");
+				i++;
 			}
 			so.append("]");
 		}
