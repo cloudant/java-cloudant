@@ -430,7 +430,18 @@ public class View {
 		uriBuilder.query("key", this.key);
 		return this;
 	}
-	
+
+	/**
+	 * Supplies a key list when calling a View.
+	 * @param keys array of keys
+	 * @return
+	 */
+	public View keys(Object[] keys) {
+		this.key = getKeyAsJson(keys);
+		uriBuilder.query("keys", this.key);
+		return this ;
+	}
+
 	/**
 	 * @param startKey The start key value, accepts a single value or multiple values for complex keys.
 	 */

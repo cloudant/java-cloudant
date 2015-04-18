@@ -109,6 +109,16 @@ public class View {
 	}
 
 	/**
+	 * Supplies a key list when calling a View.
+	 * @param keys array of keys
+	 * @return
+	 */
+	public View keys(Object[] keys) {
+		this.view = view.keys(keys);
+		return this ;
+	}
+
+	/**
 	 * @param startKey The start key value, accepts a single value or multiple values for complex keys.
 	 */
 	public View startKey(Object... startKey) {
