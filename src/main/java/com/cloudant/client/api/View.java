@@ -266,7 +266,7 @@ public class View {
 	 * @param keys
 	 * @return
 	 */
-	public View keys(List<String> keys) {
+	public View keys(Object... keys) {
 		this.view =  view.keys(keys);
 		return this ;
 	}
