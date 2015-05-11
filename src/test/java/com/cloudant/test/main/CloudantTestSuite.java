@@ -16,6 +16,7 @@ import com.cloudant.tests.IndexTests;
 import com.cloudant.tests.ReplicationTest;
 import com.cloudant.tests.ReplicatorTest;
 import com.cloudant.tests.SearchTests;
+import com.cloudant.tests.UnicodeTest;
 import com.cloudant.tests.UpdateHandlerTest;
 import com.cloudant.tests.ViewsTest;
 
@@ -35,6 +36,7 @@ import com.cloudant.tests.ViewsTest;
 	   ReplicatorTest.class,
 	   SearchTests.class,
 	   UpdateHandlerTest.class,
+	   UnicodeTest.class,
 	   ViewsTest.class
 	})
 public class CloudantTestSuite {
