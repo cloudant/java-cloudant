@@ -29,6 +29,7 @@ import static org.lightcouch.internal.CouchDbUtil.readFile;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -157,7 +158,7 @@ public class View {
 	public <T> List<T> query(Class<T> classOfT) {
 		InputStream instream = null;
 		try {  
-			Reader reader = new InputStreamReader(instream = queryForStream());
+			Reader reader = new InputStreamReader(instream = queryForStream(), "UTF-8");
 			JsonArray jsonArray = new JsonParser().parse(reader)
 					.getAsJsonObject().getAsJsonArray("rows");
 			List<T> list = new ArrayList<T>();
@@ -170,6 +171,9 @@ public class View {
 				list.add(t);
 			}
 			return list;
+		} catch (UnsupportedEncodingException e) {
+			// This should never happen as every implementation of the java platform is required to support UTF-8.
+			throw new RuntimeException(e);
 		} finally {
 			close(instream);
 		}
