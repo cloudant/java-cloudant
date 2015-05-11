@@ -187,7 +187,7 @@ public class View {
 	public <K, V, T> ViewResult<K, V, T> queryView(Class<K> classOfK, Class<V> classOfV, Class<T> classOfT) {
 		InputStream instream = null;
 		try {  
-			Reader reader = new InputStreamReader(instream = queryForStream());
+			Reader reader = new InputStreamReader(instream = queryForStream(), "UTF-8");
 			JsonObject json = new JsonParser().parse(reader).getAsJsonObject(); 
 			ViewResult<K, V, T> vr = new ViewResult<K, V, T>();
 			vr.setTotalRows(getAsLong(json, "total_rows")); 
@@ -208,6 +208,9 @@ public class View {
 				vr.getRows().add(row);
 			}
 			return vr;
+		} catch (UnsupportedEncodingException e1) {
+			// This should never happen as every implementation of the java platform is required to support UTF-8.
+			throw new RuntimeException(e1);
 		} finally {
 			close(instream);
 		}
@@ -247,13 +250,16 @@ public class View {
 	private <V> V queryValue(Class<V> classOfV) {
 		InputStream instream = null;
 		try {  
-			Reader reader = new InputStreamReader(instream = queryForStream());
+			Reader reader = new InputStreamReader(instream = queryForStream(), "UTF-8");
 			JsonArray array = new JsonParser().parse(reader).
 							getAsJsonObject().get("rows").getAsJsonArray();
 			if(array.size() != 1) { // expect exactly 1 row
 				throw new NoDocumentException("Expecting exactly a single result of this view query, but was: " + array.size());
 			}
 			return JsonToObject(gson, array.get(0), "value", classOfV);
+		} catch (UnsupportedEncodingException e) {
+			// This should never happen as every implementation of the java platform is required to support UTF-8.
+			throw new RuntimeException(e);
 		} finally {
 			close(instream);
 		}
