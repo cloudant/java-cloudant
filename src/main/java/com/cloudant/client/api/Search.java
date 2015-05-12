@@ -75,7 +75,6 @@ public class Search {
 	
 	// search fields
 	private Integer limit;
-	private Integer skip;
 	private boolean includeDocs = false;
 	private String bookmark;
 	private Database db;
@@ -346,15 +345,6 @@ public class Search {
 		if ( stale ) {
 			uriBuilder.query("stale", "ok");
 		}
-		return this;
-	}
-	
-	/**
-	 * @param skip Skips <i>n</i> number of documents.
-	 */
-	public Search skip(Integer skip) {
-		this.skip = skip;
-		uriBuilder.query("skip", this.skip);
 		return this;
 	}
 	
