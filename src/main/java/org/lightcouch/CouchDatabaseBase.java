@@ -305,7 +305,7 @@ public abstract class CouchDatabaseBase {
     /**
      * Saves an attachment to a new document with a generated <tt>UUID</tt> as the document id.
      * <p>To retrieve an attachment, see {@link #find(String)}.
-     * @param instream The {@link InputStream} holding the binary data.
+     * @param in The {@link InputStream} holding the binary data.
      * @param name The attachment name.
      * @param contentType The attachment "Content-Type".
      * @return {@link Response}
@@ -322,7 +322,7 @@ public abstract class CouchDatabaseBase {
      * Saves an attachment to an existing document given both a document id
      * and revision, or save to a new document given only the id, and rev as {@code null}.
      * <p>To retrieve an attachment, see {@link #find(String)}.
-     * @param instream The {@link InputStream} holding the binary data.
+     * @param in The {@link InputStream} holding the binary data.
      * @param name The attachment name.
      * @param contentType The attachment "Content-Type".
      * @param docId The document id to save the attachment under, or {@code null} to save under a new document.
@@ -349,7 +349,9 @@ public abstract class CouchDatabaseBase {
      * @param docId The document id to update.
      * @param query The query string parameters, e.g, <code>field=field1&value=value1</code>
      * @return The output of the request.
+     * @deprecated Use {@link #invokeUpdateHandler(String, String, Params)} instead.
      */
+    @Deprecated
     public String invokeUpdateHandler(String updateHandlerUri, String docId, String query) {
         assertNotEmpty(updateHandlerUri, "uri");
         assertNotEmpty(docId, "docId");
@@ -362,7 +364,6 @@ public abstract class CouchDatabaseBase {
 
     /**
      * Invokes an Update Handler.
-     * <p>Use this method in particular when the docId contain special characters such as slashes (/).
      * <pre>
      * Params params = new Params()
      *	.addParam("field", "foo")
@@ -371,7 +372,7 @@ public abstract class CouchDatabaseBase {
      * </pre>
      * @param updateHandlerUri The Update Handler URI, in the format: <code>designDoc/update1</code>
      * @param docId The document id to update.
-     * @param query The query parameters as {@link Params}.
+     * @param params The query parameters as {@link Params}.
      * @return The output of the request.
      */
     public String invokeUpdateHandler(String updateHandlerUri, String docId, Params params) {

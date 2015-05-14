@@ -620,7 +620,9 @@ public class Database {
      * @param docId The document id to update.
      * @param query The query string parameters, e.g, <code>field=field1&value=value1</code>
      * @return The output of the request.
+     * @deprecated use {@link #invokeUpdateHandler(String, String, Params)} instead.
      */
+    @Deprecated
     public String invokeUpdateHandler(String updateHandlerUri, String docId,
             String query) {
         return db.invokeUpdateHandler(updateHandlerUri, docId, query);
@@ -630,7 +632,6 @@ public class Database {
 
     /**
      * Invokes an Update Handler.
-     * <p>Use this method in particular when the docId contain special characters such as slashes (/).
      * <pre>
      * Params params = new Params()
      *	.addParam("field", "foo")
