@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.List;
@@ -212,8 +213,11 @@ public abstract class CouchDbClientBase {
 			try {
 				Type typeOfList = new TypeToken<List<String>>() {}.getType();
 				instream = get(buildUri(getBaseUri()).path("_all_dbs").build());
-				Reader reader = new InputStreamReader(instream);
+				Reader reader = new InputStreamReader(instream, "UTF-8");
 				return getGson().fromJson(reader, typeOfList);
+			} catch (UnsupportedEncodingException e) {
+				// This should never happen as every implementation of the java platform is required to support UTF-8.
+				throw new RuntimeException(e);
 			} finally {
 				close(instream);
 			}
@@ -226,8 +230,11 @@ public abstract class CouchDbClientBase {
 			InputStream instream = null;
 			try {
 				instream = get(buildUri(getBaseUri()).build());
-				Reader reader = new InputStreamReader(instream);
+				Reader reader = new InputStreamReader(instream, "UTF-8");
 				return getAsString(new JsonParser().parse(reader).getAsJsonObject(), "version");
+			} catch (UnsupportedEncodingException e) {
+				// This should never happen as every implementation of the java platform is required to support UTF-8.
+				throw new RuntimeException(e);
 			} finally {
 				close(instream);
 			}
@@ -323,7 +330,10 @@ public abstract class CouchDbClientBase {
 			InputStream in = null;
 			try {
 				in = get(uri);
-				return getGson().fromJson(new InputStreamReader(in), classType);
+				return getGson().fromJson(new InputStreamReader(in, "UTF-8"), classType);
+			} catch (UnsupportedEncodingException e) {
+				// This should never happen as every implementation of the java platform is required to support UTF-8.
+				throw new RuntimeException(e);
 			} finally {
 				close(in);
 			}

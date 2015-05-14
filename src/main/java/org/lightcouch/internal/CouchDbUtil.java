@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URL;
@@ -227,8 +228,11 @@ final public class CouchDbUtil {
 		
 		try {
 			instream = getStream(response);
-			Reader reader = new InputStreamReader(instream);
+			Reader reader = new InputStreamReader(instream, "UTF-8");
 			return getAsString(new JsonParser().parse(reader).getAsJsonObject(), e);
+		} catch (UnsupportedEncodingException e1) {
+			// This should never happen as every implementation of the java platform is required to support UTF-8.
+			throw new RuntimeException(e1);
 		}
 		finally {
 			close(instream);
@@ -264,8 +268,13 @@ final public class CouchDbUtil {
 	 */
 	public static  <T> List<T> getResponseList(HttpResponse response, Gson gson, Class<T> klazz, Type typeofT) throws CouchDbException {
 		InputStream instream = getStream(response);
-		Reader reader = new InputStreamReader(instream);
-		return gson.fromJson(reader,typeofT);
+		try {
+			Reader reader = new InputStreamReader(instream, "UTF-8");
+			return gson.fromJson(reader,typeofT);
+		} catch (UnsupportedEncodingException e) {
+			// This should never happen as every implementation of the java platform is required to support UTF-8.
+			throw new RuntimeException(e);
+		}
 	}
 	
 	/**
@@ -273,8 +282,13 @@ final public class CouchDbUtil {
 	 * @return {@link Response}
 	 */
 	public static <T> T getResponse(HttpResponse response, Class<T> classType, Gson gson) throws CouchDbException {
-		InputStreamReader reader = new InputStreamReader(getStream(response));
-		return gson.fromJson(reader, classType);
+		try {
+			InputStreamReader reader = new InputStreamReader(getStream(response), "UTF-8");
+			return gson.fromJson(reader, classType);
+		} catch (UnsupportedEncodingException e) {
+			// This should never happen as every implementation of the java platform is required to support UTF-8.
+			throw new RuntimeException(e);
+		}
 	}
 	 
 	/**
@@ -283,7 +297,12 @@ final public class CouchDbUtil {
 	 */
 	public static  Map<String,EnumSet<Permissions>> getResponseMap(HttpResponse response, Gson gson, Type typeofT) throws CouchDbException {
 		InputStream instream = getStream(response);
-		Reader reader = new InputStreamReader(instream);
-		return gson.fromJson(reader,typeofT);
+		try {
+			Reader reader = new InputStreamReader(instream, "UTF-8");
+			return gson.fromJson(reader,typeofT);
+		} catch (UnsupportedEncodingException e) {
+			// This should never happen as every implementation of the java platform is required to support UTF-8.
+			throw new RuntimeException(e);
+		}
 	}
 }

@@ -14,6 +14,7 @@ import static org.lightcouch.internal.URIBuilder.buildUri;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.ArrayList;
@@ -235,7 +236,7 @@ public class Database {
 		 InputStream stream = null; 
 		 try {
 			 stream = getStream(client.executeRequest(createPost(uri, body, "application/json")));
-			 Reader reader = new InputStreamReader(stream);
+			 Reader reader = new InputStreamReader(stream, "UTF-8");
 			 JsonArray jsonArray = new JsonParser().parse(reader)
 						.getAsJsonObject().getAsJsonArray("docs");
 			List<T> list = new ArrayList<T>();
@@ -245,6 +246,9 @@ public class Database {
 				list.add(t);
 			}
 			return list;
+		 } catch (UnsupportedEncodingException e) {
+			// This should never happen as every implementation of the java platform is required to support UTF-8.
+			throw new RuntimeException(e);
 		 }
 		 finally {
 			 close(stream);

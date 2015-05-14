@@ -22,6 +22,7 @@ import static org.lightcouch.internal.CouchDbUtil.getStream;
 import static org.lightcouch.internal.URIBuilder.buildUri;
 
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.Map;
 
@@ -100,8 +101,11 @@ public class Replication {
 			}
 			final URI uri = buildUri(client.getBaseUri()).path("_replicate").build();
 			response = client.post(uri, json.toString());
-			final InputStreamReader reader = new InputStreamReader(getStream(response));
+			final InputStreamReader reader = new InputStreamReader(getStream(response), "UTF-8");
 			return client.getGson().fromJson(reader, ReplicationResult.class);
+		} catch (UnsupportedEncodingException e) {
+			// This should never happen as every implementation of the java platform is required to support UTF-8.
+			throw new RuntimeException(e);
 		} finally {
 			close(response);
 		}

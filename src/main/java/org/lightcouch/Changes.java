@@ -19,6 +19,7 @@ package org.lightcouch;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 
 import org.apache.http.client.methods.HttpGet;
@@ -87,8 +88,13 @@ public class Changes {
 		final URI uri = uriBuilder.query("feed", "continuous").build();
 		httpGet = new HttpGet(uri);
 		final InputStream in = dbc.get(httpGet);
-		final InputStreamReader is = new InputStreamReader(in);
-		setReader(new BufferedReader(is));
+		try {
+			final InputStreamReader is = new InputStreamReader(in, "UTF-8");
+			setReader(new BufferedReader(is));
+		} catch (UnsupportedEncodingException e) {
+			// This should never happen as every implementation of the java platform is required to support UTF-8.
+			throw new RuntimeException(e);
+		}
 		return this;
 	}
 
