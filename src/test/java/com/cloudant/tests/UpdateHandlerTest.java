@@ -51,13 +51,15 @@ public class UpdateHandlerTest {
     @Test
     public void updateHandler_queryString() {
         final String oldValue = "foo";
-        final String newValue = "foo bar";
+        final String newValue = "foo bar+plus=equals&ampersand";
 
         Response response = db.save(new Foo(null, oldValue));
 
-        String query = "field=title&value=" + newValue;
+        Params params = new Params()
+                    .addParam("field", "title")
+                    .addParam("value", newValue);
 
-        String output = db.invokeUpdateHandler("example/example_update", response.getId(), query);
+        String output = db.invokeUpdateHandler("example/example_update", response.getId(), params);
 
         // retrieve from db to verify
         Foo foo = db.find(Foo.class, response.getId());
@@ -69,7 +71,7 @@ public class UpdateHandlerTest {
     @Test
     public void updateHandler_queryParams() {
         final String oldValue = "foo";
-        final String newValue = "foo bar";
+        final String newValue = "foo bar+plus=equals&ampersand";
 
         Response response = db.save(new Foo(null, oldValue));
 
