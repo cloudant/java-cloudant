@@ -34,50 +34,50 @@ import java.util.List;
  */
 public class Params {
 
-	private List<String> params = new ArrayList<String>();
+    private List<String> params = new ArrayList<String>();
 
-	public Params revsInfo() {
-		params.add("revs_info=true");
-		return this;
-	}
+    public Params revsInfo() {
+        params.add("revs_info=true");
+        return this;
+    }
 
-	public Params attachments() {
-		params.add("attachments=true");
-		return this;
-	}
+    public Params attachments() {
+        params.add("attachments=true");
+        return this;
+    }
 
-	public Params revisions() {
-		params.add("revs=true");
-		return this;
-	}
+    public Params revisions() {
+        params.add("revs=true");
+        return this;
+    }
 
-	public Params rev(String rev) {
-		params.add(String.format("rev=%s", rev));
-		return this;
-	}
+    public Params rev(String rev) {
+        params.add(String.format("rev=%s", rev));
+        return this;
+    }
 
-	public Params conflicts() {
-		params.add("conflicts=true");
-		return this;
-	}
+    public Params conflicts() {
+        params.add("conflicts=true");
+        return this;
+    }
 
-	public Params localSeq() {
-		params.add("local_seq=true");
-		return this;
-	}
+    public Params localSeq() {
+        params.add("local_seq=true");
+        return this;
+    }
 
-	public Params addParam(String name, String value) {
-		try {
-			name = URLEncoder.encode(name, "UTF-8");
-			value = URLEncoder.encode(value, "UTF-8");
-			params.add(String.format("%s=%s", name, value));
-		} catch (UnsupportedEncodingException e) {
-			throw new IllegalArgumentException(e);
-		}
-		return this;
-	}
+    public Params addParam(String name, String value) {
+        try {
+            name = URLEncoder.encode(name, "UTF-8");
+            value = URLEncoder.encode(value, "UTF-8");
+            params.add(String.format("%s=%s", name, value));
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalArgumentException(e);
+        }
+        return this;
+    }
 
-	public List<String> getParams() {
-		return params.isEmpty() ? null : params;
-	}
+    public List<String> getParams() {
+        return params.isEmpty() ? null : params;
+    }
 }
