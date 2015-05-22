@@ -118,6 +118,9 @@ public abstract class CouchDbClientBase {
 	
 	
 	private void getCookie(final CouchDbProperties props) {
+		if(props.getUsername() == null || props.getPassword() == null){
+			return;
+		}
 		URI uri = buildUri(baseURI).path("_session").build();
         String body = "name=" +  props.getUsername() + "&password=" + props.getPassword();
               

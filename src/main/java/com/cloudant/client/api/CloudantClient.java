@@ -95,8 +95,6 @@ public class CloudantClient {
 	public CloudantClient(String account, String loginUsername, String password) {
 		super();
 		Map<String,String> h = parseAccount(account);
-		assertNotEmpty(loginUsername,"loginUsername");
-		assertNotEmpty(password,"password");
 		this.loginUsername = loginUsername;
 		this.password = password;
 		
@@ -120,8 +118,6 @@ public class CloudantClient {
 	public CloudantClient(String account, String loginUsername, String password,ConnectOptions connectOptions){
 		super();
 		Map<String,String> h = parseAccount(account);
-		assertNotEmpty(loginUsername,"loginUsername");
-		assertNotEmpty(password,"password");
 		this.loginUsername = loginUsername;
 		this.password = password;
 		

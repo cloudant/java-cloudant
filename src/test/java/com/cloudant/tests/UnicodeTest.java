@@ -26,18 +26,17 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.protocol.HTTP;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.IndexField.SortOrder;
-import com.cloudant.tests.util.Utils;
+import com.cloudant.test.main.RequiresCloudant;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -54,31 +53,21 @@ public class UnicodeTest {
 	private static final String TESTSTRING = "Gr\u00fc\u00dfe \u65e5\u672c\u8a9e \uD834\uDD1E.";
 	private static final String TESTSTRING_ESCAPED = "Gr\\u00fc\\u00dfe \\u65e5\\u672c\\u8a9e \\uD834\\uDD1E.";
 
-	private static CloudantClient dbClient;
 	private static Database db;
 	private static Properties props ;
-
-	@BeforeClass
-	public static void setUpClass() {
-		props = Utils.getProperties("cloudant.properties",log);
-		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
-				  props.getProperty("cloudant.username"),
-				  props.getProperty("cloudant.password"));
-	}
-
-	@AfterClass
-	public static void tearDownClass() {
-		dbClient.shutdown();
-	}
+	private CloudantClient account;
 
 	@Before
 	public void setup() {
-		db = dbClient.database(DB_NAME, true);
+		account = CloudantClientHelper.getClient();
+		db = account.database(DB_NAME, true);
 	}
+
 	
 	@After
 	public void tearDown() {
-		dbClient.deleteDB(DB_NAME, "delete database");
+		account.deleteDB(DB_NAME, "delete database");
+		account.shutdown();
 	}
 
 	// ========================================================================
@@ -250,14 +239,14 @@ public class UnicodeTest {
 			request.addHeader("Accept", "application/json");
 			HttpEntity entity = new StringEntity("{\"foo\":\""+TESTSTRING+"\"}", ContentType.APPLICATION_JSON); //$NON-NLS-1$ //$NON-NLS-2$
 			request.setEntity(entity);
-			HttpResponse response = dbClient.executeRequest(request);
+			HttpResponse response = account.executeRequest(request);
 			assertEquals(201, response.getStatusLine().getStatusCode());
 			closeResponse(response);
 		}
 		{
 			HttpGet request = new HttpGet(uri);
 			request.addHeader("Accept", "application/json");
-			HttpResponse response = dbClient.executeRequest(request);
+			HttpResponse response = account.executeRequest(request);
 			assertEquals(200, response.getStatusLine().getStatusCode());
 			String result = getPlainTextEntityAsString(response.getEntity(), uri);
 			System.out.println("testLiteralUnicode: Result as returned in entity: "+result);
@@ -266,7 +255,7 @@ public class UnicodeTest {
 		{
 			HttpGet request = new HttpGet(uri);
 			request.addHeader("Accept", "application/json");
-			HttpResponse response = dbClient.executeRequest(request);
+			HttpResponse response = account.executeRequest(request);
 			assertEquals(200, response.getStatusLine().getStatusCode());
 			JsonObject result = getJSONEntityAsJsonObject(response.getEntity(), uri);
 			String value = result.get("foo").getAsString();
@@ -286,14 +275,14 @@ public class UnicodeTest {
 			request.addHeader("Accept", "application/json");
 			HttpEntity entity = new StringEntity("{\"foo\":\""+TESTSTRING_ESCAPED+"\"}", ContentType.APPLICATION_JSON); //$NON-NLS-1$ //$NON-NLS-2$
 			request.setEntity(entity);
-			HttpResponse response = dbClient.executeRequest(request);
+			HttpResponse response = account.executeRequest(request);
 			assertEquals(201, response.getStatusLine().getStatusCode());
 			closeResponse(response);
 		}
 		{
 			HttpGet request = new HttpGet(uri);
 			request.addHeader("Accept", "application/json");
-			HttpResponse response = dbClient.executeRequest(request);
+			HttpResponse response = account.executeRequest(request);
 			assertEquals(200, response.getStatusLine().getStatusCode());
 			String result = getPlainTextEntityAsString(response.getEntity(), uri);
 			System.out.println("testEscapedUnicode: Result as returned in entity: "+result);
@@ -302,7 +291,7 @@ public class UnicodeTest {
 		{
 			HttpGet request = new HttpGet(uri);
 			request.addHeader("Accept", "application/json");
-			HttpResponse response = dbClient.executeRequest(request);
+			HttpResponse response = account.executeRequest(request);
 			assertEquals(200, response.getStatusLine().getStatusCode());
 			JsonObject result = getJSONEntityAsJsonObject(response.getEntity(), uri);
 			String value = result.get("foo").getAsString();
@@ -322,6 +311,7 @@ public class UnicodeTest {
 	// To reproduce: In Eclipse, use "Run > Run Configurations...", tab "Common",
 	// panel "Encoding", set the encoding to ISO-8859-1.
 	@Test
+	@Category(RequiresCloudant.class)
 	public void testUnicodeInObject() {
 		db.createIndex(
 			"myview", "mydesigndoc", "json",

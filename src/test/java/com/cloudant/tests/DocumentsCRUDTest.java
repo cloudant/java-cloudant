@@ -26,13 +26,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.UUID;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
@@ -41,32 +38,27 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
-import com.cloudant.tests.util.Utils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 public class DocumentsCRUDTest {
 
-	private static final Log log = LogFactory.getLog(DocumentsCRUDTest.class);
-	private static CloudantClient dbClient;
-	private static Properties props ;
 	
 	private static Database db;
+	private CloudantClient account;
 	
 
-	@BeforeClass
-	public static void setUpClass() {
-		props = Utils.getProperties("cloudant.properties",log);
-		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
-									  props.getProperty("cloudant.username"),
-									  props.getProperty("cloudant.password"));
-		db = dbClient.database("lightcouch-db-test", true);
+	@Before
+	public  void setUp() {
+		account = CloudantClientHelper.getClient();
+		db = account.database("lightcouch-db-test", true);
 	}
 
-	@AfterClass
-	public static void tearDownClass() {
-		dbClient.shutdown();
+	@After
+	public void tearDown(){
+		account.shutdown();
 	}
+
 
 	// Find
 

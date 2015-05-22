@@ -6,13 +6,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -20,42 +20,38 @@ import com.cloudant.client.api.model.FindByIndexOptions;
 import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.IndexField.SortOrder;
-import com.cloudant.tests.util.Utils;
+import com.cloudant.test.main.RequiresCloudant;
 import com.google.gson.GsonBuilder;
 
 public class IndexTests {
 
 	private static final Log log = LogFactory.getLog(IndexTests.class);
-	private static CloudantClient account;
 	private static Database db;
+	private CloudantClient account;
 	
-	@BeforeClass
-	public static void setUpClass() {
-		Properties props = Utils.getProperties("cloudant.properties",log);
-		String cloudantaccount = props.getProperty("cloudant.account");
-		String userName= props.getProperty("cloudant.username");
-		String password = props.getProperty("cloudant.password");
-		
-		account = new CloudantClient(cloudantaccount,userName,password);
+	@Before
+	public  void setUp() {
+		account = CloudantClientHelper.getClient();
 		
 		// create the movies-demo db for our index tests
 		com.cloudant.client.api.Replication r = account.replication();
 		r.source("https://examples.cloudant.com/movies-demo");
 		r.createTarget(true);
-		r.target("https://"+ userName + ":" + password + "@" +   Utils.getHostName(cloudantaccount) +"/movies-demo");
+		r.target("https://"+ CloudantClientHelper.SERVER_URI.toString() +"/movies-demo");
 		r.trigger();
 		db = account.database("movies-demo", false);
 		
 	}
 
-	@AfterClass
-	public static void tearDownClass() {
-		account.deleteDB("movies-demo", "delete database");
+	@After
+	public  void tearDown() {
 		account.shutdown();
+		account.deleteDB("movies-demo", "delete database");
 	}
 	
 	
 	@Test
+	@Category(RequiresCloudant.class)
 	public void indexTestAll() {
 		
 		db.createIndex("Person_name", "Person_name", null,

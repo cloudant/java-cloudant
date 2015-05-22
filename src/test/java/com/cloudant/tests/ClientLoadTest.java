@@ -8,8 +8,9 @@ import java.util.concurrent.Executors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import com.cloudant.client.api.CloudantClient;
@@ -32,21 +33,21 @@ public class ClientLoadTest {
 	/** client max connections */
 	private static final int MAX_CONNECTIONS = 20;
 	
-	@BeforeClass 
-	public static void setUpClass() {
+	@Before
+	public  void setUp() {
 		props = Utils.getProperties("cloudant.properties",log);
 		
 		ConnectOptions connectionoptions = new ConnectOptions();
 		connectionoptions.setMaxConnections(MAX_CONNECTIONS);
 		
-		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
-									  props.getProperty("cloudant.username"),
-									  props.getProperty("cloudant.password"),connectionoptions);
+		dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI.toString(),
+				CloudantClientHelper.COUCH_USERNAME,
+				CloudantClientHelper.COUCH_PASSWORD,connectionoptions);
 		db = dbClient.database("lightcouch-db-load", true);
 	}
 	
-	@AfterClass
-	public static void tearDownClass() {
+	@After
+	public void tearDown() {
 		dbClient.shutdown();
 	}
 	
