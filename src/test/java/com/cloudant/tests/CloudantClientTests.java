@@ -9,42 +9,52 @@ import junit.framework.Assert;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.lightcouch.CouchDbException;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
+import com.cloudant.test.main.RequiresCloudant;
+import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.tests.util.Utils;
 
 public class CloudantClientTests {
 
 	private static final Log log = LogFactory.getLog(CloudantClientTests.class);
-	private static CloudantClient account;
+
 	public static CloudantClient cookieBasedClient;
 	private static Properties props;
+	private CloudantClient account;
 
-	@BeforeClass
-	public static void setUpClass() {
+	@Before
+	public  void setUp() {
+		account = CloudantClientHelper.getClient();
 		props = Utils.getProperties("cloudant.properties", log);
-		account = new CloudantClient(props.getProperty("cloudant.account"),
-				props.getProperty("cloudant.username"),
-				props.getProperty("cloudant.password"));
+
 		String cookie = account.getCookie();
-		cookieBasedClient = new CloudantClient(
-				props.getProperty("cloudant.account"), cookie);
+		if(CloudantClientHelper.COUCH_PASSWORD == null){
+			cookieBasedClient = account;
+		} else {
+			cookieBasedClient = new CloudantClient(
+					CloudantClientHelper.COUCH_USERNAME, cookie);
+		}
 
 	}
 
-	@AfterClass
-	public static void tearDownClass() {
+
+	@After
+	public void tearDown(){
 		account.shutdown();
+		cookieBasedClient.shutdown();
 	}
 
 	@Test
+	@Category(RequiresCloudantService.class)
 	public void apiKey() {
 		ApiKey key = account.generateApiKey();
 		assertNotNull(key);
@@ -59,6 +69,7 @@ public class CloudantClientTests {
 	}
 
 	@Test
+	@Category(RequiresCloudant.class)
 	public void membership() {
 		Membership mship = account.getMembership();
 		assertNotNull(mship);
@@ -69,7 +80,9 @@ public class CloudantClientTests {
 	}
 
 	@Test
+	@Category(RequiresCloudant.class)
 	public void cookieTest() {
+
 		Membership membership = cookieBasedClient.getMembership();
 		assertNotNull(membership);
 	}

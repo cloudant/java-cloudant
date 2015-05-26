@@ -23,12 +23,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 import java.util.List;
-import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import com.cloudant.client.api.Changes;
 import com.cloudant.client.api.CloudantClient;
@@ -37,32 +36,27 @@ import com.cloudant.client.api.model.ChangesResult;
 import com.cloudant.client.api.model.ChangesResult.Row;
 import com.cloudant.client.api.model.DbInfo;
 import com.cloudant.client.api.model.Response;
-import com.cloudant.tests.util.Utils;
 import com.google.gson.JsonObject;
 
 public class ChangeNotificationsTest {
 	
 	private static final Log log = LogFactory.getLog(ChangeNotificationsTest.class);
-	private static CloudantClient dbClient;
-	private static Properties props ;
 	private static Database db;
+	private CloudantClient account;
 
 	
 
-	@BeforeClass
-	public static void setUpClass() {
-		props = Utils.getProperties("cloudant.properties",log);
-		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
-									  props.getProperty("cloudant.username"),
-									  props.getProperty("cloudant.password"));
-		
-		db = dbClient.database("lightcouch-db-test", true);
+	@Before
+	public  void setUp() {
+		account = CloudantClientHelper.getClient();
+		db = account.database("lightcouch-db-test", true);
 	}
 
-	@AfterClass
-	public static void tearDownClass() {
-		dbClient.shutdown();
+	@After
+	public void tearDown(){
+		account.shutdown();
 	}
+
 	
 	@Test
 	public void changes_normalFeed() {

@@ -20,42 +20,32 @@ package com.cloudant.tests;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.Properties;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
-import com.cloudant.tests.util.Utils;
 
 public class UpdateHandlerTest {
 	
-	private static final Log log = LogFactory.getLog(UpdateHandlerTest.class);
-	private static Properties props ;
 
-	private static CloudantClient dbClient;
 	private static Database db;
+	private CloudantClient account;
 	
 
-	@BeforeClass
-	public static void setUpClass() {
-		props = Utils.getProperties("cloudant.properties",log);
-		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
-									  props.getProperty("cloudant.username"),
-									  props.getProperty("cloudant.password"));
-		db = dbClient.database("lightcouch-db-test", true);
+	@Before
+	public  void setUp() {
+		account = CloudantClientHelper.getClient();
+		db = account.database("lightcouch-db-test", true);
 		db.syncDesignDocsWithDb();
 	}
 
-	@AfterClass
-	public static void tearDownClass() {
-		dbClient.shutdown();
+	@After
+	public void tearDown(){
+		account.shutdown();
 	}
 
 	@Test

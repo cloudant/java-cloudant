@@ -29,8 +29,8 @@ import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.cloudant.client.api.CloudantClient;
@@ -40,61 +40,46 @@ import com.cloudant.client.api.model.ReplicationResult.ReplicationHistory;
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.api.model.ViewResult;
-import com.cloudant.tests.util.Utils;
 
 //@Ignore
 public class ReplicationTest {
 	private static final Log log = LogFactory.getLog(ReplicationTest.class);
 	
 	private static Properties props ;
-	private static CloudantClient dbClient;
 	private static Database db1;
 	
-	private static CloudantClient dbClient2;
 	private static Database db2;
 	
 	private static String db1URI ;
 	private static String db2URI ;
+	private CloudantClient account;
 	
-	@BeforeClass
-	public static void setUpClass() {
-		props = Utils.getProperties("cloudant.properties",log);
-		dbClient = new CloudantClient(props.getProperty("cloudant.account"),
-									  props.getProperty("cloudant.username"),
-									  props.getProperty("cloudant.password"));
-		db1 = dbClient.database("lightcouch-db-test", true);
-		db1URI = "https://" + props.getProperty("cloudant.username") + ":"
-				+ props.getProperty("cloudant.password") + "@"
-				+  Utils.getHostName(props.getProperty("cloudant.account"))
-				+ "/lightcouch-db-test";
+	@Before
+	public  void setUp() {
+		account = CloudantClientHelper.getClient();
+
+		db1 = account.database("lightcouch-db-test", true);
+		db1URI = CloudantClientHelper.SERVER_URI.toString()+ "/lightcouch-db-test";
 		
 	
-		props = Utils.getProperties("cloudant-2.properties",log);
-		dbClient2 = new CloudantClient(props.getProperty("cloudant.account"),
-									  props.getProperty("cloudant.username"),
-									  props.getProperty("cloudant.password"));
-		db2 = dbClient.database("lightcouch-db-test-2", true);
+		db2 = account.database("lightcouch-db-test-2", true);
 		
 		db1.syncDesignDocsWithDb();
 		db2.syncDesignDocsWithDb();
 		
 		
 
-		db2URI = "https://" + props.getProperty("cloudant.username") + ":"
-				+ props.getProperty("cloudant.password") + "@"
-				+ Utils.getHostName(props.getProperty("cloudant.account"))
-				+ "/lightcouch-db-test-2";
+		db2URI = CloudantClientHelper.SERVER_URI.toString() + "/lightcouch-db-test-2";
 	}
 
-	@AfterClass
-	public static void tearDownClass() {
-		dbClient.shutdown();
-		dbClient2.shutdown();
+	@After
+	public void tearDown(){
+		account.shutdown();
 	}
 
 	@Test
 	public void replication() {
-		ReplicationResult result = dbClient.replication()
+		ReplicationResult result = account.replication()
 				.createTarget(true)
 				.source(db1URI)
 				.target(db2URI)
@@ -109,7 +94,7 @@ public class ReplicationTest {
     	Map<String, Object> queryParams = new HashMap<String, Object>();
     	queryParams.put("somekey1", "value 1");
     	
-		dbClient.replication()
+		account.replication()
 				.createTarget(true)
 				.source(db1URI)
 				.target(db2URI)
@@ -120,30 +105,30 @@ public class ReplicationTest {
 
 	@Test
 	public void replicatorDB() {
-		String version = dbClient.serverVersion();
+		String version = account.serverVersion();
 		if (version.startsWith("0") || version.startsWith("1.0")) {
 			return; 
 		}
 
 		// trigger a replication
-		Response response = dbClient.replicator()
+		Response response = account.replicator()
 				.source(db1URI)
 				.target(db2URI).continuous(true)
 				.createTarget(true)
 				.save();
 		
 		// find all replicator docs
-		List<ReplicatorDocument> replicatorDocs = dbClient.replicator()
+		List<ReplicatorDocument> replicatorDocs = account.replicator()
 			.findAll();
 		assertThat(replicatorDocs.size(), is(not(0))); 
 		
 		// find replicator doc
-		ReplicatorDocument replicatorDoc = dbClient.replicator()
+		ReplicatorDocument replicatorDoc = account.replicator()
 				.replicatorDocId(response.getId())
 				.find();
 
 		// cancel a replication
-		dbClient.replicator()
+		account.replicator()
 				.replicatorDocId(replicatorDoc.getId())
 				.replicatorDocRev(replicatorDoc.getRevision())
 				.remove();
@@ -159,7 +144,7 @@ public class ReplicationTest {
 		
 		db1.save(foodb1); 
 		
-		dbClient.replication().source(db1URI)
+		account.replication().source(db1URI)
 				.target(db2URI).trigger();
 
 		foodb2 = db2.find(Foo.class, docId); 
@@ -170,7 +155,7 @@ public class ReplicationTest {
 		foodb1.setTitle("titleZ"); 
 		db1.update(foodb1); 
 
-		dbClient.replication().source(db1URI)
+		account.replication().source(db1URI)
 				.target(db2URI).trigger();
 
 		ViewResult<String[], String, Foo> conflicts = db2.view("conflicts/conflict")
