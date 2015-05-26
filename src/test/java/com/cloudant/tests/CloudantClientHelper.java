@@ -35,12 +35,20 @@ public abstract class CloudantClientHelper {
             COUCH_PORT = System.getProperty("test.couch.port", "5984");
             HTTP_PROTOCOL = System.getProperty("test.couch.http", "http"); //should either be http or https
             try {
-                SERVER_URI = new URI(String.format("%s://%s:%s@%s:%s",
-                        HTTP_PROTOCOL,
-                        COUCH_USERNAME,
-                        COUCH_PASSWORD,
-                        COUCH_HOST,
-                        COUCH_PORT));
+
+                if(COUCH_USERNAME == null || COUCH_PASSWORD == null){
+                    SERVER_URI = new URI(String.format("%s://%s:%s",
+                            HTTP_PROTOCOL,
+                            COUCH_HOST,
+                            COUCH_PORT));
+                } else {
+                    SERVER_URI = new URI(String.format("%s://%s:%s@%s:%s",
+                            HTTP_PROTOCOL,
+                            COUCH_USERNAME,
+                            COUCH_PASSWORD,
+                            COUCH_HOST,
+                            COUCH_PORT));
+                }
             } catch (URISyntaxException e) {
                 throw new RuntimeException(e);
             }
