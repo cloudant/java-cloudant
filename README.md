@@ -1,5 +1,5 @@
 # Cloudant Java Client
-[![Build Status](https://travis-ci.org/cloudant/java-cloudant.svg)](https://travis-ci.org/cloudant/java-cloudant)
+[![Build Status](https://travis-ci.org/cloudant/java-cloudant.svg?branch=master)](https://travis-ci.org/cloudant/java-cloudant)
 
 This is the official Cloudant library for Java
 
