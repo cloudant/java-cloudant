@@ -78,7 +78,7 @@ public class ReplicatorTest {
 	}
 
 	@Test
-	public void replicatorDB() {
+	public void replicatorDB() throws Exception {
 		String version = account.serverVersion();
 		if (version.startsWith("0") || version.startsWith("1.0")) {
 			return; 
@@ -90,7 +90,9 @@ public class ReplicatorTest {
 				.target(db2URI).continuous(true)
 				.createTarget(true)
 				.save();
-		
+
+		Thread.sleep(1000);
+
 		// find all replicator docs
 		List<ReplicatorDocument> replicatorDocs = account.replicator()
 			.findAll();
@@ -134,6 +136,8 @@ public class ReplicatorTest {
 		
 		account.replicator().source(db1URI)
 		.target(db2URI).save();
+
+		Thread.sleep(1000);
 
 		ViewResult<String[], String, Foo> conflicts = db2.view("conflicts/conflict")
 				.includeDocs(true).queryView(String[].class, String.class, Foo.class);

@@ -28,13 +28,11 @@ public class CloudantClientTests {
 	private static final Log log = LogFactory.getLog(CloudantClientTests.class);
 
 	public static CloudantClient cookieBasedClient;
-	private static Properties props;
 	private CloudantClient account;
 
 	@Before
 	public  void setUp() {
 		account = CloudantClientHelper.getClient();
-		props = Utils.getProperties("cloudant.properties", log);
 
 		String cookie = account.getCookie();
 		if(CloudantClientHelper.COUCH_PASSWORD == null){
@@ -93,7 +91,7 @@ public class CloudantClientTests {
 		boolean exceptionRaised = true;
 		try {
 			new CloudantClient(
-					props.getProperty("cloudant.account"), cookie).getAllDbs();
+					CloudantClientHelper.SERVER_URI.toString(), cookie).getAllDbs();
 			exceptionRaised = false;
 		} catch (CouchDbException e) {
 			if ( e.getMessage().contains("Forbidden") ) {
