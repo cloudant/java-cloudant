@@ -11,6 +11,7 @@ public class ConnectOptions {
 	
 	private String proxyHost ;
 	private int proxyPort ;
+	private boolean isSSLAuthenticationDisabled;
 	
 	public ConnectOptions(){
 		// default constructor
@@ -41,6 +42,16 @@ public class ConnectOptions {
 		return this ;
 	}
 
+	/** Sets whether hostname verification and certificate chain validation
+	 * should be disabled.
+	 * @param disabled set to true to disable or false to enable.
+	 * @return the updated {@link ConnectOptions} object.
+	 * @see #isSSLAuthenticationDisabled */
+	public ConnectOptions setSSLAuthenticationDisabled(boolean disabled) {
+		this.isSSLAuthenticationDisabled = disabled;
+		return this;
+	}
+
 	public int getSocketTimeout() {
 		return socketTimeout;
 	}
@@ -60,8 +71,12 @@ public class ConnectOptions {
 	public int getProxyPort() {
 		return proxyPort;
 	}
-	
-	
-	
-	
+
+	/** @return true if hostname verification and certificate chain validation are
+	 *  set to disabled or false otherwise.
+	 *  @see #setSSLAuthenticationDisabled(boolean) */
+	public boolean isSSLAuthenticationDisabled() {
+		return isSSLAuthenticationDisabled;
+	}
+
 }

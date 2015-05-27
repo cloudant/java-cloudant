@@ -40,6 +40,7 @@ public class CouchDbProperties {
 	private int maxConnections;
 	private String proxyHost;
 	private int proxyPort;
+	private boolean disableSSLAuthentication;
 
 	public CouchDbProperties() {
 		// default constructor
@@ -174,4 +175,21 @@ public class CouchDbProperties {
 		setPassword("");
 		setPassword(null);
 	}
+
+	/** Enables/disables hostname verification and certificate chain validation.
+	 * @param disabled set to true to disable or false to enable.
+	 * @return the updated {@link CouchDbProperties} object.
+	 * @see #isSSLAuthenticationDisabled */
+	public CouchDbProperties disableSSLAuthentication(boolean disabled) {
+		this.disableSSLAuthentication = disabled;
+		return this;
+	}
+
+	/** @return true if hostname verification and certificate chain validation are
+	 *  disabled or false otherwise.
+	 *  @see #disableSSLAuthentication(boolean) */
+	public boolean isSSLAuthenticationDisabled() {
+		return disableSSLAuthentication;
+	}
+
 }
