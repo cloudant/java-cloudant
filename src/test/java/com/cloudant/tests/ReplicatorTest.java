@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.cloudant.client.api.CloudantClient;
@@ -20,6 +21,8 @@ import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.api.model.ViewResult;
 
+
+@Ignore
 public class ReplicatorTest {
 
 	private static Properties props ;
