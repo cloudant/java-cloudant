@@ -2,6 +2,8 @@
 
 - [FIX] Fixed handling of non-ASCII characters when the platform's
   default charset is not UTF-8.
+- [FIX] Fixed encoding of `+`, `=` and `&` characters when they are used
+  in the query part of a URL.
 
 # 1.0.1 (2015-02-04)
 
