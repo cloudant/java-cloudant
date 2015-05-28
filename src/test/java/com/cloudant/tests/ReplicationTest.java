@@ -42,7 +42,7 @@ import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.api.model.ViewResult;
 
-//@Ignore
+@Ignore
 public class ReplicationTest {
 	private static final Log log = LogFactory.getLog(ReplicationTest.class);
 	
