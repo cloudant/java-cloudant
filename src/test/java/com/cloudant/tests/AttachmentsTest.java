@@ -49,6 +49,7 @@ public class AttachmentsTest  {
 
 	@After
 	public void tearDown(){
+		account.deleteDB("lightcouch-db-test", "delete database");
 		account.shutdown();
 	}
 

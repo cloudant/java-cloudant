@@ -50,6 +50,8 @@ public class ReplicatorTest {
 
 	@After
 	public void tearDown(){
+		account.deleteDB("lightcouch-db-test", "delete database");
+		account.deleteDB("lightcouch-db-test-2", "delete database");
 		account.shutdown();
 	}
 
