@@ -227,9 +227,19 @@ public class CloudantClient {
 	 * Request to  delete a database.
 	 * @param dbName The database name
 	 * @param confirm A confirmation string with the value: <tt>delete database</tt>
+	 * @deprecated use {@link CloudantClient#deleteDB(String)}
 	 */
+	@Deprecated
 	public void deleteDB(String dbName, String confirm) {
 		client.deleteDB(dbName, confirm);
+	}
+
+	/**
+	 * Request to  delete a database.
+	 * @param dbName The database name
+	 */
+	public void deleteDB(String dbName){
+		client.deleteDB(dbName);
 	}
 
 
