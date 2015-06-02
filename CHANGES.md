@@ -1,5 +1,10 @@
 # Unreleased
 
+- [BREAKING CHANGE] Hostname verification and certificate chain
+  validation are now enabled by default. To disable these additional
+  checks when the client connects to the database,
+  `disableSSLAuthentication(true)` can be called on the `ConnectOptions`
+  object passed to the `CloudantClient` constructor.
 - [NEW] New API for deleting databases, `CloudantClient.deleteDB(String name)`
 - [Deprecated] Deprecated `CloudantClient.deleteDB(String name, String confirm)`
   API.
