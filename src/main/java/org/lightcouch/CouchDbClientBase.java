@@ -194,14 +194,22 @@ public abstract class CouchDbClientBase {
 		 * Requests CouchDB deletes a database.
 		 * @param dbName The database name
 		 * @param confirm A confirmation string with the value: <tt>delete database</tt>
+		 * @Deprecated Use {@link CouchDbClientBase#deleteDB(String)}
 		 */
+		@Deprecated
 		public void deleteDB(String dbName, String confirm) {
-			assertNotEmpty(dbName, "dbName");
 			if(!"delete database".equals(confirm))
 				throw new IllegalArgumentException("Invalid confirm!");
+			deleteDB(dbName);
+		}
+
+		/**
+		 * Requests CouchDB deletes a database.
+		 * @param dbName The database name
+		 */
+	    public void deleteDB(String dbName){
+			assertNotEmpty(dbName, "dbName");
 			delete(buildUri(getBaseUri()).path(dbName).build());
-			
-			
 		}
 
 		/**

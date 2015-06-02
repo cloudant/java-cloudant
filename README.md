@@ -97,7 +97,7 @@ String password = System.getProperty("cloudant_password");
 CloudantClient client = new CloudantClient("mdb","mdb",password);
 
 // Clean up the database we created previously.
-client.deleteDB("alice", "delete database");
+client.deleteDB("alice");
 
 // Create a new database.
 client.createDB("alice");
@@ -141,7 +141,7 @@ If you run this example, you will see:
 - [Server Functions](#server-functions)
 	- [CloudantClient.createDB(name)](#comcloudantclientapicloudantclientcreatedbname)
 	- [CloudantClient.database(name, create)](#comcloudantclientapicloudantclientdatabasenamecreate)
-	- [CloudantClient.deleteDB(name, confirmDelete)](#comcloudantclientapicloudantclientdeletedbnameconfirmdelete)
+	- [CloudantClient.deleteDB(name)](#comcloudantclientapicloudantclientdeletedbname)
 	- [CloudantClient.getAllDbs()](#comcloudantclientapicloudantclientgetalldbs)
 	- [CloudantClient.getMembership()](#comcloudantclientapicloudantclientgetmembership)
 	- [CloudantClient.getActiveTasks()](#comcloudantclientapicloudantclientgetactivetasks)
@@ -275,12 +275,12 @@ System.out.println("Database Name:" + db.info().getDbName() );
 
 ~~~
 
-### com.cloudant.client.api.CloudantClient.deleteDB(name,confirmDelete)
+### com.cloudant.client.api.CloudantClient.deleteDB(name)
 
 Destroy database named `name`.
 
 ~~~ java
-client.deleteDB("alice","delete database");
+client.deleteDB("alice");
 
 ~~~
 

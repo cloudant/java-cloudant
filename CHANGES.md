@@ -1,5 +1,8 @@
 # Unreleased
 
+- [NEW] New API for deleting databases, `CloudantClient.deleteDB(String name)`
+- [Deprecated] Deprecated `CloudantClient.deleteDB(String name, String confirm)`
+  API.
 - [FIX] Fixed handling of non-ASCII characters when the platform's
   default charset is not UTF-8.
 - [FIX] Fixed encoding of `+`, `=` and `&` characters when they are used
