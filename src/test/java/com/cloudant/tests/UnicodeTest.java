@@ -66,7 +66,7 @@ public class UnicodeTest {
 	
 	@After
 	public void tearDown() {
-		account.deleteDB(DB_NAME, "delete database");
+		account.deleteDB(DB_NAME);
 		account.shutdown();
 	}
 

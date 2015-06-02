@@ -45,7 +45,7 @@ public class IndexTests {
 
 	@After
 	public  void tearDown() {
-		account.deleteDB("movies-demo", "delete database");
+		account.deleteDB("movies-demo");
 		account.shutdown();
 	}
 	
