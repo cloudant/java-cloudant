@@ -923,7 +923,7 @@ ConnectOptions connectOptions = new ConnectOptions()
                                         .setMaxConnections(100)
                                         .setProxyHost("http://localhost")
                                         .setProxyPort(8080)
-                                        .disableSSLAuthentication(true);
+                                        .setSSLAuthenticationDisabled(true);
  CloudantClient client = new CloudantClient("cloudant.com","test","password",  
                                                   connectOptions );
 
