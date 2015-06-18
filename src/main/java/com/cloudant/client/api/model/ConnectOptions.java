@@ -1,4 +1,7 @@
 package com.cloudant.client.api.model;
+
+import javax.net.ssl.SSLSocketFactory;
+
 /**
  * Represents optional configuration properties for connecting to CloudantDB.
  * @author Ganesh K Choudhary
@@ -12,6 +15,7 @@ public class ConnectOptions {
 	private String proxyHost ;
 	private int proxyPort ;
 	private boolean isSSLAuthenticationDisabled;
+	private SSLSocketFactory secureSSLSocketFactory;
 	
 	public ConnectOptions(){
 		// default constructor
@@ -52,6 +56,18 @@ public class ConnectOptions {
 		return this;
 	}
 
+	/**
+	 * Specifies the SSLSocketFactory to use when connecting to CloudantDB
+	 * over a <code>https</code> URL.
+	 * @param factory An SSLSocketFactory, or <code>null</code> for the
+	 *                default SSLSocketFactory of the JRE.
+	 * @see #getSecureSSLSocketFactory()
+	 */
+	public ConnectOptions setSecureSSLSocketFactory(SSLSocketFactory factory) {
+		this.secureSSLSocketFactory = factory;
+		return this;
+	}
+
 	public int getSocketTimeout() {
 		return socketTimeout;
 	}
@@ -79,4 +95,14 @@ public class ConnectOptions {
 		return isSSLAuthenticationDisabled;
 	}
 
+	/**
+	 * Returns the SSLSocketFactory that gets used when connecting to
+	 * CloudantDB over a <code>https</code> URL.
+	 * @return An SSLSocketFactory, or <code>null</code>, which stands for
+	 *         the default SSLSocketFactory of the JRE.
+	 * @see #setSecureSSLSocketFactory(javax.net.ssl.SSLSocketFactory)
+	 */
+	public SSLSocketFactory getSecureSSLSocketFactory() {
+		return secureSSLSocketFactory;
+	}
 }

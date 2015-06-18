@@ -16,6 +16,8 @@
 
 package org.lightcouch;
 
+import javax.net.ssl.SSLSocketFactory;
+
 /**
  * Represents configuration properties for connecting to CouchDB.
  * 
@@ -41,6 +43,7 @@ public class CouchDbProperties {
 	private String proxyHost;
 	private int proxyPort;
 	private boolean disableSSLAuthentication;
+	private SSLSocketFactory secureSSLSocketFactory;
 
 	public CouchDbProperties() {
 		// default constructor
@@ -190,6 +193,29 @@ public class CouchDbProperties {
 	 *  @see #disableSSLAuthentication(boolean) */
 	public boolean isSSLAuthenticationDisabled() {
 		return disableSSLAuthentication;
+	}
+
+	/**
+	 * Returns the SSLSocketFactory that gets used when connecting to
+	 * CouchDB over a <code>https</code> URL.
+	 * @return An SSLSocketFactory, or <code>null</code>, which stands for
+	 *         the default SSLSocketFactory of the JRE.
+	 * @see #setSecureSSLSocketFactory(javax.net.ssl.SSLSocketFactory)
+	 */
+	public SSLSocketFactory getSecureSSLSocketFactory() {
+		return secureSSLSocketFactory;
+	}
+
+	/**
+	 * Specifies the SSLSocketFactory to use when connecting to CouchDB
+	 * over a <code>https</code> URL.
+	 * @param factory An SSLSocketFactory, or <code>null</code> for the
+	 *                default SSLSocketFactory of the JRE.
+	 * @see #getSecureSSLSocketFactory()
+	 */
+	public CouchDbProperties setSecureSSLSocketFactory(SSLSocketFactory factory) {
+		this.secureSSLSocketFactory = factory;
+		return this;
 	}
 
 }

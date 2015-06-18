@@ -1,5 +1,9 @@
 # Unreleased
 
+- [NEW] New API for specifying the SSLSocketFactory. This can used to
+  enhance security in specific environments. To set this SSLSocketFactory,
+  call the `setSecureSSLSocketFactory` method on the `ConnectOptions`
+  object before you pass it to the `CloudantClient` constructor.
 - [BREAKING CHANGE] Hostname verification and certificate chain
   validation are now enabled by default. To disable these additional
   checks when the client connects to the database,
