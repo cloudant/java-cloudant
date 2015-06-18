@@ -204,19 +204,25 @@ public class CouchDbClient extends  CouchDbClientBase {
 				.<ConnectionSocketFactory> create();
 
 		if("https".equals(props.getProtocol())) {
-			SSLContext sslcontext = SSLContexts.custom()
-					.loadTrustMaterial(null, new TrustStrategy(){
-						public boolean isTrusted(X509Certificate[] chain, String authType)
-								throws CertificateException {
-							return true;
-						}
-					}).build();
+			if (props.isSSLAuthenticationDisabled()) {
+				SSLContext sslcontext = SSLContexts.custom()
+						.loadTrustMaterial(null, new TrustStrategy() {
+							public boolean isTrusted(X509Certificate[] chain, String authType)
+									throws CertificateException {
+								return true;
+							}
+						}).build();
 
-			return registry.register("https", new SSLConnectionSocketFactory(sslcontext, 
-					SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)).build();
+				return registry.register("https", new SSLConnectionSocketFactory(sslcontext,
+						SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)).build();
+			} else {
+				return registry.register("https", new SSLConnectionSocketFactory(SSLContexts.createDefault(),
+						SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER)).build();
+			}
 		} else {
 			return registry.register("http", PlainConnectionSocketFactory.INSTANCE).build();
 		}
+
 	}
 	
 	/**

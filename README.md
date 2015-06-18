@@ -918,11 +918,12 @@ Besides the account and password options, you can add an optional `com.cloudant.
 
 ~~~ java
 ConnectOptions connectOptions = new ConnectOptions()
-										. setSocketTimeout(50)
-                                        . setConnectionTimeout(50)
-                                        . setMaxConnections(100)
-                                        . setProxyHost("http://localhost")
-                                        . setProxyPort(8080);
+                                        .setSocketTimeout(50)
+                                        .setConnectionTimeout(50)
+                                        .setMaxConnections(100)
+                                        .setProxyHost("http://localhost")
+                                        .setProxyPort(8080)
+                                        .disableSSLAuthentication(true);
  CloudantClient client = new CloudantClient("cloudant.com","test","password",  
                                                   connectOptions );
 
