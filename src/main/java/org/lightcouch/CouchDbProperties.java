@@ -179,25 +179,32 @@ public class CouchDbProperties {
 		setPassword(null);
 	}
 
-	/** Enables/disables hostname verification and certificate chain validation.
+	/**
+	 * Enables/disables hostname verification, certificate chain validation,
+	 * and the use of the optional {@link #getSecureSSLSocketFactory()}.
 	 * @param disabled set to true to disable or false to enable.
 	 * @return the updated {@link CouchDbProperties} object.
-	 * @see #isSSLAuthenticationDisabled */
+	 * @see #isSSLAuthenticationDisabled
+	 */
 	public CouchDbProperties disableSSLAuthentication(boolean disabled) {
 		this.disableSSLAuthentication = disabled;
 		return this;
 	}
 
-	/** @return true if hostname verification and certificate chain validation are
-	 *  disabled or false otherwise.
-	 *  @see #disableSSLAuthentication(boolean) */
+	/**
+	 * @return true if hostname verification, certificate chain validation,
+	 * and the use of the optional {@link #getSecureSSLSocketFactory()} are
+	 * disabled, or false otherwise.
+	 * @see #disableSSLAuthentication(boolean)
+	 */
 	public boolean isSSLAuthenticationDisabled() {
 		return disableSSLAuthentication;
 	}
 
 	/**
 	 * Returns the SSLSocketFactory that gets used when connecting to
-	 * CouchDB over a <code>https</code> URL.
+	 * CouchDB over a <code>https</code> URL, when SSL authentication is
+	 * enabled.
 	 * @return An SSLSocketFactory, or <code>null</code>, which stands for
 	 *         the default SSLSocketFactory of the JRE.
 	 * @see #setSecureSSLSocketFactory(javax.net.ssl.SSLSocketFactory)
@@ -208,7 +215,7 @@ public class CouchDbProperties {
 
 	/**
 	 * Specifies the SSLSocketFactory to use when connecting to CouchDB
-	 * over a <code>https</code> URL.
+	 * over a <code>https</code> URL, when SSL authentication is enabled.
 	 * @param factory An SSLSocketFactory, or <code>null</code> for the
 	 *                default SSLSocketFactory of the JRE.
 	 * @see #getSecureSSLSocketFactory()

@@ -46,7 +46,9 @@ public class ConnectOptions {
 		return this ;
 	}
 
-	/** Sets whether hostname verification and certificate chain validation
+	/**
+	 * Sets whether hostname verification, certificate chain validation,
+	 * and the use of the optional {@link #getSecureSSLSocketFactory()}
 	 * should be disabled.
 	 * @param disabled set to true to disable or false to enable.
 	 * @return the updated {@link ConnectOptions} object.
@@ -58,7 +60,7 @@ public class ConnectOptions {
 
 	/**
 	 * Specifies the SSLSocketFactory to use when connecting to CloudantDB
-	 * over a <code>https</code> URL.
+	 * over a <code>https</code> URL, when SSL authentication is enabled.
 	 * @param factory An SSLSocketFactory, or <code>null</code> for the
 	 *                default SSLSocketFactory of the JRE.
 	 * @see #getSecureSSLSocketFactory()
@@ -88,16 +90,19 @@ public class ConnectOptions {
 		return proxyPort;
 	}
 
-	/** @return true if hostname verification and certificate chain validation are
-	 *  set to disabled or false otherwise.
-	 *  @see #setSSLAuthenticationDisabled(boolean) */
+	/**
+	 * @return true if hostname verification, certificate chain validation,
+	 * and the use of the optional {@link #getSecureSSLSocketFactory()} are
+	 * disabled, or false otherwise.
+	 * @see #setSSLAuthenticationDisabled(boolean) */
 	public boolean isSSLAuthenticationDisabled() {
 		return isSSLAuthenticationDisabled;
 	}
 
 	/**
 	 * Returns the SSLSocketFactory that gets used when connecting to
-	 * CloudantDB over a <code>https</code> URL.
+	 * CloudantDB over a <code>https</code> URL, when SSL authentication is
+	 * enabled.
 	 * @return An SSLSocketFactory, or <code>null</code>, which stands for
 	 *         the default SSLSocketFactory of the JRE.
 	 * @see #setSecureSSLSocketFactory(javax.net.ssl.SSLSocketFactory)
