@@ -6,12 +6,13 @@
   `setSSLAuthenticationDisabled(true)` can be called on the `ConnectOptions`
   object before you pass it to the `CloudantClient` constructor.
 - [NEW] New API for deleting databases, `CloudantClient.deleteDB(String name)`
-- [Deprecated] Deprecated `CloudantClient.deleteDB(String name, String confirm)`
-  API.
+- [FIX] Fixed querying of next/previous page in a descending view.
 - [FIX] Fixed handling of non-ASCII characters when the platform's
   default charset is not UTF-8.
 - [FIX] Fixed encoding of `+`, `=` and `&` characters when they are used
   in the query part of a URL.
+- [Deprecated] Deprecated `CloudantClient.deleteDB(String name, String confirm)`
+  API.
 
 # 1.0.1 (2015-02-04)
 

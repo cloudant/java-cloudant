@@ -92,4 +92,25 @@ public class Params {
     public void addAll(Params params) {
         this.params.addAll(params.params);
     }
+
+    /**
+     * If this object already contains a parameter whose name matches {@code name}, replace the
+     * existing value with {@code value} for the first instance of parameter {@code name}.
+     * Otherwise, add a parameter with the new {@code name} and {@code value}.
+     * @param name The name of the parameter to replace/add.
+     * @param value The new value of the parameter.
+     */
+    public void replaceOrAdd(String name, String value) {
+        boolean found = false;
+        for (Param param : params) {
+            if (param.getKey().equals(name)) {
+                param.setValue(value);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            addParam(name, value);
+        }
+    }
 }
