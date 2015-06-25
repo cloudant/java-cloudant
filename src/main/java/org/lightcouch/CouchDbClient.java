@@ -50,12 +50,15 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Properties;
 
 import javax.net.ssl.SSLContext;
 
@@ -94,6 +97,41 @@ import javax.net.ssl.SSLContext;
  * @since 0.0.2
  */
 public class CouchDbClient extends CouchDbClientBase {
+
+    //User-Agent value for the client
+    public static final String USER_AGENT;
+
+    static {
+        String ua = "java-cloudant";
+        String version = "unknown";
+        final URL url = CouchDbClient.class.getClassLoader().getResource("client.properties");
+        final Properties properties = new Properties();
+        InputStream propStream = null;
+        try {
+            properties.load((propStream = url.openStream()));
+            ua = properties.getProperty("user.agent.name", ua);
+            version = properties.getProperty("user.agent.version", version);
+        } catch (Exception ex) {
+            //swallow exception and keep using default values
+        } finally {
+            if (propStream != null) {
+                try {
+                    propStream.close();
+                } catch (IOException e) {
+                    //can't do anything else
+                }
+            }
+        }
+        USER_AGENT = String.format("%s/%s [Java (%s; %s; %s) %s; %s; %s]",
+                ua,
+                version,
+                System.getProperty("os.arch"),
+                System.getProperty("os.name"),
+                System.getProperty("os.version"),
+                System.getProperty("java.vendor"),
+                System.getProperty("java.version"),
+                System.getProperty("java.runtime.version"));
+    }
 
     /**
      * Constructs a new instance of this class, expects a configuration file named
@@ -136,7 +174,8 @@ public class CouchDbClient extends CouchDbClientBase {
      * @param username The Username credential
      * @param password The Password credential
      */
-    public CouchDbClient(String protocol, String host, int port, String username, String password) {
+    public CouchDbClient(String protocol, String host, int port, String username, String
+            password) {
         super(new CouchDbConfig(new CouchDbProperties(protocol, host, port, username, password)));
     }
 
@@ -158,7 +197,7 @@ public class CouchDbClient extends CouchDbClientBase {
         try {
             Registry<ConnectionSocketFactory> registry = createRegistry(props);
             PoolingHttpClientConnectionManager ccm = createConnectionManager(props, registry);
-            HttpClientBuilder clientBuilder = HttpClients.custom()
+            HttpClientBuilder clientBuilder = HttpClients.custom().setUserAgent(USER_AGENT)
                     .setConnectionManager(ccm)
                     .setDefaultConnectionConfig(ConnectionConfig.custom()
                             .setCharset(Consts.UTF_8).build())
@@ -208,7 +247,7 @@ public class CouchDbClient extends CouchDbClientBase {
     }
 
     private Registry<ConnectionSocketFactory> createRegistry(CouchDbProperties props) throws
-			KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
+            KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
         RegistryBuilder<ConnectionSocketFactory> registry = RegistryBuilder
                 .<ConnectionSocketFactory>create();
 
@@ -226,7 +265,7 @@ public class CouchDbClient extends CouchDbClientBase {
                         SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)).build();
             } else {
                 return registry.register("https", new SSLConnectionSocketFactory(SSLContexts
-						.createDefault(),
+                        .createDefault(),
                         SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER)).build();
             }
         } else {
@@ -246,7 +285,8 @@ public class CouchDbClient extends CouchDbClientBase {
                                 final HttpContext context) throws IOException {
                 if (log.isDebugEnabled()) {
                     RequestLine req = request.getRequestLine();
-                    log.debug("> " + req.getMethod() + " " + URLDecoder.decode(req.getUri(), "UTF-8"));
+                    log.debug("> " + req.getMethod() + " " + URLDecoder.decode(req.getUri(),
+                            "UTF-8"));
                 }
             }
         });
