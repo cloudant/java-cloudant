@@ -16,30 +16,31 @@
 
 package org.lightcouch;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
+import com.google.gson.Gson;
 
 import org.apache.http.client.methods.HttpGet;
 import org.lightcouch.ChangesResult.Row;
 import org.lightcouch.internal.CouchDbUtil;
 import org.lightcouch.internal.URIBuilder;
 
-import com.google.gson.Gson;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
 
 /**
- * <p>Contains the Change Notifications API, supports <i>normal</i> and <i>continuous</i> feed Changes. 
+ * <p>Contains the Change Notifications API, supports <i>normal</i> and <i>continuous</i> feed
+ * Changes.
  * <h3>Usage Example:</h3>
  * <pre>
- * // feed type normal 
+ * // feed type normal
  * String since = db.info().getUpdateSeq(); // latest update seq
  * ChangesResult changeResult = db.changes()
- *	.since(since) 
- *	.limit(10)
- *	.filter("example/filter")
- *	.getChanges();
+ * 	.since(since)
+ * 	.limit(10)
+ * 	.filter("example/filter")
+ * 	.getChanges();
  *
  * for (ChangesResult.Row row : changeResult.getResults()) {
  *   String docId = row.getId()
@@ -48,171 +49,174 @@ import com.google.gson.Gson;
  *
  * // feed type continuous
  * Changes changes = db.changes()
- *	.includeDocs(true) 
- *	.heartBeat(30000)
- *	.continuousChanges(); 
- * 
- * while (changes.hasNext()) { 
- *	ChangesResult.Row feed = changes.next();
+ * 	.includeDocs(true)
+ * 	.heartBeat(30000)
+ * 	.continuousChanges();
+ *
+ * while (changes.hasNext()) {
+ * 	ChangesResult.Row feed = changes.next();
  *  String docId = feed.getId();
  *  JsonObject doc = feed.getDoc();
- *	// changes.stop(); // stop continuous feed
+ * 	// changes.stop(); // stop continuous feed
  * }
  * </pre>
+ *
+ * @author Ahmed Yehia
  * @see ChangesResult
  * @since 0.0.2
- * @author Ahmed Yehia
  */
 public class Changes {
-	
-	private BufferedReader reader;
-	private HttpGet httpGet;
-	private Row nextRow;
-	private boolean stop;
-	
-	private CouchDatabaseBase dbc;
-	private Gson gson;
-	private URIBuilder uriBuilder;
-	
-	Changes(CouchDatabaseBase dbc) {
-		this.dbc = dbc;
-		this.gson = dbc.getGson();
-		this.uriBuilder = URIBuilder.buildUri(dbc.getDBUri()).path("_changes");
-	}
 
-	/**
-	 * Requests Change notifications of feed type continuous.
-	 * <p>Feed notifications are accessed in an <i>iterator</i> style.
-	 */
-	public Changes continuousChanges() {
-		final URI uri = uriBuilder.query("feed", "continuous").build();
-		httpGet = new HttpGet(uri);
-		final InputStream in = dbc.get(httpGet);
-		try {
-			final InputStreamReader is = new InputStreamReader(in, "UTF-8");
-			setReader(new BufferedReader(is));
-		} catch (UnsupportedEncodingException e) {
-			// This should never happen as every implementation of the java platform is required to support UTF-8.
-			throw new RuntimeException(e);
-		}
-		return this;
-	}
+    private BufferedReader reader;
+    private HttpGet httpGet;
+    private Row nextRow;
+    private boolean stop;
 
-	/**
-	 * Checks whether a feed is available in the continuous stream, blocking 
-	 * until a feed is received. 
-	 */
-	public boolean hasNext() { 
-		return readNextRow();
-	}
+    private CouchDatabaseBase dbc;
+    private Gson gson;
+    private URIBuilder uriBuilder;
 
-	/**
-	 * @return The next feed in the stream.
-	 */
-	public Row next() {
-		return getNextRow();
-	}
+    Changes(CouchDatabaseBase dbc) {
+        this.dbc = dbc;
+        this.gson = dbc.getGson();
+        this.uriBuilder = URIBuilder.buildUri(dbc.getDBUri()).path("_changes");
+    }
 
-	/**
-	 * Stops a running continuous feed.
-	 */
-	public void stop() {
-		stop = true;
-	}
+    /**
+     * Requests Change notifications of feed type continuous.
+     * <p>Feed notifications are accessed in an <i>iterator</i> style.
+     */
+    public Changes continuousChanges() {
+        final URI uri = uriBuilder.query("feed", "continuous").build();
+        httpGet = new HttpGet(uri);
+        final InputStream in = dbc.get(httpGet);
+        try {
+            final InputStreamReader is = new InputStreamReader(in, "UTF-8");
+            setReader(new BufferedReader(is));
+        } catch (UnsupportedEncodingException e) {
+            // This should never happen as every implementation of the java platform is required
+            // to support UTF-8.
+            throw new RuntimeException(e);
+        }
+        return this;
+    }
 
-	/**
-	 * Requests Change notifications of feed type normal.
-	 */
-	public ChangesResult getChanges() {
-		final URI uri = uriBuilder.query("feed", "normal").build();
-		return dbc.get(uri, ChangesResult.class);
-	}
+    /**
+     * Checks whether a feed is available in the continuous stream, blocking
+     * until a feed is received.
+     */
+    public boolean hasNext() {
+        return readNextRow();
+    }
 
-	// Query Params
-	
-	public Changes since(String since) {
-		uriBuilder.query("since", since);
-		return this;
-	}
-	
-	public Changes limit(int limit) {
-		uriBuilder.query("limit", limit);
-		return this;
-	}
-	
-	public Changes heartBeat(long heartBeat) {
-		uriBuilder.query("heartbeat", heartBeat);
-		return this;
-	}
-	
-	public Changes timeout(long timeout) {
-		uriBuilder.query("timeout", timeout);
-		return this;
-	}
+    /**
+     * @return The next feed in the stream.
+     */
+    public Row next() {
+        return getNextRow();
+    }
 
-	public Changes filter(String filter) {
-		uriBuilder.query("filter", filter);
-		return this;
-	}
-	
-	public Changes includeDocs(boolean includeDocs) {
-		uriBuilder.query("include_docs", includeDocs);
-		return this;
-	}
-	
-	public Changes style(String style) {
-		uriBuilder.query("style", style);
-		return this;
-	}
-	
-	// Helper
+    /**
+     * Stops a running continuous feed.
+     */
+    public void stop() {
+        stop = true;
+    }
 
-	/**
-	 * Reads and sets the next feed in the stream.
-	 */
-	private boolean readNextRow() {
-		boolean hasNext = false;
-		try {
-			if(!stop) {
-				while (true) {
-					String row = getReader().readLine();
-					if(row.isEmpty()){
-						continue ;
-					}
-					if(row != null && !row.startsWith("{\"last_seq\":")) { 
-						setNextRow(gson.fromJson(row, Row.class));
-						hasNext = true;
-						break ;
-					}
-				}				 
-			} 
-		} catch (Exception e) {
-			terminate();
-			throw new CouchDbException("Error reading continuous stream.", e);
-		} 
-		if(!hasNext) 
-			terminate();
-		return hasNext;
-	}
+    /**
+     * Requests Change notifications of feed type normal.
+     */
+    public ChangesResult getChanges() {
+        final URI uri = uriBuilder.query("feed", "normal").build();
+        return dbc.get(uri, ChangesResult.class);
+    }
 
-	private BufferedReader getReader() {
-		return reader;
-	}
+    // Query Params
 
-	private void setReader(BufferedReader reader) {
-		this.reader = reader;
-	}
+    public Changes since(String since) {
+        uriBuilder.query("since", since);
+        return this;
+    }
 
-	private Row getNextRow() {
-		return nextRow;
-	}
+    public Changes limit(int limit) {
+        uriBuilder.query("limit", limit);
+        return this;
+    }
 
-	private void setNextRow(Row nextRow) {
-		this.nextRow = nextRow;
-	}
-	
-	private void terminate() {
-		httpGet.abort();
-		CouchDbUtil.close(getReader());
-	}
+    public Changes heartBeat(long heartBeat) {
+        uriBuilder.query("heartbeat", heartBeat);
+        return this;
+    }
+
+    public Changes timeout(long timeout) {
+        uriBuilder.query("timeout", timeout);
+        return this;
+    }
+
+    public Changes filter(String filter) {
+        uriBuilder.query("filter", filter);
+        return this;
+    }
+
+    public Changes includeDocs(boolean includeDocs) {
+        uriBuilder.query("include_docs", includeDocs);
+        return this;
+    }
+
+    public Changes style(String style) {
+        uriBuilder.query("style", style);
+        return this;
+    }
+
+    // Helper
+
+    /**
+     * Reads and sets the next feed in the stream.
+     */
+    private boolean readNextRow() {
+        boolean hasNext = false;
+        try {
+            if (!stop) {
+                while (true) {
+                    String row = getReader().readLine();
+                    if (row.isEmpty()) {
+                        continue;
+                    }
+                    if (row != null && !row.startsWith("{\"last_seq\":")) {
+                        setNextRow(gson.fromJson(row, Row.class));
+                        hasNext = true;
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            terminate();
+            throw new CouchDbException("Error reading continuous stream.", e);
+        }
+        if (!hasNext) {
+            terminate();
+        }
+        return hasNext;
+    }
+
+    private BufferedReader getReader() {
+        return reader;
+    }
+
+    private void setReader(BufferedReader reader) {
+        this.reader = reader;
+    }
+
+    private Row getNextRow() {
+        return nextRow;
+    }
+
+    private void setNextRow(Row nextRow) {
+        this.nextRow = nextRow;
+    }
+
+    private void terminate() {
+        httpGet.abort();
+        CouchDbUtil.close(getReader());
+    }
 }

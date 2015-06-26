@@ -5,43 +5,44 @@ import com.cloudant.client.api.DbDesign;
 
 /**
  * Represents a design document.
+ *
+ * @author Ganesh K Choudhary
  * @see DbDesign
  * @since 0.0.1
- * @author Ganesh K Choudhary
  */
-public class DesignDocument extends org.lightcouch.DesignDocument{
-	
-	
-	public class MapReduce {
-		private org.lightcouch.DesignDocument.MapReduce mapReduce ;
+public class DesignDocument extends org.lightcouch.DesignDocument {
 
-		public String getMap() {
-			return mapReduce.getMap();
-		}
 
-		public String getReduce() {
-			return mapReduce.getReduce();
-		}
+    public class MapReduce {
+        private org.lightcouch.DesignDocument.MapReduce mapReduce;
 
-		public void setMap(String map) {
-			mapReduce.setMap(map);
-		}
+        public String getMap() {
+            return mapReduce.getMap();
+        }
 
-		public void setReduce(String reduce) {
-			mapReduce.setReduce(reduce);
-		}
+        public String getReduce() {
+            return mapReduce.getReduce();
+        }
 
-		public int hashCode() {
-			return mapReduce.hashCode();
-		}
+        public void setMap(String map) {
+            mapReduce.setMap(map);
+        }
 
-		public boolean equals(Object obj) {
-			return mapReduce.equals(obj);
-		}
+        public void setReduce(String reduce) {
+            mapReduce.setReduce(reduce);
+        }
 
-		org.lightcouch.DesignDocument.MapReduce getMapReduce() {
-			return mapReduce;
-		}	
-		
-	}
+        public int hashCode() {
+            return mapReduce.hashCode();
+        }
+
+        public boolean equals(Object obj) {
+            return mapReduce.equals(obj);
+        }
+
+        org.lightcouch.DesignDocument.MapReduce getMapReduce() {
+            return mapReduce;
+        }
+
+    }
 }

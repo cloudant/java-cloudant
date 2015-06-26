@@ -20,67 +20,68 @@ package com.cloudant.tests;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import com.cloudant.client.api.CloudantClient;
+import com.cloudant.client.api.Database;
+import com.cloudant.client.api.model.Response;
+import com.google.gson.JsonObject;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
-import com.cloudant.client.api.model.Response;
-import com.google.gson.JsonObject;
 
-public class BulkDocumentTest{
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-	private static final Log log = LogFactory.getLog(BulkDocumentTest.class);
-	private static Database db;
-	private CloudantClient account;
+public class BulkDocumentTest {
 
-	@Before
+    private static final Log log = LogFactory.getLog(BulkDocumentTest.class);
+    private static Database db;
+    private CloudantClient account;
 
-	public  void setUp() {
-		account = CloudantClientHelper.getClient();
-		db = account.database("lightcouch-db-test", true);
-	}
+    @Before
 
-	@After
-	public void tearDown(){
-		account.deleteDB("lightcouch-db-test");
-		account.shutdown();
-	}
+    public void setUp() {
+        account = CloudantClientHelper.getClient();
+        db = account.database("lightcouch-db-test", true);
+    }
 
-	@Test
-	public void bulkModifyDocs() {
-		List<Object> newDocs = new ArrayList<Object>();
-		newDocs.add(new Foo());
-		newDocs.add(new JsonObject());
+    @After
+    public void tearDown() {
+        account.deleteDB("lightcouch-db-test");
+        account.shutdown();
+    }
 
-	//	boolean allOrNothing = true;
-		
-		// allorNothing is not supported in cloudant
-	//	List<Response> responses = db.bulk(newDocs, allOrNothing);
-		List<Response> responses = db.bulk(newDocs);
-		
-		assertThat(responses.size(), is(2));
-	}
+    @Test
+    public void bulkModifyDocs() {
+        List<Object> newDocs = new ArrayList<Object>();
+        newDocs.add(new Foo());
+        newDocs.add(new JsonObject());
 
-	@Test
-	public void bulkDocsRetrieve() {
-		Response r1 = db.save(new Foo());
-		Response r2 = db.save(new Foo());
-		
-		List<String> keys = Arrays.asList(new String[] { r1.getId(), r2.getId() });
-		
-		List<Foo> docs = db.view("_all_docs")
-				.includeDocs(true)
-				.keys(keys)
-				.query(Foo.class);
-		
-		assertThat(docs.size(), is(2));
-	}
+        //	boolean allOrNothing = true;
+
+        // allorNothing is not supported in cloudant
+        //	List<Response> responses = db.bulk(newDocs, allOrNothing);
+        List<Response> responses = db.bulk(newDocs);
+
+        assertThat(responses.size(), is(2));
+    }
+
+    @Test
+    public void bulkDocsRetrieve() {
+        Response r1 = db.save(new Foo());
+        Response r2 = db.save(new Foo());
+
+        List<String> keys = Arrays.asList(new String[]{r1.getId(), r2.getId()});
+
+        List<Foo> docs = db.view("_all_docs")
+                .includeDocs(true)
+                .keys(keys)
+                .query(Foo.class);
+
+        assertThat(docs.size(), is(2));
+    }
 
 }

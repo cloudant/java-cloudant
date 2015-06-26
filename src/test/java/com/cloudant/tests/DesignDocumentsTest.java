@@ -18,59 +18,59 @@
 package com.cloudant.tests;
 
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertThat;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.DesignDocument;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.List;
+
 public class DesignDocumentsTest {
-	private static Database db;
-	private CloudantClient account;
-	
-
-	@Before
-	public  void setUp() {
-		account = CloudantClientHelper.getClient();
-		db = account.database("lightcouch-db-test", true);
-	}
-
-	@After
-	public void tearDown(){
-		account.deleteDB("lightcouch-db-test");
-		account.shutdown();
-	}
+    private static Database db;
+    private CloudantClient account;
 
 
-	@Test
-	public void designDocSync() {
-		DesignDocument designDoc = db.design().getFromDesk("example");
-		db.design().synchronizeWithDb(designDoc);
-	}
-	
-	@Test
-	public void designDocCompare() {
-		DesignDocument designDoc1 = db.design().getFromDesk("example");
-		db.design().synchronizeWithDb(designDoc1);
-		
-		DesignDocument designDoc11 = db.design().getFromDb("_design/example");
-		
-		assertEquals(designDoc1, designDoc11);
-	}
-	
-	@Test
-	public void designDocs() {
-		List<DesignDocument> designDocs = db.design().getAllFromDesk();
-		db.syncDesignDocsWithDb();
-		
-		assertThat(designDocs.size(), not(0));
-	}
+    @Before
+    public void setUp() {
+        account = CloudantClientHelper.getClient();
+        db = account.database("lightcouch-db-test", true);
+    }
+
+    @After
+    public void tearDown() {
+        account.deleteDB("lightcouch-db-test");
+        account.shutdown();
+    }
+
+
+    @Test
+    public void designDocSync() {
+        DesignDocument designDoc = db.design().getFromDesk("example");
+        db.design().synchronizeWithDb(designDoc);
+    }
+
+    @Test
+    public void designDocCompare() {
+        DesignDocument designDoc1 = db.design().getFromDesk("example");
+        db.design().synchronizeWithDb(designDoc1);
+
+        DesignDocument designDoc11 = db.design().getFromDb("_design/example");
+
+        assertEquals(designDoc1, designDoc11);
+    }
+
+    @Test
+    public void designDocs() {
+        List<DesignDocument> designDocs = db.design().getAllFromDesk();
+        db.syncDesignDocsWithDb();
+
+        assertThat(designDocs.size(), not(0));
+    }
 
 }

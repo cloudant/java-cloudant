@@ -26,9 +26,9 @@ import static org.lightcouch.internal.CouchDbUtil.getStream;
 import static org.lightcouch.internal.CouchDbUtil.streamToString;
 import static org.lightcouch.internal.URIBuilder.buildUri;
 
-import java.io.InputStream;
-import java.net.URI;
-import java.util.List;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,14 +36,15 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.List;
 
 /**
  * Contains a Database Public API implementation.
- * @see CouchDatabase
+ *
  * @author Ahmed Yehia
+ * @see CouchDatabase
  */
 public abstract class CouchDatabaseBase {
 
@@ -60,7 +61,7 @@ public abstract class CouchDatabaseBase {
         assertNotEmpty(name, "name");
         this.dbName = name;
         this.client = client;
-        this.dbURI   = buildUri(client.getBaseUri()).path(name).path("/").build();
+        this.dbURI = buildUri(client.getBaseUri()).path(name).path("/").build();
         connect(create);
         this.design = new CouchDbDesign(this);
     }
@@ -68,6 +69,7 @@ public abstract class CouchDatabaseBase {
 
     /**
      * Provides access to CouchDB Design Documents.
+     *
      * @see CouchDbDesign
      */
     public CouchDbDesign design() {
@@ -76,6 +78,7 @@ public abstract class CouchDatabaseBase {
 
     /**
      * Provides access to CouchDB <tt>View</tt> APIs.
+     *
      * @see View
      */
     public View view(String viewId) {
@@ -85,6 +88,7 @@ public abstract class CouchDatabaseBase {
 
     /**
      * Provides access to <tt>Change Notifications</tt> API.
+     *
      * @see Changes
      */
     public Changes changes() {
@@ -93,9 +97,10 @@ public abstract class CouchDatabaseBase {
 
     /**
      * Finds an Object of the specified type.
-     * @param <T> Object type.
+     *
+     * @param <T>       Object type.
      * @param classType The class of type T.
-     * @param id The document id.
+     * @param id        The document id.
      * @return An object of type T.
      * @throws NoDocumentException If the document is not found in the database.
      */
@@ -108,10 +113,11 @@ public abstract class CouchDatabaseBase {
 
     /**
      * Finds an Object of the specified type.
-     * @param <T> Object type.
+     *
+     * @param <T>       Object type.
      * @param classType The class of type T.
-     * @param id The document id.
-     * @param params Extra parameters to append.
+     * @param id        The document id.
+     * @param params    Extra parameters to append.
      * @return An object of type T.
      * @throws NoDocumentException If the document is not found in the database.
      */
@@ -124,10 +130,11 @@ public abstract class CouchDatabaseBase {
 
     /**
      * Finds an Object of the specified type.
-     * @param <T> Object type.
+     *
+     * @param <T>       Object type.
      * @param classType The class of type T.
-     * @param id The document _id field.
-     * @param rev The document _rev field.
+     * @param id        The document _id field.
+     * @param rev       The document _rev field.
      * @return An object of type T.
      * @throws NoDocumentException If the document is not found in the database.
      */
@@ -142,8 +149,9 @@ public abstract class CouchDatabaseBase {
     /**
      * This method finds any document given a URI.
      * <p>The URI must be URI-encoded.
+     *
      * @param classType The class of type T.
-     * @param uri The URI as string.
+     * @param uri       The URI as string.
      * @return An object of type T.
      */
     public <T> T findAny(Class<T> classType, String uri) {
@@ -155,6 +163,7 @@ public abstract class CouchDatabaseBase {
     /**
      * Finds a document and return the result as {@link InputStream}.
      * <p><b>Note</b>: The stream must be closed after use to release the connection.
+     *
      * @param id The document _id field.
      * @return The result as {@link InputStream}
      * @throws NoDocumentException If the document is not found in the database.
@@ -168,7 +177,8 @@ public abstract class CouchDatabaseBase {
     /**
      * Finds a document given id and revision and returns the result as {@link InputStream}.
      * <p><b>Note</b>: The stream must be closed after use to release the connection.
-     * @param id The document _id field.
+     *
+     * @param id  The document _id field.
      * @param rev The document _rev field.
      * @return The result as {@link InputStream}
      * @throws NoDocumentException If the document is not found in the database.
@@ -182,6 +192,7 @@ public abstract class CouchDatabaseBase {
 
     /**
      * Checks if a document exist in the database.
+     *
      * @param id The document _id field.
      * @return true If the document is found, false otherwise.
      */
@@ -200,10 +211,12 @@ public abstract class CouchDatabaseBase {
 
     /**
      * Saves an object in the database, using HTTP <tt>PUT</tt> request.
-     * <p>If the object doesn't have an <code>_id</code> value, the code will assign a <code>UUID</code> as the document id.
+     * <p>If the object doesn't have an <code>_id</code> value, the code will assign a
+     * <code>UUID</code> as the document id.
+     *
      * @param object The object to save
-     * @throws DocumentConflictException If a conflict is detected during the save.
      * @return {@link Response}
+     * @throws DocumentConflictException If a conflict is detected during the save.
      */
     public Response save(Object object) {
         return client.put(getDBUri(), object, true);
@@ -212,6 +225,7 @@ public abstract class CouchDatabaseBase {
     /**
      * Saves an object in the database using HTTP <tt>POST</tt> request.
      * <p>The database will be responsible for generating the document id.
+     *
      * @param object The object to save
      * @return {@link Response}
      */
@@ -221,7 +235,7 @@ public abstract class CouchDatabaseBase {
         try {
             URI uri = buildUri(getDBUri()).build();
             response = client.post(uri, getGson().toJson(object));
-            return getResponse(response,Response.class, client.getGson());
+            return getResponse(response, Response.class, client.getGson());
         } finally {
             close(response);
         }
@@ -229,6 +243,7 @@ public abstract class CouchDatabaseBase {
 
     /**
      * Saves a document with <tt>batch=ok</tt> query param.
+     *
      * @param object The object to save.
      */
     public void batch(Object object) {
@@ -243,10 +258,12 @@ public abstract class CouchDatabaseBase {
     }
 
     /**
-     * Updates an object in the database, the object must have the correct <code>_id</code> and <code>_rev</code> values.
+     * Updates an object in the database, the object must have the correct <code>_id</code> and
+     * <code>_rev</code> values.
+     *
      * @param object The object to update
-     * @throws DocumentConflictException If a conflict is detected during the update.
      * @return {@link Response}
+     * @throws DocumentConflictException If a conflict is detected during the update.
      */
     public Response update(Object object) {
         return client.put(getDBUri(), object, false);
@@ -255,9 +272,10 @@ public abstract class CouchDatabaseBase {
     /**
      * Removes a document from the database.
      * <p>The object must have the correct <code>_id</code> and <code>_rev</code> values.
+     *
      * @param object The document to remove as object.
-     * @throws NoDocumentException If the document is not found in the database.
      * @return {@link Response}
+     * @throws NoDocumentException If the document is not found in the database.
      */
     public Response remove(Object object) {
         assertNotEmpty(object, "object");
@@ -268,11 +286,13 @@ public abstract class CouchDatabaseBase {
     }
 
     /**
-     * Removes a document from the database given both a document <code>_id</code> and <code>_rev</code> values.
-     * @param id The document _id field.
+     * Removes a document from the database given both a document <code>_id</code> and
+     * <code>_rev</code> values.
+     *
+     * @param id  The document _id field.
      * @param rev The document _rev field.
-     * @throws NoDocumentException If the document is not found in the database.
      * @return {@link Response}
+     * @throws NoDocumentException If the document is not found in the database.
      */
     public Response remove(String id, String rev) {
         assertNotEmpty(id, "id");
@@ -283,7 +303,8 @@ public abstract class CouchDatabaseBase {
 
     /**
      * Performs a Bulk Documents insert request.
-     * @param objects The {@link List} of objects.
+     *
+     * @param objects      The {@link List} of objects.
      * @param allOrNothing Indicates whether the request has <tt>all-or-nothing</tt> semantics.
      * @return {@code List<Response>} Containing the resulted entries.
      */
@@ -293,10 +314,12 @@ public abstract class CouchDatabaseBase {
         try {
             final String allOrNothingVal = allOrNothing ? "\"all_or_nothing\": true, " : "";
             final URI uri = buildUri(getDBUri()).path("_bulk_docs").build();
-            final String json = String.format("{%s%s%s}", allOrNothingVal, "\"docs\": ", getGson().toJson(objects));
+            final String json = String.format("{%s%s%s}", allOrNothingVal, "\"docs\": ", getGson
+                    ().toJson(objects));
             response = client.post(uri, json);
             return getResponseList(response, client.getGson(), Response.class,
-                        new TypeToken<List<Response>>(){}.getType());
+                    new TypeToken<List<Response>>() {
+                    }.getType());
         } finally {
             close(response);
         }
@@ -305,8 +328,9 @@ public abstract class CouchDatabaseBase {
     /**
      * Saves an attachment to a new document with a generated <tt>UUID</tt> as the document id.
      * <p>To retrieve an attachment, see {@link #find(String)}.
-     * @param in The {@link InputStream} holding the binary data.
-     * @param name The attachment name.
+     *
+     * @param in          The {@link InputStream} holding the binary data.
+     * @param name        The attachment name.
      * @param contentType The attachment "Content-Type".
      * @return {@link Response}
      */
@@ -322,20 +346,25 @@ public abstract class CouchDatabaseBase {
      * Saves an attachment to an existing document given both a document id
      * and revision, or save to a new document given only the id, and rev as {@code null}.
      * <p>To retrieve an attachment, see {@link #find(String)}.
-     * @param in The {@link InputStream} holding the binary data.
-     * @param name The attachment name.
+     *
+     * @param in          The {@link InputStream} holding the binary data.
+     * @param name        The attachment name.
      * @param contentType The attachment "Content-Type".
-     * @param docId The document id to save the attachment under, or {@code null} to save under a new document.
-     * @param docRev The document revision to save the attachment under, or {@code null} when saving to a new document.
-     * @throws DocumentConflictException
+     * @param docId       The document id to save the attachment under, or {@code null} to save
+     *                    under a new document.
+     * @param docRev      The document revision to save the attachment under, or {@code null}
+     *                    when saving to a new document.
      * @return {@link Response}
+     * @throws DocumentConflictException
      */
-    public Response saveAttachment(InputStream in, String name, String contentType, String docId, String docRev) {
+    public Response saveAttachment(InputStream in, String name, String contentType, String docId,
+                                   String docRev) {
         assertNotEmpty(in, "in");
         assertNotEmpty(name, "name");
         assertNotEmpty(contentType, "ContentType");
         assertNotEmpty(docId, "docId");
-        final URI uri = buildUri(getDBUri()).path(docId).path("/").path(name).query("rev", docRev).build();
+        final URI uri = buildUri(getDBUri()).path(docId).path("/").path(name).query("rev",
+                docRev).build();
         return client.put(uri, in, contentType);
     }
 
@@ -345,9 +374,11 @@ public abstract class CouchDatabaseBase {
      * String query = "field=foo&value=bar";
      * String output = dbClient.invokeUpdateHandler("designDoc/update1", "docId", query);
      * </pre>
+     *
      * @param updateHandlerUri The Update Handler URI, in the format: <code>designDoc/update1</code>
-     * @param docId The document id to update.
-     * @param query The query string parameters, e.g, <code>field=field1&value=value1</code>
+     * @param docId            The document id to update.
+     * @param query            The query string parameters, e.g,
+     *                         <code>field=field1&value=value1</code>
      * @return The output of the request.
      * @deprecated Use {@link #invokeUpdateHandler(String, String, Params)} instead.
      */
@@ -366,13 +397,14 @@ public abstract class CouchDatabaseBase {
      * Invokes an Update Handler.
      * <pre>
      * Params params = new Params()
-     *	.addParam("field", "foo")
-     *	.addParam("value", "bar");
+     * 	.addParam("field", "foo")
+     * 	.addParam("value", "bar");
      * String output = dbClient.invokeUpdateHandler("designDoc/update1", "docId", params);
      * </pre>
+     *
      * @param updateHandlerUri The Update Handler URI, in the format: <code>designDoc/update1</code>
-     * @param docId The document id to update.
-     * @param params The query parameters as {@link Params}.
+     * @param docId            The document id to update.
+     * @param params           The query parameters as {@link Params}.
      * @return The output of the request.
      */
     public String invokeUpdateHandler(String updateHandlerUri, String docId, Params params) {
@@ -380,11 +412,11 @@ public abstract class CouchDatabaseBase {
         assertNotEmpty(docId, "docId");
         final String[] v = updateHandlerUri.split("/");
         final String path = String.format("_design/%s/_update/%s/", v[0], v[1]);
-        final URI uri = buildUri(getDBUri()).path(path).pathToEncode(docId).query(params).buildEncoded();
+        final URI uri = buildUri(getDBUri()).path(path).pathToEncode(docId).query(params)
+                .buildEncoded();
         final HttpResponse response = client.executeRequest(new HttpPut(uri));
         return streamToString(getStream(response));
     }
-
 
 
     /**
@@ -395,20 +427,15 @@ public abstract class CouchDatabaseBase {
     }
 
 
-
-
     /**
      * @return The database URI.
      */
     public URI getDBUri() {
         return dbURI;
     }
-    
 
 
     // End - Public API
-
-
 
 
     /**

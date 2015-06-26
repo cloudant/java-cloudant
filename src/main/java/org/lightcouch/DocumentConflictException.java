@@ -18,22 +18,23 @@ package org.lightcouch;
 
 /**
  * Thrown when a conflict is detected during save or update.
- * @since 0.0.2
+ *
  * @author Ahmed Yehia
+ * @since 0.0.2
  */
 public class DocumentConflictException extends CouchDbException {
-	
-	private static final long serialVersionUID = 1L;
 
-	public DocumentConflictException(String message) {
-		super(message);
-	}
-	
-	public DocumentConflictException(Throwable cause) {
-		super(cause);
-	}
+    private static final long serialVersionUID = 1L;
 
-	public DocumentConflictException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public DocumentConflictException(String message) {
+        super(message);
+    }
+
+    public DocumentConflictException(Throwable cause) {
+        super(cause);
+    }
+
+    public DocumentConflictException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

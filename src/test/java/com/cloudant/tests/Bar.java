@@ -3,28 +3,27 @@ package com.cloudant.tests;
 import com.cloudant.client.api.model.Document;
 
 
-
 public class Bar extends Document {
-	private String bar;
-	
-	public Bar() {
-		
-	}
-	
-	public Bar(String id) {
-		this.setId(id);
-	}
+    private String bar;
 
-	public String getBar() {
-		return bar;
-	}
+    public Bar() {
 
-	public void setBar(String bar) {
-		this.bar = bar;
-	}
+    }
 
-	@Override
-	public String toString() {
-		return "Bar [bar=" + bar + "]";
-	}
+    public Bar(String id) {
+        this.setId(id);
+    }
+
+    public String getBar() {
+        return bar;
+    }
+
+    public void setBar(String bar) {
+        this.bar = bar;
+    }
+
+    @Override
+    public String toString() {
+        return "Bar [bar=" + bar + "]";
+    }
 }

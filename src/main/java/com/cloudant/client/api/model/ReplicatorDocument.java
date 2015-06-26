@@ -1,406 +1,409 @@
 package com.cloudant.client.api.model;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import com.google.gson.JsonObject;
 
 import org.lightcouch.Attachment;
 import org.lightcouch.Replicator;
 
-import com.google.gson.JsonObject;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 /**
  * Represents a replication document in the <tt>_replicator</tt> database.
+ *
+ * @author Ganesh K Choudhary
  * @see Replicator
  * @since 0.0.1
- * @author Ganesh K Choudhary
- * 
  */
 public class ReplicatorDocument {
-	private org.lightcouch.ReplicatorDocument replicatorDocument ;
+    private org.lightcouch.ReplicatorDocument replicatorDocument;
 
-	
-	public ReplicatorDocument(){
-		replicatorDocument = new org.lightcouch.ReplicatorDocument();
-	}
-	
-	public ReplicatorDocument(org.lightcouch.ReplicatorDocument replicatorDocument){
-		this.replicatorDocument = replicatorDocument ;
-	}
-	
-	
-	/**
-	 * @return
-	 */
-	public String getId() {
-		return replicatorDocument.getId();
-	}
 
-	/**
-	 * @return
-	 */
-	public String getRevision() {
-		return replicatorDocument.getRevision();
-	}
+    public ReplicatorDocument() {
+        replicatorDocument = new org.lightcouch.ReplicatorDocument();
+    }
 
-	/**
-	 * @return
-	 */
-	public Map<String, com.cloudant.client.api.model.Attachment> getAttachments() {
-		Map<String, Attachment> couchDbAttachments = replicatorDocument.getAttachments();
-		Map<String, com.cloudant.client.api.model.Attachment> attachments = new HashMap<String, com.cloudant.client.api.model.Attachment>();
-		Iterator<String> iterator = couchDbAttachments.keySet().iterator();
-		while (iterator.hasNext()) {
-			String key = (String) iterator.next();
-			Attachment couchDbAttachment = couchDbAttachments.get(key);
-			com.cloudant.client.api.model.Attachment attachment = new com.cloudant.client.api.model.Attachment(couchDbAttachment);
-			attachments.put(key, attachment);
-			
-		}
-		return attachments;
-	}
+    public ReplicatorDocument(org.lightcouch.ReplicatorDocument replicatorDocument) {
+        this.replicatorDocument = replicatorDocument;
+    }
 
-	/**
-	 * @param id
-	 */
-	public void setId(String id) {
-		replicatorDocument.setId(id);
-	}
 
-	/**
-	 * @param revision
-	 */
-	public void setRevision(String revision) {
-		replicatorDocument.setRevision(revision);
-	}
+    /**
+     * @return
+     */
+    public String getId() {
+        return replicatorDocument.getId();
+    }
 
-	/**
-	 * @param attachments
-	 */
-	public void setAttachments(Map<String, com.cloudant.client.api.model.Attachment> attachments) {
-		Map<String, Attachment> lightCouchAttachments = new HashMap<String,Attachment>();
-		Iterator<String> iterator = attachments.keySet().iterator();
-		while (iterator.hasNext()) {
-			String key = (String) iterator.next();
-			com.cloudant.client.api.model.Attachment attachment = attachments.get(key);
-			Attachment lightCouchAttachment = attachment.getAttachement();
-			lightCouchAttachments.put(key, lightCouchAttachment);
-		}
-		replicatorDocument.setAttachments(lightCouchAttachments);
-	}
+    /**
+     * @return
+     */
+    public String getRevision() {
+        return replicatorDocument.getRevision();
+    }
 
-	/**
-	 * @param name
-	 * @param attachment
-	 */
-	public void addAttachment(String name, com.cloudant.client.api.model.Attachment attachment) {
-		replicatorDocument.addAttachment(name, attachment.getAttachement());
-	}
+    /**
+     * @return
+     */
+    public Map<String, com.cloudant.client.api.model.Attachment> getAttachments() {
+        Map<String, Attachment> couchDbAttachments = replicatorDocument.getAttachments();
+        Map<String, com.cloudant.client.api.model.Attachment> attachments = new HashMap<String,
+                com.cloudant.client.api.model.Attachment>();
+        Iterator<String> iterator = couchDbAttachments.keySet().iterator();
+        while (iterator.hasNext()) {
+            String key = (String) iterator.next();
+            Attachment couchDbAttachment = couchDbAttachments.get(key);
+            com.cloudant.client.api.model.Attachment attachment = new com.cloudant.client.api
+                    .model.Attachment(couchDbAttachment);
+            attachments.put(key, attachment);
 
-	/**
-	 * @return
-	 */
-	public String getSource() {
-		return replicatorDocument.getSource();
-	}
+        }
+        return attachments;
+    }
 
-	/**
-	 * @return
-	 */
-	public String getTarget() {
-		return replicatorDocument.getTarget();
-	}
+    /**
+     * @param id
+     */
+    public void setId(String id) {
+        replicatorDocument.setId(id);
+    }
 
-	/**
-	 * @return
-	 */
-	public Boolean getContinuous() {
-		return replicatorDocument.getContinuous();
-	}
+    /**
+     * @param revision
+     */
+    public void setRevision(String revision) {
+        replicatorDocument.setRevision(revision);
+    }
 
-	/**
-	 * @return
-	 */
-	public String getFilter() {
-		return replicatorDocument.getFilter();
-	}
+    /**
+     * @param attachments
+     */
+    public void setAttachments(Map<String, com.cloudant.client.api.model.Attachment> attachments) {
+        Map<String, Attachment> lightCouchAttachments = new HashMap<String, Attachment>();
+        Iterator<String> iterator = attachments.keySet().iterator();
+        while (iterator.hasNext()) {
+            String key = (String) iterator.next();
+            com.cloudant.client.api.model.Attachment attachment = attachments.get(key);
+            Attachment lightCouchAttachment = attachment.getAttachement();
+            lightCouchAttachments.put(key, lightCouchAttachment);
+        }
+        replicatorDocument.setAttachments(lightCouchAttachments);
+    }
 
-	/**
-	 * @return
-	 */
-	public JsonObject getQueryParams() {
-		return replicatorDocument.getQueryParams();
-	}
+    /**
+     * @param name
+     * @param attachment
+     */
+    public void addAttachment(String name, com.cloudant.client.api.model.Attachment attachment) {
+        replicatorDocument.addAttachment(name, attachment.getAttachement());
+    }
 
-	/**
-	 * @return
-	 */
-	public String[] getDocIds() {
-		return replicatorDocument.getDocIds();
-	}
+    /**
+     * @return
+     */
+    public String getSource() {
+        return replicatorDocument.getSource();
+    }
 
-	/**
-	 * @return
-	 */
-	public String getProxy() {
-		return replicatorDocument.getProxy();
-	}
+    /**
+     * @return
+     */
+    public String getTarget() {
+        return replicatorDocument.getTarget();
+    }
 
-	/**
-	 * @return
-	 */
-	public Boolean getCreateTarget() {
-		return replicatorDocument.getCreateTarget();
-	}
+    /**
+     * @return
+     */
+    public Boolean getContinuous() {
+        return replicatorDocument.getContinuous();
+    }
 
-	/**
-	 * @return
-	 */
-	public String getReplicationId() {
-		return replicatorDocument.getReplicationId();
-	}
+    /**
+     * @return
+     */
+    public String getFilter() {
+        return replicatorDocument.getFilter();
+    }
 
-	/**
-	 * @return
-	 */
-	public String getReplicationState() {
-		return replicatorDocument.getReplicationState();
-	}
+    /**
+     * @return
+     */
+    public JsonObject getQueryParams() {
+        return replicatorDocument.getQueryParams();
+    }
 
-	/**
-	 * @return
-	 */
-	public String getReplicationStateTime() {
-		return replicatorDocument.getReplicationStateTime();
-	}
+    /**
+     * @return
+     */
+    public String[] getDocIds() {
+        return replicatorDocument.getDocIds();
+    }
 
-	/**
-	 * @return
-	 */
-	public UserCtx getUserCtx() {
-		org.lightcouch.ReplicatorDocument.UserCtx couchDbUserCtx = replicatorDocument.getUserCtx();
-		UserCtx userCtx = new UserCtx(couchDbUserCtx);
-		return userCtx ;
-	}
+    /**
+     * @return
+     */
+    public String getProxy() {
+        return replicatorDocument.getProxy();
+    }
 
-	/**
-	 * @return
-	 */
-	public Integer getWorkerProcesses() {
-		return replicatorDocument.getWorkerProcesses();
-	}
+    /**
+     * @return
+     */
+    public Boolean getCreateTarget() {
+        return replicatorDocument.getCreateTarget();
+    }
 
-	/**
-	 * @return
-	 */
-	public Integer getWorkerBatchSize() {
-		return replicatorDocument.getWorkerBatchSize();
-	}
+    /**
+     * @return
+     */
+    public String getReplicationId() {
+        return replicatorDocument.getReplicationId();
+    }
 
-	/**
-	 * @return
-	 */
-	public Integer getHttpConnections() {
-		return replicatorDocument.getHttpConnections();
-	}
+    /**
+     * @return
+     */
+    public String getReplicationState() {
+        return replicatorDocument.getReplicationState();
+    }
 
-	/**
-	 * @return
-	 */
-	public Long getConnectionTimeout() {
-		return replicatorDocument.getConnectionTimeout();
-	}
+    /**
+     * @return
+     */
+    public String getReplicationStateTime() {
+        return replicatorDocument.getReplicationStateTime();
+    }
 
-	/**
-	 * @return
-	 */
-	public Integer getRetriesPerRequest() {
-		return replicatorDocument.getRetriesPerRequest();
-	}
+    /**
+     * @return
+     */
+    public UserCtx getUserCtx() {
+        org.lightcouch.ReplicatorDocument.UserCtx couchDbUserCtx = replicatorDocument.getUserCtx();
+        UserCtx userCtx = new UserCtx(couchDbUserCtx);
+        return userCtx;
+    }
 
-	/**
-	 * @param source
-	 */
-	public void setSource(String source) {
-		replicatorDocument.setSource(source);
-	}
+    /**
+     * @return
+     */
+    public Integer getWorkerProcesses() {
+        return replicatorDocument.getWorkerProcesses();
+    }
 
-	/**
-	 * @param target
-	 */
-	public void setTarget(String target) {
-		replicatorDocument.setTarget(target);
-	}
+    /**
+     * @return
+     */
+    public Integer getWorkerBatchSize() {
+        return replicatorDocument.getWorkerBatchSize();
+    }
 
-	/**
-	 * @param continuous
-	 */
-	public void setContinuous(Boolean continuous) {
-		replicatorDocument.setContinuous(continuous);
-	}
+    /**
+     * @return
+     */
+    public Integer getHttpConnections() {
+        return replicatorDocument.getHttpConnections();
+    }
 
-	/**
-	 * @param filter
-	 */
-	public void setFilter(String filter) {
-		replicatorDocument.setFilter(filter);
-	}
+    /**
+     * @return
+     */
+    public Long getConnectionTimeout() {
+        return replicatorDocument.getConnectionTimeout();
+    }
 
-	/**
-	 * @param queryParams
-	 */
-	public void setQueryParams(JsonObject queryParams) {
-		replicatorDocument.setQueryParams(queryParams);
-	}
+    /**
+     * @return
+     */
+    public Integer getRetriesPerRequest() {
+        return replicatorDocument.getRetriesPerRequest();
+    }
 
-	/**
-	 * @param docIds
-	 */
-	public void setDocIds(String[] docIds) {
-		replicatorDocument.setDocIds(docIds);
-	}
+    /**
+     * @param source
+     */
+    public void setSource(String source) {
+        replicatorDocument.setSource(source);
+    }
 
-	/**
-	 * @param proxy
-	 */
-	public void setProxy(String proxy) {
-		replicatorDocument.setProxy(proxy);
-	}
+    /**
+     * @param target
+     */
+    public void setTarget(String target) {
+        replicatorDocument.setTarget(target);
+    }
 
-	/**
-	 * @param createTarget
-	 */
-	public void setCreateTarget(Boolean createTarget) {
-		replicatorDocument.setCreateTarget(createTarget);
-	}
+    /**
+     * @param continuous
+     */
+    public void setContinuous(Boolean continuous) {
+        replicatorDocument.setContinuous(continuous);
+    }
 
-	/**
-	 * @param replicationId
-	 */
-	public void setReplicationId(String replicationId) {
-		replicatorDocument.setReplicationId(replicationId);
-	}
+    /**
+     * @param filter
+     */
+    public void setFilter(String filter) {
+        replicatorDocument.setFilter(filter);
+    }
 
-	/**
-	 * @param replicationState
-	 */
-	public void setReplicationState(String replicationState) {
-		replicatorDocument.setReplicationState(replicationState);
-	}
+    /**
+     * @param queryParams
+     */
+    public void setQueryParams(JsonObject queryParams) {
+        replicatorDocument.setQueryParams(queryParams);
+    }
 
-	/**
-	 * @param replicationStateTime
-	 */
-	public void setReplicationStateTime(String replicationStateTime) {
-		replicatorDocument.setReplicationStateTime(replicationStateTime);
-	}
+    /**
+     * @param docIds
+     */
+    public void setDocIds(String[] docIds) {
+        replicatorDocument.setDocIds(docIds);
+    }
 
-	/**
-	 * @param userCtx
-	 */
-	public void setUserCtx(UserCtx userCtx) {
-		replicatorDocument.setUserCtx(userCtx.getLightCouchUserCtx());
-	}
+    /**
+     * @param proxy
+     */
+    public void setProxy(String proxy) {
+        replicatorDocument.setProxy(proxy);
+    }
 
-	/**
-	 * @param workerProcesses
-	 */
-	public void setWorkerProcesses(Integer workerProcesses) {
-		replicatorDocument.setWorkerProcesses(workerProcesses);
-	}
+    /**
+     * @param createTarget
+     */
+    public void setCreateTarget(Boolean createTarget) {
+        replicatorDocument.setCreateTarget(createTarget);
+    }
 
-	/**
-	 * @param workerBatchSize
-	 */
-	public void setWorkerBatchSize(Integer workerBatchSize) {
-		replicatorDocument.setWorkerBatchSize(workerBatchSize);
-	}
+    /**
+     * @param replicationId
+     */
+    public void setReplicationId(String replicationId) {
+        replicatorDocument.setReplicationId(replicationId);
+    }
 
-	/**
-	 * @param httpConnections
-	 */
-	public void setHttpConnections(Integer httpConnections) {
-		replicatorDocument.setHttpConnections(httpConnections);
-	}
+    /**
+     * @param replicationState
+     */
+    public void setReplicationState(String replicationState) {
+        replicatorDocument.setReplicationState(replicationState);
+    }
 
-	/**
-	 * @param connectionTimeout
-	 */
-	public void setConnectionTimeout(Long connectionTimeout) {
-		replicatorDocument.setConnectionTimeout(connectionTimeout);
-	}
+    /**
+     * @param replicationStateTime
+     */
+    public void setReplicationStateTime(String replicationStateTime) {
+        replicatorDocument.setReplicationStateTime(replicationStateTime);
+    }
 
-	/**
-	 * @param retriesPerRequest
-	 */
-	public void setRetriesPerRequest(Integer retriesPerRequest) {
-		replicatorDocument.setRetriesPerRequest(retriesPerRequest);
-	}
+    /**
+     * @param userCtx
+     */
+    public void setUserCtx(UserCtx userCtx) {
+        replicatorDocument.setUserCtx(userCtx.getLightCouchUserCtx());
+    }
 
-	/**
-	 * @return
-	 */
-	public Integer getSinceSeq() {
-		return replicatorDocument.getSinceSeq();
-	}
+    /**
+     * @param workerProcesses
+     */
+    public void setWorkerProcesses(Integer workerProcesses) {
+        replicatorDocument.setWorkerProcesses(workerProcesses);
+    }
 
-	/**
-	 * @param sinceSeq
-	 */
-	public void setSinceSeq(Integer sinceSeq) {
-		replicatorDocument.setSinceSeq(sinceSeq);
-	}
+    /**
+     * @param workerBatchSize
+     */
+    public void setWorkerBatchSize(Integer workerBatchSize) {
+        replicatorDocument.setWorkerBatchSize(workerBatchSize);
+    }
 
-	
-	public class UserCtx {
-		private org.lightcouch.ReplicatorDocument.UserCtx userCtx ;
+    /**
+     * @param httpConnections
+     */
+    public void setHttpConnections(Integer httpConnections) {
+        replicatorDocument.setHttpConnections(httpConnections);
+    }
 
-		public UserCtx(){
-			this.userCtx = replicatorDocument.new UserCtx();
-		}
-		
-		UserCtx(org.lightcouch.ReplicatorDocument.UserCtx userCtx){
-			this.userCtx = userCtx ;
-		}
-		
-		/**
-		 * @return the userCtx
-		 */
-		public UserCtx getUserCtx() {
-			return this;
-		}
+    /**
+     * @param connectionTimeout
+     */
+    public void setConnectionTimeout(Long connectionTimeout) {
+        replicatorDocument.setConnectionTimeout(connectionTimeout);
+    }
 
-		/**
-		 * @return
-		 */
-		public String getName() {
-			return userCtx.getName();
-		}
+    /**
+     * @param retriesPerRequest
+     */
+    public void setRetriesPerRequest(Integer retriesPerRequest) {
+        replicatorDocument.setRetriesPerRequest(retriesPerRequest);
+    }
 
-		/**
-		 * @return
-		 */
-		public String[] getRoles() {
-			return userCtx.getRoles();
-		}
+    /**
+     * @return
+     */
+    public Integer getSinceSeq() {
+        return replicatorDocument.getSinceSeq();
+    }
 
-		/**
-		 * @param name
-		 */
-		public void setName(String name) {
-			userCtx.setName(name);
-		}
+    /**
+     * @param sinceSeq
+     */
+    public void setSinceSeq(Integer sinceSeq) {
+        replicatorDocument.setSinceSeq(sinceSeq);
+    }
 
-		/**
-		 * @param roles
-		 */
-		public void setRoles(String[] roles) {
-			userCtx.setRoles(roles);
-		}
-		
-		private org.lightcouch.ReplicatorDocument.UserCtx getLightCouchUserCtx() {
-			return userCtx ;
 
-		}
-	}
-	
+    public class UserCtx {
+        private org.lightcouch.ReplicatorDocument.UserCtx userCtx;
+
+        public UserCtx() {
+            this.userCtx = replicatorDocument.new UserCtx();
+        }
+
+        UserCtx(org.lightcouch.ReplicatorDocument.UserCtx userCtx) {
+            this.userCtx = userCtx;
+        }
+
+        /**
+         * @return the userCtx
+         */
+        public UserCtx getUserCtx() {
+            return this;
+        }
+
+        /**
+         * @return
+         */
+        public String getName() {
+            return userCtx.getName();
+        }
+
+        /**
+         * @return
+         */
+        public String[] getRoles() {
+            return userCtx.getRoles();
+        }
+
+        /**
+         * @param name
+         */
+        public void setName(String name) {
+            userCtx.setName(name);
+        }
+
+        /**
+         * @param roles
+         */
+        public void setRoles(String[] roles) {
+            userCtx.setRoles(roles);
+        }
+
+        private org.lightcouch.ReplicatorDocument.UserCtx getLightCouchUserCtx() {
+            return userCtx;
+
+        }
+    }
+
 }

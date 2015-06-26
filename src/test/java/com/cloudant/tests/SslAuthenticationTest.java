@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.model.ConnectOptions;
 import com.cloudant.test.main.RequiresCloudantService;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
@@ -15,18 +16,19 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.lightcouch.CouchDbException;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLHandshakeException;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.SocketException;
 import java.security.KeyStore;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
 
 
 public class SslAuthenticationTest {
@@ -50,11 +52,12 @@ public class SslAuthenticationTest {
     /**
      * A very simple HTTPS Server that runs on the localhost and has a simple certificate that won't
      * work for hostname verification.
-     * <p>
+     * <p/>
      * A suitable simple certificate can be generated using the command:<br />
-     *    <code>
-     *        keytool -genkey -alias alias -keypass password -keystore SslAuthenticationTest.keystore -storepass password
-     *    </code>
+     * <code>
+     * keytool -genkey -alias alias -keypass password -keystore SslAuthenticationTest.keystore
+     * -storepass password
+     * </code>
      */
     private static class HttpsServer implements Runnable {
 
@@ -65,8 +68,10 @@ public class SslAuthenticationTest {
             while (!finished) {
                 try {
                     KeyStore keystore = KeyStore.getInstance("JKS");
-                    keystore.load(new FileInputStream(KEYSTORE_FILE), KEYSTORE_PASSWORD.toCharArray());
-                    KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+                    keystore.load(new FileInputStream(KEYSTORE_FILE), KEYSTORE_PASSWORD
+                            .toCharArray());
+                    KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory
+                            .getDefaultAlgorithm());
                     kmf.init(keystore, KEY_PASSWORD.toCharArray());
                     SSLContext sslContext = SSLContext.getInstance("TLS");
                     sslContext.init(kmf.getKeyManagers(), null, null);
@@ -90,7 +95,8 @@ public class SslAuthenticationTest {
                         log.debug("Server accepted connection");
 
                         // Just send a simple success response.
-                        BufferedWriter w = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                        BufferedWriter w = new BufferedWriter(new OutputStreamWriter(socket
+                                .getOutputStream()));
                         w.write("HTTP/1.0 200 OK");
                         w.flush();
                         w.close();
@@ -147,7 +153,9 @@ public class SslAuthenticationTest {
         }
     }
 
-    /** Wait until the local HTTPS server is ready to accept connections. */
+    /**
+     * Wait until the local HTTPS server is ready to accept connections.
+     */
     private void waitForLocalServer() {
         synchronized (lock) {
             try {
@@ -163,12 +171,14 @@ public class SslAuthenticationTest {
     /**
      * Check the exception chain is as expected when the SSL host name authentication fails
      * to be sure we got a CouchDbException for the reason we expect.
+     *
      * @param e the exception.
      */
     private static void validateClientAuthenticationException(CouchDbException e) {
         assertNotNull("Expected CouchDbException but got null", e);
         Throwable t = e.getCause();
-        assertTrue("Expected SSLHandshakeException caused by client certificate check but got " + t.getClass(),
+        assertTrue("Expected SSLHandshakeException caused by client certificate check but got " +
+                        t.getClass(),
                 t instanceof SSLHandshakeException);
     }
 

@@ -22,63 +22,64 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
-import java.util.List;
+import com.cloudant.client.api.CloudantClient;
+import com.cloudant.client.api.Database;
+import com.cloudant.client.api.model.DbInfo;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
-import com.cloudant.client.api.model.DbInfo;
+
+import java.util.List;
 
 public class DBServerTest {
 
-	private static final Log log = LogFactory.getLog(DBServerTest.class);
-	private static Database db;
-	private CloudantClient account;
-	
-
-	@Before
-	public  void setUp() {
-		account = CloudantClientHelper.getClient();
-		db = account.database("lightcouch-db-test", true);
-	}
-
-	@After
-	public void tearDown(){
-		account.deleteDB("lightcouch-db-test");
-		account.shutdown();
-	}
+    private static final Log log = LogFactory.getLog(DBServerTest.class);
+    private static Database db;
+    private CloudantClient account;
 
 
-	@Test
-	public void dbInfo() {
-		DbInfo dbInfo = db.info();
-		assertNotNull(dbInfo);
-	}
+    @Before
+    public void setUp() {
+        account = CloudantClientHelper.getClient();
+        db = account.database("lightcouch-db-test", true);
+    }
 
-	@Test
-	public void serverVersion() {
-		String version = account.serverVersion();
-		assertNotNull(version);
-	}
+    @After
+    public void tearDown() {
+        account.deleteDB("lightcouch-db-test");
+        account.shutdown();
+    }
 
-	@Test
-	public void allDBs() {
-		List<String> allDbs = account.getAllDbs();
-		assertThat(allDbs.size(), is(not(0)));
-	}
 
-	@Test
-	public void ensureFullCommit() {
-		db.ensureFullCommit();
-	}
+    @Test
+    public void dbInfo() {
+        DbInfo dbInfo = db.info();
+        assertNotNull(dbInfo);
+    }
 
-	@Test
-	public void uuids() {
-		List<String> uuids = account.uuids(10);
-		assertThat(uuids.size(), is(10));
-	}
+    @Test
+    public void serverVersion() {
+        String version = account.serverVersion();
+        assertNotNull(version);
+    }
+
+    @Test
+    public void allDBs() {
+        List<String> allDbs = account.getAllDbs();
+        assertThat(allDbs.size(), is(not(0)));
+    }
+
+    @Test
+    public void ensureFullCommit() {
+        db.ensureFullCommit();
+    }
+
+    @Test
+    public void uuids() {
+        List<String> uuids = account.uuids(10);
+        assertThat(uuids.size(), is(10));
+    }
 }

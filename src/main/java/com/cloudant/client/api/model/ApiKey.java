@@ -2,43 +2,46 @@ package com.cloudant.client.api.model;
 
 /**
  * Encapsulates a ApiKey response from Cloudant
- * @since 0.0.1
- * @author Mario Briggs
  *
+ * @author Mario Briggs
+ * @since 0.0.1
  */
 public class ApiKey {
 
-	//@SerializedName("db_name")
-	private String key;
-	//@SerializedName("doc_count")
-	private String password;
-	
-
-	/**
-	 * Return the Apikey
-	 * @return String
-	 */
-	public String getKey() {
-		return key;
-	}
+    //@SerializedName("db_name")
+    private String key;
+    //@SerializedName("doc_count")
+    private String password;
 
 
-	/**
-	 * Return the password associated with the ApiKey
-	 * @return String
-	 */
-	public String getPassword() {
-		return password;
-	}
+    /**
+     * Return the Apikey
+     *
+     * @return String
+     */
+    public String getKey() {
+        return key;
+    }
 
-	/** (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "key:" + key + " password:" + password;
-	}
-	
-	
-	
+
+    /**
+     * Return the password associated with the ApiKey
+     *
+     * @return String
+     */
+    public String getPassword() {
+        return password;
+    }
+
+    /**
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "key:" + key + " password:" + password;
+    }
+
+
 }

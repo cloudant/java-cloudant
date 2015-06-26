@@ -16,22 +16,6 @@
 
 package org.lightcouch;
 
-import java.io.IOException;
-import java.net.Socket;
-import java.net.URLDecoder;
-import java.net.UnknownHostException;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -64,184 +48,212 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
 
+import java.io.IOException;
+import java.net.Socket;
+import java.net.URLDecoder;
+import java.net.UnknownHostException;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
 /**
  * Presents a <i>client</i> to CouchDB database server; targeted to run on Android platform.
+ *
+ * @author Ahmed Yehia
  * @see CouchDbClient
  * @since 0.1.0
- * @author Ahmed Yehia
  */
 @SuppressWarnings("deprecation")
 public class CouchDbClientAndroid extends CouchDbClientBase {
-	
-	/**
-	 * @see CouchDbClient#CouchDbClient()
-	 */
-	public CouchDbClientAndroid() {
-		super();
-	}
-	
-	/**
-	 * @see CouchDbClient#CouchDbClient(String)
-	 */
-	public CouchDbClientAndroid(String configFileName) {
-		super(new CouchDbConfig(configFileName));
-	}
-	
-	/**
-	 *@see CouchDbClient#CouchDbClient(String, boolean, String, String, int, String, String)
-	 */
-	public CouchDbClientAndroid(String protocol, String host, int port, String username, String password) { 		
-		super(new CouchDbConfig(new CouchDbProperties( protocol, host, port, username, password)));
-	}
-	
-	/**
-	 * @see CouchDbClient#CouchDbClient(CouchDbProperties)
-	 */
-	public CouchDbClientAndroid(CouchDbProperties properties) {
-		super(new CouchDbConfig(properties));
-	}
-	
-	/**
-	 * @return {@link DefaultHttpClient} instance.
-	 */
-	@Override
-	HttpClient createHttpClient(CouchDbProperties props) {
-		DefaultHttpClient httpclient = null;
-		try {
-			final SchemeRegistry schemeRegistry = createRegistry(props);
-			// Http params
-			final HttpParams params = new BasicHttpParams();
-			params.setParameter(CoreProtocolPNames.HTTP_CONTENT_CHARSET, "UTF-8");
-			params.setParameter(CoreConnectionPNames.SO_TIMEOUT, props.getSocketTimeout());
-			params.setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, props.getConnectionTimeout());
-			final ThreadSafeClientConnManager ccm = new ThreadSafeClientConnManager(params,schemeRegistry);
-			httpclient = new DefaultHttpClient(ccm, params);
-			if(props.getProxyHost() != null) {
-				HttpHost proxy = new HttpHost(props.getProxyHost(), props.getProxyPort());
-				httpclient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
-			}
-			// basic authentication
-			if(props.getUsername() != null && props.getPassword() != null) {
-				httpclient.getCredentialsProvider().setCredentials(
-						new AuthScope(props.getHost(), props.getPort()),
-						new UsernamePasswordCredentials(props.getUsername(), props.getPassword()));
-				props.clearPassword();
-			}
-			registerInterceptors(httpclient);
-		} catch (Exception e) {
-			throw new IllegalStateException("Error Creating HTTP client. ", e);
-		}
-		return httpclient;
-	}
-	
-	@Override
-	HttpContext createContext() {	
-		HttpContext context = new BasicHttpContext();
-		BasicScheme basicAuth = new BasicScheme();
-		context.setAttribute("preemptive-auth", basicAuth);
-		((AbstractHttpClient) httpClient).addRequestInterceptor(new PreemptiveAuthInterceptor(), 0);
-		return context;
-	}
 
-	@Override
-	public void shutdown() {
-		this.httpClient.getConnectionManager().shutdown();
-	}
+    /**
+     * @see CouchDbClient#CouchDbClient()
+     */
+    public CouchDbClientAndroid() {
+        super();
+    }
 
-	private SchemeRegistry createRegistry(CouchDbProperties properties) throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException, CertificateException, IOException, UnrecoverableKeyException {
-		SchemeRegistry registry = new SchemeRegistry();
-		if("https".equals(properties.getProtocol())) {
-			KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-	        trustStore.load(null, null);
-	        SSLSocketFactory sf = new MySSLSocketFactory(trustStore);
-	        sf.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-			registry.register(new Scheme(properties.getProtocol(), sf, properties.getPort()));
-		} else {
-			registry.register(new Scheme(properties.getProtocol(), PlainSocketFactory.getSocketFactory(), properties.getPort()));
-		}
-		return registry;
-	}
-	
-	private void registerInterceptors(DefaultHttpClient httpclient) {
-		httpclient.addRequestInterceptor(new HttpRequestInterceptor() {
-		    public void process(
-		            final HttpRequest request,
-		            final HttpContext context) throws IOException {
-		        if (log.isInfoEnabled()) {
-					RequestLine req = request.getRequestLine();
-					log.info("> " + req.getMethod() + URLDecoder.decode(req.getUri(), "UTF-8"));
-		        }
-		    }
-		});
-		httpclient.addResponseInterceptor(new HttpResponseInterceptor() {
-		    public void process(
-		            final HttpResponse response,
-		            final HttpContext context) throws IOException {
-		    	if(log.isInfoEnabled()) {
-					log.info("< Status: " + response.getStatusLine().getStatusCode());
-		    	}
-		    	validate(response);
-		    }
-		});
-	}
-	
-	private static class MySSLSocketFactory extends SSLSocketFactory {
-		SSLContext sslContext = SSLContext.getInstance("TLS");
+    /**
+     * @see CouchDbClient#CouchDbClient(String)
+     */
+    public CouchDbClientAndroid(String configFileName) {
+        super(new CouchDbConfig(configFileName));
+    }
 
-		public MySSLSocketFactory(KeyStore truststore) throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException, UnrecoverableKeyException {
-			super(truststore);
+    /**
+     * @see CouchDbClient#CouchDbClient(String, boolean, String, String, int, String, String)
+     */
+    public CouchDbClientAndroid(String protocol, String host, int port, String username, String
+            password) {
+        super(new CouchDbConfig(new CouchDbProperties(protocol, host, port, username, password)));
+    }
 
-			TrustManager tm = new X509TrustManager() {
-				public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-				}
+    /**
+     * @see CouchDbClient#CouchDbClient(CouchDbProperties)
+     */
+    public CouchDbClientAndroid(CouchDbProperties properties) {
+        super(new CouchDbConfig(properties));
+    }
 
-				public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-				}
+    /**
+     * @return {@link DefaultHttpClient} instance.
+     */
+    @Override
+    HttpClient createHttpClient(CouchDbProperties props) {
+        DefaultHttpClient httpclient = null;
+        try {
+            final SchemeRegistry schemeRegistry = createRegistry(props);
+            // Http params
+            final HttpParams params = new BasicHttpParams();
+            params.setParameter(CoreProtocolPNames.HTTP_CONTENT_CHARSET, "UTF-8");
+            params.setParameter(CoreConnectionPNames.SO_TIMEOUT, props.getSocketTimeout());
+            params.setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, props
+                    .getConnectionTimeout());
+            final ThreadSafeClientConnManager ccm = new ThreadSafeClientConnManager(params,
+                    schemeRegistry);
+            httpclient = new DefaultHttpClient(ccm, params);
+            if (props.getProxyHost() != null) {
+                HttpHost proxy = new HttpHost(props.getProxyHost(), props.getProxyPort());
+                httpclient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+            }
+            // basic authentication
+            if (props.getUsername() != null && props.getPassword() != null) {
+                httpclient.getCredentialsProvider().setCredentials(
+                        new AuthScope(props.getHost(), props.getPort()),
+                        new UsernamePasswordCredentials(props.getUsername(), props.getPassword()));
+                props.clearPassword();
+            }
+            registerInterceptors(httpclient);
+        } catch (Exception e) {
+            throw new IllegalStateException("Error Creating HTTP client. ", e);
+        }
+        return httpclient;
+    }
 
-				public X509Certificate[] getAcceptedIssuers() {
-					return null;
-				}
-			};
+    @Override
+    HttpContext createContext() {
+        HttpContext context = new BasicHttpContext();
+        BasicScheme basicAuth = new BasicScheme();
+        context.setAttribute("preemptive-auth", basicAuth);
+        ((AbstractHttpClient) httpClient).addRequestInterceptor(new PreemptiveAuthInterceptor(), 0);
+        return context;
+    }
 
-			sslContext.init(null, new TrustManager[] { tm }, null);
-		}
+    @Override
+    public void shutdown() {
+        this.httpClient.getConnectionManager().shutdown();
+    }
 
-		@Override
-		public Socket createSocket(Socket socket, String host, int port, boolean autoClose) throws IOException, UnknownHostException {
-			return sslContext.getSocketFactory().createSocket(socket, host, port, autoClose);
-		}
+    private SchemeRegistry createRegistry(CouchDbProperties properties) throws
+            NoSuchAlgorithmException, KeyManagementException, KeyStoreException,
+            CertificateException, IOException, UnrecoverableKeyException {
+        SchemeRegistry registry = new SchemeRegistry();
+        if ("https".equals(properties.getProtocol())) {
+            KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            trustStore.load(null, null);
+            SSLSocketFactory sf = new MySSLSocketFactory(trustStore);
+            sf.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+            registry.register(new Scheme(properties.getProtocol(), sf, properties.getPort()));
+        } else {
+            registry.register(new Scheme(properties.getProtocol(), PlainSocketFactory
+                    .getSocketFactory(), properties.getPort()));
+        }
+        return registry;
+    }
 
-		@Override
-		public Socket createSocket() throws IOException {
-			return sslContext.getSocketFactory().createSocket();
-		}
-	}
-	
-	private static class PreemptiveAuthInterceptor implements HttpRequestInterceptor {
+    private void registerInterceptors(DefaultHttpClient httpclient) {
+        httpclient.addRequestInterceptor(new HttpRequestInterceptor() {
+            public void process(
+                    final HttpRequest request,
+                    final HttpContext context) throws IOException {
+                if (log.isInfoEnabled()) {
+                    RequestLine req = request.getRequestLine();
+                    log.info("> " + req.getMethod() + URLDecoder.decode(req.getUri(), "UTF-8"));
+                }
+            }
+        });
+        httpclient.addResponseInterceptor(new HttpResponseInterceptor() {
+            public void process(
+                    final HttpResponse response,
+                    final HttpContext context) throws IOException {
+                if (log.isInfoEnabled()) {
+                    log.info("< Status: " + response.getStatusLine().getStatusCode());
+                }
+                validate(response);
+            }
+        });
+    }
 
-	    public void process(final HttpRequest request, final HttpContext context) throws HttpException, IOException {
-	        AuthState authState = (AuthState) context.getAttribute(ClientContext.TARGET_AUTH_STATE);
+    private static class MySSLSocketFactory extends SSLSocketFactory {
+        SSLContext sslContext = SSLContext.getInstance("TLS");
 
-	        // If no auth scheme avaialble yet, try to initialize it preemptively
-	        if (authState.getAuthScheme() == null) {
-	            AuthScheme authScheme = (AuthScheme) context.getAttribute("preemptive-auth");
-	            CredentialsProvider credsProvider = (CredentialsProvider) context.getAttribute(ClientContext.CREDS_PROVIDER);
-	            HttpHost targetHost = (HttpHost) context.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
-	            if (authScheme != null) {
-	            	authState.setAuthScheme(authScheme);
-	                Credentials creds = credsProvider.getCredentials(new AuthScope(targetHost.getHostName(), targetHost.getPort()));
-	                if (creds != null) {
-	                	authState.setCredentials(creds);
-	                }
-	            }
-	        }
+        public MySSLSocketFactory(KeyStore truststore) throws NoSuchAlgorithmException,
+                KeyManagementException, KeyStoreException, UnrecoverableKeyException {
+            super(truststore);
 
-	    }
+            TrustManager tm = new X509TrustManager() {
+                public void checkClientTrusted(X509Certificate[] chain, String authType) throws
+                        CertificateException {
+                }
 
-	}
+                public void checkServerTrusted(X509Certificate[] chain, String authType) throws
+                        CertificateException {
+                }
 
-	@Override
-	CouchDatabaseBase database(String name, boolean create) {
-		return new CouchDatabase(this,name,create);
-	}
+                public X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+            };
+
+            sslContext.init(null, new TrustManager[]{tm}, null);
+        }
+
+        @Override
+        public Socket createSocket(Socket socket, String host, int port, boolean autoClose)
+                throws IOException, UnknownHostException {
+            return sslContext.getSocketFactory().createSocket(socket, host, port, autoClose);
+        }
+
+        @Override
+        public Socket createSocket() throws IOException {
+            return sslContext.getSocketFactory().createSocket();
+        }
+    }
+
+    private static class PreemptiveAuthInterceptor implements HttpRequestInterceptor {
+
+        public void process(final HttpRequest request, final HttpContext context) throws
+                HttpException, IOException {
+            AuthState authState = (AuthState) context.getAttribute(ClientContext.TARGET_AUTH_STATE);
+
+            // If no auth scheme avaialble yet, try to initialize it preemptively
+            if (authState.getAuthScheme() == null) {
+                AuthScheme authScheme = (AuthScheme) context.getAttribute("preemptive-auth");
+                CredentialsProvider credsProvider = (CredentialsProvider) context.getAttribute(ClientContext.CREDS_PROVIDER);
+                HttpHost targetHost = (HttpHost) context.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
+                if (authScheme != null) {
+                    authState.setAuthScheme(authScheme);
+                    Credentials creds = credsProvider.getCredentials(new AuthScope(targetHost.getHostName(), targetHost.getPort()));
+                    if (creds != null) {
+                        authState.setCredentials(creds);
+                    }
+                }
+            }
+
+        }
+
+    }
+
+    @Override
+    CouchDatabaseBase database(String name, boolean create) {
+        return new CouchDatabase(this, name, create);
+    }
 }

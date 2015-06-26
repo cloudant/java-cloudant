@@ -20,70 +20,70 @@ package com.cloudant.tests;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 public class UpdateHandlerTest {
 
-	private static Database db;
-	private CloudantClient account;
-	
+    private static Database db;
+    private CloudantClient account;
 
-	@Before
-	public  void setUp() {
-		account = CloudantClientHelper.getClient();
-		db = account.database("lightcouch-db-test", true);
-		db.syncDesignDocsWithDb();
-	}
 
-	@After
-	public void tearDown(){
-		account.deleteDB("lightcouch-db-test");
-		account.shutdown();
-	}
+    @Before
+    public void setUp() {
+        account = CloudantClientHelper.getClient();
+        db = account.database("lightcouch-db-test", true);
+        db.syncDesignDocsWithDb();
+    }
 
-	@Test
-	public void updateHandler_queryString() {
-		final String oldValue = "foo";
-		final String newValue = "foo bar+plus=equals&ampersand";
-		
-		Response response = db.save(new Foo(null, oldValue));
+    @After
+    public void tearDown() {
+        account.deleteDB("lightcouch-db-test");
+        account.shutdown();
+    }
 
-		Params params = new Params()
-				.addParam("field", "title")
-				.addParam("value", newValue);
-		
-        String output = db.invokeUpdateHandler("example/example_update", response.getId(), params);
-		
-		// retrieve from db to verify
-		Foo foo = db.find(Foo.class, response.getId());
-		
-		assertNotNull(output);
-		assertEquals(foo.getTitle(), newValue);
-	}
-	
-	@Test
-	public void updateHandler_queryParams() {
-		final String oldValue = "foo";
+    @Test
+    public void updateHandler_queryString() {
+        final String oldValue = "foo";
         final String newValue = "foo bar+plus=equals&ampersand";
-		
-		Response response = db.save(new Foo(null, oldValue));
 
-		Params params = new Params()
-					.addParam("field", "title")
-					.addParam("value", newValue);
-		String output = db.invokeUpdateHandler("example/example_update", response.getId(), params);
-		
-		// retrieve from db to verify
-		Foo foo = db.find(Foo.class, response.getId());
-		
-		assertNotNull(output);
-		assertEquals(foo.getTitle(), newValue);
-	}
+        Response response = db.save(new Foo(null, oldValue));
+
+        Params params = new Params()
+                .addParam("field", "title")
+                .addParam("value", newValue);
+
+        String output = db.invokeUpdateHandler("example/example_update", response.getId(), params);
+
+        // retrieve from db to verify
+        Foo foo = db.find(Foo.class, response.getId());
+
+        assertNotNull(output);
+        assertEquals(foo.getTitle(), newValue);
+    }
+
+    @Test
+    public void updateHandler_queryParams() {
+        final String oldValue = "foo";
+        final String newValue = "foo bar+plus=equals&ampersand";
+
+        Response response = db.save(new Foo(null, oldValue));
+
+        Params params = new Params()
+                .addParam("field", "title")
+                .addParam("value", newValue);
+        String output = db.invokeUpdateHandler("example/example_update", response.getId(), params);
+
+        // retrieve from db to verify
+        Foo foo = db.find(Foo.class, response.getId());
+
+        assertNotNull(output);
+        assertEquals(foo.getTitle(), newValue);
+    }
 }

@@ -22,13 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
-import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 import com.cloudant.client.api.Changes;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -38,75 +31,82 @@ import com.cloudant.client.api.model.DbInfo;
 import com.cloudant.client.api.model.Response;
 import com.google.gson.JsonObject;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.List;
+
 public class ChangeNotificationsTest {
-	
-	private static final Log log = LogFactory.getLog(ChangeNotificationsTest.class);
-	private static Database db;
-	private CloudantClient account;
 
-	
+    private static final Log log = LogFactory.getLog(ChangeNotificationsTest.class);
+    private static Database db;
+    private CloudantClient account;
 
-	@Before
-	public  void setUp() {
-		account = CloudantClientHelper.getClient();
-		db = account.database("lightcouch-db-test", true);
-	}
 
-	@After
-	public void tearDown(){
-		account.deleteDB("lightcouch-db-test");
-		account.shutdown();
-	}
+    @Before
+    public void setUp() {
+        account = CloudantClientHelper.getClient();
+        db = account.database("lightcouch-db-test", true);
+    }
 
-	
-	@Test
-	public void changes_normalFeed() {
-		db.save(new Foo()); 
+    @After
+    public void tearDown() {
+        account.deleteDB("lightcouch-db-test");
+        account.shutdown();
+    }
 
-		ChangesResult changes = db.changes()
-				.includeDocs(true)
-				.limit(1)
-				.getChanges();
-		
-		List<ChangesResult.Row> rows = changes.getResults();
-		
-		for (Row row : rows) {
-			List<ChangesResult.Row.Rev> revs = row.getChanges();
-			String docId = row.getId();
-			JsonObject doc = row.getDoc();
-			
-			assertNotNull(revs);
-			assertNotNull(docId);
-			assertNotNull(doc);
-		}
-		
-		assertThat(rows.size(), is(1));
-	}
 
-	@Test
-	public void changes_continuousFeed() {
-		db.save(new Foo()); 
+    @Test
+    public void changes_normalFeed() {
+        db.save(new Foo());
 
-		DbInfo dbInfo = db.info();
-		String since = dbInfo.getUpdateSeq();
+        ChangesResult changes = db.changes()
+                .includeDocs(true)
+                .limit(1)
+                .getChanges();
 
-		Changes changes = db.changes()
-				.includeDocs(true)
-				.since(since)
-				.heartBeat(30000)
-				.continuousChanges();
+        List<ChangesResult.Row> rows = changes.getResults();
 
-		Response response = db.save(new Foo());
+        for (Row row : rows) {
+            List<ChangesResult.Row.Rev> revs = row.getChanges();
+            String docId = row.getId();
+            JsonObject doc = row.getDoc();
 
-		while (changes.hasNext()) {
-			ChangesResult.Row feed = changes.next();
-			final JsonObject feedObject = feed.getDoc();
-			final String docId = feed.getId();
-			
-			assertEquals(response.getId(), docId);
-			assertNotNull(feedObject);
-			
-			changes.stop();
-		}
-	}
+            assertNotNull(revs);
+            assertNotNull(docId);
+            assertNotNull(doc);
+        }
+
+        assertThat(rows.size(), is(1));
+    }
+
+    @Test
+    public void changes_continuousFeed() {
+        db.save(new Foo());
+
+        DbInfo dbInfo = db.info();
+        String since = dbInfo.getUpdateSeq();
+
+        Changes changes = db.changes()
+                .includeDocs(true)
+                .since(since)
+                .heartBeat(30000)
+                .continuousChanges();
+
+        Response response = db.save(new Foo());
+
+        while (changes.hasNext()) {
+            ChangesResult.Row feed = changes.next();
+            final JsonObject feedObject = feed.getDoc();
+            final String docId = feed.getId();
+
+            assertEquals(response.getId(), docId);
+            assertNotNull(feedObject);
+
+            changes.stop();
+        }
+    }
 }

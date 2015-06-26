@@ -19,91 +19,92 @@ package org.lightcouch;
 import java.util.List;
 
 /**
- * Holds data of a page as result of a view pagination query. 
+ * Holds data of a page as result of a view pagination query.
+ *
+ * @author Ahmed Yehia
  * @see View#queryPage(int, String, Class)
  * @since 0.0.3
- * @author Ahmed Yehia
  */
 public class Page<T> {
-	private boolean isHasPrevious;
-	private boolean isHasNext;
-	private List<T> resultList;
-	private long totalResults;
-	private int resultFrom;
-	private int resultTo;
-	private int pageNumber;
-	private String nextParam;
-	private String previousParam;
+    private boolean isHasPrevious;
+    private boolean isHasNext;
+    private List<T> resultList;
+    private long totalResults;
+    private int resultFrom;
+    private int resultTo;
+    private int pageNumber;
+    private String nextParam;
+    private String previousParam;
 
-	public boolean isHasPrevious() {
-		return isHasPrevious;
-	}
+    public boolean isHasPrevious() {
+        return isHasPrevious;
+    }
 
-	public boolean isHasNext() {
-		return isHasNext;
-	}
+    public boolean isHasNext() {
+        return isHasNext;
+    }
 
-	public List<T> getResultList() {
-		return resultList;
-	}
+    public List<T> getResultList() {
+        return resultList;
+    }
 
-	public long getTotalResults() {
-		return totalResults;
-	}
+    public long getTotalResults() {
+        return totalResults;
+    }
 
-	public int getResultFrom() {
-		return resultFrom;
-	}
+    public int getResultFrom() {
+        return resultFrom;
+    }
 
-	public int getResultTo() {
-		return resultTo;
-	}
+    public int getResultTo() {
+        return resultTo;
+    }
 
-	public int getPageNumber() {
-		return pageNumber;
-	}
+    public int getPageNumber() {
+        return pageNumber;
+    }
 
-	public String getNextParam() {
-		return nextParam;
-	}
+    public String getNextParam() {
+        return nextParam;
+    }
 
-	public String getPreviousParam() {
-		return previousParam;
-	}
+    public String getPreviousParam() {
+        return previousParam;
+    }
 
-	public void setHasPrevious(boolean isHasPrevious) {
-		this.isHasPrevious = isHasPrevious;
-	}
+    public void setHasPrevious(boolean isHasPrevious) {
+        this.isHasPrevious = isHasPrevious;
+    }
 
-	public void setHasNext(boolean isHasNext) {
-		this.isHasNext = isHasNext;
-	}
+    public void setHasNext(boolean isHasNext) {
+        this.isHasNext = isHasNext;
+    }
 
-	public void setResultList(List<T> resultList) {
-		this.resultList = resultList;
-	}
+    public void setResultList(List<T> resultList) {
+        this.resultList = resultList;
+    }
 
-	public void setTotalResults(long totalResults) {
-		this.totalResults = totalResults;
-	}
+    public void setTotalResults(long totalResults) {
+        this.totalResults = totalResults;
+    }
 
-	public void setResultFrom(int resultFrom) {
-		this.resultFrom = resultFrom;
-	}
+    public void setResultFrom(int resultFrom) {
+        this.resultFrom = resultFrom;
+    }
 
-	public void setResultTo(int resultTo) {
-		this.resultTo = resultTo;
-	}
+    public void setResultTo(int resultTo) {
+        this.resultTo = resultTo;
+    }
 
-	public void setPageNumber(int pageNumber) {
-		this.pageNumber = pageNumber;
-	}
+    public void setPageNumber(int pageNumber) {
+        this.pageNumber = pageNumber;
+    }
 
-	public void setNextParam(String nextParam) {
-		this.nextParam = nextParam;
-	}
+    public void setNextParam(String nextParam) {
+        this.nextParam = nextParam;
+    }
 
-	public void setPreviousParam(String previousParam) {
-		this.previousParam = previousParam;
-	}
+    public void setPreviousParam(String previousParam) {
+        this.previousParam = previousParam;
+    }
 }

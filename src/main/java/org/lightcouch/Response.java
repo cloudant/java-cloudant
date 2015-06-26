@@ -18,48 +18,48 @@ package org.lightcouch;
 
 /**
  * Contains the response returned from CouchDB.
- * 
+ * <p/>
  * <p>The response typically contains an <tt>id</tt> and <tt>rev</tt> values,
  * additional data might be returned such as <tt>error</tt> from Bulk request.
- * 
+ *
+ * @author Ahmed Yehia
  * @see CouchDatabaseBase#save(Object)
  * @since 0.0.2
- * @author Ahmed Yehia
  */
 public class Response {
-	private String id;
-	private String rev;
-	
-	private String error;
-	private String reason;
+    private String id;
+    private String rev;
 
-	/**
-	 * @return the <tt>id</tt> of the response
-	 */
-	public String getId() {
-		return id;
-	}
+    private String error;
+    private String reason;
 
-	/**
-	 * @return the <tt>rev</tt> of the response
-	 */
-	public String getRev() {
-		return rev;
-	}
-	
-	public String getError() {
-		return error;
-	}
-	
-	public String getReason() {
-		return reason;
-	}
+    /**
+     * @return the <tt>id</tt> of the response
+     */
+    public String getId() {
+        return id;
+    }
 
-	/**
-	 * @return <tt>id</tt> and <tt>rev</tt> concatenated.
-	 */
-	@Override
-	public String toString() {
-		return "Response [id=" + id + ", rev=" + rev + "]";
-	}
+    /**
+     * @return the <tt>rev</tt> of the response
+     */
+    public String getRev() {
+        return rev;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    /**
+     * @return <tt>id</tt> and <tt>rev</tt> concatenated.
+     */
+    @Override
+    public String toString() {
+        return "Response [id=" + id + ", rev=" + rev + "]";
+    }
 }

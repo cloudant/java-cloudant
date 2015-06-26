@@ -16,18 +16,18 @@
 
 package org.lightcouch.internal;
 
+import org.lightcouch.Params;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 
-import org.lightcouch.Params;
-
 /**
  * Helper class for construction of HTTP request URIs.
- * @since 0.0.2
+ *
  * @author Ahmed Yehia
- * 
+ * @since 0.0.2
  */
 public class URIBuilder {
     private String scheme;
@@ -79,7 +79,8 @@ public class URIBuilder {
         }
         try {
             String q = (query.length() == 0) ? "" : "?" + query;
-            String uri = String.format("%s://%s:%s%s%s%s", scheme, host, port, path, encodedPath, q);
+            String uri = String.format("%s://%s:%s%s%s%s", scheme, host, port, path, encodedPath,
+                    q);
             return new URI(uri);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(e);
@@ -118,11 +119,12 @@ public class URIBuilder {
     /**
      * Add the given {@code name} and {@code value} to the query parameters or replace
      * the existing query parameter matching {@code name} with one with the new {@code value}.
-     * @param name The name of the parameter to add/replace.
-     * @param value The value of the parameter.
+     *
+     * @param name    The name of the parameter to add/replace.
+     * @param value   The value of the parameter.
      * @param replace set to true to replace the value of an existing query parameter matching
-     *               {@code name}, or false to add a new one. Note that if this is true and there
-     *               is no parameter matching {@code name}, the parameter will be added.
+     *                {@code name}, or false to add a new one. Note that if this is true and there
+     *                is no parameter matching {@code name}, the parameter will be added.
      * @return The updated {@link URIBuilder} object.
      */
     public URIBuilder query(String name, Object value, boolean replace) {
@@ -139,7 +141,8 @@ public class URIBuilder {
 
     /**
      * Add the given {@code name} and {@code value} to the query parameters.
-     * @param name The name to add.
+     *
+     * @param name  The name to add.
      * @param value The value to add.
      * @return The updated {@link URIBuilder} object.
      */
@@ -148,17 +151,21 @@ public class URIBuilder {
 
     }
 
-    /** @deprecated Use {@link #query(String, Object)} instead. */
+    /**
+     * @deprecated Use {@link #query(String, Object)} instead.
+     */
     @Deprecated
     public URIBuilder query(String query) {
-        if (query != null)
+        if (query != null) {
             this.query.append(query);
+        }
         return this;
     }
 
     public URIBuilder query(Params params) {
-        if (params.getParams() != null)
+        if (params.getParams() != null) {
             this.qParams.addAll(params);
+        }
         return this;
     }
 

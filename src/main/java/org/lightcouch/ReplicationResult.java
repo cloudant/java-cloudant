@@ -16,119 +16,121 @@
 
 package org.lightcouch;
 
-import java.util.List;
-
 import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
 
 /**
  * Holds the result of a replication request, along with previous sessions history.
+ *
+ * @author Ahmed Yehia
  * @see Replication
  * @since 0.0.2
- * @author Ahmed Yehia
  */
 public class ReplicationResult {
-	@SerializedName("ok")
-	private boolean ok;
-	@SerializedName("session_id")
-	private String sessionId;
-	@SerializedName("source_last_seq")
-	private String sourceLastSeq;
-	@SerializedName("_local_id")
-	private String localId;
-	@SerializedName("history")
-	private List<ReplicationHistory> histories;
+    @SerializedName("ok")
+    private boolean ok;
+    @SerializedName("session_id")
+    private String sessionId;
+    @SerializedName("source_last_seq")
+    private String sourceLastSeq;
+    @SerializedName("_local_id")
+    private String localId;
+    @SerializedName("history")
+    private List<ReplicationHistory> histories;
 
-	public boolean isOk() {
-		return ok;
-	}
+    public boolean isOk() {
+        return ok;
+    }
 
-	public String getSessionId() {
-		return sessionId;
-	}
+    public String getSessionId() {
+        return sessionId;
+    }
 
-	public String getSourceLastSeq() {
-		return sourceLastSeq;
-	}
-	
-	public String getLocalId() {
-		return localId;
-	}
+    public String getSourceLastSeq() {
+        return sourceLastSeq;
+    }
 
-	public List<ReplicationHistory> getHistories() {
-		return histories;
-	}
+    public String getLocalId() {
+        return localId;
+    }
 
-	/**
-	 * Represents a replication session history.
-	 * @author Ahmed Yehia
-	 */
-	public static class ReplicationHistory {
-		@SerializedName("session_id")
-		private String sessionId;
-		@SerializedName("start_time")
-		private String startTime;
-		@SerializedName("end_time")
-		private String endTime;
-		@SerializedName("start_last_seq")
-		private String startLastSeq;
-		@SerializedName("end_last_seq")
-		private String endLastSeq;
-		@SerializedName("recorded_seq")
-		private String recordedSeq;
-		@SerializedName("missing_checked")
-		private long missingChecked;
-		@SerializedName("missing_found")
-		private long missingFound;
-		@SerializedName("docs_read")
-		private long docsRead;
-		@SerializedName("docs_written")
-		private long docsWritten;
-		@SerializedName("doc_write_failures")
-		private long docWriteFailures;
+    public List<ReplicationHistory> getHistories() {
+        return histories;
+    }
 
-		public String getSessionId() {
-			return sessionId;
-		}
+    /**
+     * Represents a replication session history.
+     *
+     * @author Ahmed Yehia
+     */
+    public static class ReplicationHistory {
+        @SerializedName("session_id")
+        private String sessionId;
+        @SerializedName("start_time")
+        private String startTime;
+        @SerializedName("end_time")
+        private String endTime;
+        @SerializedName("start_last_seq")
+        private String startLastSeq;
+        @SerializedName("end_last_seq")
+        private String endLastSeq;
+        @SerializedName("recorded_seq")
+        private String recordedSeq;
+        @SerializedName("missing_checked")
+        private long missingChecked;
+        @SerializedName("missing_found")
+        private long missingFound;
+        @SerializedName("docs_read")
+        private long docsRead;
+        @SerializedName("docs_written")
+        private long docsWritten;
+        @SerializedName("doc_write_failures")
+        private long docWriteFailures;
 
-		public String getStartTime() {
-			return startTime;
-		}
+        public String getSessionId() {
+            return sessionId;
+        }
 
-		public String getEndTime() {
-			return endTime;
-		}
+        public String getStartTime() {
+            return startTime;
+        }
 
-		public String getStartLastSeq() {
-			return startLastSeq;
-		}
+        public String getEndTime() {
+            return endTime;
+        }
 
-		public String getEndLastSeq() {
-			return endLastSeq;
-		}
+        public String getStartLastSeq() {
+            return startLastSeq;
+        }
 
-		public String getRecordedSeq() {
-			return recordedSeq;
-		}
+        public String getEndLastSeq() {
+            return endLastSeq;
+        }
 
-		public long getMissingChecked() {
-			return missingChecked;
-		}
+        public String getRecordedSeq() {
+            return recordedSeq;
+        }
 
-		public long getMissingFound() {
-			return missingFound;
-		}
+        public long getMissingChecked() {
+            return missingChecked;
+        }
 
-		public long getDocsRead() {
-			return docsRead;
-		}
+        public long getMissingFound() {
+            return missingFound;
+        }
 
-		public long getDocsWritten() {
-			return docsWritten;
-		}
+        public long getDocsRead() {
+            return docsRead;
+        }
 
-		public long getDocWriteFailures() {
-			return docWriteFailures;
-		}
-	} // /class ReplicationHistory
+        public long getDocsWritten() {
+            return docsWritten;
+        }
+
+        public long getDocWriteFailures() {
+            return docWriteFailures;
+        }
+    } // /class ReplicationHistory
 
 } 

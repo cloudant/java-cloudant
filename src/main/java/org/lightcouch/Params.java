@@ -21,14 +21,14 @@ import java.util.List;
 
 /**
  * Query parameters to append to find requests.
- * <p>Example: 
+ * <p>Example:
  * <pre>
  * dbClient.find(Foo.class, "doc-id", new Params().revsInfo().attachments());
  * </pre>
+ *
+ * @author Ahmed Yehia
  * @see CouchDatabaseBase#find(Class, String, Params)
  * @since 0.0.6
- * @author Ahmed Yehia
- * 
  */
 public class Params {
 
@@ -97,7 +97,8 @@ public class Params {
      * If this object already contains a parameter whose name matches {@code name}, replace the
      * existing value with {@code value} for the first instance of parameter {@code name}.
      * Otherwise, add a parameter with the new {@code name} and {@code value}.
-     * @param name The name of the parameter to replace/add.
+     *
+     * @param name  The name of the parameter to replace/add.
      * @param value The new value of the parameter.
      */
     public void replaceOrAdd(String name, String value) {

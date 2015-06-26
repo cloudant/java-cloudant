@@ -1,94 +1,94 @@
 package com.cloudant.client.api.model;
 
-import java.util.List;
-
 import org.lightcouch.View;
 
+import java.util.List;
+
 /**
- * Holds data of a page as result of a view pagination query. 
+ * Holds data of a page as result of a view pagination query.
+ *
+ * @author Ganesh K Choudhary
  * @see View#queryPage(int, String, Class)
  * @since 0.0.1
- * @author Ganesh K Choudhary
  */
 public class Page<T> {
-	private org.lightcouch.Page<T> page ;
-	
-	public Page(org.lightcouch.Page<T> page){
-		this.page = page ;
-	}
+    private org.lightcouch.Page<T> page;
 
-	public boolean isHasPrevious() {
-		return page.isHasPrevious();
-	}
+    public Page(org.lightcouch.Page<T> page) {
+        this.page = page;
+    }
 
-	public boolean isHasNext() {
-		return page.isHasNext();
-	}
+    public boolean isHasPrevious() {
+        return page.isHasPrevious();
+    }
 
-	public List<T> getResultList() {
-		return page.getResultList();
-	}
+    public boolean isHasNext() {
+        return page.isHasNext();
+    }
 
-	public long getTotalResults() {
-		return page.getTotalResults();
-	}
+    public List<T> getResultList() {
+        return page.getResultList();
+    }
 
-	public int getResultFrom() {
-		return page.getResultFrom();
-	}
+    public long getTotalResults() {
+        return page.getTotalResults();
+    }
 
-	public int getResultTo() {
-		return page.getResultTo();
-	}
+    public int getResultFrom() {
+        return page.getResultFrom();
+    }
 
-	public int getPageNumber() {
-		return page.getPageNumber();
-	}
+    public int getResultTo() {
+        return page.getResultTo();
+    }
 
-	public String getNextParam() {
-		return page.getNextParam();
-	}
+    public int getPageNumber() {
+        return page.getPageNumber();
+    }
 
-	public String getPreviousParam() {
-		return page.getPreviousParam();
-	}
+    public String getNextParam() {
+        return page.getNextParam();
+    }
 
-	public void setHasPrevious(boolean isHasPrevious) {
-		page.setHasPrevious(isHasPrevious);
-	}
+    public String getPreviousParam() {
+        return page.getPreviousParam();
+    }
 
-	public void setHasNext(boolean isHasNext) {
-		page.setHasNext(isHasNext);
-	}
+    public void setHasPrevious(boolean isHasPrevious) {
+        page.setHasPrevious(isHasPrevious);
+    }
 
-	public void setResultList(List<T> resultList) {
-		page.setResultList(resultList);
-	}
+    public void setHasNext(boolean isHasNext) {
+        page.setHasNext(isHasNext);
+    }
 
-	public void setTotalResults(long totalResults) {
-		page.setTotalResults(totalResults);
-	}
+    public void setResultList(List<T> resultList) {
+        page.setResultList(resultList);
+    }
 
-	public void setResultFrom(int resultFrom) {
-		page.setResultFrom(resultFrom);
-	}
+    public void setTotalResults(long totalResults) {
+        page.setTotalResults(totalResults);
+    }
 
-	public void setResultTo(int resultTo) {
-		page.setResultTo(resultTo);
-	}
+    public void setResultFrom(int resultFrom) {
+        page.setResultFrom(resultFrom);
+    }
 
-	public void setPageNumber(int pageNumber) {
-		page.setPageNumber(pageNumber);
-	}
+    public void setResultTo(int resultTo) {
+        page.setResultTo(resultTo);
+    }
 
-	public void setNextParam(String nextParam) {
-		page.setNextParam(nextParam);
-	}
+    public void setPageNumber(int pageNumber) {
+        page.setPageNumber(pageNumber);
+    }
 
-	public void setPreviousParam(String previousParam) {
-		page.setPreviousParam(previousParam);
-	}
-	
-	
-	
+    public void setNextParam(String nextParam) {
+        page.setNextParam(nextParam);
+    }
+
+    public void setPreviousParam(String previousParam) {
+        page.setPreviousParam(previousParam);
+    }
+
+
 }

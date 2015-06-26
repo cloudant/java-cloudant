@@ -16,70 +16,70 @@
 
 package org.lightcouch;
 
-import java.util.List;
-
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
+
 /**
  * Represents Changes feed result of type <i>normal</i>.
- * @since 0.0.2
- * @see Changes
- * @author Ahmed Yehia
  *
+ * @author Ahmed Yehia
+ * @see Changes
+ * @since 0.0.2
  */
 public class ChangesResult {
-	private List<ChangesResult.Row> results;
-	@SerializedName("last_seq")
-	private String lastSeq;
+    private List<ChangesResult.Row> results;
+    @SerializedName("last_seq")
+    private String lastSeq;
 
-	public List<ChangesResult.Row> getResults() {
-		return results;
-	}
+    public List<ChangesResult.Row> getResults() {
+        return results;
+    }
 
-	public String getLastSeq() {
-		return lastSeq;
-	}
+    public String getLastSeq() {
+        return lastSeq;
+    }
 
-	/**
-	 * Represent a row in Changes result. 
-	 */
-	public static class Row {
-		private String seq;
-		private String id;
-		private List<Row.Rev> changes;
-		private boolean deleted;
-		private JsonObject doc;
+    /**
+     * Represent a row in Changes result.
+     */
+    public static class Row {
+        private String seq;
+        private String id;
+        private List<Row.Rev> changes;
+        private boolean deleted;
+        private JsonObject doc;
 
-		public String getSeq() {
-			return seq;
-		}
+        public String getSeq() {
+            return seq;
+        }
 
-		public String getId() {
-			return id;
-		}
+        public String getId() {
+            return id;
+        }
 
-		public List<Row.Rev> getChanges() {
-			return changes;
-		}
+        public List<Row.Rev> getChanges() {
+            return changes;
+        }
 
-		public boolean isDeleted() {
-			return deleted;
-		}
+        public boolean isDeleted() {
+            return deleted;
+        }
 
-		public JsonObject getDoc() {
-			return doc;
-		}
+        public JsonObject getDoc() {
+            return doc;
+        }
 
-		/**
-		 * Represent a Change rev. 
-		 */
-		public static class Rev {
-			private String rev;
+        /**
+         * Represent a Change rev.
+         */
+        public static class Rev {
+            private String rev;
 
-			public String getRev() {
-				return rev;
-			}
-		} // end class Rev
-	} // end class Row
+            public String getRev() {
+                return rev;
+            }
+        } // end class Rev
+    } // end class Row
 } // end class ChangesResult

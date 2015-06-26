@@ -18,178 +18,183 @@ package org.lightcouch;
 
 /**
  * Represents configuration properties for connecting to CouchDB.
- * 
+ *
  * @author Ahmed Yehia
  * @author Daan van Berkel
  */
 public class CouchDbProperties {
 
-	// required
-	private String protocol;
-	private String host;
-	private String path;
-	private int port;
-	private String username;
-	private String password;
-	
-	private String authCookie;
+    // required
+    private String protocol;
+    private String host;
+    private String path;
+    private int port;
+    private String username;
+    private String password;
 
-	// optional
-	private int socketTimeout;
-	private int connectionTimeout;
-	private int maxConnections;
-	private String proxyHost;
-	private int proxyPort;
-	private boolean disableSSLAuthentication;
+    private String authCookie;
 
-	public CouchDbProperties() {
-		// default constructor
-	}
+    // optional
+    private int socketTimeout;
+    private int connectionTimeout;
+    private int maxConnections;
+    private String proxyHost;
+    private int proxyPort;
+    private boolean disableSSLAuthentication;
 
-	public CouchDbProperties(String protocol, String host, int port,
-			String authCookie) {
-		this.protocol = protocol;
-		this.host = host;
-		this.port = port;
-		this.authCookie = authCookie;
-	}
-	
-	public CouchDbProperties(String protocol,
-			String host, int port, String username, String password) {
-		
-		this.protocol = protocol;
-		this.host = host;
-		this.port = port;
-		this.username = username;
-		this.password = password;
-	}
+    public CouchDbProperties() {
+        // default constructor
+    }
 
-	public String getProtocol() {
-		return protocol;
-	}
+    public CouchDbProperties(String protocol, String host, int port,
+                             String authCookie) {
+        this.protocol = protocol;
+        this.host = host;
+        this.port = port;
+        this.authCookie = authCookie;
+    }
 
-	public String getHost() {
-		return host;
-	}
-	
-	public String getPath() {
-		return path;
-	}
+    public CouchDbProperties(String protocol,
+                             String host, int port, String username, String password) {
 
-	public int getPort() {
-		return port;
-	}
+        this.protocol = protocol;
+        this.host = host;
+        this.port = port;
+        this.username = username;
+        this.password = password;
+    }
 
-	public String getUsername() {
-		return username;
-	}
+    public String getProtocol() {
+        return protocol;
+    }
 
-	public String getPassword() {
-		return password;
-	}
+    public String getHost() {
+        return host;
+    }
 
-	public int getSocketTimeout() {
-		return socketTimeout;
-	}
+    public String getPath() {
+        return path;
+    }
 
-	public int getConnectionTimeout() {
-		return connectionTimeout;
-	}
+    public int getPort() {
+        return port;
+    }
 
-	public int getMaxConnections() {
-		return maxConnections;
-	}
+    public String getUsername() {
+        return username;
+    }
 
-	public String getProxyHost() {
-		return proxyHost;
-	}
+    public String getPassword() {
+        return password;
+    }
 
-	public int getProxyPort() {
-		return proxyPort;
-	}
+    public int getSocketTimeout() {
+        return socketTimeout;
+    }
 
-	public CouchDbProperties setProtocol(String protocol) {
-		this.protocol = protocol;
-		return this;
-	}
+    public int getConnectionTimeout() {
+        return connectionTimeout;
+    }
 
-	public CouchDbProperties setHost(String host) {
-		this.host = host;
-		return this;
-	}
+    public int getMaxConnections() {
+        return maxConnections;
+    }
 
-	public CouchDbProperties setPath(String path) {
-        	this.path = path;
-        	return this;
-    	}
+    public String getProxyHost() {
+        return proxyHost;
+    }
 
-	public CouchDbProperties setPort(int port) {
-		this.port = port;
-		return this;
-	}
+    public int getProxyPort() {
+        return proxyPort;
+    }
 
-	public CouchDbProperties setUsername(String username) {
-		this.username = username;
-		return this;
-	}
+    public CouchDbProperties setProtocol(String protocol) {
+        this.protocol = protocol;
+        return this;
+    }
 
-	public CouchDbProperties setPassword(String password) {
-		this.password = password;
-		return this;
-	}
+    public CouchDbProperties setHost(String host) {
+        this.host = host;
+        return this;
+    }
 
-	public CouchDbProperties setSocketTimeout(int socketTimeout) {
-		this.socketTimeout = socketTimeout;
-		return this;
-	}
+    public CouchDbProperties setPath(String path) {
+        this.path = path;
+        return this;
+    }
 
-	public CouchDbProperties setConnectionTimeout(int connectionTimeout) {
-		this.connectionTimeout = connectionTimeout;
-		return this;
-	}
+    public CouchDbProperties setPort(int port) {
+        this.port = port;
+        return this;
+    }
 
-	public CouchDbProperties setMaxConnections(int maxConnections) {
-		this.maxConnections = maxConnections;
-		return this;
-	}
+    public CouchDbProperties setUsername(String username) {
+        this.username = username;
+        return this;
+    }
 
-	public CouchDbProperties setProxyHost(String proxyHost) {
-		this.proxyHost = proxyHost;
-		return this;
-	}
+    public CouchDbProperties setPassword(String password) {
+        this.password = password;
+        return this;
+    }
 
-	public CouchDbProperties setProxyPort(int proxyPort) {
-		this.proxyPort = proxyPort;
-		return this;
-	}
+    public CouchDbProperties setSocketTimeout(int socketTimeout) {
+        this.socketTimeout = socketTimeout;
+        return this;
+    }
 
-	public String getAuthCookie() {
-		return authCookie;
-	}
+    public CouchDbProperties setConnectionTimeout(int connectionTimeout) {
+        this.connectionTimeout = connectionTimeout;
+        return this;
+    }
 
-	public void setAuthCookie(String authCookie) {
-		this.authCookie = authCookie;
-	}
+    public CouchDbProperties setMaxConnections(int maxConnections) {
+        this.maxConnections = maxConnections;
+        return this;
+    }
 
-	public void clearPassword() {
-		setPassword("");
-		setPassword(null);
-	}
+    public CouchDbProperties setProxyHost(String proxyHost) {
+        this.proxyHost = proxyHost;
+        return this;
+    }
 
-	/** Enables/disables hostname verification and certificate chain validation.
-	 * @param disabled set to true to disable or false to enable.
-	 * @return the updated {@link CouchDbProperties} object.
-	 * @see #isSSLAuthenticationDisabled */
-	public CouchDbProperties disableSSLAuthentication(boolean disabled) {
-		this.disableSSLAuthentication = disabled;
-		return this;
-	}
+    public CouchDbProperties setProxyPort(int proxyPort) {
+        this.proxyPort = proxyPort;
+        return this;
+    }
 
-	/** @return true if hostname verification and certificate chain validation are
-	 *  disabled or false otherwise.
-	 *  @see #disableSSLAuthentication(boolean) */
-	public boolean isSSLAuthenticationDisabled() {
-		return disableSSLAuthentication;
-	}
+    public String getAuthCookie() {
+        return authCookie;
+    }
+
+    public void setAuthCookie(String authCookie) {
+        this.authCookie = authCookie;
+    }
+
+    public void clearPassword() {
+        setPassword("");
+        setPassword(null);
+    }
+
+    /**
+     * Enables/disables hostname verification and certificate chain validation.
+     *
+     * @param disabled set to true to disable or false to enable.
+     * @return the updated {@link CouchDbProperties} object.
+     * @see #isSSLAuthenticationDisabled
+     */
+    public CouchDbProperties disableSSLAuthentication(boolean disabled) {
+        this.disableSSLAuthentication = disabled;
+        return this;
+    }
+
+    /**
+     * @return true if hostname verification and certificate chain validation are
+     * disabled or false otherwise.
+     * @see #disableSSLAuthentication(boolean)
+     */
+    public boolean isSSLAuthenticationDisabled() {
+        return disableSSLAuthentication;
+    }
 
 }

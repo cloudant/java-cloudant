@@ -2,7 +2,6 @@ package org.lightcouch;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.AbstractMap;
 
 public class Param {
 
@@ -31,7 +30,8 @@ public class Param {
     }
 
     public String toURLEncodedString() {
-        return String.format("%s=%s", encodeQueryParameter(getKey()), encodeQueryParameter(getValue().toString()));
+        return String.format("%s=%s", encodeQueryParameter(getKey()), encodeQueryParameter
+                (getValue().toString()));
     }
 
     private static String encodeQueryParameter(String in) {
