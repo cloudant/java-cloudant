@@ -3,7 +3,7 @@ apply plugin: 'maven'
 
 group = 'com.cloudant'
 version = '1.0.2-SNAPSHOT'
-
+//note this description is used as the user agent name in the client properties
 description = """java-cloudant"""
 
 sourceCompatibility = 1.6
@@ -45,4 +45,45 @@ task cloudantTest(type: Test, dependsOn: testClasses) {
 
 task cloudantServiceTest(type: Test, dependsOn: testClasses) {
     // Run all tests
+}
+
+//task for generating a client properties file
+class ClientProperties extends DefaultTask {
+
+    //allow this to be configured, default to client.properties
+    File clientPropsPath = new File("client.properties")
+
+    //internal
+    private Properties p = new Properties()
+
+    ClientProperties() {
+        //if there is a generated file already load the values
+        if (clientPropsPath.exists()) {
+            p.load(new FileInputStream(clientPropsPath));
+        }
+    }
+
+    @TaskAction
+    def save() {
+        p.put("user.agent.name", project.description)
+        p.put("user.agent.version", project.version)
+        p.store(new FileOutputStream(clientPropsPath), "User agent information for this client")
+    }
+
+    String getPropertyValue(String key) {
+        return p.getProperty(key)
+    }
+}
+
+//generate a client props file, make the jar task depend on this
+task generateClientPropertiesFile(type: ClientProperties) {
+    clientPropsPath = new File(buildDir, "tmp/client.properties")
+    outputs.upToDateWhen {
+        project.description.equals(getPropertyValue("user.agent.name")) && project.version.equals(getPropertyValue("user.agent.version"))
+    }
+}
+jar.dependsOn generateClientPropertiesFile
+//include the client props in the built jar
+jar {
+    into "META-INF", { from generateClientPropertiesFile.clientPropsPath }
 }
