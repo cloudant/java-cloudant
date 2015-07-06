@@ -1,18 +1,21 @@
 apply plugin: 'java'
 apply plugin: 'maven'
+apply plugin: 'signing'
 
 group = 'com.cloudant'
 version = '1.0.2-SNAPSHOT'
-//note this description is used as the user agent name in the client properties
 description = """java-cloudant"""
+//note the gradle project name (cloudant-client) is the maven artifactId
+//the maven pom name entry and User-Agent name in client.properties are defined by clientName
+ext.clientName = 'java-cloudant'
+
+//if the version says "snapshot" anywhere assume it is not a release
+ext.isReleaseVersion = !version.toUpperCase(Locale.ENGLISH).contains("SNAPSHOT")
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
 
-
-
 repositories {
-
     maven { url "http://oss.sonatype.org/content/repositories/snapshots" }
     maven { url "http://repo.maven.apache.org/maven2" }
 }
@@ -56,16 +59,17 @@ class ClientProperties extends DefaultTask {
     //internal
     private Properties p = new Properties()
 
-    ClientProperties() {
+    def load() {
         //if there is a generated file already load the values
         if (clientPropsPath.exists()) {
             p.load(new FileInputStream(clientPropsPath));
         }
     }
 
+
     @TaskAction
     def save() {
-        p.put("user.agent.name", project.description)
+        p.put("user.agent.name", project.clientName)
         p.put("user.agent.version", project.version)
         p.store(new FileOutputStream(clientPropsPath), "User agent information for this client")
     }
@@ -79,11 +83,113 @@ class ClientProperties extends DefaultTask {
 task generateClientPropertiesFile(type: ClientProperties) {
     clientPropsPath = new File(buildDir, "tmp/client.properties")
     outputs.upToDateWhen {
-        project.description.equals(getPropertyValue("user.agent.name")) && project.version.equals(getPropertyValue("user.agent.version"))
+        if (clientPropsPath.exists()) {
+            it.load()
+            return project.clientName.equals(it.getPropertyValue("user.agent.name")) && project.version.equals(it.getPropertyValue("user.agent.version"))
+        } else {
+            return false
+        }
     }
 }
 jar.dependsOn generateClientPropertiesFile
 //include the client props in the built jar
 jar {
     into "META-INF", { from generateClientPropertiesFile.clientPropsPath }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    sourceSets.all {
+        into(name + "/java", { from allJava })
+        into(name + "/resources", { from resources })
+    }
+}
+
+javadoc {
+    exclude("**/com/cloudant/tests/**",
+            "**/com/cloudant/test/**",
+            "**/resources/**")
+    include("**/lightcouch/DocumentConflictException.java",
+            "**/lightcouch/NoDocumentException.java",
+            "**/lightcouch/CouchDbException.java",
+            "**/client/**")
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+//load signing and repository parameters from system properties
+['signing.keyId', 'signing.password', 'signing.secretKeyRingFile', 'ossrhUsername', 'ossrhPassword']
+        .each { propName ->
+    //set a property with the given name if the system property is set
+    //if the system property is not set then set the property to null if it isn't a signing one
+    if (System.properties.(propName.toString()) != null || !propName.startsWith("signing")) {
+        ext.(propName.toString()) = System.properties.(propName.toString())
+    }
+}
+
+signing {
+    //only apply signing when it is a release and is being published
+    required {
+        isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives")
+    }
+    //when signing, sign the archives
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+
+            //when publishing sign the pom
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            //augment the pom with additional information
+            pom.project {
+                packaging 'jar'
+                name project.clientName
+                description 'Official Cloudant client for Java'
+                inceptionYear '2014'
+                url 'https://cloudant.com'
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+                scm {
+                    connection 'scm:git:git://github.com/cloudant/java-cloudant.git'
+                    developerConnection 'scm:git:git@github.com/cloudant/java-cloudant.git'
+                    url 'https://java-cloudant@github.com/cloudant/java-cloudant.git'
+                }
+                properties {
+                    'project.build.sourceEncoding' 'UTF-8'
+                }
+                developers {
+                    developer {
+                        name 'IBM Cloudant'
+                        email 'support@cloudant.com'
+                        url 'https://cloudant.com'
+                        organization 'IBM'
+                        organizationUrl 'http://www.ibm.com'
+                    }
+                }
+            }
+        }
+    }
 }
