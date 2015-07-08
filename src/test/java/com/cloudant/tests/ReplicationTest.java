@@ -28,21 +28,19 @@ import com.cloudant.client.api.model.ReplicationResult.ReplicationHistory;
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.api.model.ViewResult;
+import com.cloudant.tests.util.Utils;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 
-@Ignore
 public class ReplicationTest {
     private static final Log log = LogFactory.getLog(ReplicationTest.class);
 
@@ -67,8 +65,7 @@ public class ReplicationTest {
 
         db1.syncDesignDocsWithDb();
         db2.syncDesignDocsWithDb();
-
-
+        
         db2URI = CloudantClientHelper.SERVER_URI.toString() + "/lightcouch-db-test-2";
     }
 
@@ -106,7 +103,7 @@ public class ReplicationTest {
     }
 
     @Test
-    public void replicatorDB() {
+    public void replicatorDB() throws Exception {
         String version = account.serverVersion();
         if (version.startsWith("0") || version.startsWith("1.0")) {
             return;
@@ -119,26 +116,21 @@ public class ReplicationTest {
                 .createTarget(true)
                 .save();
 
+        // we need the replication to finish before continuing
+        Utils.waitForReplicatorToStart(account, response.getId());
+
+
         // find all replicator docs
         List<ReplicatorDocument> replicatorDocs = account.replicator()
                 .findAll();
         assertThat(replicatorDocs.size(), is(not(0)));
 
-        // find replicator doc
-        ReplicatorDocument replicatorDoc = account.replicator()
-                .replicatorDocId(response.getId())
-                .find();
-
-        // cancel a replication
-        account.replicator()
-                .replicatorDocId(replicatorDoc.getId())
-                .replicatorDocRev(replicatorDoc.getRevision())
-                .remove();
+        Utils.removeReplicatorTestDoc(account, response.getId());
     }
 
     @Test
     public void replication_conflict() {
-        String docId = generateUUID();
+        String docId = Utils.generateUUID();
         Foo foodb1 = new Foo(docId, "title");
         Foo foodb2 = null;
 
@@ -164,9 +156,5 @@ public class ReplicationTest {
                 .includeDocs(true).queryView(String[].class, String.class, Foo.class);
 
         assertThat(conflicts.getRows().size(), is(not(0)));
-    }
-
-    private static String generateUUID() {
-        return UUID.randomUUID().toString().replace("-", "");
     }
 }

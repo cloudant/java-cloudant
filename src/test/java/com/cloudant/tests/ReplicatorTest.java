@@ -9,20 +9,17 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.api.model.ViewResult;
+import com.cloudant.tests.util.Utils;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 
-
-@Ignore
 public class ReplicatorTest {
 
     private static Properties props;
@@ -58,27 +55,34 @@ public class ReplicatorTest {
     }
 
     @Test
-    public void replication() {
-        account.replicator()
+    public void replication() throws Exception {
+        Response response = account.replicator()
                 .createTarget(true)
                 .source(db1URI)
                 .target(db2URI)
                 .save();
 
+        // find and remove replicator doc
+        Utils.waitForReplicatorToComplete(account, response.getId());
+        Utils.removeReplicatorTestDoc(account, response.getId());
     }
 
     @Test
-    public void replication_filteredWithQueryParams() {
+    public void replication_filteredWithQueryParams() throws Exception {
         Map<String, Object> queryParams = new HashMap<String, Object>();
         queryParams.put("somekey1", "value 1");
 
-        account.replicator()
+        Response response = account.replicator()
                 .createTarget(true)
                 .source(db1URI)
                 .target(db2URI)
                 .filter("example/example_filter")
                 .queryParams(queryParams)
                 .save();
+
+        // find and remove replicator doc
+        Utils.waitForReplicatorToComplete(account, response.getId());
+        Utils.removeReplicatorTestDoc(account, response.getId());
     }
 
     @Test
@@ -95,28 +99,21 @@ public class ReplicatorTest {
                 .createTarget(true)
                 .save();
 
-        Thread.sleep(1000);
+        // we need the replication to finish before continuing
+        Utils.waitForReplicatorToStart(account, response.getId());
 
         // find all replicator docs
         List<ReplicatorDocument> replicatorDocs = account.replicator()
                 .findAll();
         assertThat(replicatorDocs.size(), is(not(0)));
 
-        // find replicator doc
-        ReplicatorDocument replicatorDoc = account.replicator()
-                .replicatorDocId(response.getId())
-                .find();
-
-        // cancel a replication
-        account.replicator()
-                .replicatorDocId(replicatorDoc.getId())
-                .replicatorDocRev(replicatorDoc.getRevision())
-                .remove();
+        // find and remove replicator doc
+        Utils.removeReplicatorTestDoc(account, response.getId());
     }
 
     @Test
     public void replication_conflict() throws Exception {
-        String docId = generateUUID();
+        String docId = Utils.generateUUID();
         Foo foodb1 = new Foo(docId, "title");
         Foo foodb2 = null;
 
@@ -124,11 +121,12 @@ public class ReplicatorTest {
 
         db1.save(foodb1);
 
-        account.replicator().source(db1URI)
+        Response response = account.replicator().source(db1URI)
                 .target(db2URI).replicatorDocId(docId)
                 .save();
 
-        Thread.sleep(1000); //we need the replication to finish before continuing
+        // we need the replication to finish before continuing
+        Utils.waitForReplicatorToComplete(account, response.getId());
 
         foodb2 = db2.find(Foo.class, docId);
         foodb2.setTitle("titleY");
@@ -138,18 +136,19 @@ public class ReplicatorTest {
         foodb1.setTitle("titleZ");
         db1.update(foodb1);
 
-        account.replicator().source(db1URI)
+        Response secondResponse = account.replicator().source(db1URI)
                 .target(db2URI).save();
 
-        Thread.sleep(1000);
+        // we need the replication to finish before continuing
+        Utils.waitForReplicatorToComplete(account, secondResponse.getId());
 
         ViewResult<String[], String, Foo> conflicts = db2.view("conflicts/conflict")
                 .includeDocs(true).queryView(String[].class, String.class, Foo.class);
 
         assertThat(conflicts.getRows().size(), is(not(0)));
-    }
 
-    private static String generateUUID() {
-        return UUID.randomUUID().toString().replace("-", "");
+        // find and remove replicator doc
+        Utils.removeReplicatorTestDoc(account, response.getId());
+        Utils.removeReplicatorTestDoc(account, secondResponse.getId());
     }
 }
