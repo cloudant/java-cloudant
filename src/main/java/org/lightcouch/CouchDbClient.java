@@ -222,7 +222,7 @@ public class CouchDbClient extends  CouchDbClientBase {
 				// With SSL authentication enabled.
 				// A custom SSLSocketFactory can be set to
 				// enhance security in specific environments.
-				SSLSocketFactory factory = props.getSecureSSLSocketFactory();
+				SSLSocketFactory factory = props.getAuthenticatedModeSSLSocketFactory();
 				if (factory != null) {
 					return registry.register("https", new SSLConnectionSocketFactory(factory,
 							SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER)).build();

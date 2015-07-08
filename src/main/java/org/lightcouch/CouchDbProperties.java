@@ -43,7 +43,7 @@ public class CouchDbProperties {
 	private String proxyHost;
 	private int proxyPort;
 	private boolean disableSSLAuthentication;
-	private SSLSocketFactory secureSSLSocketFactory;
+	private SSLSocketFactory authenticatedModeSSLSocketFactory;
 
 	public CouchDbProperties() {
 		// default constructor
@@ -181,7 +181,8 @@ public class CouchDbProperties {
 
 	/**
 	 * Enables/disables hostname verification, certificate chain validation,
-	 * and the use of the optional {@link #getSecureSSLSocketFactory()}.
+	 * and the use of the optional
+	 * {@link #getAuthenticatedModeSSLSocketFactory()}.
 	 * @param disabled set to true to disable or false to enable.
 	 * @return the updated {@link CouchDbProperties} object.
 	 * @see #isSSLAuthenticationDisabled
@@ -193,8 +194,9 @@ public class CouchDbProperties {
 
 	/**
 	 * @return true if hostname verification, certificate chain validation,
-	 * and the use of the optional {@link #getSecureSSLSocketFactory()} are
-	 * disabled, or false otherwise.
+	 * and the use of the optional
+	 * {@link #getAuthenticatedModeSSLSocketFactory()} are disabled, or
+	 * false otherwise.
 	 * @see #disableSSLAuthentication(boolean)
 	 */
 	public boolean isSSLAuthenticationDisabled() {
@@ -207,10 +209,10 @@ public class CouchDbProperties {
 	 * enabled.
 	 * @return An SSLSocketFactory, or <code>null</code>, which stands for
 	 *         the default SSLSocketFactory of the JRE.
-	 * @see #setSecureSSLSocketFactory(javax.net.ssl.SSLSocketFactory)
+	 * @see #setAuthenticatedModeSSLSocketFactory(javax.net.ssl.SSLSocketFactory)
 	 */
-	public SSLSocketFactory getSecureSSLSocketFactory() {
-		return secureSSLSocketFactory;
+	public SSLSocketFactory getAuthenticatedModeSSLSocketFactory() {
+		return authenticatedModeSSLSocketFactory;
 	}
 
 	/**
@@ -218,10 +220,10 @@ public class CouchDbProperties {
 	 * over a <code>https</code> URL, when SSL authentication is enabled.
 	 * @param factory An SSLSocketFactory, or <code>null</code> for the
 	 *                default SSLSocketFactory of the JRE.
-	 * @see #getSecureSSLSocketFactory()
+	 * @see #getAuthenticatedModeSSLSocketFactory()
 	 */
-	public CouchDbProperties setSecureSSLSocketFactory(SSLSocketFactory factory) {
-		this.secureSSLSocketFactory = factory;
+	public CouchDbProperties setAuthenticatedModeSSLSocketFactory(SSLSocketFactory factory) {
+		this.authenticatedModeSSLSocketFactory = factory;
 		return this;
 	}
 
