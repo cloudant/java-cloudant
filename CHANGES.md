@@ -5,6 +5,11 @@
   checks when the client connects to the database,
   `setSSLAuthenticationDisabled(true)` can be called on the `ConnectOptions`
   object before you pass it to the `CloudantClient` constructor.
+- [NEW] New API for specifying the SSLSocketFactory. This can used to
+  enhance security in specific environments. To set this SSLSocketFactory,
+  call the `setAuthenticatedModeSSLSocketFactory` method on the
+  `ConnectOptions` object before you pass it to the `CloudantClient`
+  constructor.
 - [NEW] New API for deleting databases, `CloudantClient.deleteDB(String name)`
 - [FIX] Fixed querying of next/previous page in a descending view.
 - [FIX] Fixed handling of non-ASCII characters when the platform's
