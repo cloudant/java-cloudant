@@ -495,6 +495,7 @@ public class CloudantClient {
             props.setProxyHost(connectOptions.getProxyHost());
             props.setProxyPort(connectOptions.getProxyPort());
             props.disableSSLAuthentication(connectOptions.isSSLAuthenticationDisabled());
+            props.setAuthenticatedModeSSLSocketFactory(connectOptions.getAuthenticatedModeSSLSocketFactory());
         }
         this.client = new CouchDbClient(props);
 
