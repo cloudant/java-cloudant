@@ -30,13 +30,13 @@ import com.cloudant.client.api.View;
 import com.cloudant.client.api.model.Page;
 import com.cloudant.client.api.model.ViewResult;
 import com.cloudant.test.main.RequiresDB;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
 
 import java.util.Arrays;
@@ -49,7 +49,8 @@ public class ViewsTest {
 
     private static Database db;
     private CloudantClient account;
-
+    private static String[] testViews = {"example/doc_title", "example/creator_created",
+            "example/creator_boolean_total"};
 
     @Before
     public void setUp() {
@@ -65,7 +66,6 @@ public class ViewsTest {
         account.deleteDB("lightcouch-db-test");
         account.shutdown();
     }
-
 
     @Test
     public void queryView() {
@@ -107,13 +107,372 @@ public class ViewsTest {
         assertThat(foos.size(), is(2));
     }
 
+    /**
+     * Assert that passing a boolean key with value 'false'
+     * in query will produce a result list of
+     * all false docs.
+     */
+    @Test
+    public void queryWithStartAndEndBooleanKey() {
+        init();
+
+        View view = db.view("example/boolean")
+                .startKey(false)
+                .endKey(false);
+
+        List<Object> result = view.query(Object.class);
+
+        assertThat(result.size(), is(1));
+    }
+
+    /**
+     * Assert that passing a boolean key with value 'true' in
+     * queryView will produce a result list of a true doc.
+     */
+    @Test
+    public void queryPageWithStartAndEndBooleanKey() {
+        init();
+
+        View view = db.view("example/boolean")
+                .startKey(true)
+                .endKey(true);
+
+        Page page = null;
+        try {
+            page = view.queryPage(2, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(2));
+    }
+
+    /**
+     * Assert that passing a string key with double quotes
+     * or spaces in query and queryView will produce
+     * a result list without exception.
+     */
+    @Test
+    public void queryWithStartAndEndStringIntKeyArray() {
+        init();
+
+        //Query for testing string with spaces
+        View view = db.view("example/spaces_created")
+                .startKey(" spaces ", 1)
+                .endKey(" spaces 1", 2000);
+
+        List<Object> result = view.query(Object.class);
+
+        assertThat(result.size(), is(2));
+    }
+
+    /**
+     * Assert that passing a string key with spaces
+     * in queryPage will produce a result list
+     * without exception.
+     */
+    @Test
+    public void queryPageWithStartAndEndStringIntKeyArray() {
+        init();
+
+        //Query for testing string with spaces
+        View view = db.view("example/spaces_created")
+                .startKey(" spaces ", 1)
+                .endKey(" spaces 0", 2000);
+
+        Page page = null;
+        try {
+            page = view.queryPage(30, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(1));
+    }
+
+    /**
+     * Assert that passing a string key with quotes
+     * in query will produce a result list
+     * without exception.
+     */
+    @Test
+    public void queryWithStartAndEndStringWithQuotesAndIntKeyArray() {
+        init();
+
+        View view = db.view("example/quotes_created")
+                .startKey("\"quotes\" ", 1)
+                .endKey("\"quotes\" 0", 2000);
+
+        List<Object> result = view.query(Object.class);
+
+        assertThat(result.size(), is(1));
+    }
+
+    /**
+     * Assert that passing a string key with quotes
+     * in query will produce a result list
+     * without exception.
+     */
+    @Test
+    public void queryPageWithStartAndEndStringWithQuotesAndIntKeyArray() {
+        init();
+
+        View view = db.view("example/quotes_created")
+                .startKey("\"quotes\" ", 1)
+                .endKey("\"quotes\" 1", 2000);
+
+        Page page = null;
+        try {
+            page = view.queryPage(30, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(2));
+    }
+
+    /**
+     * Assert that passing an array of integers in query
+     * will produce a result list of all docs.
+     */
+    @Test
+    public void queryWithStartAndEndIntKeyArray() {
+        init();
+
+        View view = db.view("example/created")
+                .startKey(1, 10)
+                .endKey(2000, 5000);
+
+        List<Object> result = view.query(Object.class);
+
+        assertThat(result.size(), is(3));
+    }
+
+    /**
+     * Assert that passing an array of integers in queryPage
+     * will produce a result list of two docs.
+     */
+    @Test
+    public void queryPageWithStartAndEndIntKeyArray() {
+        init();
+
+        View view = db.view("example/created")
+                .startKey(1, 10)
+                .endKey(1001, 2000);
+
+        Page page = null;
+        try {
+            page = view.queryPage(30, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(2));
+    }
+
+    /**
+     * Assert that passing a key in query with an explicit object array of a
+     * string and integer value will produce a result list with three docs.
+     */
+    @Test
+    public void queryWithStartAndEndObjectKeyArray() {
+        init();
+
+        View view = db.view("example/creator_created")
+                .startKey(new Object[]{"uuid", 1})
+                .endKey(new Object[]{"uuid", 1010});
+
+
+        List<Object> result = view.query(Object.class);
+
+        assertThat(result.size(), is(3));
+    }
+
+    /**
+     * Assert that passing a key in queryPage with an explicit object array of
+     * a string and integer value will produce a result list with three docs.
+     */
+    @Test
+    public void queryPageWithStartAndEndObjectKeyArray() {
+        init();
+
+        View view = db.view("example/creator_created")
+                .startKey(new Object[]{"uuid", 1})
+                .endKey(new Object[]{"uuid", 1010});
+
+        Page page = null;
+        try {
+            page = view.queryPage(30, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(3));
+
+    }
+
+    /**
+     * Assert that passing a key in query with an array of number
+     * values will produce a result list with two docs.
+     */
+    @Test
+    public void queryWithStartAndEndNumbersKeyArray() {
+        init();
+
+        View view = db.view("example/created_total")
+                .startKey(1000, 12.00)
+                .endKey(1002, 15.00);
+
+        List<Object> result = view.query(Object.class);
+
+        assertThat(result.size(), is(2));
+    }
+
+    /**
+     * Assert that passing a key in queryPage with an array of number
+     * values will produce a result list with one doc.
+     */
+    @Test
+    public void queryPageWithStartAndEndNumbersKeyArray() {
+        init();
+
+        View view = db.view("example/total_created")
+                .startKey(10.00, 1)
+                .endKey(11.00, 2000);
+
+        Page page = null;
+        try {
+            page = view.queryPage(30, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(1));
+    }
+
+    /**
+     * Assert that passing a key in query with an array of a boolean, string,
+     * and integer value will produce a result list with three docs.
+     */
+    @Test
+    public void queryWithStartAndEndBooleanStringIntegerKeyArray() {
+        init();
+
+        View view = db.view("example/boolean_creator_created")
+                .startKey(false, "uuid", 1)
+                .endKey(true, "uuid", 2000);
+
+        List<Object> result = view.query(Object.class);
+
+        assertThat(result.size(), is(3));
+    }
+
+    /**
+     * Assert that passing a key in queryPage with an array of a boolean, string,
+     * and integer value will produce a result list with one doc.
+     */
+    @Test
+    public void queryPageWithStartAndEndBooleanStringIntegerKeyArray() {
+        init();
+
+        View view = db.view("example/boolean_creator_created")
+                .startKey(false, "uuid", 1)
+                .endKey(false, "uuid", 2000);
+
+        Page page = null;
+        try {
+            page = view.queryPage(30, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(1));
+    }
+
+    /**
+     * Assert that passing a key in query with an array of a integer, boolean,
+     * and string value will produce a result list with one doc.
+     */
+    @Test
+    public void queryWithStartAndEndIntegerBooleanStringKeyArray() {
+        init();
+
+        View view = db.view("example/created_boolean_creator")
+                .startKey(1000, false, "uuid")
+                .endKey(1000, false, "uuid");
+
+        List<Object> result = view.query(Object.class);
+
+        assertThat(result.size(), is(1));
+    }
+
+    /**
+     * Assert that passing a key in query with an explicit object array will produce the same
+     * result list as the queryWithStartAndEndIntegerBooleanStringKeyArray test.
+     */
+    @Test
+    public void queryWithStartAndEndKeyUsingNewObjectWithIntegerBooleanStringArray() {
+        init();
+
+        View view = db.view("example/created_boolean_creator")
+                .startKey(new Object[]{1000, false, "uuid"})
+                .endKey(new Object[]{1000, false, "uuid"});
+
+        List<Object> result = view.query(Object.class);
+
+        assertThat(result.size(), is(1));
+    }
+
+    /**
+     * Assert that passing a key in queryPage with an array of a integer, boolean,
+     * and string value will produce a result list with two docs.
+     */
+    @Test
+    public void queryPageWithStartAndEndIntegerBooleanStringKeyArray() {
+        init();
+
+        View view = db.view("example/created_boolean_creator")
+                .startKey(1000, false, "uuid")
+                .endKey(1002, false, "uuid");
+
+        Page page = null;
+        try {
+            page = view.queryPage(30, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(2));
+
+    }
+
+    /**
+     * Assert that passing a key in queryPage with an explicit object array will produce the same
+     * result list as the queryPageWithStartAndEndIntegerBooleanStringKeyArray test.
+     */
+    @Test
+    public void queryPageWithStartAndEndKeyUsingNewObjectWithIntegerBooleanStringArray() {
+        init();
+
+        View view = db.view("example/created_boolean_creator")
+                .startKey(new Object[]{1000, false, "uuid"})
+                .endKey(new Object[]{1002, false, "uuid"});
+
+        Page page = null;
+        try {
+            page = view.queryPage(30, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(2));
+    }
+
     @Test
     public void byComplexKey() {
         init();
-        int[] complexKey = new int[]{2011, 10, 15};
         List<Foo> foos = db.view("example/by_date")
-                .key(complexKey)
-//				.key(2011, 10, 15) 
+				.key(2011, 10, 15)
                 .includeDocs(true)
                 .reduce(false)
                 .query(Foo.class);
@@ -267,6 +626,20 @@ public class ViewsTest {
     }
 
     /**
+     * Run the same check as paginationAscendingReusingViewAllTheWayInEachDirectionTwice
+     * test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationAscendingReusingMVKeyViewAllTheWayInEachDirectionTwice() {
+        new CheckPaginationWithMultiValueKey()
+                .descending(false)
+                .docCount(6)
+                .docsPerPage(2)
+                .pageToPages(3, 1, 3, 1)
+                .runTest();
+    }
+
+    /**
      * Check that we can page through a view in descending order where the number of results
      * is an exact multiple of the number of pages. Check each page contains the documents
      * we expect. This test uses the same {@link View} instance for each page query.
@@ -279,6 +652,20 @@ public class ViewsTest {
                 .reduce(false)
                 .descending(true);
         checkPagination(true, 6, 2, view, 3, 1, 3, 1);
+    }
+
+    /**
+     * Run the same check as paginationDescendingReusingViewAllTheWayInEachDirectionTwice
+     * test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationDescendingReusingMVKeyViewAllTheWayInEachDirectionTwice() {
+        new CheckPaginationWithMultiValueKey()
+                .descending(true)
+                .docCount(6)
+                .docsPerPage(2)
+                .pageToPages(3, 1, 3, 1)
+                .runTest();
     }
 
     /**
@@ -296,11 +683,27 @@ public class ViewsTest {
     }
 
     /**
+     * Run the same check as paginationAscendingReusingViewPartialLastPageAllTheWayInEachDirection
+     * Twice test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationAscendingReusingMVKeyViewPartialLastPageAllTheWayInEachDirectionTwice() {
+        new CheckPaginationWithMultiValueKey()
+                .descending(false)
+                .docCount(5)
+                .docsPerPage(2)
+                .pageToPages(3, 1, 3, 1)
+                .runTest();
+    }
+
+    /**
      * Check that we can page through a view in descending order where the number of results
      * is not an exact multiple of the number of pages. Check each page contains the documents
      * we expect. This test uses the same {@link View} instance for each page query.
      * Page forward to the last page, back to the first page, forward to the last page and back to
      * the first page.
+     *
+     * Run the same check above on an array of multi-value key views.
      */
     @Test
     public void paginationDescendingReusingViewPartialLastPageAllTheWayInEachDirectionTwice() {
@@ -308,6 +711,20 @@ public class ViewsTest {
                 .reduce(false)
                 .descending(true);
         checkPagination(true, 5, 2, view, 3, 1, 3, 1);
+    }
+
+    /**
+     * Run the same check as paginationDescendingReusingViewPartialLastPageAllTheWayInEachDirection
+     * Twice test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationDescendingReusingMVKeyViewPartialLastPageAllTheWayInEachDirectionTwice() {
+        new CheckPaginationWithMultiValueKey()
+                .descending(true)
+                .docCount(5)
+                .docsPerPage(2)
+                .pageToPages(3, 1, 3, 1)
+                .runTest();
     }
 
     /**
@@ -323,6 +740,21 @@ public class ViewsTest {
     }
 
     /**
+     * Run the same check as paginationAscendingNewViewAllTheWayInEachDirectionTwice
+     * test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationAscendingNewMVKeyViewAllTheWayInEachDirectionTwice() {
+        new CheckPaginationWithMultiValueKey()
+                .descending(false)
+                .useNewView(true)
+                .docCount(6)
+                .docsPerPage(2)
+                .pageToPages(3, 1, 3, 1)
+                .runTest();
+    }
+
+    /**
      * Check that we can page through a view in descending order where the number of results
      * is an exact multiple of the number of pages. Check each page contains the documents
      * we expect. This test uses a new {@link View} instance for each page query.
@@ -332,6 +764,21 @@ public class ViewsTest {
     @Test
     public void paginationDescendingNewViewAllTheWayInEachDirectionTwice() {
         checkPagination(true, 6, 2, null, 3, 1, 3, 1);
+    }
+
+    /**
+     * Run the same check as paginationDescendingNewViewAllTheWayInEachDirectionTwice
+     * test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationDescendingNewMVKeyViewAllTheWayInEachDirectionTwice() {
+        new CheckPaginationWithMultiValueKey()
+                .descending(true)
+                .useNewView(true)
+                .docCount(6)
+                .docsPerPage(2)
+                .pageToPages(3, 1, 3, 1)
+                .runTest();
     }
 
     /**
@@ -347,6 +794,21 @@ public class ViewsTest {
     }
 
     /**
+     * Run the same check as paginationAscendingNewViewPartialLastPageAllTheWayInEachDirectionTwice
+     * test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationAscendingNewMVKeyViewPartialLastPageAllTheWayInEachDirectionTwice() {
+        new CheckPaginationWithMultiValueKey()
+                .descending(false)
+                .useNewView(true)
+                .docCount(5)
+                .docsPerPage(2)
+                .pageToPages(3, 1, 3, 1)
+                .runTest();
+    }
+
+    /**
      * Check that we can page through a view in descending order where the number of results
      * is not an exact multiple of the number of pages. Check each page contains the documents
      * we expect. This test uses a newfuture {@link View} instance for each page query.
@@ -356,6 +818,22 @@ public class ViewsTest {
     @Test
     public void paginationDescendingNewViewPartialLastPageAllTheWayInEachDirectionTwice() {
         checkPagination(true, 5, 2, null, 3, 1, 3, 1);
+    }
+
+    /**
+     * Run the same check as paginationDescendingNewViewPartialLastPageAllTheWayInEachDirectionTwice
+     * test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationDescendingNewMVKeyViewPartialLastPageAllTheWayInEachDirectionTwice() {
+        //checkPaginationWithMultiValueKey(true, 5, 2, 3, 1, 3, 1);
+        new CheckPaginationWithMultiValueKey()
+                .descending(true)
+                .useNewView(true)
+                .docCount(5)
+                .docsPerPage(2)
+                .pageToPages(3, 1, 3, 1)
+                .runTest();
     }
 
     /**
@@ -369,6 +847,20 @@ public class ViewsTest {
         View view = db.view("example/foo")
                 .reduce(false);
         checkPagination(false, 30, 5, view, 4, 2, 5, 3, 4, 2, 6);
+    }
+
+    /**
+     * Run the same check as paginationAscendingReusingViewPartWayInEachDirection
+     * test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationAscendingReusingMVKeyViewPartWayInEachDirection() {
+        new CheckPaginationWithMultiValueKey()
+                .descending(false)
+                .docCount(30)
+                .docsPerPage(5)
+                .pageToPages(4, 2, 5, 3, 4, 2, 6)
+                .runTest();
     }
 
     /**
@@ -386,6 +878,20 @@ public class ViewsTest {
     }
 
     /**
+     * Run the same check as paginationDescendingReusingViewPartWayInEachDirection
+     * test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationDescendingReusingMVKeyViewPartWayInEachDirection() {
+        new CheckPaginationWithMultiValueKey()
+                .descending(true)
+                .docCount(30)
+                .docsPerPage(5)
+                .pageToPages(4, 2, 5, 3, 4, 2, 6)
+                .runTest();
+    }
+
+    /**
      * Check that we can page through a view in ascending order where the number of results
      * is not an exact multiple of the number of pages. Check each page contains the documents
      * we expect. This test uses the same {@link View} instance for each page query.
@@ -396,6 +902,20 @@ public class ViewsTest {
         View view = db.view("example/foo")
                 .reduce(false);
         checkPagination(false, 28, 5, view, 4, 2, 5, 3, 4, 2, 6);
+    }
+
+    /**
+     * Run the same check as paginationAscendingReusingViewPartialLastPagePartWayInEachDirection
+     * test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationAscendingReusingMVKeyViewPartialLastPagePartWayInEachDirection() {
+        new CheckPaginationWithMultiValueKey()
+                .descending(false)
+                .docCount(28)
+                .docsPerPage(5)
+                .pageToPages(4, 2, 5, 3, 4, 2, 6)
+                .runTest();
     }
 
     /**
@@ -413,6 +933,20 @@ public class ViewsTest {
     }
 
     /**
+     * Run the same check as paginationDescendingReusingViewPartialLastPagePartWayInEachDirection
+     * test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationDescendingReusingMVKeyViewPartialLastPagePartWayInEachDirection() {
+        new CheckPaginationWithMultiValueKey()
+                .descending(true)
+                .docCount(28)
+                .docsPerPage(5)
+                .pageToPages(4, 2, 5, 3, 4, 2, 6)
+                .runTest();
+    }
+
+    /**
      * Check that we can page through a view in ascending order where the number of results
      * is an exact multiple of the number of pages. Check each page contains the documents
      * we expect. This test uses a new {@link View} instance for each page query.
@@ -421,6 +955,21 @@ public class ViewsTest {
     @Test
     public void paginationAscendingNewViewPartWayInEachDirection() {
         checkPagination(false, 30, 5, null, 4, 2, 5, 3, 4, 2, 6);
+    }
+
+    /**
+     * Run the same check as paginationAscendingNewViewPartWayInEachDirection
+     * test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationAscendingNewMVKeyViewPartWayInEachDirection() {
+        new CheckPaginationWithMultiValueKey()
+                .descending(false)
+                .useNewView(true)
+                .docCount(30)
+                .docsPerPage(5)
+                .pageToPages(4, 2, 5, 3, 4, 2, 6)
+                .runTest();
     }
 
     /**
@@ -435,6 +984,21 @@ public class ViewsTest {
     }
 
     /**
+     * Run the same check as paginationDescendingNewViewPartWayInEachDirection
+     * test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationDescendingNewMVKeyViewPartWayInEachDirection() {
+        new CheckPaginationWithMultiValueKey()
+                .descending(true)
+                .useNewView(true)
+                .docCount(30)
+                .docsPerPage(5)
+                .pageToPages(4, 2, 5, 3, 4, 2, 6)
+                .runTest();
+    }
+
+    /**
      * Check that we can page through a view in ascending order where the number of results
      * is not an exact multiple of the number of pages. Check each page contains the documents
      * we expect. This test uses a new {@link View} instance for each page query.
@@ -446,6 +1010,21 @@ public class ViewsTest {
     }
 
     /**
+     * Run the same check as paginationAscendingNewViewPartialLastPagePartWayInEachDirection
+     * test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationAscendingNewMVKeyViewPartialLastPagePartWayInEachDirection() {
+        new CheckPaginationWithMultiValueKey()
+                .descending(false)
+                .useNewView(true)
+                .docCount(28)
+                .docsPerPage(5)
+                .pageToPages(4, 2, 5, 3, 4, 2, 6)
+                .runTest();
+    }
+
+    /**
      * Check that we can page through a view in descending order where the number of results
      * is not an exact multiple of the number of pages. Check each page contains the documents
      * we expect. This test uses a newfuture {@link View} instance for each page query.
@@ -454,6 +1033,21 @@ public class ViewsTest {
     @Test
     public void paginationDescendingNewViewPartialLastPagePartWayInEachDirection() {
         checkPagination(true, 28, 5, null, 4, 2, 5, 3, 4, 2, 6);
+    }
+
+    /**
+     * Run the same check as paginationDescendingNewViewPartialLastPagePartWayInEachDirection
+     * test on views using an array of multi-value keys.
+     */
+    @Test
+    public void paginationDescendingNewMVKeyViewPartialLastPagePartWayInEachDirection() {
+        new CheckPaginationWithMultiValueKey()
+                .descending(true)
+                .useNewView(true)
+                .docCount(28)
+                .docsPerPage(5)
+                .pageToPages(4, 2, 5, 3, 4, 2, 6)
+                .runTest();
     }
 
     /**
@@ -506,6 +1100,7 @@ public class ViewsTest {
      */
     private void checkPagination(boolean descending, int docCount, int docsPerPage, View view,
                                  int... pageToPages) {
+
         for (int i = 0; i < docCount; ++i) {
             Foo foo = new Foo(generateUUID(), docTitle(i + 1));
             db.save(foo);
@@ -576,28 +1171,225 @@ public class ViewsTest {
     }
 
     private static void init() {
-        try {
-            Foo foo = null;
+        Foo foo = null;
 
-            foo = new Foo("id-1", "key-1");
-            foo.setTags(Arrays.asList(new String[]{"couchdb", "views"}));
-            foo.setComplexDate(new int[]{2011, 10, 15});
-            db.save(foo);
+        foo = new Foo("id-1", "key-1");
+        foo.setTags(Arrays.asList(new String[]{"couchdb", "views"}));
+        foo.setComplexDate(new int[]{2011, 10, 15});
+        multiValueKeyInit(foo, 0);
+        db.save(foo);
 
-            foo = new Foo("id-2", "key-2");
-            foo.setTags(Arrays.asList(new String[]{"java", "couchdb"}));
-            foo.setComplexDate(new int[]{2011, 10, 15});
-            db.save(foo);
+        foo = new Foo("id-2", "key-2");
+        foo.setTags(Arrays.asList(new String[]{"java", "couchdb"}));
+        foo.setComplexDate(new int[]{2011, 10, 15});
+        multiValueKeyInit(foo, 1);
+        db.save(foo);
 
-            foo = new Foo("id-3", "key-3");
-            foo.setComplexDate(new int[]{2013, 12, 17});
-            db.save(foo);
+        foo = new Foo("id-3", "key-3");
+        foo.setComplexDate(new int[]{2013, 12, 17});
+        multiValueKeyInit(foo, 2);
+        db.save(foo);
+    }
 
-        } catch (DocumentConflictException e) {
-        }
+    private static void multiValueKeyInit(Foo foo, int i) {
+        //JSON object for multi value key array tests
+        JsonObject json = new JsonObject();
+        json.addProperty("creator", "uuid");
+        json.addProperty("created", 1000 + i);
+        json.addProperty("boolean", (i != 0));
+        json.addProperty("total", 10.01 + i);
+        json.addProperty("quotes", "\"quotes\" " + String.valueOf(i));
+        json.addProperty("spaces", " spaces " + String.valueOf(i));
+        json.addProperty("letters", (char) ('a' + i) + "bc");
+
+        JsonArray jsonArray = new JsonArray();
+        jsonArray.add(json);
+
+        foo.setContentArray(jsonArray);
     }
 
     private static String generateUUID() {
         return UUID.randomUUID().toString().replace("-", "");
+    }
+
+    /**
+     * Helper class for use with multi-value key view tests.
+     */
+    private class CheckPaginationWithMultiValueKey {
+        /** True if the view is in descending order, and false otherwise. */
+        private boolean descending;
+        /** True for creating a new view for the query, and false otherwise. */
+        private boolean useNewView;
+        /** The total number of documents in the view. */
+        private int docCount;
+        /** The maximum number of documents per page. */
+        private int docsPerPage;
+        /** The list of page numbers to page to. */
+        private int[] pageToPages;
+
+        public CheckPaginationWithMultiValueKey descending(boolean descending) {
+            this.descending = descending;
+            return this;
+        }
+
+        public CheckPaginationWithMultiValueKey useNewView(boolean useNewView) {
+            this.useNewView = useNewView;
+            return this;
+        }
+
+        public CheckPaginationWithMultiValueKey docCount(int docCount) {
+            this.docCount = docCount;
+            return this;
+        }
+
+        public CheckPaginationWithMultiValueKey docsPerPage(int docsPerPage) {
+            this.docsPerPage = docsPerPage;
+            return this;
+        }
+
+        public CheckPaginationWithMultiValueKey pageToPages(int... pageToPages) {
+            this.pageToPages = pageToPages;
+            return this;
+        }
+
+        /**
+         * For use with multi-value key view tests.
+         *
+         * This helper function uses the given {@code view} to query for a page of
+         * results. The {@code param} indicates whether we should be getting a next or previous
+         * page. If {@code view} is null, a new {@link View} is created to perform the query,
+         * otherwise the given {@code view} is used.
+         *
+         * @param expectedPageNumber the page number of the page we expect to be returned.
+         * @param param              the request parameter to use to query a page, or {@code null} to
+         *                              return the first page.
+         * @param descending         true if the view should be created in descending order, and false
+         *                              otherwise.
+         * @param docCount           the total number of documents in the view.
+         * @param docsPerPage        the maximum number of documents per page in the view.
+         * @param view               the {@link View} object to use to perform the query, or {@code
+         *                              null} to create a new {@link View}
+         * @param viewCount          the current view in the array of multi-value key views.
+         *                              This value is used when view parameter is null.
+         * @return the page of results.
+         */
+        private Page queryAndCheckPageWithMultiValueKey(int expectedPageNumber, String param, boolean
+                descending, int docCount, int docsPerPage, View view, int viewCount) {
+            View queryView = view;
+            if (queryView == null) {
+                queryView = db.view(testViews[viewCount])
+                        .reduce(false)
+                        .descending(descending);
+            }
+            Page page = queryView.queryPage(docsPerPage, param, Foo.class);
+            checkPage(page, docCount, docsPerPage, expectedPageNumber, descending);
+            return page;
+        }
+
+        /**
+         * For use with multi-value key view tests.
+         *
+         * Check all the pages going forwards until we reach the last page. This assumes the given
+         * {@code page} is the first page of results.
+         *
+         * @param currentPage   the page number of the {@code page}.
+         * @param numberOfPages the number of pages to page forwards.
+         * @param page          the page from which to start paging forwards.
+         * @param descending    true if the view is in descending order, and false otherwise.
+         * @param docCount      the total number of documents in the view.
+         * @param docsPerPage   the maximum number of documents per page.
+         * @param view          the {@link View} object to use to perform the query (or null to create
+         *                         a new
+         *                      view for the query).
+         * @param viewCount     the current view in the array of multi-value key views. This value is
+         *                      used when view parameter is null.
+         * @return the last page in the view.
+         */
+        private Page checkPagesForwardMultiValueKey(int currentPage, int numberOfPages, Page page, boolean
+                descending, int docCount, int docsPerPage, View view, int viewCount) {
+            for (int i = 0; i < numberOfPages; ++i) {
+                page = queryAndCheckPageWithMultiValueKey(currentPage + i + 1, page.getNextParam(),
+                        descending,
+                        docCount, docsPerPage, view, viewCount);
+            }
+            return page;
+        }
+
+        /**
+         * For use with multi-value key view tests.
+         *
+         * Check all the pages going backwards until we reach the first page. This assumes the
+         * given {@code page} is the last page of results.
+         *
+         * @param currentPage   the page number of the {@code page}.
+         * @param numberOfPages the number of pages to page backwards.
+         * @param page          the page from which to start paging backwards.
+         * @param descending    true if the view is in descending order, and false otherwise.
+         * @param docCount      the total number of documents in the view.
+         * @param docsPerPage   the maximum number of documents per page.
+         * @param view          the {@link View} object to use to perform the query (or null to create
+         *                         a new
+         *                      view for the query).
+         * @param viewCount     the current view in the array of multi-value key views. This value is
+         *                      used when view parameter is null.
+         * @return the first page in the view
+         */
+        private Page checkPagesBackwardMultiValueKey(int currentPage, int numberOfPages, Page page, boolean
+                descending, int docCount, int docsPerPage, View view, int viewCount) {
+            for (int i = 0; i < numberOfPages; ++i) {
+                page = queryAndCheckPageWithMultiValueKey(currentPage - i - 1, page.getPreviousParam(), descending,
+                        docCount, docsPerPage, view, viewCount);
+            }
+            return page;
+        }
+
+
+        /**
+         * Run tests for paging the view with multiple changes of direction. Uses a pre-defined
+         * array of queries for multi-value key testing.
+         *
+         * <p/>
+         * Starting from page 1, page through to each page identified by the page numbers in
+         * {@code pageToPages}, checking all the intervening pages as well as the pages specified
+         * in {@code pageToPages} are as expected.
+         * <p/>
+         * For example, if {@code pageToPages} contains {@code 4, 2, 5}, this will check pages in the
+         * following order: 1, 2, 3, 4, 3, 2, 3, 4, 5.
+         */
+        public void runTest() {
+            for (int i = 0; i < docCount; ++i) {
+                Foo foo = new Foo(generateUUID(), docTitle(i + 1));
+                multiValueKeyInit(foo, i);
+                db.save(foo);
+            }
+
+            // Run all views
+            for(int viewCount = 0; viewCount < testViews.length; viewCount++) {
+                View view = null;
+                if(!useNewView) {
+                    view = db.view(testViews[viewCount])
+                            .reduce(false)
+                            .descending(descending);
+                }
+
+                // Get the first page of results.
+                Page page = queryAndCheckPageWithMultiValueKey(1, null, descending, docCount,
+                        docsPerPage, view, viewCount);
+
+                int currentPage = 1;
+                for (int i = 0; i < pageToPages.length; ++i) {
+                    if (pageToPages[i] > currentPage) {
+                        page = checkPagesForwardMultiValueKey(currentPage, pageToPages[i] -
+                                        currentPage, page,
+                                descending, docCount, docsPerPage, view, viewCount);
+                    } else {
+                        page = checkPagesBackwardMultiValueKey(currentPage, currentPage -
+                                        pageToPages[i], page,
+                                descending, docCount, docsPerPage, view, viewCount);
+                    }
+                    currentPage = pageToPages[i];
+                }
+            }
+        }
     }
 }
