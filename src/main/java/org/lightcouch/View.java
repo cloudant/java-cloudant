@@ -361,8 +361,8 @@ public class View {
         // init page, query view
         final Page<T> page = new Page<T>();
         final List<T> pageList = new ArrayList<T>();
-        final ViewResult<String, String, T> vr = queryView(String.class, String.class, classOfT);
-        final List<ViewResult<String, String, T>.Rows> rows = vr.getRows();
+        final ViewResult<Object, String, T> vr = queryView(Object.class, String.class, classOfT);
+        final List<ViewResult<Object, String, T>.Rows> rows = vr.getRows();
         final int resultRows = rows.size();
         final int offset = vr.getOffset();
         final long totalRows = vr.getTotalRows();
@@ -373,7 +373,19 @@ public class View {
         final JsonObject currentKeys = new JsonObject();
         final JsonObject jsonNext = new JsonObject();
         final JsonObject jsonPrev = new JsonObject();
-        currentKeys.addProperty(CURRENT_START_KEY, rows.get(0).getKey());
+
+        Object getKey = rows.get(0).getKey();
+        //Handle multi value key array
+        if(getKey instanceof ArrayList) {
+            String keyAsString = "[";
+            for(Object key : (ArrayList<Object>)getKey) {
+                keyAsString += key.toString() + ",";
+            }
+            //Final key value as string with closing bracket
+            getKey = keyAsString.substring(0,keyAsString.length()-1).concat("]");
+        }
+
+        currentKeys.addProperty(CURRENT_START_KEY, getKey.toString());
         currentKeys.addProperty(CURRENT_START_KEY_DOC_ID, rows.get(0).getId());
         for (int i = 0; i < resultRows; i++) {
             // set keys for the next page
@@ -381,7 +393,7 @@ public class View {
                 boolean isLastPage = resultRows <= rowsPerPage;
                 if (!isLastPage) {
                     page.setHasNext(true);
-                    jsonNext.addProperty(START_KEY, rows.get(i).getKey());
+                    jsonNext.addProperty(START_KEY, rows.get(i).getKey().toString());
                     jsonNext.addProperty(START_KEY_DOC_ID, rows.get(i).getId());
                     jsonNext.add(CURRENT_KEYS, currentKeys);
                     jsonNext.addProperty(ACTION, NEXT);
@@ -583,7 +595,14 @@ public class View {
     }
 
     private String getKeyAsJson(Object... key) {
-        return (key.length == 1) ? gson.toJson(key[0]) : gson.toJson(key); // single or complex key
+        // single or complex key
+        if(key.length == 1 && key[0] instanceof Number) {
+            return gson.toJson(key);
+        } else if(key.length == 1) {
+            return gson.toJson(key[0]);
+        } else {
+            return gson.toJson(key);
+        }
     }
 
     /**

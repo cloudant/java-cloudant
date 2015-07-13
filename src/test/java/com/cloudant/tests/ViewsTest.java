@@ -36,11 +36,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.lightcouch.DesignDocument;
 import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Category(RequiresDB.class)
@@ -108,12 +111,146 @@ public class ViewsTest {
     }
 
     @Test
+    public void byStartAndEndIntKeyArray() {
+        multiValueKeyInit();
+
+        //Test key array with 1 start and end integer (startkey=[1]&endkey=[2000])
+        View query = db.view("keyarray_example/created")
+                .startKey(1)
+                .endKey(2000)
+                .includeDocs(true);
+
+
+        List<Object> result = query.query(Object.class);
+
+        assertThat(result.size(), is(3));
+
+        Page page = null;
+        try {
+            page = query.queryPage(30, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(3));
+
+        //Query with object array in startkey and endkey
+        query = db.view("keyarray_example/created")
+                .startKey(new Object[]{1})
+                .endKey(new Object[]{2000})
+                .includeDocs(true);
+
+
+        result = query.query(Object.class);
+
+        assertThat(result.size(), is(3));
+    }
+
+    @Test
+    public void byStartAndEndTwoKeyArray() {
+        multiValueKeyInit();
+
+        //Test key array with 2 (startkey=["uuid",1]&endkey=["uuid",2000])
+        View query = db.view("keyarray_example/creator_created")
+                .startKey("uuid", 1)
+                .endKey("uuid", 2000)
+                .includeDocs(true);
+
+
+        List<Object> result = query.query(Object.class);
+
+        assertThat(result.size(), is(3));
+
+        Page page = null;
+        try {
+            page = query.queryPage(30, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(3));
+
+
+        query = db.view("keyarray_example/creator_created")
+                .startKey(new Object[]{"uuid", 1})
+                .endKey(new Object[]{"uuid", 2000})
+                .includeDocs(true);
+
+
+        result = query.query(Object.class);
+
+        assertThat(result.size(), is(3));
+
+        //Key array with only integers
+        query = db.view("keyarray_example/created_total")
+                .startKey(1, 12.00)
+                .endKey(2000, 15.00)
+                .includeDocs(true);
+
+
+        result = query.query(Object.class);
+
+        assertThat(result.size(), is(3));
+
+        page = null;
+        try {
+            page = query.queryPage(30, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(3));
+    }
+
+    @Test
+    public void byStartAndEndThreeKeyArray() {
+        multiValueKeyInit();
+
+        //Test key array with 3 (startkey=[false,"uuid",1]&endkey=[false,"uuid",2000])
+        View query = db.view("keyarray_example/creator_created_boolean")
+                .startKey(false, "uuid", 1)
+                .endKey(false, "uuid", 2000)
+                .includeDocs(true);
+
+        List<Object> result = query.query(Object.class);
+
+        assertThat(result.size(), is(1));
+
+        //Test key array with 3 (startkey=[false,"uuid",1]&endkey=["{}","uuid",2000])
+        query = db.view("keyarray_example/creator_created_boolean")
+                .startKey(false, "uuid", 1)
+                .endKey("{}", "uuid", 2000)
+                .includeDocs(true);
+
+        result = query.query(Object.class);
+
+        assertThat(result.size(), is(3));
+
+        Page page = null;
+        try {
+            page = query.queryPage(30, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(3));
+
+
+        query = db.view("keyarray_example/creator_created_boolean")
+                .startKey(new Object[]{true, "uuid", 1})
+                .endKey(new Object[]{true, "uuid", 2000})
+                .includeDocs(true);
+
+        result = query.query(Object.class);
+
+        assertThat(result.size(), is(2));
+    }
+
+    @Test
     public void byComplexKey() {
         init();
-        int[] complexKey = new int[]{2011, 10, 15};
         List<Foo> foos = db.view("example/by_date")
-                .key(complexKey)
-//				.key(2011, 10, 15) 
+				.key(2011, 10, 15)
                 .includeDocs(true)
                 .reduce(false)
                 .query(Foo.class);
@@ -592,6 +729,91 @@ public class ViewsTest {
             foo = new Foo("id-3", "key-3");
             foo.setComplexDate(new int[]{2013, 12, 17});
             db.save(foo);
+
+        } catch (DocumentConflictException e) {
+        }
+    }
+
+    private static void multiValueKeyInit() {
+        try {
+            
+            JsonObject json = new JsonObject();
+            json.addProperty("creator", "uuid");
+            json.addProperty("created", 1000);
+            json.addProperty("boolean", true);
+            json.addProperty("total", 12.34);
+            db.save(json);
+
+            json = new JsonObject();
+            json.addProperty("creator", "uuid");
+            json.addProperty("created", 1010);
+            json.addProperty("boolean", false);
+            json.addProperty("total", 13.34);
+            db.save(json);
+
+            json = new JsonObject();
+            json.addProperty("creator", "uuid");
+            json.addProperty("created", 1020);
+            json.addProperty("boolean", true);
+            json.addProperty("total", 14.34);
+            db.save(json);
+
+            DesignDocument designDoc = new DesignDocument();
+
+            designDoc.setId("_design/keyarray_example");
+            designDoc.setLanguage("javascript");
+
+
+            DesignDocument.MapReduce mapFunctions =
+                    new DesignDocument.MapReduce();
+
+            //Creator and created multi (3) value key map function
+            mapFunctions.setMap(
+                    "function(doc) { emit([doc.boolean, doc.creator, doc.created], null); }");
+
+
+            Map<String, DesignDocument.MapReduce> keyViews =
+                    new HashMap<String, DesignDocument.MapReduce>();
+            keyViews.put("creator_created_boolean", mapFunctions);
+
+            designDoc.setViews(keyViews);
+
+            //Creator and created multi (2) value key map function
+            mapFunctions =
+                    new DesignDocument.MapReduce();
+
+            mapFunctions.setMap(
+                    "function(doc) { emit([doc.creator, doc.created], null); }");
+
+            keyViews.put("creator_created", mapFunctions);
+
+            designDoc.setViews(keyViews);
+
+            //Creator and created multi (2) integer value key map function
+            mapFunctions =
+                    new DesignDocument.MapReduce();
+
+            mapFunctions.setMap(
+                    "function(doc) { emit([doc.created, doc.total], null); }");
+
+            keyViews.put("created_total", mapFunctions);
+
+            designDoc.setViews(keyViews);
+
+            //Created single value map function
+            mapFunctions =
+                    new DesignDocument.MapReduce();
+
+            mapFunctions.setMap(
+                    "function(doc) { emit([doc.created], null); }");
+
+            keyViews.put("created", mapFunctions);
+
+            designDoc.setViews(keyViews);
+
+            db.save(designDoc);
+
+            db.syncDesignDocsWithDb();
 
         } catch (DocumentConflictException e) {
         }
