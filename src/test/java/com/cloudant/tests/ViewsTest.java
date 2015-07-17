@@ -37,7 +37,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.lightcouch.DesignDocument;
-import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
 
 import java.util.Arrays;
@@ -68,7 +67,6 @@ public class ViewsTest {
         account.deleteDB("lightcouch-db-test");
         account.shutdown();
     }
-
 
     @Test
     public void queryView() {
@@ -110,16 +108,50 @@ public class ViewsTest {
         assertThat(foos.size(), is(2));
     }
 
+    /**
+     * Assert that passing a boolean key with value 'false'
+     * in query and queryView will produce a result list of
+     * all false docs.
+     */
+
+    @Test
+    public void byStartAndEndBooleanKey() {
+        multiValueKeyInit();
+
+        View query = db.view("keyarray_example/boolean")
+                .startKey(false)
+                .endKey(false)
+                .includeDocs(true);
+
+        List<Object> result = query.query(Object.class);
+
+        assertThat(result.size(), is(1));
+
+        Page page = null;
+        try {
+            page = query.queryPage(30, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(1));
+    }
+
+    /**
+     * Assert that passing a single integer value key expression
+     * in query and queryView will produce a result list of all docs.
+     *
+     * Run the same assert above but with a key that is an object array
+     * containing an integer.
+     */
     @Test
     public void byStartAndEndIntKeyArray() {
         multiValueKeyInit();
 
-        //Test key array with 1 start and end integer (startkey=[1]&endkey=[2000])
         View query = db.view("keyarray_example/created")
                 .startKey(1)
                 .endKey(2000)
                 .includeDocs(true);
-
 
         List<Object> result = query.query(Object.class);
 
@@ -134,7 +166,6 @@ public class ViewsTest {
 
         assertThat(page.getResultList().size(), is(3));
 
-        //Query with object array in startkey and endkey
         query = db.view("keyarray_example/created")
                 .startKey(new Object[]{1})
                 .endKey(new Object[]{2000})
@@ -146,16 +177,21 @@ public class ViewsTest {
         assertThat(result.size(), is(3));
     }
 
+    /**
+     * Assert that passing a key with two values in query
+     * and queryView will produce a result list of all docs.
+     *
+     * Run the same assert above but with a key that is an
+     * object array containing only integers.
+     */
     @Test
     public void byStartAndEndTwoKeyArray() {
         multiValueKeyInit();
 
-        //Test key array with 2 (startkey=["uuid",1]&endkey=["uuid",2000])
         View query = db.view("keyarray_example/creator_created")
                 .startKey("uuid", 1)
                 .endKey("uuid", 2000)
                 .includeDocs(true);
-
 
         List<Object> result = query.query(Object.class);
 
@@ -202,11 +238,17 @@ public class ViewsTest {
         assertThat(page.getResultList().size(), is(3));
     }
 
+    /**
+     * Assert that passing a key with three different values in
+     * query and queryView will produce a result list of all docs.
+     *
+     * Run the same assert above but with a key that is an object array
+     * and should only return a result with 'true' as the first value.
+     */
     @Test
     public void byStartAndEndThreeKeyArray() {
         multiValueKeyInit();
 
-        //Test key array with 3 (startkey=[false,"uuid",1]&endkey=[false,"uuid",2000])
         View query = db.view("keyarray_example/creator_created_boolean")
                 .startKey(false, "uuid", 1)
                 .endKey(false, "uuid", 2000)
@@ -216,7 +258,6 @@ public class ViewsTest {
 
         assertThat(result.size(), is(1));
 
-        //Test key array with 3 (startkey=[false,"uuid",1]&endkey=["{}","uuid",2000])
         query = db.view("keyarray_example/creator_created_boolean")
                 .startKey(false, "uuid", 1)
                 .endKey("{}", "uuid", 2000)
@@ -713,110 +754,112 @@ public class ViewsTest {
     }
 
     private static void init() {
-        try {
-            Foo foo = null;
+        Foo foo = null;
 
-            foo = new Foo("id-1", "key-1");
-            foo.setTags(Arrays.asList(new String[]{"couchdb", "views"}));
-            foo.setComplexDate(new int[]{2011, 10, 15});
-            db.save(foo);
+        foo = new Foo("id-1", "key-1");
+        foo.setTags(Arrays.asList(new String[]{"couchdb", "views"}));
+        foo.setComplexDate(new int[]{2011, 10, 15});
+        db.save(foo);
 
-            foo = new Foo("id-2", "key-2");
-            foo.setTags(Arrays.asList(new String[]{"java", "couchdb"}));
-            foo.setComplexDate(new int[]{2011, 10, 15});
-            db.save(foo);
+        foo = new Foo("id-2", "key-2");
+        foo.setTags(Arrays.asList(new String[]{"java", "couchdb"}));
+        foo.setComplexDate(new int[]{2011, 10, 15});
+        db.save(foo);
 
-            foo = new Foo("id-3", "key-3");
-            foo.setComplexDate(new int[]{2013, 12, 17});
-            db.save(foo);
-
-        } catch (DocumentConflictException e) {
-        }
+        foo = new Foo("id-3", "key-3");
+        foo.setComplexDate(new int[]{2013, 12, 17});
+        db.save(foo);
     }
 
+    //Initialize JSON docs and design docs for testing multi value and integer keys
     private static void multiValueKeyInit() {
-        try {
-            
-            JsonObject json = new JsonObject();
-            json.addProperty("creator", "uuid");
-            json.addProperty("created", 1000);
-            json.addProperty("boolean", true);
-            json.addProperty("total", 12.34);
-            db.save(json);
+        JsonObject json = new JsonObject();
+        json.addProperty("creator", "uuid");
+        json.addProperty("created", 1000);
+        json.addProperty("boolean", true);
+        json.addProperty("total", 12.34);
+        db.save(json);
 
-            json = new JsonObject();
-            json.addProperty("creator", "uuid");
-            json.addProperty("created", 1010);
-            json.addProperty("boolean", false);
-            json.addProperty("total", 13.34);
-            db.save(json);
+        json = new JsonObject();
+        json.addProperty("creator", "uuid");
+        json.addProperty("created", 1010);
+        json.addProperty("boolean", false);
+        json.addProperty("total", 13.34);
+        db.save(json);
 
-            json = new JsonObject();
-            json.addProperty("creator", "uuid");
-            json.addProperty("created", 1020);
-            json.addProperty("boolean", true);
-            json.addProperty("total", 14.34);
-            db.save(json);
+        json = new JsonObject();
+        json.addProperty("creator", "uuid");
+        json.addProperty("created", 1020);
+        json.addProperty("boolean", true);
+        json.addProperty("total", 14.34);
+        db.save(json);
 
-            DesignDocument designDoc = new DesignDocument();
+        DesignDocument designDoc = new DesignDocument();
 
-            designDoc.setId("_design/keyarray_example");
-            designDoc.setLanguage("javascript");
+        designDoc.setId("_design/keyarray_example");
+        designDoc.setLanguage("javascript");
 
 
-            DesignDocument.MapReduce mapFunctions =
-                    new DesignDocument.MapReduce();
+        DesignDocument.MapReduce mapFunctions =
+                new DesignDocument.MapReduce();
 
-            //Creator and created multi (3) value key map function
-            mapFunctions.setMap(
-                    "function(doc) { emit([doc.boolean, doc.creator, doc.created], null); }");
+        //Creator and created multi (3) value key map function
+        mapFunctions.setMap(
+                "function(doc) { emit([doc.boolean, doc.creator, doc.created], null); }");
 
 
-            Map<String, DesignDocument.MapReduce> keyViews =
-                    new HashMap<String, DesignDocument.MapReduce>();
-            keyViews.put("creator_created_boolean", mapFunctions);
+        Map<String, DesignDocument.MapReduce> keyViews =
+                new HashMap<String, DesignDocument.MapReduce>();
+        keyViews.put("creator_created_boolean", mapFunctions);
 
-            designDoc.setViews(keyViews);
+        designDoc.setViews(keyViews);
 
-            //Creator and created multi (2) value key map function
-            mapFunctions =
-                    new DesignDocument.MapReduce();
+        //Creator and created multi (2) value key map function
+        mapFunctions =
+                new DesignDocument.MapReduce();
 
-            mapFunctions.setMap(
-                    "function(doc) { emit([doc.creator, doc.created], null); }");
+        mapFunctions.setMap(
+                "function(doc) { emit([doc.creator, doc.created], null); }");
 
-            keyViews.put("creator_created", mapFunctions);
+        keyViews.put("creator_created", mapFunctions);
 
-            designDoc.setViews(keyViews);
+        designDoc.setViews(keyViews);
 
-            //Creator and created multi (2) integer value key map function
-            mapFunctions =
-                    new DesignDocument.MapReduce();
+        //Creator and created multi (2) integer value key map function
+        mapFunctions =
+                new DesignDocument.MapReduce();
 
-            mapFunctions.setMap(
-                    "function(doc) { emit([doc.created, doc.total], null); }");
+        mapFunctions.setMap(
+                "function(doc) { emit([doc.created, doc.total], null); }");
 
-            keyViews.put("created_total", mapFunctions);
+        keyViews.put("created_total", mapFunctions);
 
-            designDoc.setViews(keyViews);
+        designDoc.setViews(keyViews);
 
-            //Created single value map function
-            mapFunctions =
-                    new DesignDocument.MapReduce();
+        //Created single value map function for integer key test
+        mapFunctions =
+                new DesignDocument.MapReduce();
 
-            mapFunctions.setMap(
-                    "function(doc) { emit([doc.created], null); }");
+        mapFunctions.setMap(
+                "function(doc) { emit([doc.created], null); }");
 
-            keyViews.put("created", mapFunctions);
+        keyViews.put("created", mapFunctions);
 
-            designDoc.setViews(keyViews);
+        designDoc.setViews(keyViews);
 
-            db.save(designDoc);
+        //Created single value map function for boolean key test
+        mapFunctions = new DesignDocument.MapReduce();
 
-            db.syncDesignDocsWithDb();
+        mapFunctions.setMap(
+                "function(doc) { emit([doc.boolean], null); }");
 
-        } catch (DocumentConflictException e) {
-        }
+        keyViews.put("boolean", mapFunctions);
+
+        designDoc.setViews(keyViews);
+
+        db.save(designDoc);
+
+        db.syncDesignDocsWithDb();
     }
 
     private static String generateUUID() {
