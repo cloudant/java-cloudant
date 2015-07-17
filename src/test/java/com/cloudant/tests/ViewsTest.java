@@ -138,6 +138,54 @@ public class ViewsTest {
     }
 
     /**
+     * Assert that passing a string key with double quotes
+     * or spaces in query and queryView will produce
+     * a result list without exception.
+     */
+    @Test
+    public void byStartAndEndStringKey() {
+        multiValueKeyInit();
+
+        //Query for testing string with spaces
+        View query = db.view("keyarray_example/spaces_created")
+                .startKey("uuid with spaces", 1)
+                .endKey("uuid with spaces", 2000)
+                .includeDocs(true);
+
+        List<Object> result = query.query(Object.class);
+
+        assertThat(result.size(), is(1));
+
+        Page page = null;
+        try {
+            page = query.queryPage(30, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(1));
+
+        //Query for testing string with quotes
+        query = db.view("keyarray_example/quotes_created")
+                .startKey("uuid\"with\"quotes", 1)
+                .endKey("uuid\"with\"quotes", 2000)
+                .includeDocs(true);
+
+        result = query.query(Object.class);
+
+        assertThat(result.size(), is(1));
+
+        page = null;
+        try {
+            page = query.queryPage(30, null, Object.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertThat(page.getResultList().size(), is(1));
+    }
+
+    /**
      * Assert that passing a single integer value key expression
      * in query and queryView will produce a result list of all docs.
      *
@@ -778,6 +826,7 @@ public class ViewsTest {
         json.addProperty("created", 1000);
         json.addProperty("boolean", true);
         json.addProperty("total", 12.34);
+        json.addProperty("quotes", "uuid\"with\"quotes");
         db.save(json);
 
         json = new JsonObject();
@@ -785,6 +834,7 @@ public class ViewsTest {
         json.addProperty("created", 1010);
         json.addProperty("boolean", false);
         json.addProperty("total", 13.34);
+        json.addProperty("spaces", "uuid with spaces");
         db.save(json);
 
         json = new JsonObject();
@@ -792,6 +842,8 @@ public class ViewsTest {
         json.addProperty("created", 1020);
         json.addProperty("boolean", true);
         json.addProperty("total", 14.34);
+        json.addProperty("quotes", "\"quotes\"");
+        json.addProperty("spaces", " space ");
         db.save(json);
 
         DesignDocument designDoc = new DesignDocument();
@@ -814,6 +866,28 @@ public class ViewsTest {
 
         designDoc.setViews(keyViews);
 
+        //Created and spaces multi (2) value key map function
+        mapFunctions =
+                new DesignDocument.MapReduce();
+
+        mapFunctions.setMap(
+                "function(doc) { emit([doc.spaces, doc.created], null); }");
+
+        keyViews.put("spaces_created", mapFunctions);
+
+        designDoc.setViews(keyViews);
+
+        //Created and quotes multi (2) value key map function
+        mapFunctions =
+                new DesignDocument.MapReduce();
+
+        mapFunctions.setMap(
+                "function(doc) { emit([doc.quotes, doc.created], null); }");
+
+        keyViews.put("quotes_created", mapFunctions);
+
+        designDoc.setViews(keyViews);
+
         //Creator and created multi (2) value key map function
         mapFunctions =
                 new DesignDocument.MapReduce();
@@ -825,7 +899,7 @@ public class ViewsTest {
 
         designDoc.setViews(keyViews);
 
-        //Creator and created multi (2) integer value key map function
+        //Created and total multi (2) integer value key map function
         mapFunctions =
                 new DesignDocument.MapReduce();
 
