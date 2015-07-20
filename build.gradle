@@ -25,6 +25,9 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.8.2'
 }
 
+//include variable debug info in the compiled classes
+compileJava.options.debugOptions.debugLevel = "source,lines,vars"
+
 tasks.withType(Test) {
     // pick up properties named test.* from command line, gradle.properties first
     System.properties.each { prop ->
