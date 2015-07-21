@@ -3,12 +3,12 @@ package com.cloudant.client.api.model;
 
 /**
  * Contains the response returned from CouchDB.
- * <p/>
- * <p>The response typically contains an <tt>id</tt> and <tt>rev</tt> values,
+ * <p>
+ * The response typically contains an <tt>id</tt> and <tt>rev</tt> values,
  * additional data might be returned such as <tt>error</tt> from Bulk request.
  *
  * @author Ganesh K Choudhary
- * @see DatabaseBase#save(Object)
+ * @see com.cloudant.client.api.Database#save(Object)
  * @since 0.0.1
  */
 public class Response {

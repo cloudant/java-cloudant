@@ -13,7 +13,6 @@ import java.util.Map;
  * 1.1.0
  * <p>A replication is triggered by persisting a document, and cancelled by removing the document
  * that triggered the replication.
- * <p/>
  * <h3>Usage Example:</h3>
  * <pre>
  * Response response = db.replicator()
