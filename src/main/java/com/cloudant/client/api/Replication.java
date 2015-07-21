@@ -9,7 +9,6 @@ import java.util.Map;
 /**
  * This class provides access to the database replication API; a replication request
  * is sent via HTTP POST to <code>_replicate</code> URI.
- * <p/>
  * <h3>Usage Example:</h3>
  * <pre>
  * ReplicationResult replication = db.replication()

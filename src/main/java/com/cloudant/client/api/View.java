@@ -9,7 +9,6 @@ import java.util.List;
 
 /**
  * This class provides access to the <tt>View</tt> APIs.
- * <p/>
  * <h3>Usage Example:</h3>
  * <pre>
  * {@code

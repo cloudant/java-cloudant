@@ -1,12 +1,10 @@
 package com.cloudant.client.api.model;
 
 
-import org.lightcouch.Document;
-
 /**
  * Represents an in-line document attachment.
  *
- * @see Document#addAttachment(String, Attachment)
+ * @see com.cloudant.client.api.model.Document#addAttachment(String, Attachment)
  */
 public class Attachment {
     private org.lightcouch.Attachment attachement;

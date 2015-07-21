@@ -33,7 +33,6 @@ import java.util.Set;
 
 /**
  * This class provides access to the Cloudant <tt>Search</tt> APIs.
- * <p/>
  * <h3>Usage Example:</h3>
  * <pre>
  * {@code

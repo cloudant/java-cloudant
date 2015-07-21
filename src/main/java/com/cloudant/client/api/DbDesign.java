@@ -13,7 +13,6 @@ import com.google.gson.JsonObject;
 
 import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDatabaseBase;
-import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbDesign;
 import org.lightcouch.DesignDocument.MapReduce;
 import org.lightcouch.Response;
@@ -80,8 +79,8 @@ public class DbDesign {
     /**
      * Synchronize all design documents on desk to the database.
      *
-     * @see #synchronizeWithDb(DesignDocument)
-     * @see CouchDbClient#syncDesignDocsWithDb()
+     * @see DbDesign#synchronizeWithDb(DesignDocument)
+     * @see CouchDbDesign#synchronizeAllWithDb()
      */
     public void synchronizeAllWithDb() {
         couchDbDesign.synchronizeAllWithDb();

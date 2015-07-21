@@ -128,7 +128,7 @@ public class Database {
     /**
      * Returns the Permissions on the database from the /db/_security document
      *
-     * @return Map<String,EnumSet<Permissions>> the map of userNames to their Permissions
+     * @return the map of userNames to their Permissions
      */
     public Map<String, EnumSet<Permissions>> getPermissions() {
         HttpResponse resp = null;
@@ -165,7 +165,7 @@ public class Database {
     /**
      * Get info about the shard a document belongs to
      *
-     * @param String documentId
+     * @param docId document ID
      * @return Shard info
      */
     public Shard getShard(String docId) {
@@ -191,8 +191,9 @@ public class Database {
     /**
      * create a new Index
      *
-     * @param @see <a href="http://docs.cloudant.com/api/cloudant-query
-     * .html#creating-a-new-index">indexDefinition</a>
+     * @param indexDefinition
+     * @see <a href="http://docs.cloudant.com/api/cloudant-query.html#creating-a-new-index">
+     * index definition</a>
      */
     public void createIndex(String indexDefinition) {
         assertNotEmpty(indexDefinition, "indexDefinition");
@@ -216,11 +217,11 @@ public class Database {
      * Find documents using an index
      *
      * @param selectorJson JSON object describing criteria used to select documents.
-     *                     Is of the form "selector": { <your data here> } @see <a
-     *                     href="http://docs.cloudant.com/api/cloudant-query
-     *                     .html#cloudant-query-selectors">selector syntax</a>
+     *                     Is of the form <code>"selector": {&lt;your data here&gt;} </code>
      * @param classOfT     The class of Java objects to be returned
      * @return List of classOfT objects
+     * @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">
+     * selector syntax</a>
      */
     public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT) {
         return findByIndex(selectorJson, classOfT, new FindByIndexOptions());
@@ -230,12 +231,12 @@ public class Database {
      * Find documents using an index
      *
      * @param selectorJson JSON object describing criteria used to select documents.
-     *                     Is of the form "selector": { <your data here> }  @see <a
-     *                     href="http://docs.cloudant.com/api/cloudant-query
-     *                     .html#cloudant-query-selectors">selector syntax</a>
+     *                     Is of the form <code>"selector": {&lt;your data here&gt;} </code>
      * @param options      {@link FindByIndexOptions query Index options}
      * @param classOfT     The class of Java objects to be returned
      * @return List of classOfT objects
+     * @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">
+     * selector syntax</a>
      */
     public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT, FindByIndexOptions
             options) {
@@ -619,7 +620,7 @@ public class Database {
      * Saves an attachment to a new document with a generated <tt>UUID</tt> as the document id.
      * <p>To retrieve an attachment, see {@link #find(String)}.
      *
-     * @param instream    The {@link InputStream} holding the binary data.
+     * @param in          The {@link InputStream} holding the binary data.
      * @param name        The attachment name.
      * @param contentType The attachment "Content-Type".
      * @return {@link Response}
@@ -638,7 +639,7 @@ public class Database {
      * and revision, or save to a new document given only the id, and rev as {@code null}.
      * <p>To retrieve an attachment, see {@link #find(String)}.
      *
-     * @param instream    The {@link InputStream} holding the binary data.
+     * @param in          The {@link InputStream} holding the binary data.
      * @param name        The attachment name.
      * @param contentType The attachment "Content-Type".
      * @param docId       The document id to save the attachment under, or {@code null} to save
@@ -660,15 +661,14 @@ public class Database {
 
     /**
      * Invokes an Update Handler.
-     * <pre>
-     * String query = "field=foo&value=bar";
-     * String output = dbClient.invokeUpdateHandler("designDoc/update1", "docId", query);
-     * </pre>
+     * <code>String query = "field=foo&amp;value=bar";</code>
+     * <code>String output = dbClient.invokeUpdateHandler("designDoc/update1", "docId", query);
+     * </code>
      *
      * @param updateHandlerUri The Update Handler URI, in the format: <code>designDoc/update1</code>
      * @param docId            The document id to update.
      * @param query            The query string parameters, e.g,
-     *                         <code>field=field1&value=value1</code>
+     *                         <code>field=field1&amp;value=value1</code>
      * @return The output of the request.
      * @deprecated use {@link #invokeUpdateHandler(String, String, Params)} instead.
      */
@@ -690,7 +690,7 @@ public class Database {
      *
      * @param updateHandlerUri The Update Handler URI, in the format: <code>designDoc/update1</code>
      * @param docId            The document id to update.
-     * @param query            The query parameters as {@link Params}.
+     * @param params           The query parameters as {@link Params}.
      * @return The output of the request.
      */
     public String invokeUpdateHandler(String updateHandlerUri, String docId,
@@ -898,7 +898,7 @@ class ShardDeserializer implements JsonDeserializer<List<Shard>> {
             String range = entry.getKey();
             List<String> nodeNames = context.deserialize(entry.getValue(), new
                     TypeToken<List<String>>() {
-            }.getType());
+                    }.getType());
             shards.add(new Shard(range, nodeNames));
         }
 
@@ -960,7 +960,7 @@ class SecurityDeserializer implements JsonDeserializer<Map<String, EnumSet<Permi
             String user = entry.getKey();
             EnumSet<Permissions> p = context.deserialize(entry.getValue(), new
                     TypeToken<EnumSet<Permissions>>() {
-            }.getType());
+                    }.getType());
             perms.put(user, p);
         }
         return perms;

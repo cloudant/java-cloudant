@@ -30,7 +30,6 @@ import org.lightcouch.CouchDbProperties;
 import org.lightcouch.Replication;
 import org.lightcouch.Replicator;
 import org.lightcouch.Response;
-import org.lightcouch.View;
 import org.lightcouch.internal.CouchDbUtil;
 
 import java.net.URI;
@@ -43,42 +42,80 @@ import java.util.Map;
 /**
  * Exposes the Cloudant client API
  * <p>This class is the main object to use to gain access to the Cloudant APIs.
- * <h3>Usage Example:</h3>
- * <p>Create a new Cloudant client instance:
- * <pre>
+ * <h1>Usage Examples:</h1>
+ *
+ * <h2>Create a new Cloudant client instance</h2>
+ * <code>
  * CloudantClient client = new CloudantClient("mycloudantaccount","myusername","mypassword");
- * </pre>
- * <p/>
- * <p>Start using the API by the client:
- * <p/>
- * <p>Server APIs is accessed by the client directly eg.: {@link CloudantClient#getAllDbs()
- * client.getAllDbs()}
- * <p>DB is accessed by getting to the Database from the client
- * <pre>
- * Database db = client.database("customers",false);
- * </pre>
- * <p>Documents <code>CRUD</code> APIs is accessed from the Database eg.: {@link Database#find
- * (Class, String) db.find(Foo.class, "doc-id")}
- * <p>Cloudant Query
- * <p>		{@link Database#createIndex(String, String, String, IndexField[]) db.createIndex
- * ("Person_name", "Person_name", "json",
- * new IndexField[] { new IndexField("Person_name",SortOrder.asc)}) }
- * <p>      {@link Database#findByIndex(String, Class) db.findByIndex(" "selector": {
+ * </code>
+ *
+ * <h2>Client use of the API</h2>
+ * <ul>
+ * <li>Server APIs accessed by the client directly e.g.:
+ * <p>
+ * {@link CloudantClient#getAllDbs() client.getAllDbs()}
+ * </p>
+ * </li>
+ * <li>DB is accessed by getting the {@link Database} from the client e.g.:
+ * <p>
+ * <code>Database db = client.database("customers",false);</code>
+ * </p>
+ * </li>
+ * <li>Document <code>CRUD</code> APIs accessed from the {@link Database} e.g.:
+ * <p>
+ * {@link Database#find(Class, String) db.find(Foo.class, "doc-id")}
+ * </p>
+ * </li>
+ * </ul>
+ *
+ * <h2>Cloudant Query</h2>
+ * <ul>
+ * <li>Create an index
+ * {@link Database#createIndex(String, String, String, IndexField[])} e.g.:
+ * <p>
+ * <code>
+ * db.createIndex("Person_name", "Person_name_design_doc", "json", new IndexField[] { new IndexField
+ * ("Person_name",SortOrder.asc)})
+ * </code>
+ * </p>
+ * </li>
+ * <li>Find using an index
+ * {@link Database#findByIndex(String, Class)} e.g.:
+ * <p>
+ * <code>
+ * db.findByIndex(" "selector": {
  * "Person_name": "Alec Guinness" }", Movie.class)}
- * <p>      {@link Database#deleteIndex(String, String) db.deleteIndex("Person_name",
- * "Person_name") }
- * <p/>
- * <p>Cloudant Search {@link Search db.search("views101/animals)}
- * <p>View APIs {@link View db.view()}
- * <p>Change Notifications {@link Changes db.changes()}
- * <p>Design documents {@link CouchDbDesign db.design()}
- * <p/>
- * <p>Replication {@link Replication account.replication()} and {@link Replicator account
- * .replicator()}
- * <p/>
- * <p/>
- * <p>At the end of a client usage; it's useful to call: {@link #shutdown()} to ensure proper
- * release of resources.
+ * </code>
+ * </p>
+ * </li>
+ * <li>Delete an index
+ * {@link Database#deleteIndex(String, String)} e.g.:
+ * <p>
+ * <code>
+ * db.deleteIndex("Person_name", "Person_name_design_doc")
+ * </code>
+ * </p>
+ * </li>
+ * </ul>
+ *
+ * <h2>Cloudant Search</h2>
+ * {@link Search db.search("views101/animals)}
+ *
+ * <h2>View APIs</h2>
+ * {@link View db.view()}
+ *
+ * <h2>Change Notifications</h2>
+ * {@link Changes db.changes()}
+ *
+ * <h2>Design Documents</h2>
+ * {@link CouchDbDesign db.design()}
+ *
+ * <h2>Replication</h2>
+ * Replication {@link Replication account.replication()} and {@link Replicator account.replicator()}
+ *
+ * <h2>Shutting down</h2>
+ * At the end of a client usage; it's useful to call {@link #shutdown() client.shutdown()} to
+ * ensure proper release of resources.
  *
  * @author Mario Briggs
  * @since 0.0.1
@@ -97,9 +134,9 @@ public class CloudantClient {
      * specified credentials
      *
      * @param account       For cloudant.com, the cloudant account to connect to. For Cloudant
-     *                         local, the server URL
+     *                      local, the server URL
      * @param loginUsername The apiKey (if using an APIKey, else pass in the account for this
-     *                         parameter also)
+     *                      parameter also)
      * @param password      The Password credential
      */
     public CloudantClient(String account, String loginUsername, String password) {
@@ -123,9 +160,9 @@ public class CloudantClient {
      * specified credentials
      *
      * @param account        For cloudant.com, the cloudant account to connect to. For Cloudant
-     *                          local, the server URL
+     *                       local, the server URL
      * @param loginUsername  The apiKey (if using an APIKey, else pass in the account for this
-     *                          parameter also)
+     *                       parameter also)
      * @param password       The Password credential
      * @param connectOptions optional properties to connect e.g connectionTime,socketTimeout,etc
      */
@@ -151,7 +188,7 @@ public class CloudantClient {
      * specified credentials
      *
      * @param account    For cloudant.com, the cloudant account to connect to. For Cloudant
-	 *                      local, the server URL
+     *                   local, the server URL
      * @param authCookie The cookie obtained from last login
      */
     public CloudantClient(String account, String authCookie) {
@@ -171,7 +208,7 @@ public class CloudantClient {
      * specified credentials
      *
      * @param account        For cloudant.com, the cloudant account to connect to. For Cloudant
-     *                          local, the server URL
+     *                       local, the server URL
      * @param account        The cloudant account to connect to
      * @param authCookie     The cookie obtained from last login
      * @param connectOptions optional properties to connect e.g connectionTime,socketTimeout,etc
@@ -313,7 +350,7 @@ public class CloudantClient {
     public com.cloudant.client.api.Replication replication() {
         Replication couchDbReplication = client.replication();
         com.cloudant.client.api.Replication replication = new com.cloudant.client.api.Replication
-				(couchDbReplication);
+                (couchDbReplication);
         return replication;
     }
 
@@ -326,7 +363,7 @@ public class CloudantClient {
     public com.cloudant.client.api.Replicator replicator() {
         Replicator couchDbReplicator = client.replicator();
         com.cloudant.client.api.Replicator replicator = new com.cloudant.client.api.Replicator
-				(couchDbReplicator);
+                (couchDbReplicator);
         return replicator;
     }
 
@@ -375,7 +412,7 @@ public class CloudantClient {
                 .registerTypeAdapter(new TypeToken<List<Index>>() {
                 }.getType(), new IndexDeserializer())
                 .registerTypeAdapter(new TypeToken<Map<String, EnumSet<Permissions>>>() {
-                }.getType(),
+                        }.getType(),
                         new SecurityDeserializer());
         client.setGsonBuilder(gsonBuilder);
     }
@@ -432,7 +469,7 @@ public class CloudantClient {
                 assertNotEmpty(rev, "rev");
             }
             final HttpPut put = new HttpPut(buildUri(uri).pathToEncode(id).query("w",
-					writeQuorum).buildEncoded());
+                    writeQuorum).buildEncoded());
             CouchDbUtil.setEntity(put, json.toString(), "application/json");
             response = client.executeRequest(put);
             return CouchDbUtil.getResponse(response, Response.class, gson);
@@ -476,7 +513,8 @@ public class CloudantClient {
      * @param authCookie
      */
     private void doInit(String scheme, String hostname, int port,
-                        String loginUsername, String password, ConnectOptions connectOptions, String authCookie) {
+                        String loginUsername, String password, ConnectOptions connectOptions,
+                        String authCookie) {
 
         CouchDbProperties props;
         if (authCookie == null) {
@@ -495,7 +533,8 @@ public class CloudantClient {
             props.setProxyHost(connectOptions.getProxyHost());
             props.setProxyPort(connectOptions.getProxyPort());
             props.disableSSLAuthentication(connectOptions.isSSLAuthenticationDisabled());
-            props.setAuthenticatedModeSSLSocketFactory(connectOptions.getAuthenticatedModeSSLSocketFactory());
+            props.setAuthenticatedModeSSLSocketFactory(connectOptions
+                    .getAuthenticatedModeSSLSocketFactory());
         }
         this.client = new CouchDbClient(props);
 
@@ -503,4 +542,4 @@ public class CloudantClient {
         setGsonBuilder(new GsonBuilder());
     }
 }
-	
+
