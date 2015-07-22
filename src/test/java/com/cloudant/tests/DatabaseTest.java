@@ -15,6 +15,7 @@ import com.google.gson.GsonBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -69,6 +70,22 @@ public class DatabaseTest {
         assertEquals(userPerms.get(key.getKey()), p);
 
 
+    }
+
+    /**
+     * Test that when called against a DB that is not a Cloudant service
+     * an UnsupportedOperationException is thrown
+     */
+    @Test
+    public void testPermissionsException() {
+        try {
+            Map<String, EnumSet<Permissions>> userPerms = db.getPermissions();
+            //ignore the test in cases where we don't get an exception
+            Assume.assumeTrue(false);
+        }catch(UnsupportedOperationException e){
+            //this is the exception we want; expected for non-Cloudant service
+            //if another exception is thrown the test will fail
+        }
     }
 
     @Test
