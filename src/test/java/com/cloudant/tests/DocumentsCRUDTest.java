@@ -26,12 +26,15 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
+import com.cloudant.test.main.RequiresCouch;
+import com.cloudant.test.main.RequiresDB;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
 
@@ -41,6 +44,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+@Category(RequiresDB.class)
 public class DocumentsCRUDTest {
 
 
@@ -94,13 +98,13 @@ public class DocumentsCRUDTest {
         assertNotNull(jsonObject);
     }
 
-	/* not supported in cloudant
-     * @Test
-	public void findAny() {
-		String uri = dbClient.getBaseUri() + "_stats";
-		JsonObject jsonObject = db.findAny(JsonObject.class, uri);
-		assertNotNull(jsonObject);
-	}*/
+    @Test
+    @Category(RequiresCouch.class)
+    public void findAny() {
+        String uri = account.getBaseUri() + "_stats";
+        JsonObject jsonObject = db.findAny(JsonObject.class, uri);
+        assertNotNull(jsonObject);
+    }
 
     @Test
     public void findInputstream() throws IOException {

@@ -9,13 +9,15 @@ import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.model.Shard;
 import com.cloudant.test.main.RequiresCloudant;
+import com.cloudant.test.main.RequiresCloudantLocal;
 import com.cloudant.test.main.RequiresCloudantService;
+import com.cloudant.test.main.RequiresCouch;
+import com.cloudant.test.main.RequiresDB;
 import com.google.gson.GsonBuilder;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -25,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Category(RequiresDB.class)
 public class DatabaseTest {
     private static final Log log = LogFactory.getLog(DatabaseTest.class);
     private static Database db;
@@ -76,16 +79,10 @@ public class DatabaseTest {
      * Test that when called against a DB that is not a Cloudant service
      * an UnsupportedOperationException is thrown
      */
-    @Test
+    @Test(expected = UnsupportedOperationException.class)
+    @Category({RequiresCouch.class, RequiresCloudantLocal.class})
     public void testPermissionsException() {
-        try {
-            Map<String, EnumSet<Permissions>> userPerms = db.getPermissions();
-            //ignore the test in cases where we don't get an exception
-            Assume.assumeTrue(false);
-        }catch(UnsupportedOperationException e){
-            //this is the exception we want; expected for non-Cloudant service
-            //if another exception is thrown the test will fail
-        }
+        Map<String, EnumSet<Permissions>> userPerms = db.getPermissions();
     }
 
     @Test

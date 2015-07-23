@@ -38,19 +38,33 @@ tasks.withType(Test) {
 }
 
 test {
+    // Run tests for any DB
     useJUnit {
-        excludeCategories 'com.cloudant.test.main.RequiresCloudant'
+        excludeCategories 'com.cloudant.test.main.RequiresCloudant',
+                'com.cloudant.test.main.RequiresCouch'
+    }
+}
+
+task noDBTest(type: Test, dependsOn: testClasses) {
+    // Run tests that can use any Cloudant
+    useJUnit {
+        excludeCategories 'com.cloudant.test.main.RequiresDB'
     }
 }
 
 task cloudantTest(type: Test, dependsOn: testClasses) {
+    // Run tests that can use any Cloudant
     useJUnit {
         excludeCategories 'com.cloudant.test.main.RequiresCloudantService'
     }
 }
 
 task cloudantServiceTest(type: Test, dependsOn: testClasses) {
-    // Run all tests
+    // Run all Cloudant service tests
+    useJUnit {
+        excludeCategories 'com.cloudant.test.main.RequiresCloudantLocal',
+                'com.cloudant.test.main.RequiresCouch'
+    }
 }
 
 //task for generating a client properties file

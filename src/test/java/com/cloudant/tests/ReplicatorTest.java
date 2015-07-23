@@ -9,17 +9,20 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.api.model.ViewResult;
+import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.Utils;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+@Category(RequiresDB.class)
 public class ReplicatorTest {
 
     private static Properties props;

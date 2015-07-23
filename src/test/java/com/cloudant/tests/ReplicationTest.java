@@ -28,6 +28,7 @@ import com.cloudant.client.api.model.ReplicationResult.ReplicationHistory;
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.api.model.ViewResult;
+import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.Utils;
 
 import org.apache.commons.logging.Log;
@@ -35,12 +36,14 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+@Category(RequiresDB.class)
 public class ReplicationTest {
     private static final Log log = LogFactory.getLog(ReplicationTest.class);
 

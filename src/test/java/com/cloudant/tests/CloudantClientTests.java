@@ -9,6 +9,7 @@ import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
+import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.SingleRequestHttpServer;
 
 import junit.framework.Assert;
@@ -62,6 +63,7 @@ public class CloudantClientTests {
     }
 
     @Test
+    @Category(RequiresCloudant.class)
     public void activeTasks() {
         List<Task> tasks = account.getActiveTasks();
         assertNotNull(tasks);
@@ -87,6 +89,7 @@ public class CloudantClientTests {
     }
 
     @Test
+    @Category(RequiresDB.class)
     public void cookieNegativeTest() {
         String cookie = account.getCookie() + "XXX";
         boolean exceptionRaised = true;

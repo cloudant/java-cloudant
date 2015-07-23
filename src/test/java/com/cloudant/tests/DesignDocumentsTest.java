@@ -24,13 +24,16 @@ import static org.junit.Assert.assertThat;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.DesignDocument;
+import com.cloudant.test.main.RequiresDB;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
+@Category(RequiresDB.class)
 public class DesignDocumentsTest {
     private static Database db;
     private CloudantClient account;
