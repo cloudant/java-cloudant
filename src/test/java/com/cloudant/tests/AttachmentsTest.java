@@ -25,17 +25,20 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Attachment;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
+import com.cloudant.test.main.RequiresDB;
 
 import org.apache.commons.codec.binary.Base64;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+@Category(RequiresDB.class)
 public class AttachmentsTest {
 
 

@@ -6,7 +6,6 @@ import static org.lightcouch.internal.CouchDbUtil.createPost;
 import static org.lightcouch.internal.CouchDbUtil.getAsString;
 import static org.lightcouch.internal.CouchDbUtil.getResponse;
 import static org.lightcouch.internal.CouchDbUtil.getResponseList;
-import static org.lightcouch.internal.CouchDbUtil.getResponseMap;
 import static org.lightcouch.internal.CouchDbUtil.getStream;
 import static org.lightcouch.internal.CouchDbUtil.setEntity;
 import static org.lightcouch.internal.URIBuilder.buildUri;
@@ -40,6 +39,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.lightcouch.Changes;
 import org.lightcouch.CouchDatabase;
 import org.lightcouch.CouchDbDesign;
+import org.lightcouch.CouchDbException;
 import org.lightcouch.CouchDbInfo;
 import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
@@ -72,6 +72,7 @@ public class Database {
     static final Log log = LogFactory.getLog(Database.class);
     private CouchDatabase db;
     private CloudantClient client;
+    private final URI apiV2DBSecurityURI;
 
     /**
      * @param client
@@ -81,13 +82,27 @@ public class Database {
         super();
         this.client = client;
         this.db = db;
+        apiV2DBSecurityURI = buildUri(client.getBaseUri()).path("_api/v2/db/").path(db.getDbName
+                ()).path("/_security").build();
     }
 
     /**
-     * Set permissions for a user/apiKey on the database
+     * Set permissions for a user/apiKey on this database.
+     * <p>
+     * Note this method is only applicable to databases that support the
+     * <a href="http://docs.cloudant.com/authorization.html">
+     * Cloudant authorization API
+     * </a> such as Cloudant DBaaS. For unsupported databases consider using the /db/_security
+     * endpoint.
+     * </p>
      *
      * @param userNameorApikey
      * @param permissions      permissions to grant
+     * @throws UnsupportedOperationException if called on a database that does not provide the
+     *                                       Cloudant authorization API
+     * @see <a href="http://docs.cloudant.com/authorization.html#roles">Roles</a>
+     * @see <a href="http://docs.cloudant.com/authorization.html#modifying-permissions">Modifying
+     * permissions</a>
      */
     public void setPermissions(String userNameorApikey, EnumSet<Permissions> permissions) {
         assertNotEmpty(userNameorApikey, "userNameorApikey");
@@ -99,11 +114,10 @@ public class Database {
         }
 
         // get existing permissions
-        URI uri = buildUri(getDBUri()).path("_security").build();
-        JsonObject perms = client.get(uri, JsonObject.class);
+        JsonObject perms = getPermissionsObject();
 
         // now set back
-        JsonElement elem = perms.getAsJsonObject().get("cloudant");
+        JsonElement elem = perms.get("cloudant");
         if (elem == null) {
             perms.addProperty("_id", "_security");
             elem = new JsonObject();
@@ -112,7 +126,7 @@ public class Database {
         elem.getAsJsonObject().add(userNameorApikey, jsonPermissions);
 
         HttpResponse response = null;
-        HttpPut put = new HttpPut(buildUri(uri).build());
+        HttpPut put = new HttpPut(apiV2DBSecurityURI);
         setEntity(put, client.getGson().toJson(perms), "application/json");
         try {
             response = executeRequest(put);
@@ -126,23 +140,49 @@ public class Database {
     }
 
     /**
-     * Returns the Permissions on the database from the /db/_security document
-     *
-     * @return the map of userNames to their Permissions
+     * @return /api/v2/db/$dbname/_security JSON data
+     * @throws UnsupportedOperationException if called on a database that does not provide the
+     *                                       Cloudant authorization API
      */
-    public Map<String, EnumSet<Permissions>> getPermissions() {
-        HttpResponse resp = null;
-        HttpGet get = new HttpGet(buildUri(getDBUri()).path("_security").build());
+    private JsonObject getPermissionsObject() {
         try {
-            resp = client.executeRequest(get);
-            return getResponseMap(resp, client.getGson(),
-                    new TypeToken<Map<String, EnumSet<Permissions>>>() {
-                    }.getType());
-        } finally {
-            close(resp);
+            return client.get(apiV2DBSecurityURI, JsonObject.class);
+        } catch (CouchDbException exception) {
+            //currently we can't inspect the HttpResponse code
+            //being in this catch block means it was not a 20x code
+            //look for the "bad request" that implies the endpoint is not supported
+            if (exception.getMessage().toLowerCase().contains("bad request")) {
+                throw new UnsupportedOperationException("The methods getPermissions and " +
+                        "setPermissions are not supported for this database, consider using the " +
+                        "/db/_security endpoint.");
+            } else {
+                throw exception;
+            }
         }
     }
 
+    /**
+     * Returns the Permissions of this database.
+     * <p>
+     * Note this method is only applicable to databases that support the
+     * <a href="http://docs.cloudant.com/authorization.html">
+     * Cloudant authorization API
+     * </a> such as Cloudant DBaaS. For unsupported databases consider using the /db/_security
+     * endpoint.
+     * </p>
+     *
+     * @return the map of userNames to their Permissions
+     * @throws UnsupportedOperationException if called on a database that does not provide the
+     *                                       Cloudant authorization API
+     * @see <a href="http://docs.cloudant.com/authorization.html#roles">Roles</a>
+     * @see <a href="http://docs.cloudant.com/authorization.html#viewing-permissions">Viewing
+     * permissions</a>
+     */
+    public Map<String, EnumSet<Permissions>> getPermissions() {
+        JsonObject perms = getPermissionsObject();
+        return client.getGson().getAdapter(new TypeToken<Map<String, EnumSet<Permissions>>>() {
+        }).fromJsonTree(perms);
+    }
 
     /**
      * Get info about the shards in the database

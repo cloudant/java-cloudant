@@ -29,11 +29,13 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.api.View;
 import com.cloudant.client.api.model.Page;
 import com.cloudant.client.api.model.ViewResult;
+import com.cloudant.test.main.RequiresDB;
 import com.google.gson.JsonObject;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.lightcouch.DocumentConflictException;
 import org.lightcouch.NoDocumentException;
 
@@ -41,6 +43,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+@Category(RequiresDB.class)
 public class ViewsTest {
 
 

@@ -11,3 +11,4 @@ src/test/resources/cloudant-2.properties
 *.iml
 build/
 .gradle/
+local.properties

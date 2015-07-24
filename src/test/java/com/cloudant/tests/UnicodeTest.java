@@ -8,6 +8,7 @@ import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.IndexField.SortOrder;
 import com.cloudant.test.main.RequiresCloudant;
+import com.cloudant.test.main.RequiresDB;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -40,6 +41,7 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.List;
 import java.util.Properties;
 
+@Category(RequiresDB.class)
 public class UnicodeTest {
 
     private static final Log log = LogFactory.getLog(UnicodeTest.class);

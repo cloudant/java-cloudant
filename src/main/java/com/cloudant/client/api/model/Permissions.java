@@ -5,7 +5,9 @@ public enum Permissions {
     _admin,
     _reader,
     _writer,
-    _replicator
-
+    _replicator,
+    _db_updates,
+    _design,
+    _shards,
+    _security
 }
-

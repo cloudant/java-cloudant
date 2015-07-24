@@ -9,7 +9,10 @@ import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.model.Shard;
 import com.cloudant.test.main.RequiresCloudant;
+import com.cloudant.test.main.RequiresCloudantLocal;
 import com.cloudant.test.main.RequiresCloudantService;
+import com.cloudant.test.main.RequiresCouch;
+import com.cloudant.test.main.RequiresDB;
 import com.google.gson.GsonBuilder;
 
 import org.apache.commons.logging.Log;
@@ -24,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Category(RequiresDB.class)
 public class DatabaseTest {
     private static final Log log = LogFactory.getLog(DatabaseTest.class);
     private static Database db;
@@ -69,6 +73,16 @@ public class DatabaseTest {
         assertEquals(userPerms.get(key.getKey()), p);
 
 
+    }
+
+    /**
+     * Test that when called against a DB that is not a Cloudant service
+     * an UnsupportedOperationException is thrown
+     */
+    @Test(expected = UnsupportedOperationException.class)
+    @Category({RequiresCouch.class, RequiresCloudantLocal.class})
+    public void testPermissionsException() {
+        Map<String, EnumSet<Permissions>> userPerms = db.getPermissions();
     }
 
     @Test

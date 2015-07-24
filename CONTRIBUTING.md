@@ -63,13 +63,13 @@ The project should build out of the box with:
 ```bash
 $ ./gradlew compileJava
 ```
-
-### Running the tests
+###Running the tests
+#### Configuration
 
 The tests can be configured before running, by default they use the local
 CouchDB. To run tests with a remote CouchDB or Cloudant, you need set the
-details of this CouchDB server, including access credentials: add the following to
-`gradle.properties` in the same folder as `build.gradle`:
+details of this CouchDB server, including access credentials:
+
 ```
 systemProp.test.couch.username=yourUsername
 systemProp.test.couch.password=yourPassword
@@ -84,23 +84,37 @@ systemProp.test.couch.uri=https://example.couch.db
 You can leave out the port (it will use the protocol's default) and username
 and password (if the server does not require one)
 
-
 Note: using the uri config option will override *all* the individual options such as
 "test.couch.username"
 
-The tests can be run with:
+Add these properties to a `gradle.properties` file, this can be either:
+
+1. in the `GRADLE_USER_HOME` folder
+2. in the same folder as `build.gradle`
+
+Take care not to commit your credentials. Using the `GRADLE_USER_HOME` folder
+will make it harder to do this accidentally!
+
+#### Execution
+The default tests (that require a running DB) can be run with:
 
 ```bash
 $ ./gradlew check
 ```
-Some tests require the use of certain flavours of CouchDB, there are two targets
-to run these additional tests.
 
-For tests which run against Cloudant Local or the Cloudant Service
+The tests are categorized based on the resources they need. In addition to the
+default `check` and `test` tasks there are gradle tasks to run tests from these
+selected categories:
+
+1. Tests that do not need a database
+```bash
+$ ./gradlew noDBTest
+```
+1. For tests which run against Cloudant Local or the Cloudant Service
 ```bash
 $ ./gradlew cloudantTest
 ```
-For tests which run only against the Cloudant Service
+1. For tests which run only against the Cloudant Service
 ```bash
 $ ./gradlew cloudantServiceTest
 ```

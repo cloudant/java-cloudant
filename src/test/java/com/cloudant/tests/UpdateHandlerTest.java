@@ -24,11 +24,14 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
+import com.cloudant.test.main.RequiresDB;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(RequiresDB.class)
 public class UpdateHandlerTest {
 
     private static Database db;
