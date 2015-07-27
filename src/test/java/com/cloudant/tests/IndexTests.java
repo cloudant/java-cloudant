@@ -127,6 +127,35 @@ public class IndexTests {
             assertNotNull(m.getMovie_year());
         }
 
+        //check find by using index design doc
+        db.findByIndex(new GsonBuilder().create().toJson(selector), Movie.class, new
+                FindByIndexOptions().sort(new IndexField("Movie_year", SortOrder.desc))
+                .fields("Movie_name").fields("Movie_year")
+                .limit(1)
+                .skip(1)
+                .readQuorum(2).useIndex("Movie_year"));
+        assertNotNull(movies);
+        assert (movies.size() == 1);
+        for (Movie m : movies) {
+            assertNotNull(m.getMovie_name());
+            assertNotNull(m.getMovie_year());
+        }
+
+        //check find by using index design doc and index name
+        db.findByIndex(new GsonBuilder().create().toJson(selector), Movie.class, new
+                FindByIndexOptions().sort(new IndexField("Movie_year", SortOrder.desc))
+                .fields("Movie_name").fields("Movie_year")
+                .limit(1)
+                .skip(1)
+                .readQuorum(2).useIndex("Movie_year", "Movie_year"));
+        assertNotNull(movies);
+        assert (movies.size() == 1);
+        for (Movie m : movies) {
+            assertNotNull(m.getMovie_name());
+            assertNotNull(m.getMovie_year());
+        }
+
+
         db.deleteIndex("Person_name", "Person_name");
         db.deleteIndex("Movie_year", "Movie_year");
     }
