@@ -32,6 +32,7 @@ public class FindByIndexOptions {
     private List<IndexField> sort = new ArrayList<IndexField>();
     private List<String> fields = new ArrayList<String>();
     private Integer readQuorum;
+    private String useIndex = null;
 
     /**
      * @param limit limit the number of results return
@@ -78,6 +79,27 @@ public class FindByIndexOptions {
         return this;
     }
 
+    /**
+     * Specify a specific index to run the query against
+     *
+     * @param designDocument set the design document to use
+     */
+    public FindByIndexOptions useIndex(String designDocument) {
+        this.useIndex = "\"" + designDocument + "\"";
+        return this;
+    }
+
+    /**
+     * Specify a specific index to run the query against
+     *
+     * @param designDocument set the design document to use
+     * @param indexName set the index name to use
+     */
+    public FindByIndexOptions useIndex(String designDocument, String indexName) {
+        this.useIndex = "[\"" + designDocument + "\",\"" + indexName + "\"]";
+        return this;
+    }
+
     public List<String> getFields() {
         return fields;
     }
@@ -96,6 +118,10 @@ public class FindByIndexOptions {
 
     public Integer getReadQuorum() {
         return readQuorum;
+    }
+
+    public String getUseIndex() {
+        return useIndex;
     }
 
 }

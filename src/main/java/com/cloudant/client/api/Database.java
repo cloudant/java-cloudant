@@ -907,6 +907,11 @@ public class Database {
                     .append("\"r\": ")
                     .append(options.getReadQuorum());
         }
+        if (options.getUseIndex() != null) {
+            finalbody.append(",")
+                    .append("\"use_index\": ")
+                    .append(options.getUseIndex());
+        }
         finalbody.append("}");
 
         return finalbody.toString();
