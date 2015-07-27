@@ -120,3 +120,4 @@ $ ./gradlew cloudantServiceTest
 ```
 
 Note: you will need a Cloudant account to run tests against the Cloudant service.
+Additionally the ReplicatorTest cases require the `_replicator` DB to exist.
