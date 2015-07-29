@@ -39,7 +39,8 @@ public class CouchDbProperties {
     // optional
     private int socketTimeout;
     private int connectionTimeout;
-    private int maxConnections;
+    //default to 6 connections
+    private int maxConnections = 6;
     private String proxyHost;
     private int proxyPort;
     private boolean disableSSLAuthentication;
