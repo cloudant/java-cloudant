@@ -95,9 +95,9 @@ public class View {
 
     // view fields
     private String key;
-    private String startKey;
+    private JsonElement startKey;
     private String startKeyDocId;
-    private String endKey;
+    private JsonElement endKey;
     private String endKeyDocId;
     private Integer limit;
     private String stale;
@@ -307,9 +307,9 @@ public class View {
             return queryPage(PagingDirection.FORWARD, rowsPerPage, null, null, null, null,
                     classOfT);
         }
-        String currentStartKey;
+        JsonElement currentStartKey;
         String currentStartKeyDocId;
-        String startKey;
+        JsonElement startKey;
         String startKeyDocId;
         String action;
         try {
@@ -320,9 +320,9 @@ public class View {
                 log.debug("Paging Param Decoded = " + json);
             }
             final JsonObject jsonCurrent = json.getAsJsonObject(CURRENT_KEYS);
-            currentStartKey = jsonCurrent.get(CURRENT_START_KEY).getAsString();
+            currentStartKey = jsonCurrent.get(CURRENT_START_KEY);
             currentStartKeyDocId = jsonCurrent.get(CURRENT_START_KEY_DOC_ID).getAsString();
-            startKey = json.get(START_KEY).getAsString();
+            startKey = json.get(START_KEY);
             startKeyDocId = json.get(START_KEY_DOC_ID).getAsString();
             action = json.get(ACTION).getAsString();
         } catch (Exception e) {
@@ -337,9 +337,9 @@ public class View {
         }
     }
 
-    private <T> Page<T> queryPage(PagingDirection direction, int rowsPerPage, String
+    private <T> Page<T> queryPage(PagingDirection direction, int rowsPerPage, JsonElement
             currentStartKey,
-                                  String currentStartKeyDocId, String startKey, String
+                                  String currentStartKeyDocId, JsonElement startKey, String
                                           startKeyDocId, Class<T> classOfT) {
         // set view query params
         limit(rowsPerPage + 1);
@@ -362,8 +362,8 @@ public class View {
         final Page<T> page = new Page<T>();
         final List<T> pageList = new ArrayList<T>();
 
-        final ViewResult<Object, String, T> vr = queryView(Object.class, String.class, classOfT);
-        final List<ViewResult<Object, String, T>.Rows> rows = vr.getRows();
+        final ViewResult<JsonElement, String, T> vr = queryView(JsonElement.class, String.class, classOfT);
+        final List<ViewResult<JsonElement, String, T>.Rows> rows = vr.getRows();
         final int resultRows = rows.size();
         final int offset = vr.getOffset();
         final long totalRows = vr.getTotalRows();
@@ -375,7 +375,7 @@ public class View {
         final JsonObject jsonNext = new JsonObject();
         final JsonObject jsonPrev = new JsonObject();
 
-        currentKeys.addProperty(CURRENT_START_KEY, rows.get(0).getKey().toString());
+        currentKeys.add(CURRENT_START_KEY, rows.get(0).getKey());
         currentKeys.addProperty(CURRENT_START_KEY_DOC_ID, rows.get(0).getId());
         for (int i = 0; i < resultRows; i++) {
             // set keys for the next page
@@ -383,7 +383,7 @@ public class View {
                 boolean isLastPage = resultRows <= rowsPerPage;
                 if (!isLastPage) {
                     page.setHasNext(true);
-                    jsonNext.addProperty(START_KEY, rows.get(i).getKey().toString());
+                    jsonNext.add(START_KEY, rows.get(i).getKey());
                     jsonNext.addProperty(START_KEY_DOC_ID, rows.get(i).getId());
                     jsonNext.add(CURRENT_KEYS, currentKeys);
                     jsonNext.addProperty(ACTION, NEXT);
@@ -399,7 +399,7 @@ public class View {
                 || (direction == PagingDirection.BACKWARD && offset == totalRows - rowsPerPage - 1);
         if (!isFirstPage) {
             page.setHasPrevious(true);
-            jsonPrev.addProperty(START_KEY, currentStartKey);
+            jsonPrev.add(START_KEY, currentStartKey);
             jsonPrev.addProperty(START_KEY_DOC_ID, currentStartKeyDocId);
             jsonPrev.add(CURRENT_KEYS, currentKeys);
             jsonPrev.addProperty(ACTION, PREVIOUS);
@@ -440,7 +440,7 @@ public class View {
      *                 keys.
      */
     public View startKey(Object... startKey) {
-        this.startKey = getKeyAsJson(startKey);
+        this.startKey = getKeyAsJsonElement(startKey);
         uriBuilder.query("startkey", this.startKey);
         return this;
     }
@@ -455,7 +455,7 @@ public class View {
      * @param endKey The end key value, accepts a single value or multiple values for complex keys.
      */
     public View endKey(Object... endKey) {
-        this.endKey = getKeyAsJson(endKey);
+        this.endKey = getKeyAsJsonElement(endKey);
         uriBuilder.query("endkey", this.endKey);
         return this;
     }
@@ -586,12 +586,20 @@ public class View {
 
     private String getKeyAsJson(Object... key) {
         // single or complex key
-        if (key.length == 1 && (key[0] instanceof Boolean || key[0] instanceof Number)) {
-            return gson.toJson(key);
-        } else if (key.length == 1) {
+        if (key.length == 1) {
             return gson.toJson(key[0]);
         } else {
             return gson.toJson(key);
+        }
+    }
+
+    private JsonElement getKeyAsJsonElement(Object... key) {
+        // single or complex key
+        // If the startKey is a single key value, grab the first value from the JSON tree array
+        if(key.length == 1) {
+            return gson.toJsonTree(key).getAsJsonArray().get(0);
+        } else {
+            return gson.toJsonTree(key).getAsJsonArray();
         }
     }
 
