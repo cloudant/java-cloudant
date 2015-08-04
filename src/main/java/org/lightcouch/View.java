@@ -342,7 +342,7 @@ public class View {
                                   String currentStartKeyDocId, JsonElement startKey, String
                                           startKeyDocId, Class<T> classOfT) {
         // set view query params
-        limit(rowsPerPage + 1);
+        limit(rowsPerPage + 1, true);
         includeDocs(true);
 
         if (direction != pagingDirection) {
@@ -355,7 +355,7 @@ public class View {
             startKeyDocId(currentStartKeyDocId);
         } else if (startKey != null) {
             startKey(startKey);
-            startKeyDocId(startKeyDocId);
+            startKeyDocId(startKeyDocId, true);
         }
 
         // init page, query view
@@ -441,13 +441,19 @@ public class View {
      */
     public View startKey(Object... startKey) {
         this.startKey = getKeyAsJsonElement(startKey);
-        uriBuilder.query("startkey", this.startKey);
+        uriBuilder.query("startkey", this.startKey, true);
+        return this;
+    }
+
+    public View startKeyDocId(String startKeyDocId, boolean replace) {
+        this.startKeyDocId = startKeyDocId;
+        uriBuilder.query("startkey_docid", this.startKeyDocId, replace);
         return this;
     }
 
     public View startKeyDocId(String startKeyDocId) {
         this.startKeyDocId = startKeyDocId;
-        uriBuilder.query("startkey_docid", this.startKeyDocId);
+        uriBuilder.query("startkey_docid", this.startKeyDocId, true);
         return this;
     }
 
@@ -456,19 +462,31 @@ public class View {
      */
     public View endKey(Object... endKey) {
         this.endKey = getKeyAsJsonElement(endKey);
-        uriBuilder.query("endkey", this.endKey);
+        uriBuilder.query("endkey", this.endKey, true);
+        return this;
+    }
+
+    public View endKeyDocId(String endKeyDocId, boolean replace) {
+        this.endKeyDocId = endKeyDocId;
+        uriBuilder.query("endkey_docid", this.endKeyDocId, replace);
         return this;
     }
 
     public View endKeyDocId(String endKeyDocId) {
         this.endKeyDocId = endKeyDocId;
-        uriBuilder.query("endkey_docid", this.endKeyDocId);
+        uriBuilder.query("endkey_docid", this.endKeyDocId, true);
+        return this;
+    }
+
+    public View limit(Integer limit, boolean replace) {
+        this.limit = limit;
+        uriBuilder.query("limit", this.limit, replace);
         return this;
     }
 
     public View limit(Integer limit) {
         this.limit = limit;
-        uriBuilder.query("limit", this.limit);
+        uriBuilder.query("limit", this.limit, true);
         return this;
     }
 
