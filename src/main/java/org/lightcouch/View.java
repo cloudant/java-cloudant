@@ -545,7 +545,7 @@ public class View {
 
     public View includeDocs(Boolean includeDocs) {
         this.includeDocs = includeDocs;
-        uriBuilder.query("include_docs", this.includeDocs);
+        uriBuilder.query("include_docs", this.includeDocs, true);
         return this;
     }
 
