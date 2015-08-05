@@ -30,7 +30,9 @@ import com.cloudant.client.api.View;
 import com.cloudant.client.api.model.Page;
 import com.cloudant.client.api.model.ViewResult;
 import com.cloudant.test.main.RequiresDB;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.junit.After;
@@ -39,8 +41,11 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.lightcouch.NoDocumentException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Category(RequiresDB.class)
@@ -50,7 +55,7 @@ public class ViewsTest {
     private static Database db;
     private CloudantClient account;
     private static String[] testViews = {"example/doc_title", "example/creator_created",
-            "example/creator_boolean_total"};
+            "example/creator_boolean_total", "example/created_boolean_creator"};
 
     @Before
     public void setUp() {
@@ -419,6 +424,158 @@ public class ViewsTest {
         Page page = view.queryPage(30, null, Object.class);
 
         assertThat(page.getResultList().size(), is(2));
+    }
+
+    /**
+     * Assert that passing a complex key with integer, string, and
+     * boolean objects in query will produce a result with
+     * JSON object values.
+     * Assert that the keys and values in the query result's
+     * JSON objects are the same as the expected objects.
+     */
+    @Test
+    public void queryWithComplexStartEndKeyAndJsonObjectValue() {
+        init();
+
+        View view = db.view("example/boolean_creator_created")
+                .startKey(true ,"uuid",1)
+                .endKey(true ,"uuid", 2000);
+
+        List<Object> result = view.query(Object.class);
+
+        assertThat(result.size(), is(2));
+
+        Gson gson = new Gson();
+        ArrayList<JsonObject> expectedJsonObject = new ArrayList<JsonObject>(),
+                              actualJsonObject = new ArrayList<JsonObject>();
+
+        for(int i = 0; i < result.size(); i++) {
+            expectedJsonObject.add(multiValueKeyInit(null, i + 1));
+            //Build a list from the query's results of the JSON objects from 'contentArray'
+            JsonObject jsonValueObject = (gson.toJsonTree(result.get(i)))
+                    .getAsJsonObject().get("value").getAsJsonObject();
+            JsonObject actualJsonContentObject = jsonValueObject.get("contentArray")
+                    .getAsJsonArray().get(0).getAsJsonObject();
+            actualJsonObject.add(actualJsonContentObject);
+        }
+
+        assertJsonObjectKeysAndValues(expectedJsonObject, actualJsonObject);
+    }
+
+    /**
+     * Assert that passing a complex key with integer, string, and
+     * boolean objects in queryView will produce a result with
+     * JSON object values.
+     * Assert that the keys and values in the page result's
+     * JSON objects are the same as the expected objects.
+     */
+    @Test
+    public void queryPageWithComplexStartEndKeyAndJsonObjectValue() {
+        init();
+
+        View view = db.view("example/boolean_creator_created")
+                .startKey(true ,"uuid",1)
+                .endKey(true ,"uuid", 2000);
+
+        Page page = view.queryPage(30, null, Object.class);
+
+        assertThat(page.getResultList().size(), is(2));
+
+        Gson gson = new Gson();
+        ArrayList<JsonObject> expectedJsonObject = new ArrayList<JsonObject>(),
+                actualJsonObject = new ArrayList<JsonObject>();
+
+        for(int i = 0; i < page.getResultList().size(); i++) {
+            expectedJsonObject.add(multiValueKeyInit(null, i + 1));
+            //Build a list from the query's results of the JSON objects from 'contentArray'
+            JsonObject actualJsonContentObject = (gson.toJsonTree(page.getResultList().get(i)))
+                    .getAsJsonObject().get("contentArray")
+                    .getAsJsonArray().get(0).getAsJsonObject();
+            actualJsonObject.add(actualJsonContentObject);
+        }
+
+        assertJsonObjectKeysAndValues(expectedJsonObject, actualJsonObject);
+    }
+
+    /**
+     * Assert that passing a complex key with integer, string, and
+     * boolean objects in query will produce a result with
+     * JSON array values.
+     * Assert that the keys and values in the query result's
+     * JSON arrays are the same as the expected arrays.
+     */
+    @Test
+    public void queryWithComplexStartEndKeyAndJsonArrayValue() {
+        init();
+
+        View query = db.view("example/creator_boolean_total")
+                .startKey("uuid" ,true, 1)
+                .endKey("uuid" ,true, 2000);
+
+        List<Object> result = query.query(Object.class);
+
+        assertThat(result.size(), is(2));
+
+        Gson gson = new Gson();
+        ArrayList<JsonArray> expectedJsonArray = new ArrayList<JsonArray>(),
+                actualJsonArray = new ArrayList<JsonArray>();
+
+
+        for(int i = 0; i < result.size(); i++) {
+            JsonArray expectedArray = new JsonArray();
+            expectedArray.add(gson.toJsonTree("key-" + (i + 2)));
+            expectedArray.add(gson.toJsonTree(10.009999999999999787 + i + 1));
+            expectedJsonArray.add(expectedArray);
+            //Build a list from the query's results of the JSON value array
+            JsonArray jsonValueArray = (gson.toJsonTree(result.get(i)))
+                    .getAsJsonObject().get("value").getAsJsonArray();
+            actualJsonArray.add(jsonValueArray);
+        }
+
+        assertJsonArrayKeysAndValues(expectedJsonArray, actualJsonArray);
+    }
+
+    /**
+     * Assert that passing a complex key with integer, string, and
+     * boolean objects in queryView will produce a result with
+     * JSON array values.
+     * Assert that the keys and values in the page result's
+     * JSON arrays are the same as the expected arrays.
+     */
+    @Test
+    public void queryPageWithComplexStartEndKeyAndJsonArrayValue() {
+        init();
+
+        View query = db.view("example/creator_boolean_total")
+                .startKey("uuid" ,true, 1)
+                .endKey("uuid" ,true, 2000);
+
+        Page page = query.queryPage(30, null, Object.class);
+
+        assertThat(page.getResultList().size(), is(2));
+
+        Gson gson = new Gson();
+        ArrayList<JsonArray> expectedJsonArray = new ArrayList<JsonArray>(),
+                actualJsonArray = new ArrayList<JsonArray>();
+
+        for(int i = 0; i < page.getResultList().size(); i++) {
+            JsonArray expectedArray = new JsonArray();
+            expectedArray.add(gson.toJsonTree("key-" + (i + 2)));
+            expectedArray.add(gson.toJsonTree(10.009999999999999787 + i + 1));
+            expectedJsonArray.add(expectedArray);
+            //Build a list from the query's results of the JSON value array
+            JsonArray actualArray = new JsonArray();
+            JsonElement jsonTitleValue = (gson.toJsonTree(page.getResultList().get(i)))
+                    .getAsJsonObject().get("title");
+            actualArray.add(jsonTitleValue);
+            JsonElement jsonTotalValue = (gson.toJsonTree(page.getResultList().get(i)))
+                    .getAsJsonObject().get("contentArray").getAsJsonArray().get(0)
+                    .getAsJsonObject().get("total");
+            actualArray.add(jsonTotalValue);
+            actualJsonArray.add(actualArray);
+        }
+
+        assertJsonArrayKeysAndValues(expectedJsonArray, actualJsonArray);
     }
 
     @Test
@@ -1144,25 +1301,93 @@ public class ViewsTest {
         db.save(foo);
     }
 
-    private static void multiValueKeyInit(Foo foo, int i) {
+    private static JsonObject multiValueKeyInit(Foo foo, int i) {
         //JSON object for multi value key array tests
-        JsonObject json = new JsonObject();
-        json.addProperty("creator", "uuid");
-        json.addProperty("created", 1000 + i);
-        json.addProperty("boolean", (i != 0));
-        json.addProperty("total", 10.01 + i);
-        json.addProperty("quotes", "\"quotes\" " + String.valueOf(i));
-        json.addProperty("spaces", " spaces " + String.valueOf(i));
-        json.addProperty("letters", (char) ('a' + i) + "bc");
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("creator", "uuid");
+        jsonObject.addProperty("created", 1000 + i);
+        jsonObject.addProperty("boolean", (i != 0));
+        jsonObject.addProperty("total", 10.01 + i);
+        jsonObject.addProperty("quotes", "\"quotes\" " + String.valueOf(i));
+        jsonObject.addProperty("spaces", " spaces " + String.valueOf(i));
+        jsonObject.addProperty("letters", (char) ('a' + i) + "bc");
 
         JsonArray jsonArray = new JsonArray();
-        jsonArray.add(json);
+        jsonArray.add(jsonObject);
 
-        foo.setContentArray(jsonArray);
+        if(foo != null) {
+            foo.setContentArray(jsonArray);
+        }
+
+        return jsonObject;
     }
 
     private static String generateUUID() {
         return UUID.randomUUID().toString().replace("-", "");
+    }
+
+    /**
+     * Helper method to assert that keys and values in two JSON objects are equal.
+     * @param expectedJson the expected JSON element(s)
+     * @param actualJson the actual JSON element(s) from test result list
+     */
+    private void assertJsonObjectKeysAndValues(ArrayList<JsonObject> expectedJson,
+                                         ArrayList<JsonObject> actualJson) {
+
+        assertEquals(expectedJson.size(),
+                actualJson.size());
+
+        for(int i = 0; i < actualJson.size(); i++) {
+            JsonObject expectedJsonObject = expectedJson.get(i).getAsJsonObject();
+            JsonObject actualJsonObject = actualJson.get(i).getAsJsonObject();
+
+            Iterator<Map.Entry<String, JsonElement>> actualJsonIter =
+                    actualJsonObject.entrySet().iterator();
+
+            for (Map.Entry<String, JsonElement> expectedJsonMap :
+                    expectedJsonObject.entrySet()) {
+                String expectedJsonKey = expectedJsonMap.getKey();
+                JsonElement expectedJsonValue = expectedJsonMap.getValue();
+
+                if(actualJsonIter.hasNext()) {
+                    Map.Entry<String, JsonElement> actualJsonMap = actualJsonIter.next();
+                    assertEquals(expectedJsonKey, actualJsonMap.getKey());
+                    assertEquals(expectedJsonValue, actualJsonMap.getValue());
+                }
+            }
+        }
+    }
+
+    /**
+     * Helper method to assert that keys and values in two JSON arrays are equal.
+     * @param expectedJson the expected JSON element(s)
+     * @param actualJson the actual JSON element(s) from test result list
+     */
+    private void assertJsonArrayKeysAndValues(ArrayList<JsonArray> expectedJson,
+                                               ArrayList<JsonArray> actualJson) {
+        assertEquals(expectedJson.size(), actualJson.size());
+
+        for(int i = 0; i < actualJson.size(); i++) {
+            //Check key and values in the JSON array
+            JsonArray expectedJsonArray = expectedJson.get(i).getAsJsonArray();
+            JsonArray actualJsonArray = actualJson.get(i).getAsJsonArray();
+
+            assertEquals(expectedJsonArray.size(),
+                    actualJsonArray.size());
+
+            Iterator<JsonElement> actualJsonIter =
+                    actualJsonArray.iterator();
+
+            Iterator<JsonElement> expectedJsonIter =
+                    expectedJsonArray.iterator();
+
+            while (expectedJsonIter.hasNext()) {
+                JsonElement expectedJsonElement = expectedJsonIter.next();
+                JsonElement actualJsonElement = actualJsonIter.next();
+
+                assertEquals(expectedJsonElement, actualJsonElement);
+            }
+        }
     }
 
     /**
