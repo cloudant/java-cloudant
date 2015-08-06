@@ -147,7 +147,7 @@ public class URIBuilder {
      * @return The updated {@link URIBuilder} object.
      */
     public URIBuilder query(String name, Object value) {
-        return query(name, value, false);
+        return query(name, value, true);
 
     }
 
