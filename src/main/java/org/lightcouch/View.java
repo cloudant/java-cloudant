@@ -117,9 +117,9 @@ public class View {
 
     /**
      * This will be FORWARD initially or if
-     * {@link #queryPage(PagingDirection, int, String, String, String, String, Class)} has been
+     * {@link #queryPage(PagingDirection, int, JsonElement, String, JsonElement, String, Class)} has been
      * called, it will match the last {@code direction} passed to
-     * {@link #queryPage(PagingDirection, int, String, String, String, String, Class)}.
+     * {@link #queryPage(PagingDirection, int, JsonElement, String, JsonElement, String, Class)}.
      */
     private PagingDirection pagingDirection = PagingDirection.FORWARD;
 
