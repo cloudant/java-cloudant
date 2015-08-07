@@ -278,7 +278,7 @@ public class CloudantClient {
      * Get a database
      *
      * @param name   name of database to access
-     * @param create flag indicating whether to create the database if doesnt exist.
+     * @param create flag indicating whether to create the database if it does not exist.
      * @return Database object
      */
     public Database database(String name, boolean create) {
