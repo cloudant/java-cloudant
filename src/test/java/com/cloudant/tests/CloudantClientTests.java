@@ -113,8 +113,6 @@ public class CloudantClientTests {
 
     /**
      * Assert that the User-Agent header is of the expected form.
-     * It would be nice to test that the header is actually added to requests, but we can't
-     * assert that without making assumptions about the underlying client or asserting server-side.
      */
     @Test
     public void testUserAgentHeaderString() {
@@ -124,6 +122,10 @@ public class CloudantClientTests {
                 (userAgentRegex));
     }
 
+    /**
+     * Assert that requests have the User-Agent header added. This test runs a local HTTP server
+     * process that can handle a single request to receive the request and validate the header.
+     */
     @Test
     public void testUserAgentHeaderIsAddedToRequest() {
 
@@ -155,4 +157,5 @@ public class CloudantClientTests {
                 userAgentHeaderMatchedExpectedForm);
 
     }
+
 }
