@@ -1,5 +1,7 @@
 package com.cloudant.tests;
 
+import com.google.gson.JsonArray;
+
 import org.lightcouch.Attachment;
 
 import java.util.Arrays;
@@ -18,6 +20,7 @@ public class Foo {
 
     private String title;
     private String content;
+    private JsonArray contentArray;
     private int position;
     private List<String> tags;
     private int[] complexDate;
@@ -53,6 +56,10 @@ public class Foo {
 
     public String getContent() {
         return content;
+    }
+
+    public JsonArray getContentArray() {
+        return contentArray;
     }
 
     public int getPosition() {
@@ -97,6 +104,10 @@ public class Foo {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public void setContentArray(JsonArray content) {
+        this.contentArray = content;
     }
 
     public void setPosition(int position) {
