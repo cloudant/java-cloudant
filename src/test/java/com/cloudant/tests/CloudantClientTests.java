@@ -4,6 +4,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
+import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
@@ -22,6 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.lightcouch.CouchDbClient;
 import org.lightcouch.CouchDbException;
+import org.lightcouch.NoDocumentException;
 
 import java.util.List;
 
@@ -113,8 +115,6 @@ public class CloudantClientTests {
 
     /**
      * Assert that the User-Agent header is of the expected form.
-     * It would be nice to test that the header is actually added to requests, but we can't
-     * assert that without making assumptions about the underlying client or asserting server-side.
      */
     @Test
     public void testUserAgentHeaderString() {
@@ -124,6 +124,10 @@ public class CloudantClientTests {
                 (userAgentRegex));
     }
 
+    /**
+     * Assert that requests have the User-Agent header added. This test runs a local HTTP server
+     * process that can handle a single request to receive the request and validate the header.
+     */
     @Test
     public void testUserAgentHeaderIsAddedToRequest() {
 
@@ -155,4 +159,35 @@ public class CloudantClientTests {
                 userAgentHeaderMatchedExpectedForm);
 
     }
+
+    /**
+     * Test a NoDocumentException is thrown when trying an operation on a DB that doesn't exist
+     */
+    @Test(expected = NoDocumentException.class)
+    @Category(RequiresDB.class)
+    public void nonExistentDatabaseException() {
+        //try and get a DB that doesn't exist
+        Database db = cookieBasedClient.database("not_really_there", false);
+        //try an operation against the non-existant DB
+        db.info();
+    }
+
+    /**
+     * Validate that no exception bubbles up when trying to create a DB that already exists
+     */
+    @Test
+    @Category(RequiresDB.class)
+    public void existingDatabaseCreateException() {
+        try {
+            //create a DB for this test
+            cookieBasedClient.createDB("existing");
+
+            //do a get with create true for the already existing DB
+            cookieBasedClient.database("existing", true);
+        } finally {
+            //clean up the DB created by this test
+            cookieBasedClient.deleteDB("existing");
+        }
+    }
+
 }

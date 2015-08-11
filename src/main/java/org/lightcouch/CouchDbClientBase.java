@@ -485,6 +485,9 @@ public abstract class CouchDbClientBase {
             case HttpStatus.SC_CONFLICT: {
                 throw new DocumentConflictException(reason);
             }
+            case HttpStatus.SC_PRECONDITION_FAILED: {
+                throw new PreconditionFailedException(reason);
+            }
             default: { // other errors: 400 | 401 | 500 etc.
                 throw new CouchDbException(reason += EntityUtils.toString(response.getEntity()));
             }

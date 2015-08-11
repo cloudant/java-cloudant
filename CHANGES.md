@@ -1,3 +1,6 @@
+- [IMPROVED] Removed unconditional GET request when creating `Database` objects
+  This offered little protection to the developer while performing a hidden HTTP request.
+
 # 1.1.0 (2015-07-31)
 
 - [BREAKING CHANGE] Hostname verification and certificate chain

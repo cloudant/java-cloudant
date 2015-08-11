@@ -64,6 +64,8 @@ import java.util.Set;
 /**
  * Contains a Database Public API implementation.
  *
+ * Methods may throw a {@link NoDocumentException} if the database does not exist.
+ *
  * @author Mario Briggs
  * @since 0.0.1
  */

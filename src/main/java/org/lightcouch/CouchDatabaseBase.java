@@ -62,7 +62,9 @@ public abstract class CouchDatabaseBase {
         this.dbName = name;
         this.client = client;
         this.dbURI = buildUri(client.getBaseUri()).path(name).path("/").build();
-        connect(create);
+        if (create) {
+            create();
+        }
         this.design = new CouchDbDesign(this);
     }
 
@@ -478,22 +480,17 @@ public abstract class CouchDatabaseBase {
     }
 
 
-    private void connect(boolean create) {
-
-        InputStream getresp = null;
+    private void create() {
         HttpResponse putresp = null;
-
         try {
-            getresp = get(dbURI);
-        } catch (NoDocumentException e) { // db doesn't exist
-            if (!create) {
-                throw e;
-            }
             final HttpPut put = new HttpPut(dbURI);
             putresp = client.executeRequest(put);
             log.info(String.format("Created Database: '%s'", dbName));
+        } catch (PreconditionFailedException e) {
+            // The PreconditionFailedException is thrown if the database already existed.
+            // To preserve the behaviour of the previous version, suppress this type of exception.
+            // All other CouchDbExceptions will be thrown.
         } finally {
-            close(getresp);
             close(putresp);
         }
     }
