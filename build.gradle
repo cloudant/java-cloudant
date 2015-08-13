@@ -16,8 +16,8 @@ sourceCompatibility = 1.6
 targetCompatibility = 1.6
 
 repositories {
-    maven { url "http://oss.sonatype.org/content/repositories/snapshots" }
-    maven { url "http://repo.maven.apache.org/maven2" }
+    mavenLocal()
+    mavenCentral()
 }
 dependencies {
     compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3.3'
