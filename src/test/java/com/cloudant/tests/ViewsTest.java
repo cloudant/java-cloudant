@@ -425,7 +425,7 @@ public class ViewsTest {
     public void byComplexKey() {
         init();
         List<Foo> foos = db.view("example/by_date")
-				.key(2011, 10, 15)
+                .key(2011, 10, 15)
                 .includeDocs(true)
                 .reduce(false)
                 .query(Foo.class);
@@ -1011,13 +1011,13 @@ public class ViewsTest {
      *
      * @param expectedPageNumber the page number of the page we expect to be returned.
      * @param param              the request parameter to use to query a page, or {@code null} to
-     *                              return the first page.
+     *                           return the first page.
      * @param descending         true if the view should be created in descending order, and false
-     *                              otherwise.
+     *                           otherwise.
      * @param docCount           the total number of documents in the view.
      * @param docsPerPage        the maximum number of documents per page in the view.
      * @param view               the {@link View} object to use to perform the query, or {@code
-     * null} to create a new {@link View}
+     *                           null} to create a new {@link View}
      * @return the page of results.
      */
     private static Page queryAndCheckPage(int expectedPageNumber, String param, boolean
@@ -1047,7 +1047,7 @@ public class ViewsTest {
      * @param docCount    the total number of documents in the view.
      * @param docsPerPage the maximum number of documents per page in the view.
      * @param view        the {@link View} object to use to perform the query (or null to create a
-     *                       new
+     *                    new
      *                    view for the query).
      * @param pageToPages the list of page numbers to page to.
      */
@@ -1086,7 +1086,7 @@ public class ViewsTest {
      * @param docCount      the total number of documents in the view.
      * @param docsPerPage   the maximum number of documents per page.
      * @param view          the {@link View} object to use to perform the query (or null to create
-     *                         a new
+     *                      a new
      *                      view for the query).
      * @return the last page in the view.
      */
@@ -1110,7 +1110,7 @@ public class ViewsTest {
      * @param docCount      the total number of documents in the view.
      * @param docsPerPage   the maximum number of documents per page.
      * @param view          the {@link View} object to use to perform the query (or null to create
-     *                         a new
+     *                      a new
      *                      view for the query).
      * @return the first page in the view
      */
@@ -1169,15 +1169,25 @@ public class ViewsTest {
      * Helper class for use with multi-value key view tests.
      */
     private class CheckPaginationWithMultiValueKey {
-        /** True if the view is in descending order, and false otherwise. */
+        /**
+         * True if the view is in descending order, and false otherwise.
+         */
         private boolean descending;
-        /** True for creating a new view for the query, and false otherwise. */
+        /**
+         * True for creating a new view for the query, and false otherwise.
+         */
         private boolean useNewView;
-        /** The total number of documents in the view. */
+        /**
+         * The total number of documents in the view.
+         */
         private int docCount;
-        /** The maximum number of documents per page. */
+        /**
+         * The maximum number of documents per page.
+         */
         private int docsPerPage;
-        /** The list of page numbers to page to. */
+        /**
+         * The list of page numbers to page to.
+         */
         private int[] pageToPages;
 
         public CheckPaginationWithMultiValueKey descending(boolean descending) {
@@ -1214,19 +1224,22 @@ public class ViewsTest {
          * otherwise the given {@code view} is used.
          *
          * @param expectedPageNumber the page number of the page we expect to be returned.
-         * @param param              the request parameter to use to query a page, or {@code null} to
-         *                              return the first page.
-         * @param descending         true if the view should be created in descending order, and false
-         *                              otherwise.
+         * @param param              the request parameter to use to query a page, or {@code
+         * null} to
+         *                           return the first page.
+         * @param descending         true if the view should be created in descending order, and
+         *                           false
+         *                           otherwise.
          * @param docCount           the total number of documents in the view.
          * @param docsPerPage        the maximum number of documents per page in the view.
          * @param view               the {@link View} object to use to perform the query, or {@code
-         *                              null} to create a new {@link View}
+         *                           null} to create a new {@link View}
          * @param viewCount          the current view in the array of multi-value key views.
-         *                              This value is used when view parameter is null.
+         *                           This value is used when view parameter is null.
          * @return the page of results.
          */
-        private Page queryAndCheckPageWithMultiValueKey(int expectedPageNumber, String param, boolean
+        private Page queryAndCheckPageWithMultiValueKey(int expectedPageNumber, String param,
+                                                        boolean
                 descending, int docCount, int docsPerPage, View view, int viewCount) {
             View queryView = view;
             if (queryView == null) {
@@ -1251,14 +1264,17 @@ public class ViewsTest {
          * @param descending    true if the view is in descending order, and false otherwise.
          * @param docCount      the total number of documents in the view.
          * @param docsPerPage   the maximum number of documents per page.
-         * @param view          the {@link View} object to use to perform the query (or null to create
-         *                         a new
+         * @param view          the {@link View} object to use to perform the query (or null to
+         *                      create
+         *                      a new
          *                      view for the query).
-         * @param viewCount     the current view in the array of multi-value key views. This value is
+         * @param viewCount     the current view in the array of multi-value key views. This
+         *                      value is
          *                      used when view parameter is null.
          * @return the last page in the view.
          */
-        private Page checkPagesForwardMultiValueKey(int currentPage, int numberOfPages, Page page, boolean
+        private Page checkPagesForwardMultiValueKey(int currentPage, int numberOfPages, Page
+                page, boolean
                 descending, int docCount, int docsPerPage, View view, int viewCount) {
             for (int i = 0; i < numberOfPages; ++i) {
                 page = queryAndCheckPageWithMultiValueKey(currentPage + i + 1, page.getNextParam(),
@@ -1280,17 +1296,21 @@ public class ViewsTest {
          * @param descending    true if the view is in descending order, and false otherwise.
          * @param docCount      the total number of documents in the view.
          * @param docsPerPage   the maximum number of documents per page.
-         * @param view          the {@link View} object to use to perform the query (or null to create
-         *                         a new
+         * @param view          the {@link View} object to use to perform the query (or null to
+         *                      create
+         *                      a new
          *                      view for the query).
-         * @param viewCount     the current view in the array of multi-value key views. This value is
+         * @param viewCount     the current view in the array of multi-value key views. This
+         *                      value is
          *                      used when view parameter is null.
          * @return the first page in the view
          */
-        private Page checkPagesBackwardMultiValueKey(int currentPage, int numberOfPages, Page page, boolean
+        private Page checkPagesBackwardMultiValueKey(int currentPage, int numberOfPages, Page
+                page, boolean
                 descending, int docCount, int docsPerPage, View view, int viewCount) {
             for (int i = 0; i < numberOfPages; ++i) {
-                page = queryAndCheckPageWithMultiValueKey(currentPage - i - 1, page.getPreviousParam(), descending,
+                page = queryAndCheckPageWithMultiValueKey(currentPage - i - 1, page
+                                .getPreviousParam(), descending,
                         docCount, docsPerPage, view, viewCount);
             }
             return page;
@@ -1306,7 +1326,8 @@ public class ViewsTest {
          * {@code pageToPages}, checking all the intervening pages as well as the pages specified
          * in {@code pageToPages} are as expected.
          * <p/>
-         * For example, if {@code pageToPages} contains {@code 4, 2, 5}, this will check pages in the
+         * For example, if {@code pageToPages} contains {@code 4, 2, 5}, this will check pages in
+         * the
          * following order: 1, 2, 3, 4, 3, 2, 3, 4, 5.
          */
         public void runTest() {
@@ -1317,9 +1338,9 @@ public class ViewsTest {
             }
 
             // Run all views
-            for(int viewCount = 0; viewCount < testViews.length; viewCount++) {
+            for (int viewCount = 0; viewCount < testViews.length; viewCount++) {
                 View view = null;
-                if(!useNewView) {
+                if (!useNewView) {
                     view = db.view(testViews[viewCount])
                             .reduce(false)
                             .descending(descending);
