@@ -137,12 +137,7 @@ public class ViewsTest {
                 .startKey(true)
                 .endKey(true);
 
-        Page page = null;
-        try {
-            page = view.queryPage(2, null, Object.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Page page = view.queryPage(2, null, Object.class);
 
         assertThat(page.getResultList().size(), is(2));
     }
@@ -180,12 +175,7 @@ public class ViewsTest {
                 .startKey(" spaces ", 1)
                 .endKey(" spaces 0", 2000);
 
-        Page page = null;
-        try {
-            page = view.queryPage(30, null, Object.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Page page = view.queryPage(30, null, Object.class);
 
         assertThat(page.getResultList().size(), is(1));
     }
@@ -221,12 +211,7 @@ public class ViewsTest {
                 .startKey("\"quotes\" ", 1)
                 .endKey("\"quotes\" 1", 2000);
 
-        Page page = null;
-        try {
-            page = view.queryPage(30, null, Object.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Page page = view.queryPage(30, null, Object.class);
 
         assertThat(page.getResultList().size(), is(2));
     }
@@ -260,12 +245,7 @@ public class ViewsTest {
                 .startKey(1, 10)
                 .endKey(1001, 2000);
 
-        Page page = null;
-        try {
-            page = view.queryPage(30, null, Object.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Page page = view.queryPage(30, null, Object.class);
 
         assertThat(page.getResultList().size(), is(2));
     }
@@ -300,15 +280,9 @@ public class ViewsTest {
                 .startKey(new Object[]{"uuid", 1})
                 .endKey(new Object[]{"uuid", 1010});
 
-        Page page = null;
-        try {
-            page = view.queryPage(30, null, Object.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Page page = view.queryPage(30, null, Object.class);
 
         assertThat(page.getResultList().size(), is(3));
-
     }
 
     /**
@@ -340,12 +314,7 @@ public class ViewsTest {
                 .startKey(10.00, 1)
                 .endKey(11.00, 2000);
 
-        Page page = null;
-        try {
-            page = view.queryPage(30, null, Object.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Page page = view.queryPage(30, null, Object.class);
 
         assertThat(page.getResultList().size(), is(1));
     }
@@ -379,12 +348,7 @@ public class ViewsTest {
                 .startKey(false, "uuid", 1)
                 .endKey(false, "uuid", 2000);
 
-        Page page = null;
-        try {
-            page = view.queryPage(30, null, Object.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Page page = view.queryPage(30, null, Object.class);
 
         assertThat(page.getResultList().size(), is(1));
     }
@@ -435,15 +399,9 @@ public class ViewsTest {
                 .startKey(1000, false, "uuid")
                 .endKey(1002, false, "uuid");
 
-        Page page = null;
-        try {
-            page = view.queryPage(30, null, Object.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Page page = view.queryPage(30, null, Object.class);
 
         assertThat(page.getResultList().size(), is(2));
-
     }
 
     /**
@@ -458,12 +416,7 @@ public class ViewsTest {
                 .startKey(new Object[]{1000, false, "uuid"})
                 .endKey(new Object[]{1002, false, "uuid"});
 
-        Page page = null;
-        try {
-            page = view.queryPage(30, null, Object.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Page page = view.queryPage(30, null, Object.class);
 
         assertThat(page.getResultList().size(), is(2));
     }
