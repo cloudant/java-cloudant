@@ -1,4 +1,4 @@
-# Unreleased
+# 1.1.2 (2015-08-14)
 
 - [IMPROVED] Removed unconditional GET request when creating `Database` objects
   This offered little protection to the developer while performing a hidden HTTP request.
