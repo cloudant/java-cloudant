@@ -362,8 +362,8 @@ public class View {
         final Page<T> page = new Page<T>();
         final List<T> pageList = new ArrayList<T>();
 
-        final ViewResult<JsonElement, JsonElement, T> vr = queryView(JsonElement.class, JsonElement.class, classOfT);
-        final List<ViewResult<JsonElement, JsonElement, T>.Rows> rows = vr.getRows();
+        final ViewResult<JsonElement, String, T> vr = queryView(JsonElement.class, String.class, classOfT);
+        final List<ViewResult<JsonElement, String, T>.Rows> rows = vr.getRows();
         final int resultRows = rows.size();
         final int offset = vr.getOffset();
         final long totalRows = vr.getTotalRows();
