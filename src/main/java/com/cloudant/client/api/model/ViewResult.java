@@ -46,8 +46,10 @@ public class ViewResult<K, V, T> {
     }
 
     /**
+     * Offset should not be used in clustered environments
      * @return
      */
+    @Deprecated
     public int getOffset() {
         return viewResult.getOffset();
     }
@@ -81,8 +83,10 @@ public class ViewResult<K, V, T> {
     }
 
     /**
+     * Offset should not be used in clustered environments
      * @param offset
      */
+    @Deprecated
     public void setOffset(int offset) {
         viewResult.setOffset(offset);
     }

@@ -54,38 +54,83 @@ public class Page<T> {
         return page.getPreviousParam();
     }
 
+    /**
+     * Setter methods on {@link Page} should not be called by applications.
+     * These parameters are controlled internally.
+     */
+    @Deprecated
     public void setHasPrevious(boolean isHasPrevious) {
         page.setHasPrevious(isHasPrevious);
     }
 
+    /**
+     * Setter methods on {@link Page} should not be called by applications.
+     * These parameters are controlled internally.
+     */
+    @Deprecated
     public void setHasNext(boolean isHasNext) {
         page.setHasNext(isHasNext);
     }
 
+    /**
+     * Setter methods on {@link Page} should not be called by applications.
+     * These parameters are controlled internally.
+     */
+    @Deprecated
     public void setResultList(List<T> resultList) {
         page.setResultList(resultList);
     }
 
+    /**
+     * Setter methods on {@link Page} should not be called by applications.
+     * These parameters are controlled internally.
+     */
+    @Deprecated
     public void setTotalResults(long totalResults) {
         page.setTotalResults(totalResults);
     }
 
+    /**
+     * Setter methods on {@link Page} should not be called by applications.
+     * These parameters are controlled internally.
+     */
+    @Deprecated
     public void setResultFrom(int resultFrom) {
         page.setResultFrom(resultFrom);
     }
 
+    /**
+     * Setter methods on {@link Page} should not be called by applications.
+     * These parameters are controlled internally.
+     */
+    @Deprecated
     public void setResultTo(int resultTo) {
         page.setResultTo(resultTo);
     }
 
+    /**
+     * Setter methods on {@link Page} should not be called by applications.
+     * These parameters are controlled internally.
+     */
+    @Deprecated
     public void setPageNumber(int pageNumber) {
         page.setPageNumber(pageNumber);
     }
 
+    /**
+     * Setter methods on {@link Page} should not be called by applications.
+     * These parameters are controlled internally.
+     */
+    @Deprecated
     public void setNextParam(String nextParam) {
         page.setNextParam(nextParam);
     }
 
+    /**
+     * Setter methods on {@link Page} should not be called by applications.
+     * These parameters are controlled internally.
+     */
+    @Deprecated
     public void setPreviousParam(String previousParam) {
         page.setPreviousParam(previousParam);
     }
