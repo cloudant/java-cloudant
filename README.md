@@ -33,13 +33,13 @@ dependencies {
 }
 ```
 
-Alternately download the dependencies  
+Alternately download the dependencies
   [cloudant.jar](http://search.maven.org/remotecontent?filepath=com/cloudant/cloudant-client/1.0.1/cloudant-client-1.0.1.jar)
-  [HttpClient 4.3.3](http://hc.apache.org/downloads.cgi)  
-  [HttpCore 4.3.2](http://hc.apache.org/downloads.cgi)  
-  [Commons Codec 1.6](http://commons.apache.org/codec/download_codec.cgi)  
-  [Commons Logging 1.1.3](http://commons.apache.org/logging/download_logging.cgi)  
-  [Gson 2.2.4](http://code.google.com/p/google-gson/downloads/list)  
+  [HttpClient 4.3.3](http://hc.apache.org/downloads.cgi)
+  [HttpCore 4.3.2](http://hc.apache.org/downloads.cgi)
+  [Commons Codec 1.6](http://commons.apache.org/codec/download_codec.cgi)
+  [Commons Logging 1.1.3](http://commons.apache.org/logging/download_logging.cgi)
+  [Gson 2.2.4](http://code.google.com/p/google-gson/downloads/list)
 
 ### Getting Started
 
@@ -105,7 +105,7 @@ Database db = client.database("alice", false);
 
 // and insert a document in it
 db.save(new Rabbit(true));
-System.out.println("You have inserted the Rabbit");  
+System.out.println("You have inserted the Rabbit");
 Rabbit r = db.find(Rabbit.class,"rabbit");
 System.out.println(r);
 
@@ -146,7 +146,7 @@ If you run this example, you will see:
 	- [CloudantClient.replicator()](#comcloudantclientapicloudantclientreplicator)
 	- [CloudantClient.replication()](#comcloudantclientapicloudantclientreplication )
 	- [CloudantClient.executeRequest()](#comcloudantclientapicloudantclientexecuterequest)
-	- [CloudantClient.uuids(number)](#comcloudantclientapicloudantclientuuids)  
+	- [CloudantClient.uuids(number)](#comcloudantclientapicloudantclientuuids)
 	- [CloudantClient.getServerVersion()](#comcloudantclientapicloudantclientgetserverversion)
 - [Database Functions](#database-functions)
 	- [Database.changes()](#comcloudantclientapidatabasechanges)
@@ -787,24 +787,37 @@ call getFromDb(design-doc) to retrieve the server copy .
 
 DesignDocument designDoc = db.design().getFromDb("_design/example");
 ~~~
-### synchronizing design doc
-
-call synchronizeWithDb(design-doc) method to synchronize the server copy with local one.
-
-~~~ java
-
-DesignDocument designDoc = db.design().getFromDesk("example");
-db.design().synchronizeWithDb(designDoc);
-~~~
-
-All the design documents can be synchronized in a single attempt
-
-~~~ java
-
-db.syncDesignDocsWithDb();
-~~~
 
 
+## Creating a View (Map-Reduce Index)
+
+To create a view, upload a design document containing the index:
+
+```java
+// Uploads the design document with view index:
+// {
+//   "_id": "_design/name",
+//   "views": {
+//     "view1": {
+//       "map":"function(doc){emit(doc.field, 1)}",
+//       "reduce": "function(key, value, rereduce){return sum(values)}"
+//     }
+//   }
+// }
+
+Map<String, Object> view1 = new HashMap<>();
+view1.put("map", "function(doc){emit(doc.field, 1)}");
+view1.put("reduce", "function(key, value, rereduce){return sum(values)}");
+
+Map<String, Object> views = new HashMap<>();
+views.put("view1", view1);
+
+Map<String, Object> view_ddoc = new HashMap<>();
+view_ddoc.put("_id", "_design/name");
+view_ddoc.put("views", views);
+
+db.save(view_ddoc);
+```
 
 Take a look at the [CouchDB wiki](http://wiki.apache.org/couchdb/Formatting_with_Show_and_List#Showing_Documents) for possible query paramaters and more information on show functions.
 
@@ -868,13 +881,33 @@ First, when working with a database (as opposed to the root server), call the `.
 Database db = dbClient.database("movies-demo", false);
 ~~~
 
-To create a Cloudant Search index, create a design document and call `synchronizeWithDb()` method.
+## Creating a search index
 
-~~~ java
+To create a search index, upload a design document containing the index:
 
-DesignDocument designDoc = db.design().getFromDesk("views101");
-db.design().synchronizeWithDb(designDoc);
-~~~
+```java
+// Uploads the search index:
+// {
+//   "_id": "_design/views101",
+//   "indexes": {
+//     "animals": {
+//       "index": "function(doc){ index(\"default\", doc._id); }"
+//     }
+//   }
+// }
+
+Map<String, Object> animals = new HashMap<>();
+animals.put("index", "function(doc){ index(\"default\", doc._id); }");
+
+Map<String, Object> indexes = new HashMap<>();
+indexes.put("animals", animals);
+
+Map<String, Object> ddoc = new HashMap<>();
+ddoc.put("_id", "_design/searchindex");
+ddoc.put("indexes", indexes);
+
+db.save(ddoc);
+```
 
 To query this index, create instance of `com.cloudant.client.api.Search`  by calling the database `.search()` method. The argument of `.search()` method is the design document name. The other criterion can be set by calling different methods on `search` object.
 
@@ -922,7 +955,7 @@ ConnectOptions connectOptions = new ConnectOptions()
                                         .setProxyHost("http://localhost")
                                         .setProxyPort(8080)
                                         .setSSLAuthenticationDisabled(true);
- CloudantClient client = new CloudantClient("cloudant.com","test","password",  
+ CloudantClient client = new CloudantClient("cloudant.com","test","password",
                                                   connectOptions );
 
 ~~~
