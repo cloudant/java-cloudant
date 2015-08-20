@@ -4,7 +4,6 @@
   This offered little protection to the developer while performing a hidden HTTP request.
 - [FIXED] Fixed issue where URL parameters would be appended rather than replaced. This could cause very
   long URLs to be accidentally created."
-- [FIXED] Fixed issue where URL parameters would be appended rather than replaced.
 
 # 1.1.0 (2015-07-31)
 
