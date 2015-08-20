@@ -156,10 +156,12 @@ public class View {
             List<T> list = new ArrayList<T>();
             for (JsonElement jsonElem : jsonArray) {
                 JsonElement elem = jsonElem.getAsJsonObject();
+                T t = null;
                 if (Boolean.TRUE.equals(this.includeDocs)) {
-                    elem = jsonElem.getAsJsonObject().get("doc");
+                    t = JsonToObject(gson, elem, "doc", classOfT);
+                } else {
+                    t = this.gson.fromJson(elem, classOfT);
                 }
-                T t = this.gson.fromJson(elem, classOfT);
                 list.add(t);
             }
             return list;
