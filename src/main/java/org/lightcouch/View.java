@@ -20,7 +20,6 @@ import static java.lang.String.format;
 import static org.lightcouch.internal.CouchDbUtil.JsonToObject;
 import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static org.lightcouch.internal.CouchDbUtil.close;
-import static org.lightcouch.internal.CouchDbUtil.getAsInt;
 import static org.lightcouch.internal.CouchDbUtil.getAsLong;
 import static org.lightcouch.internal.CouchDbUtil.getStream;
 import static org.lightcouch.internal.CouchDbUtil.listResources;
@@ -31,6 +30,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.annotations.SerializedName;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
@@ -78,16 +78,6 @@ import java.util.List;
 public class View {
     private static final Log log = LogFactory.getLog(CouchDbClient.class);
 
-    // paging param fields
-    private static final String START_KEY = "s_k";
-    private static final String START_KEY_DOC_ID = "s_k_d_i";
-    private static final String CURRENT_START_KEY = "c_k";
-    private static final String CURRENT_START_KEY_DOC_ID = "c_k_d_i";
-    private static final String CURRENT_KEYS = "c";
-    private static final String ACTION = "a";
-    private static final String NEXT = "n";
-    private static final String PREVIOUS = "p";
-
     // temp views
     private static final String TEMP_VIEWS_DIR = "temp-views";
     private static final String MAP_JS = "map.js";
@@ -101,7 +91,7 @@ public class View {
     private String endKeyDocId;
     private Integer limit;
     private String stale;
-    private Boolean descending;
+    private Boolean descending = false;
     private Integer skip;
     private Boolean group;
     private Integer groupLevel;
@@ -109,19 +99,6 @@ public class View {
     private Boolean includeDocs;
     private Boolean inclusiveEnd;
     private Boolean updateSeq;
-
-    private enum PagingDirection {
-        FORWARD,
-        BACKWARD
-    }
-
-    /**
-     * This will be FORWARD initially or if
-     * {@link #queryPage(PagingDirection, int, JsonElement, String, JsonElement, String, Class)} has been
-     * called, it will match the last {@code direction} passed to
-     * {@link #queryPage(PagingDirection, int, JsonElement, String, JsonElement, String, Class)}.
-     */
-    private PagingDirection pagingDirection = PagingDirection.FORWARD;
 
     private CouchDatabaseBase dbc;
     private Gson gson;
@@ -213,7 +190,6 @@ public class View {
             JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
             ViewResult<K, V, T> vr = new ViewResult<K, V, T>();
             vr.setTotalRows(getAsLong(json, "total_rows"));
-            vr.setOffset(getAsInt(json, "offset"));
             vr.setUpdateSeq(getAsLong(json, "update_seq"));
             JsonArray jsonArray = json.getAsJsonArray("rows");
             if (jsonArray.size() == 0) { // validate available rows
@@ -298,129 +274,133 @@ public class View {
      * @param <T>         Object type T
      * @param rowsPerPage The number of rows per page.
      * @param param       The request parameter to use to query a page, or {@code null} to return
-     *                       the first page.
+     *                    the first page.
      * @param classOfT    The class of type T.
      * @return {@link Page}
      */
     public <T> Page<T> queryPage(int rowsPerPage, String param, Class<T> classOfT) {
-        if (param == null) { // assume first page
-            return queryPage(PagingDirection.FORWARD, rowsPerPage, null, null, null, null,
-                    classOfT);
-        }
-        JsonElement currentStartKey;
-        String currentStartKeyDocId;
-        JsonElement startKey;
-        String startKeyDocId;
-        String action;
-        try {
-            // extract fields from the returned HEXed JSON object
-            final JsonObject json = new JsonParser().parse(new String(Base64.decodeBase64(param
-                    .getBytes()))).getAsJsonObject();
-            if (log.isDebugEnabled()) {
-                log.debug("Paging Param Decoded = " + json);
-            }
-            final JsonObject jsonCurrent = json.getAsJsonObject(CURRENT_KEYS);
-            currentStartKey = jsonCurrent.get(CURRENT_START_KEY);
-            currentStartKeyDocId = jsonCurrent.get(CURRENT_START_KEY_DOC_ID).getAsString();
-            startKey = json.get(START_KEY);
-            startKeyDocId = json.get(START_KEY_DOC_ID).getAsString();
-            action = json.get(ACTION).getAsString();
-        } catch (Exception e) {
-            throw new CouchDbException("could not parse the given param!", e);
-        }
-        if (PREVIOUS.equals(action)) { // previous
-            return queryPage(PagingDirection.BACKWARD, rowsPerPage, currentStartKey,
-                    currentStartKeyDocId, startKey, startKeyDocId, classOfT);
-        } else { // next
-            return queryPage(PagingDirection.FORWARD, rowsPerPage, currentStartKey,
-                    currentStartKeyDocId, startKey, startKeyDocId, classOfT);
-        }
-    }
-
-    private <T> Page<T> queryPage(PagingDirection direction, int rowsPerPage, JsonElement
-            currentStartKey,
-                                  String currentStartKeyDocId, JsonElement startKey, String
-                                          startKeyDocId, Class<T> classOfT) {
         // set view query params
+        //we want to retrieve the number of required rows, plus 1 additional to determine the start
+        //key for the next page if there is one
         limit(rowsPerPage + 1);
         includeDocs(true);
 
-        if (direction != pagingDirection) {
-            // We've changed paging direction.
-            invertDirection();
-        }
-
-        if (direction == PagingDirection.BACKWARD) {
-            startKey(currentStartKey);
-            startKeyDocId(currentStartKeyDocId);
-        } else if (startKey != null) {
-            startKey(startKey);
-            startKeyDocId(startKeyDocId);
-        }
-
-        // init page, query view
-        final Page<T> page = new Page<T>();
-        final List<T> pageList = new ArrayList<T>();
-
-        final ViewResult<JsonElement, String, T> vr = queryView(JsonElement.class, String.class, classOfT);
-        final List<ViewResult<JsonElement, String, T>.Rows> rows = vr.getRows();
-        final int resultRows = rows.size();
-        final int offset = vr.getOffset();
-        final long totalRows = vr.getTotalRows();
-        if (direction == PagingDirection.BACKWARD) {
-            Collections.reverse(rows); // fix order
-        }
-        // holds page params
-        final JsonObject currentKeys = new JsonObject();
-        final JsonObject jsonNext = new JsonObject();
-        final JsonObject jsonPrev = new JsonObject();
-
-        currentKeys.add(CURRENT_START_KEY, rows.get(0).getKey());
-        currentKeys.addProperty(CURRENT_START_KEY_DOC_ID, rows.get(0).getId());
-        for (int i = 0; i < resultRows; i++) {
-            // set keys for the next page
-            if (i == resultRows - 1) { // last element (i.e rowsPerPage + 1)
-                boolean isLastPage = resultRows <= rowsPerPage;
-                if (!isLastPage) {
-                    page.setHasNext(true);
-                    jsonNext.add(START_KEY, rows.get(i).getKey());
-                    jsonNext.addProperty(START_KEY_DOC_ID, rows.get(i).getId());
-                    jsonNext.add(CURRENT_KEYS, currentKeys);
-                    jsonNext.addProperty(ACTION, NEXT);
-                    page.setNextParam(Base64.encodeBase64URLSafeString(jsonNext.toString()
-                            .getBytes()));
-                    continue;
-                }
-            }
-            pageList.add(rows.get(i).getDoc());
-        }
-        // set keys for the previousPage page
-        boolean isFirstPage = (direction == PagingDirection.FORWARD && offset == 0)
-                || (direction == PagingDirection.BACKWARD && offset == totalRows - rowsPerPage - 1);
-        if (!isFirstPage) {
-            page.setHasPrevious(true);
-            jsonPrev.add(START_KEY, currentStartKey);
-            jsonPrev.addProperty(START_KEY_DOC_ID, currentStartKeyDocId);
-            jsonPrev.add(CURRENT_KEYS, currentKeys);
-            jsonPrev.addProperty(ACTION, PREVIOUS);
-            page.setPreviousParam(Base64.encodeBase64URLSafeString(jsonPrev.toString().getBytes()));
-        }
-        // calculate paging display info
-        page.setResultList(pageList);
-        page.setTotalResults(totalRows);
-        if (direction == PagingDirection.BACKWARD) {
-            page.setResultFrom((int) totalRows - (offset + rowsPerPage));
-            final int resultTo = (int) totalRows - offset - 1;
-            page.setResultTo(resultTo);
-            page.setPageNumber(resultTo / rowsPerPage);
+        int thisPageNumber;
+        PageMetadata pageToRetrieveMetadata = null;
+        if (param != null) {
+            pageToRetrieveMetadata = PageMetadata.decode(gson, param);
+            //set up the parameters from the supplied pageToRetrieveMetadata link
+            startKey(pageToRetrieveMetadata.startKey);
+            startKeyDocId(pageToRetrieveMetadata.startKeyDocId);
+            thisPageNumber = pageToRetrieveMetadata.pageNumber;
         } else {
-            page.setResultFrom(offset + 1);
-            final int resultTo = rowsPerPage > resultRows ? resultRows : rowsPerPage; // fix when
-            // rowsPerPage exceeds returned rows
-
-            page.setResultTo(offset + resultTo);
-            page.setPageNumber((int) Math.ceil(page.getResultFrom() / (double) rowsPerPage));
+            //null param implies first page
+            thisPageNumber = 1;
+            //we can only page forward from the first page
+            pageToRetrieveMetadata = new PageMetadata(PageMetadata.PagingDirection.FORWARD);
         }
+
+        //pages only have a reference to the start key, when paging backwards this is the startkey
+        // of the following page (i.e. the last element of the previous page) so to correctly
+        // present page results when paging backwards requires a _temporary_ reversal
+        if (PageMetadata.PagingDirection.BACKWARD == pageToRetrieveMetadata.direction) {
+            //reverse whichever direction this view is normally doing
+            uriBuilder.query("descending", !descending);
+        }
+
+        // init page, results list
+        final Page<T> page = new Page<T>();
+        final List<T> resultList = new ArrayList<T>();
+
+        List<ViewResult<JsonElement, JsonElement, T>.Rows> rows = Collections.emptyList();
+        int resultRows = 0;
+        Long totalRows = 0l;
+        try {
+            //query the view
+            final ViewResult<JsonElement, JsonElement, T> vr = queryView(JsonElement.class,
+                    JsonElement.class, classOfT);
+
+            rows = vr.getRows();
+            resultRows = rows.size();
+            totalRows = vr.getTotalRows();
+
+            if (PageMetadata.PagingDirection.BACKWARD == pageToRetrieveMetadata.direction) {
+                //Result needs reversing because to implement backward paging the view reading
+                // order is reversed
+                Collections.reverse(rows);
+            }
+        } finally {
+            //ensure the view descending parameter is assigned back to its previous value
+            uriBuilder.query("descending", descending);
+        }
+
+        //we expect limit = rowsPerPage + 1 results, if we have rowsPerPage or less we are on the
+        // last page
+        boolean isLastPage = resultRows <= rowsPerPage;
+
+        //Loop through the view results, except the last row populating the result list
+        for (int i = 0; i < resultRows - 1; i++) {
+            // add the element to the result list
+            resultList.add(rows.get(i).getDoc());
+        }
+
+        // If we are not on the last page, we need to use the last
+        // result as the start key for the next page and therefore
+        // we don't return it to the user.
+        // If we are on the last page, the final row should be returned
+        // to the user.
+        int lastIndex = resultRows - 1;
+        if (!isLastPage) {
+            //not the last page, so there is a next page
+            page.setHasNext(true);
+            //Construct the next page metadata (i.e. paging forward)
+            PageMetadata nextPageMetadata = new PageMetadata(PageMetadata.PagingDirection
+                    .FORWARD);
+            //the last element is the start of the next page
+            nextPageMetadata.startKey = rows.get(lastIndex).getKey();
+            nextPageMetadata.startKeyDocId = rows.get(lastIndex).getId();
+            //increment the page number for the next page
+            nextPageMetadata.pageNumber = thisPageNumber + 1;
+            //set the parameter
+            page.setNextParam(PageMetadata.encode(gson, nextPageMetadata));
+        } else {
+            // last page
+            page.setHasNext(false);
+            //add the final row
+            resultList.add(rows.get(lastIndex).getDoc());
+        }
+
+        //set previous page links if not the first page
+        if (thisPageNumber == 1) {
+            page.setHasPrevious(false);
+        } else {
+            page.setHasPrevious(true);
+            //set up previous page data, i.e. paging backward
+            PageMetadata previousPageMetadata = new PageMetadata(PageMetadata.PagingDirection
+                    .BACKWARD);
+            //decrement the page number for the previous page
+            previousPageMetadata.pageNumber = thisPageNumber - 1;
+            //this page's startKey will also be the startKey for the previous page, but with a
+            // descending lookup indicated by the paging direction
+            previousPageMetadata.startKey = rows.get(0).getKey();
+            previousPageMetadata.startKeyDocId = rows.get(0).getId();
+            //set the parameter
+            page.setPreviousParam(PageMetadata.encode(gson, previousPageMetadata));
+        }
+
+        // calculate paging display info
+        page.setResultList(resultList);
+        page.setTotalResults(totalRows);
+        page.setPageNumber(thisPageNumber);
+        int offset = (thisPageNumber - 1) * rowsPerPage;
+        //given that totalRows is a long, the indexes for "from" and "to" should be long as well
+        //however, the API for org.lightcouch.Page uses int so we have to convert
+        //TODO fix this next time we change the API
+        int resultFrom = offset + 1;
+        int resultTo = offset + (isLastPage ? resultRows : rowsPerPage);
+        page.setResultFrom(resultFrom);
+        page.setResultTo(resultTo);
+
         return page;
     }
 
@@ -586,9 +566,11 @@ public class View {
         return this;
     }
 
+    //utilities
+
     private JsonElement getKeyAsJsonElement(Object... key) {
         // single or complex key
-        if(key.length == 1) {
+        if (key.length == 1) {
             return gson.toJsonTree(key[0]);
         } else {
             return gson.toJsonTree(key).getAsJsonArray();
@@ -596,19 +578,82 @@ public class View {
     }
 
     /**
-     * Invert the reading direction.
+     * <P>
+     * Object for serializing metadata about a page.
+     * </P>
+     * <P>
+     * Each call to {@link View#queryPage(int, String, Class)} calculates the parameters required
+     * to get the pages preceding and following it. This class is used to persist the values for
+     * either page as tokens a caller can pass back to queryPage to retrieve them at a later point.
+     * </P>
      */
-    private View invertDirection() {
-        pagingDirection =
-                pagingDirection == PagingDirection.FORWARD ? PagingDirection.BACKWARD : PagingDirection.FORWARD;
-        boolean directionDescending;
-        if (descending == null) {
-            directionDescending = pagingDirection == PagingDirection.BACKWARD;
-        } else {
-            directionDescending = (descending && pagingDirection == PagingDirection.FORWARD)
-                    || (!descending && pagingDirection == PagingDirection.BACKWARD);
+    static final class PageMetadata {
+        /**
+         * The start key of the page to retrieve
+         */
+        @SerializedName("sk")
+        JsonElement startKey;
+        /**
+         * The start key docId of the page to retrieve
+         */
+        @SerializedName("sd")
+        String startKeyDocId;
+        /**
+         * The page number of the page to retrieve
+         */
+        @SerializedName("p")
+        int pageNumber;
+        /**
+         * Indicate the paging direction for this metadata
+         */
+        @SerializedName("d")
+        private PagingDirection direction;
+
+        enum PagingDirection {
+            @SerializedName("f")
+            FORWARD,
+            @SerializedName("b")
+            BACKWARD
         }
-        uriBuilder.query("descending", directionDescending, true);
-        return this;
+
+        PageMetadata(PagingDirection direction) {
+            this.direction = direction;
+        }
+
+        /**
+         * @param gson
+         * @param metadata
+         * @return Base64 encoded string of the GSON serialized metadata object
+         */
+        static String encode(Gson gson, PageMetadata metadata) {
+            if (metadata == null) {
+                return null;
+            }
+            String jsonMetadata = gson.toJson(metadata);
+            return Base64.encodeBase64URLSafeString(jsonMetadata
+                    .getBytes());
+        }
+
+        /**
+         * @param gson
+         * @param pageParameter
+         * @return metadata object deserialized from the Base64 encoded parameter
+         */
+        static PageMetadata decode(Gson gson, String pageParameter) {
+            if (pageParameter == null) {
+                return null;
+            }
+            try {
+                // extract fields from the returned HEXed JSON object
+                String jsonMetadata = new String(Base64.decodeBase64(pageParameter
+                        .getBytes()));
+                if (log.isDebugEnabled()) {
+                    log.debug("Paging Param Decoded = " + jsonMetadata);
+                }
+                return gson.fromJson(jsonMetadata, PageMetadata.class);
+            } catch (Exception e) {
+                throw new CouchDbException("could not parse the given param!", e);
+            }
+        }
     }
 }
