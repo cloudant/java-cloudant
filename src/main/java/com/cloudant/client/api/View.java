@@ -74,53 +74,45 @@ public class View {
 
     /**
      * Returns the queried view's results containing JSON entries.
-     *
-     * @see com.cloudant.client.api.model.ViewResult for result entries returned.
-     *
+     * <p>
      * Example:
+     * </p>
+     * <p>
      * A view with a map function of emitted key-value pairs.
+     * </p>
+     *
      * Sample view:
      * <pre>
-     * {@code
      * function(doc) {
      *     emit(doc.shape, doc.sides);
-     * }
      * }
      * </pre>
      *
      * A sample document that could be queried by this view is:
      * <pre>
-     * {@code
      * { "_id" : docId,
      *   "_rev" : 1-23456
-     *   "shape" : “triangle”
+     *   "shape" : "triangle"
      *   "sides" : 3
-     * }
      * }
      * </pre>
      *
      * The results of a query using this view are JSON object of key-value pairs:
      * <pre>
-     * {@code
      * {"total_rows":1,"offset":0,"rows":[
      * {"id":"docId","key":"triangle","value":3},
      * ]}
-     * }
      * </pre>
      *
      * Sample use of this method to get this ViewResult:
      * <pre>
-     * {@code
-     * ViewResult<String, Integer, Foo> viewResult = database.view("example/foo")
+     * ViewResult&lt;String, Integer, Foo&gt; viewResult = database.view("example/foo")
      *                              .queryView(String.class, Integer.class, Foo.class);
-     * }
-     * </pre>
      *
+     * </pre>
      * Example ViewResult entries:
      * <pre>
-     * {@code
      * ViewResult [totalRows=1, updateSeq=0, rows=[Rows[id=docId]]]
-     * }
      * </pre>
      *
      * @param <K>      The type of key emitted by the view.
@@ -131,7 +123,6 @@ public class View {
      * @param classOfT The class type of the view's doc included by the view.
      * @return The view's result entries which contains the doc's id, key, and value.
      *         Will also contain the doc if include_doc equals true.
-     *
      */
     public <K, V, T> com.cloudant.client.api.model.ViewResult<K, V, T> queryView(Class<K> classOfK,
                                                                                  Class<V> classOfV,
