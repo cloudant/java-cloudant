@@ -73,18 +73,60 @@ public class View {
     }
 
     /**
-     * Queries a view.
+     * Returns the queried view's results containing JSON entries.
+     * <p>
+     * Example:
+     * </p>
+     * <p>
+     * A view with a map function of emitted key-value pairs.
+     * </p>
      *
-     * @param <K>      Object type K (key)
-     * @param <V>      Object type V (value)
-     * @param classOfK The class of type K.
-     * @param classOfV The class of type V.
-     * @param classOfT The class of type T.
-     * @return The View result entries.
+     * Sample view:
+     * <pre>
+     * function(doc) {
+     *     emit(doc.shape, doc.sides);
+     * }
+     * </pre>
+     *
+     * A sample document that could be queried by this view is:
+     * <pre>
+     * { "_id" : docId,
+     *   "_rev" : 1-23456
+     *   "shape" : "triangle"
+     *   "sides" : 3
+     * }
+     * </pre>
+     *
+     * The results of a query using this view are JSON object of key-value pairs:
+     * <pre>
+     * {"total_rows":1,"offset":0,"rows":[
+     * {"id":"docId","key":"triangle","value":3},
+     * ]}
+     * </pre>
+     *
+     * Sample use of this method to get this ViewResult:
+     * <pre>
+     * ViewResult&lt;String, Integer, Foo&gt; viewResult = database.view("example/foo")
+     *                              .queryView(String.class, Integer.class, Foo.class);
+     *
+     * </pre>
+     * Example ViewResult entries:
+     * <pre>
+     * ViewResult [totalRows=1, updateSeq=0, rows=[Rows[id=docId]]]
+     * </pre>
+     *
+     * @param <K>      The type of key emitted by the view.
+     * @param <V>      The type of value emitted by the view.
+     * @param <T>      The type of class for the view's doc.
+     * @param classOfK The class type of the key emitted by the view.
+     * @param classOfV The class type of value emitted by the view.
+     * @param classOfT The class type of the view's doc included by the view.
+     * @return The view's result entries which contains the doc's id, key, and value.
+     *         Will also contain the doc if include_doc equals true.
      */
     public <K, V, T> com.cloudant.client.api.model.ViewResult<K, V, T> queryView(Class<K> classOfK,
-                                                                                 Class<V>
-                                                                                         classOfV, Class<T> classOfT) {
+                                                                                 Class<V> classOfV,
+                                                                                 Class<T> classOfT) {
         ViewResult<K, V, T> lightCouchQueryView = view.queryView(classOfK, classOfV, classOfT);
         com.cloudant.client.api.model.ViewResult<K, V, T> queryView = new com.cloudant.client.api
                 .model.ViewResult<K, V, T>(lightCouchQueryView);
