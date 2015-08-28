@@ -2,6 +2,7 @@ package com.cloudant.tests;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.lightcouch.internal.CouchDbUtil.JsonToObject;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -10,6 +11,9 @@ import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.api.model.SearchResult;
 import com.cloudant.client.api.model.SearchResult.SearchResultRows;
 import com.cloudant.test.main.RequiresCloudant;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -136,7 +140,6 @@ public class SearchTests {
         assertEquals(rslt.getRanges().get("min_length").get("large"), new Long(2));
 
     }
-
 
     @Test
     public void sortTest() {
