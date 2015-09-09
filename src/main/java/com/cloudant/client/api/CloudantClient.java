@@ -28,6 +28,7 @@ import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.model.Shard;
 import com.cloudant.client.api.model.Task;
+import com.cloudant.client.api.views.Key;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -427,7 +428,8 @@ public class CloudantClient {
                 }.getType(), new IndexDeserializer())
                 .registerTypeAdapter(new TypeToken<Map<String, EnumSet<Permissions>>>() {
                         }.getType(),
-                        new SecurityDeserializer());
+                        new SecurityDeserializer())
+        .registerTypeAdapter(Key.ComplexKey.class, new Key.ComplexKeyDeserializer());
         client.setGsonBuilder(gsonBuilder);
     }
 
