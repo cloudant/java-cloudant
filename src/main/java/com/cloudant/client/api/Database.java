@@ -25,6 +25,7 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.setEntity;
 import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
 import com.cloudant.client.api.model.DbInfo;
+import com.cloudant.client.api.model.Document;
 import com.cloudant.client.api.model.FindByIndexOptions;
 import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
@@ -32,6 +33,15 @@ import com.cloudant.client.api.model.IndexField.SortOrder;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.model.Shard;
+import com.cloudant.client.org.lightcouch.Changes;
+import com.cloudant.client.org.lightcouch.CouchDatabase;
+import com.cloudant.client.org.lightcouch.CouchDbDesign;
+import com.cloudant.client.org.lightcouch.CouchDbException;
+import com.cloudant.client.org.lightcouch.CouchDbInfo;
+import com.cloudant.client.org.lightcouch.DocumentConflictException;
+import com.cloudant.client.org.lightcouch.NoDocumentException;
+import com.cloudant.client.org.lightcouch.Response;
+import com.cloudant.client.org.lightcouch.View;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
@@ -390,6 +400,37 @@ public class Database {
         com.cloudant.client.api.View view = new com.cloudant.client.api.View();
         view.setView(couchDbview);
         return view;
+    }
+
+    /**
+     * @param designDoc containing the view
+     * @param viewName  the view name
+     * @return a builder to build view requests for the specified design document and view of
+     * this database
+     */
+    public ViewRequestBuilder getViewRequestBuilder(String designDoc, String viewName) {
+        return new ViewRequestBuilder(client, this, designDoc, viewName);
+    }
+
+    /**
+     * Build a request for the _all_docs endpoint.
+     * <P>
+     * Example usage:
+     * <pre>
+     * {@code
+     *  getAllDocsRequestBuilder().build().getResponse();
+     * }
+     * </pre>
+     * </P>
+     * @return a request builder for the _all_docs endpoint of this database
+     */
+    public AllDocsRequestBuilder getAllDocsRequestBuilder() {
+        return new AllDocsRequestBuilderImpl(new ViewQueryParameters<String,
+                Document.Revision>(client, this, "", "", String.class, Document.Revision.class) {
+            protected URIBuilder getViewURIBuilder() {
+                return URIBuilder.buildUri(db.getDBUri()).path("_all_docs");
+            }
+        });
     }
 
 
