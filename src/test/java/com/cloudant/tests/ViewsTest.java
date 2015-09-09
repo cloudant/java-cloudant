@@ -18,15 +18,22 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
-import com.cloudant.client.api.View;
-import com.cloudant.client.api.model.Page;
-import com.cloudant.client.api.model.ViewResult;
+import com.cloudant.client.api.model.Document;
+import com.cloudant.client.api.views.Key;
+import com.cloudant.client.api.views.ViewMultipleRequest;
+import com.cloudant.client.api.views.ViewRequest;
+import com.cloudant.client.api.views.ViewRequestBuilder;
+import com.cloudant.client.api.views.ViewResponse;
+import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresDB;
+import com.cloudant.tests.util.CheckPagination;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -36,14 +43,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import com.cloudant.client.org.lightcouch.NoDocumentException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Category(RequiresDB.class)
 public class ViewsTest {
@@ -51,8 +58,6 @@ public class ViewsTest {
 
     private static Database db;
     private CloudantClient account;
-    private static String[] testViews = {"example/doc_title", "example/creator_created",
-            "example/creator_boolean_total", "example/created_boolean_creator"};
 
     @Before
     public void setUp() {
@@ -70,42 +75,37 @@ public class ViewsTest {
     }
 
     @Test
-    public void queryView() {
+    public void queryView() throws Exception {
         init();
-        List<Foo> foos = db.view("example/foo")
-                .includeDocs(true)
-                .query(Foo.class);
+        List<Foo> foos = db.getViewRequestBuilder("example", "foo").newRequest(Key.Type.STRING,
+                Object.class).includeDocs(true).build().getResponse().getDocsAs(Foo.class);
         assertThat(foos.size(), not(0));
     }
 
     @Test
-    public void byKey() {
+    public void byKey() throws Exception {
         init();
-        List<Foo> foos = db.view("example/foo")
-                .includeDocs(true)
-                .key("key-1")
-                .query(Foo.class);
+        List<Foo> foos = db.getViewRequestBuilder("example", "foo").newRequest(Key.Type.STRING,
+                Object.class).includeDocs(true).keys("key-1").build().getResponse().getDocsAs(Foo
+                .class);
         assertThat(foos.size(), is(1));
     }
 
     @Test
-    public void byKeys() {
+    public void byKeys() throws Exception {
         init();
-        List<Foo> foos = db.view("example/foo")
-                .includeDocs(true)
-                .keys(new Object[]{"key-1", "key-2"})
-                .query(Foo.class);
+        List<Foo> foos = db.getViewRequestBuilder("example", "foo").newRequest(Key.Type.STRING,
+                Object.class).includeDocs(true).keys("key-1", "key-2").build().getResponse()
+                .getDocsAs(Foo.class);
         assertThat(foos.size(), is(2));
     }
 
     @Test
-    public void byStartAndEndKey() {
+    public void byStartAndEndKey() throws Exception {
         init();
-        List<Foo> foos = db.view("example/foo")
-                .startKey("key-1")
-                .endKey("key-2")
-                .includeDocs(true)
-                .query(Foo.class);
+        List<Foo> foos = db.getViewRequestBuilder("example", "foo").newRequest(Key.Type.STRING,
+                Object.class).includeDocs(true).startKey("key-1").endKey("key-2").build()
+                .getResponse().getDocsAs(Foo.class);
         assertThat(foos.size(), is(2));
     }
 
@@ -115,15 +115,11 @@ public class ViewsTest {
      * all false docs.
      */
     @Test
-    public void queryWithStartAndEndBooleanKey() {
+    public void queryWithStartAndEndBooleanKey() throws Exception {
         init();
-
-        View view = db.view("example/boolean")
-                .startKey(false)
-                .endKey(false);
-
-        List<Object> result = view.query(Object.class);
-
+        List<Object> result = db.getViewRequestBuilder("example", "boolean").newRequest(Key.Type
+                .BOOLEAN, Object.class).startKey(false).endKey(false).build()
+                .getResponse().getValues();
         assertThat(result.size(), is(1));
     }
 
@@ -132,16 +128,16 @@ public class ViewsTest {
      * queryView will produce a result list of a true doc.
      */
     @Test
-    public void queryPageWithStartAndEndBooleanKey() {
+    public void queryPageWithStartAndEndBooleanKey() throws Exception {
         init();
+        ViewResponse<Boolean, Object> result = db.getViewRequestBuilder("example", "boolean")
+                .newPaginatedRequest(Key.Type.BOOLEAN, Object.class).startKey(true).endKey(true)
+                .rowsPerPage(2).build()
+                .getResponse();
 
-        View view = db.view("example/boolean")
-                .startKey(true)
-                .endKey(true);
+        List<Object> resultList = result.getValues();
 
-        Page page = view.queryPage(2, null, Object.class);
-
-        assertThat(page.getResultList().size(), is(2));
+        assertThat(resultList.size(), is(2));
     }
 
     /**
@@ -150,15 +146,14 @@ public class ViewsTest {
      * a result list without exception.
      */
     @Test
-    public void queryWithStartAndEndStringIntKeyArray() {
+    public void queryWithStartAndEndStringIntKeyArray() throws Exception {
         init();
 
-        //Query for testing string with spaces
-        View view = db.view("example/spaces_created")
-                .startKey(" spaces ", 1)
-                .endKey(" spaces 1", 2000);
-
-        List<Object> result = view.query(Object.class);
+        List<Object> result = db.getViewRequestBuilder("example", "spaces_created").newRequest
+                (Key.Type.COMPLEX, Object.class)
+                .startKey(Key.complex(" spaces ").add(1))
+                .endKey(Key.complex(" spaces 1").add(2000))
+                .build().getResponse().getValues();
 
         assertThat(result.size(), is(2));
     }
@@ -169,33 +164,14 @@ public class ViewsTest {
      * without exception.
      */
     @Test
-    public void queryPageWithStartAndEndStringIntKeyArray() {
+    public void queryPageWithStartAndEndStringIntKeyArray() throws Exception {
         init();
 
-        //Query for testing string with spaces
-        View view = db.view("example/spaces_created")
-                .startKey(" spaces ", 1)
-                .endKey(" spaces 0", 2000);
-
-        Page page = view.queryPage(30, null, Object.class);
-
-        assertThat(page.getResultList().size(), is(1));
-    }
-
-    /**
-     * Assert that passing a string key with quotes
-     * in query will produce a result list
-     * without exception.
-     */
-    @Test
-    public void queryWithStartAndEndStringWithQuotesAndIntKeyArray() {
-        init();
-
-        View view = db.view("example/quotes_created")
-                .startKey("\"quotes\" ", 1)
-                .endKey("\"quotes\" 0", 2000);
-
-        List<Object> result = view.query(Object.class);
+        List<Object> result = db.getViewRequestBuilder("example", "spaces_created")
+                .newPaginatedRequest(Key.Type.COMPLEX, Object.class)
+                .startKey(Key.complex(" spaces ").add(1))
+                .endKey(Key.complex(" spaces 0").add(2000))
+                .rowsPerPage(30).build().getResponse().getValues();
 
         assertThat(result.size(), is(1));
     }
@@ -206,16 +182,34 @@ public class ViewsTest {
      * without exception.
      */
     @Test
-    public void queryPageWithStartAndEndStringWithQuotesAndIntKeyArray() {
+    public void queryWithStartAndEndStringWithQuotesAndIntKeyArray() throws Exception {
         init();
 
-        View view = db.view("example/quotes_created")
-                .startKey("\"quotes\" ", 1)
-                .endKey("\"quotes\" 1", 2000);
+        List<Object> result = db.getViewRequestBuilder("example", "quotes_created").newRequest
+                (Key.Type.COMPLEX, Object.class)
+                .startKey(Key.complex("\"quotes\" ").add(1))
+                .endKey(Key.complex("\"quotes\" 0").add(2000))
+                .build().getResponse().getValues();
 
-        Page page = view.queryPage(30, null, Object.class);
+        assertThat(result.size(), is(1));
+    }
 
-        assertThat(page.getResultList().size(), is(2));
+    /**
+     * Assert that passing a string key with quotes
+     * in query will produce a result list
+     * without exception.
+     */
+    @Test
+    public void queryPageWithStartAndEndStringWithQuotesAndIntKeyArray() throws Exception {
+        init();
+
+        List<Object> result = db.getViewRequestBuilder("example", "quotes_created")
+                .newPaginatedRequest(Key.Type.COMPLEX, Object.class)
+                .startKey(Key.complex("\"quotes\" ").add(1))
+                .endKey(Key.complex("\"quotes\" 1").add(2000))
+                .rowsPerPage(30).build().getResponse().getValues();
+
+        assertThat(result.size(), is(2));
     }
 
     /**
@@ -223,14 +217,12 @@ public class ViewsTest {
      * will produce a result list of all docs.
      */
     @Test
-    public void queryWithStartAndEndIntKeyArray() {
+    public void queryWithStartAndEndIntKeyArray() throws Exception {
         init();
 
-        View view = db.view("example/created")
-                .startKey(1, 10)
-                .endKey(2000, 5000);
-
-        List<Object> result = view.query(Object.class);
+        List<Key.ComplexKey> result = db.getViewRequestBuilder("example", "created").newRequest
+                (Key.Type.COMPLEX, Object.class).startKey(Key.complex(1, 10)).endKey(Key.complex
+                (2000, 5000)).build().getResponse().getKeys();
 
         assertThat(result.size(), is(3));
     }
@@ -240,16 +232,14 @@ public class ViewsTest {
      * will produce a result list of two docs.
      */
     @Test
-    public void queryPageWithStartAndEndIntKeyArray() {
+    public void queryPageWithStartAndEndIntKeyArray() throws Exception {
         init();
 
-        View view = db.view("example/created")
-                .startKey(1, 10)
-                .endKey(1001, 2000);
+        List<Object> result = db.getViewRequestBuilder("example", "created").newPaginatedRequest
+                (Key.Type.COMPLEX, Object.class).startKey(Key.complex(1, 10)).endKey(Key.complex
+                (1001, 2000)).rowsPerPage(30).build().getResponse().getValues();
 
-        Page page = view.queryPage(30, null, Object.class);
-
-        assertThat(page.getResultList().size(), is(2));
+        assertThat(result.size(), is(2));
     }
 
     /**
@@ -257,15 +247,13 @@ public class ViewsTest {
      * string and integer value will produce a result list with three docs.
      */
     @Test
-    public void queryWithStartAndEndObjectKeyArray() {
+    public void queryWithStartAndEndObjectKeyArray() throws Exception {
         init();
 
-        View view = db.view("example/creator_created")
-                .startKey(new Object[]{"uuid", 1})
-                .endKey(new Object[]{"uuid", 1010});
-
-
-        List<Object> result = view.query(Object.class);
+        List<Object> result = db.getViewRequestBuilder("example", "creator_created").newRequest
+                (Key.Type.COMPLEX, Object.class).startKey(Key.complex("uuid").add(1)).endKey(Key
+                .complex("uuid").add(1010)).build().getResponse()
+                .getValues();
 
         assertThat(result.size(), is(3));
     }
@@ -275,16 +263,15 @@ public class ViewsTest {
      * a string and integer value will produce a result list with three docs.
      */
     @Test
-    public void queryPageWithStartAndEndObjectKeyArray() {
+    public void queryPageWithStartAndEndObjectKeyArray() throws Exception {
         init();
 
-        View view = db.view("example/creator_created")
-                .startKey(new Object[]{"uuid", 1})
-                .endKey(new Object[]{"uuid", 1010});
+        List<Key.ComplexKey> result = db.getViewRequestBuilder("example", "creator_created")
+                .newPaginatedRequest(Key.Type.COMPLEX, Object.class).startKey(Key.complex("uuid")
+                        .add(1)).endKey(Key.complex("uuid").add(1010)
+                ).rowsPerPage(30).build().getResponse().getKeys();
 
-        Page page = view.queryPage(30, null, Object.class);
-
-        assertThat(page.getResultList().size(), is(3));
+        assertThat(result.size(), is(3));
     }
 
     /**
@@ -292,14 +279,14 @@ public class ViewsTest {
      * values will produce a result list with two docs.
      */
     @Test
-    public void queryWithStartAndEndNumbersKeyArray() {
+    public void queryWithStartAndEndNumbersKeyArray() throws Exception {
         init();
 
-        View view = db.view("example/created_total")
-                .startKey(1000, 12.00)
-                .endKey(1002, 15.00);
-
-        List<Object> result = view.query(Object.class);
+        List<Key.ComplexKey> result = db.getViewRequestBuilder("example", "created_total")
+                .newRequest
+                        (Key.Type.COMPLEX, Object.class).startKey(Key.complex(1000, 12.00))
+                .endKey(Key
+                        .complex(1002, 15.00)).build().getResponse().getKeys();
 
         assertThat(result.size(), is(2));
     }
@@ -309,16 +296,15 @@ public class ViewsTest {
      * values will produce a result list with one doc.
      */
     @Test
-    public void queryPageWithStartAndEndNumbersKeyArray() {
+    public void queryPageWithStartAndEndNumbersKeyArray() throws Exception {
         init();
 
-        View view = db.view("example/total_created")
-                .startKey(10.00, 1)
-                .endKey(11.00, 2000);
+        List<Key.ComplexKey> result = db.getViewRequestBuilder("example", "total_created")
+                .newPaginatedRequest(Key.Type.COMPLEX, Object.class).startKey(Key.complex(10.00,
+                        1)).endKey(Key.complex(11.00, 2000)).rowsPerPage(30).build().getResponse
+                        ().getKeys();
 
-        Page page = view.queryPage(30, null, Object.class);
-
-        assertThat(page.getResultList().size(), is(1));
+        assertThat(result.size(), is(1));
     }
 
     /**
@@ -326,14 +312,14 @@ public class ViewsTest {
      * and integer value will produce a result list with three docs.
      */
     @Test
-    public void queryWithStartAndEndBooleanStringIntegerKeyArray() {
+    public void queryWithStartAndEndBooleanStringIntegerKeyArray() throws Exception {
         init();
 
-        View view = db.view("example/boolean_creator_created")
-                .startKey(false, "uuid", 1)
-                .endKey(true, "uuid", 2000);
-
-        List<Object> result = view.query(Object.class);
+        List<Object> result = db.getViewRequestBuilder("example", "boolean_creator_created")
+                .newRequest(Key.Type.COMPLEX, Object.class)
+                .startKey(Key.complex(false).add("uuid").add(1))
+                .endKey(Key.complex(true).add("uuid").add(2000))
+                .build().getResponse().getValues();
 
         assertThat(result.size(), is(3));
     }
@@ -343,16 +329,16 @@ public class ViewsTest {
      * and integer value will produce a result list with one doc.
      */
     @Test
-    public void queryPageWithStartAndEndBooleanStringIntegerKeyArray() {
+    public void queryPageWithStartAndEndBooleanStringIntegerKeyArray() throws Exception {
         init();
 
-        View view = db.view("example/boolean_creator_created")
-                .startKey(false, "uuid", 1)
-                .endKey(false, "uuid", 2000);
+        List<Object> result = db.getViewRequestBuilder("example", "boolean_creator_created")
+                .newPaginatedRequest(Key.Type.COMPLEX, Object.class)
+                .startKey(Key.complex(false).add("uuid").add(1))
+                .endKey(Key.complex(false).add("uuid").add(2000))
+                .rowsPerPage(30).build().getResponse().getValues();
 
-        Page page = view.queryPage(30, null, Object.class);
-
-        assertThat(page.getResultList().size(), is(1));
+        assertThat(result.size(), is(1));
     }
 
     /**
@@ -360,14 +346,14 @@ public class ViewsTest {
      * and string value will produce a result list with one doc.
      */
     @Test
-    public void queryWithStartAndEndIntegerBooleanStringKeyArray() {
+    public void queryWithStartAndEndIntegerBooleanStringKeyArray() throws Exception {
         init();
 
-        View view = db.view("example/created_boolean_creator")
-                .startKey(1000, false, "uuid")
-                .endKey(1000, false, "uuid");
-
-        List<Object> result = view.query(Object.class);
+        List<Object> result = db.getViewRequestBuilder("example", "created_boolean_creator")
+                .newRequest(Key.Type.COMPLEX, Object.class)
+                .startKey(Key.complex(1000).add(false).add("uuid"))
+                .endKey(Key.complex(1000).add(false).add("uuid"))
+                .build().getResponse().getValues();
 
         assertThat(result.size(), is(1));
     }
@@ -376,15 +362,19 @@ public class ViewsTest {
      * Assert that passing a key in query with an explicit object array will produce the same
      * result list as the queryWithStartAndEndIntegerBooleanStringKeyArray test.
      */
+//TODO this test is now obsolete because using an Object[] is enforced
     @Test
-    public void queryWithStartAndEndKeyUsingNewObjectWithIntegerBooleanStringArray() {
+    public void queryWithStartAndEndKeyUsingNewObjectWithIntegerBooleanStringArray() throws
+            Exception {
         init();
 
-        View view = db.view("example/created_boolean_creator")
-                .startKey(new Object[]{1000, false, "uuid"})
-                .endKey(new Object[]{1000, false, "uuid"});
-
-        List<Object> result = view.query(Object.class);
+        List<Object> result = db.getViewRequestBuilder("example", "created_boolean_creator")
+                .newPaginatedRequest
+                        (Key.Type.COMPLEX, Object.class).startKey(Key.complex(1000).add
+                        (false).add(
+                        "uuid")).endKey(Key.complex(1000).add(false).add("uuid")
+                ).rowsPerPage(30).build().getResponse()
+                .getValues();
 
         assertThat(result.size(), is(1));
     }
@@ -394,33 +384,37 @@ public class ViewsTest {
      * and string value will produce a result list with two docs.
      */
     @Test
-    public void queryPageWithStartAndEndIntegerBooleanStringKeyArray() {
+    public void queryPageWithStartAndEndIntegerBooleanStringKeyArray() throws Exception {
         init();
 
-        View view = db.view("example/created_boolean_creator")
-                .startKey(1000, false, "uuid")
-                .endKey(1002, false, "uuid");
+        List<Object> result = db.getViewRequestBuilder("example", "created_boolean_creator")
+                .newPaginatedRequest
+                        (Key.Type.COMPLEX, Object.class)
+                .startKey(Key.complex(1000).add(false).add("uuid"))
+                .endKey(Key.complex(1002).add(false).add("uuid"))
+                .rowsPerPage(30).build().getResponse().getValues();
 
-        Page page = view.queryPage(30, null, Object.class);
-
-        assertThat(page.getResultList().size(), is(2));
+        assertThat(result.size(), is(2));
     }
 
     /**
      * Assert that passing a key in queryPage with an explicit object array will produce the same
      * result list as the queryPageWithStartAndEndIntegerBooleanStringKeyArray test.
      */
+//TODO this test is now obsolete because using an Object[] is enforced
     @Test
-    public void queryPageWithStartAndEndKeyUsingNewObjectWithIntegerBooleanStringArray() {
+    public void queryPageWithStartAndEndKeyUsingNewObjectWithIntegerBooleanStringArray() throws
+            Exception {
         init();
 
-        View view = db.view("example/created_boolean_creator")
-                .startKey(new Object[]{1000, false, "uuid"})
-                .endKey(new Object[]{1002, false, "uuid"});
+        List<Object> result = db.getViewRequestBuilder("example", "created_boolean_creator")
+                .newPaginatedRequest
+                        (Key.Type.COMPLEX, Object.class)
+                .startKey(Key.complex(1000).add(false).add("uuid"))
+                .endKey(Key.complex(1002).add(false).add("uuid"))
+                .rowsPerPage(30).build().getResponse().getValues();
 
-        Page page = view.queryPage(30, null, Object.class);
-
-        assertThat(page.getResultList().size(), is(2));
+        assertThat(result.size(), is(2));
     }
 
     /**
@@ -431,26 +425,26 @@ public class ViewsTest {
      * JSON objects are the same as the expected objects.
      */
     @Test
-    public void queryWithComplexStartEndKeyAndJsonObjectValue() {
+    public void queryWithComplexStartEndKeyAndJsonObjectValue() throws Exception {
         init();
 
-        View view = db.view("example/boolean_creator_created")
-                .startKey(true ,"uuid",1)
-                .endKey(true ,"uuid", 2000);
-
-        List<Object> result = view.query(Object.class);
+        List<JsonObject> result = db.getViewRequestBuilder("example", "boolean_creator_created")
+                .newRequest
+                        (Key.Type.COMPLEX, JsonObject.class)
+                .startKey(Key.complex(true).add("uuid").add(1))
+                .endKey(Key.complex(true).add("uuid").add(2000))
+                .build().getResponse().getValues();
 
         assertThat(result.size(), is(2));
 
         Gson gson = new Gson();
         ArrayList<JsonObject> expectedJsonObject = new ArrayList<JsonObject>(),
-                              actualJsonObject = new ArrayList<JsonObject>();
+                actualJsonObject = new ArrayList<JsonObject>();
 
-        for(int i = 0; i < result.size(); i++) {
+        for (int i = 0; i < result.size(); i++) {
             expectedJsonObject.add(multiValueKeyInit(null, i + 1));
             //Build a list from the query's results of the JSON objects from 'contentArray'
-            JsonObject jsonValueObject = (gson.toJsonTree(result.get(i)))
-                    .getAsJsonObject().get("value").getAsJsonObject();
+            JsonObject jsonValueObject = result.get(i);
             JsonObject actualJsonContentObject = jsonValueObject.get("contentArray")
                     .getAsJsonArray().get(0).getAsJsonObject();
             actualJsonObject.add(actualJsonContentObject);
@@ -467,25 +461,27 @@ public class ViewsTest {
      * JSON objects are the same as the expected objects.
      */
     @Test
-    public void queryPageWithComplexStartEndKeyAndJsonObjectValue() {
+    public void queryPageWithComplexStartEndKeyAndJsonObjectValue() throws Exception {
         init();
 
-        View view = db.view("example/boolean_creator_created")
-                .startKey(true ,"uuid",1)
-                .endKey(true ,"uuid", 2000);
+        List<JsonObject> result = db.getViewRequestBuilder("example", "boolean_creator_created")
+                .newPaginatedRequest
+                        (Key.Type.COMPLEX, JsonObject.class).startKey(Key.complex(true)
+                        .add("uuid").add(1))
+                .endKey(Key.complex(true).add("uuid").add(2000)).rowsPerPage(30)
+                .build().getResponse()
+                .getValues();
 
-        Page page = view.queryPage(30, null, Object.class);
-
-        assertThat(page.getResultList().size(), is(2));
+        assertThat(result.size(), is(2));
 
         Gson gson = new Gson();
         ArrayList<JsonObject> expectedJsonObject = new ArrayList<JsonObject>(),
                 actualJsonObject = new ArrayList<JsonObject>();
 
-        for(int i = 0; i < page.getResultList().size(); i++) {
+        for (int i = 0; i < result.size(); i++) {
             expectedJsonObject.add(multiValueKeyInit(null, i + 1));
             //Build a list from the query's results of the JSON objects from 'contentArray'
-            JsonObject actualJsonContentObject = (gson.toJsonTree(page.getResultList().get(i)))
+            JsonObject actualJsonContentObject = (gson.toJsonTree(result.get(i)))
                     .getAsJsonObject().get("contentArray")
                     .getAsJsonArray().get(0).getAsJsonObject();
             actualJsonObject.add(actualJsonContentObject);
@@ -502,14 +498,16 @@ public class ViewsTest {
      * JSON arrays are the same as the expected arrays.
      */
     @Test
-    public void queryWithComplexStartEndKeyAndJsonArrayValue() {
+    public void queryWithComplexStartEndKeyAndJsonArrayValue() throws Exception {
         init();
 
-        View query = db.view("example/creator_boolean_total")
-                .startKey("uuid" ,true, 1)
-                .endKey("uuid" ,true, 2000);
-
-        List<Object> result = query.query(Object.class);
+        List<JsonArray> result = db.getViewRequestBuilder("example", "creator_boolean_total")
+                .newRequest
+                        (Key.Type.COMPLEX, JsonArray.class).startKey(Key.complex("uuid")
+                        .add(true).add(1))
+                .endKey(Key.complex("uuid").add(true).add(2000)).build()
+                .getResponse()
+                .getValues();
 
         assertThat(result.size(), is(2));
 
@@ -518,15 +516,14 @@ public class ViewsTest {
                 actualJsonArray = new ArrayList<JsonArray>();
 
 
-        for(int i = 0; i < result.size(); i++) {
+        for (int i = 0; i < result.size(); i++) {
             JsonArray expectedArray = new JsonArray();
             expectedArray.add(gson.toJsonTree("key-" + (i + 2)));
             expectedArray.add(gson.toJsonTree(10.009999999999999787 + i + 1));
             expectedJsonArray.add(expectedArray);
             //Build a list from the query's results of the JSON value array
-            JsonArray jsonValueArray = (gson.toJsonTree(result.get(i)))
-                    .getAsJsonObject().get("value").getAsJsonArray();
-            actualJsonArray.add(jsonValueArray);
+            JsonArray actualJsonArrayValue = result.get(i);
+            actualJsonArray.add(actualJsonArrayValue);
         }
 
         assertJsonArrayKeysAndValues(expectedJsonArray, actualJsonArray);
@@ -540,123 +537,140 @@ public class ViewsTest {
      * JSON arrays are the same as the expected arrays.
      */
     @Test
-    public void queryPageWithComplexStartEndKeyAndJsonArrayValue() {
+    public void queryPageWithComplexStartEndKeyAndJsonArrayValue() throws Exception {
         init();
 
-        View query = db.view("example/creator_boolean_total")
-                .startKey("uuid" ,true, 1)
-                .endKey("uuid" ,true, 2000);
+        List<JsonArray> result = db.getViewRequestBuilder("example", "creator_boolean_total")
+                .newPaginatedRequest
+                        (Key.Type.COMPLEX, JsonArray.class).startKey(Key.complex("uuid")
+                        .add(true).add(1))
+                .endKey(Key.complex("uuid").add(true).add(2000)).rowsPerPage(30)
+                .build().getResponse()
+                .getValues();
 
-        Page page = query.queryPage(30, null, Object.class);
-
-        assertThat(page.getResultList().size(), is(2));
+        assertThat(result.size(), is(2));
 
         Gson gson = new Gson();
         ArrayList<JsonArray> expectedJsonArray = new ArrayList<JsonArray>(),
                 actualJsonArray = new ArrayList<JsonArray>();
 
-        for(int i = 0; i < page.getResultList().size(); i++) {
+        for (int i = 0; i < result.size(); i++) {
             JsonArray expectedArray = new JsonArray();
             expectedArray.add(gson.toJsonTree("key-" + (i + 2)));
             expectedArray.add(gson.toJsonTree(10.009999999999999787 + i + 1));
             expectedJsonArray.add(expectedArray);
             //Build a list from the query's results of the JSON value array
-            JsonArray actualArray = new JsonArray();
-            JsonElement jsonTitleValue = (gson.toJsonTree(page.getResultList().get(i)))
-                    .getAsJsonObject().get("title");
-            actualArray.add(jsonTitleValue);
-            JsonElement jsonTotalValue = (gson.toJsonTree(page.getResultList().get(i)))
-                    .getAsJsonObject().get("contentArray").getAsJsonArray().get(0)
-                    .getAsJsonObject().get("total");
-            actualArray.add(jsonTotalValue);
-            actualJsonArray.add(actualArray);
+            JsonArray actualJsonArrayValue = result.get(i);
+            actualJsonArray.add(actualJsonArrayValue);
         }
 
         assertJsonArrayKeysAndValues(expectedJsonArray, actualJsonArray);
     }
 
     @Test
-    public void byComplexKey() {
+    public void byComplexKey() throws Exception {
         init();
-        List<Foo> foos = db.view("example/by_date")
-                .key(2011, 10, 15)
-                .includeDocs(true)
-                .reduce(false)
-                .query(Foo.class);
+
+        List<Foo> foos = db.getViewRequestBuilder("example", "by_date").newRequest(Key.Type.COMPLEX,
+                Object.class).includeDocs(true).keys(Key.complex(2011, 10, 15)).reduce(false)
+                .build().getResponse().getDocsAs(Foo
+                        .class);
+
         assertThat(foos.size(), is(2));
     }
 
     @Test
-    public void byComplexKeys() {
+    public void byComplexKeys() throws Exception {
         init();
-        int[] complexKey1 = new int[]{2011, 10, 15};
-        int[] complexKey2 = new int[]{2013, 12, 17};
-        List<Foo> foos = db.view("example/by_date")
-                .keys(new Object[]{complexKey1, complexKey2})
-                .includeDocs(true)
-                .reduce(false)
-                .query(Foo.class);
+        Key.ComplexKey complexKey1 = Key.complex(new Integer[]{2011, 10, 15});
+        Key.ComplexKey complexKey2 = Key.complex(new Integer[]{2013, 12, 17});
+
+        List<Foo> foos = db.getViewRequestBuilder("example", "by_date").newRequest(Key.Type.COMPLEX,
+                Object.class).includeDocs(true).keys(complexKey1, complexKey2).reduce(false)
+                .build().getResponse().getDocsAs(Foo
+                        .class);
+
         assertThat(foos.size(), is(3));
     }
 
     @Test
-    public void viewResultEntries() {
+    public void viewResultEntries() throws Exception {
         init();
-        ViewResult<int[], String, Foo> viewResult = db.view("example/by_date")
-                .reduce(false)
-                .queryView(int[].class, String.class, Foo.class);
-        assertThat(viewResult.getRows().size(), is(3));
+
+        Collection<ViewResponse.Row<Key.ComplexKey, String>> rows = db.getViewRequestBuilder
+                ("example",
+                        "by_date").newRequest(Key.Type.COMPLEX,
+                String.class).reduce(false).build().getResponse().getRows();
+
+        assertThat(rows.size(), is(3));
     }
 
     @Test
-    public void scalarValues() {
+    public void scalarValues() throws Exception {
         init();
-        int allTags = db.view("example/by_tag").queryForInt();
+
+        ViewRequestBuilder builder = db.getViewRequestBuilder("example", "by_tag");
+
+        int allTags = builder.newRequest(Key.Type.STRING, int.class).build().getSingleValue();
         assertThat(allTags, is(4));
 
-        long couchDbTags = db.view("example/by_tag")
-                .key("couchdb")
-                .queryForLong();
+        long couchDbTags = builder.newRequest(Key.Type.STRING, long.class).keys("couchdb").build()
+                .getSingleValue();
         assertThat(couchDbTags, is(2L));
 
-        String javaTags = db.view("example/by_tag")
-                .key("java")
-                .queryForString();
+        String javaTags = builder.newRequest(Key.Type.STRING, String.class).keys("java").build()
+                .getSingleValue();
         assertThat(javaTags, is("1"));
     }
 
-    @Test(expected = NoDocumentException.class)
-    public void viewWithNoResult_throwsNoDocumentException() {
+    @Test
+    public void viewWithNoResult_emptyList() throws IOException {
         init();
-        db.view("example/by_tag")
-                .key("javax")
-                .queryForInt();
+        assertEquals("The results list should be of length 0", 0, db.getViewRequestBuilder
+                ("example", "by_tag").newRequest(Key.Type.STRING, Object.class).keys
+                ("javax").build().getResponse().getKeys().size());
+
     }
 
     @Test
-    public void groupLevel() {
+    public void viewWithNoResult_nullSingleResult() throws IOException {
         init();
-        ViewResult<int[], Integer, Foo> viewResult = db
-                .view("example/by_date")
-                .groupLevel(2)
-                .queryView(int[].class, Integer.class, Foo.class);
-        assertThat(viewResult.getRows().size(), is(2));
+        assertNull("The single result should be null", db.getViewRequestBuilder("example",
+                "by_tag").newRequest(Key.Type.STRING,
+                Object.class).keys
+                ("javax").build().getSingleValue());
+
     }
 
     @Test
-    public void allDocs() {
+    public void groupLevel() throws Exception {
+        init();
+        List<Integer> result = db.getViewRequestBuilder("example", "by_date").newRequest(Key.Type
+                .COMPLEX, Integer.class).groupLevel(2).build().getResponse().getValues();
+        assertThat(result.size(), is(2));
+    }
+
+    @Test
+    public void allDocs() throws Exception {
         init();
         db.save(new Foo());
-        List<JsonObject> allDocs = db.view("_all_docs")
-                .query(JsonObject.class);
-        assertThat(allDocs.size(), not(0));
+        List<String> allDocIds = db.getAllDocsRequestBuilder().build().getResponse().getKeys();
+        assertThat(allDocIds.size(), not(0));
+        List<Document.Revision> allDocRevs = db.getAllDocsRequestBuilder().build().getResponse()
+                .getValues();
+        assertThat(allDocIds.size(), not(0));
+        for (Document.Revision rev : allDocRevs) {
+            System.out.println(rev.get());
+            assertNotNull("The document _rev value should not be null", rev.get());
+        }
     }
+
 
     /**
      * @param index the index to encode.
      * @return a three character string representing the given {@code index}.
      */
-    private static String docTitle(int index) {
+    public static String docTitle(int index) {
         return String.format("%03d", index);
     }
 
@@ -669,13 +683,13 @@ public class ViewsTest {
      * @param pageNumber  the page number of the {@code page}.
      * @param descending  whether the view is descending or not.
      */
-    private static void checkDocumentTitles(Page page, int docCount, int docsPerPage, int
+    private static void checkDocumentTitles(ViewResponse page, int docCount, int docsPerPage, int
             pageNumber, boolean descending) {
         int offset = (pageNumber - 1) * docsPerPage + 1;
         if (descending) {
             offset = docCount + 1 - offset;
         }
-        List<Foo> resultList = page.getResultList();
+        List<Foo> resultList = page.getDocsAs(Foo.class);
         for (int i = 0; i < resultList.size(); ++i) {
             assertEquals("Document titles do not match", docTitle(descending ? offset-- :
                     offset++), resultList.get(i).getTitle());
@@ -691,29 +705,30 @@ public class ViewsTest {
      * @param pageNumber  the page number of the {@code page}.
      * @param descending  whether the view is descending or not.
      */
-    private static void checkPage(Page page, int docCount, int docsPerPage, int pageNumber,
+    private static void checkPage(ViewResponse page, int docCount, int docsPerPage, int pageNumber,
                                   boolean descending) {
         if (pageNumber == 1) {
-            assertFalse(page.isHasPrevious());
+            assertFalse(page.hasPreviousPage());
         } else {
-            assertTrue(page.isHasPrevious());
+            assertTrue(page.hasPreviousPage());
         }
 
         double numberOfPages = docCount / (double) docsPerPage;
         if (pageNumber >= numberOfPages) {
-            assertFalse(page.isHasNext());
+            assertFalse(page.hasNextPage());
         } else {
-            assertTrue(page.isHasNext());
+            assertTrue(page.hasNextPage());
         }
 
         int startIndex = (pageNumber - 1) * docsPerPage + 1;
-        assertThat(page.getResultFrom(), is(startIndex));
-        assertThat(page.getResultTo(), is(Math.min(startIndex + docsPerPage - 1, docCount)));
-        assertThat(page.getPageNumber(), is(pageNumber));
-        if (page.isHasNext() || docCount % docsPerPage == 0) {
-            assertThat(page.getResultList().size(), is(docsPerPage));
+        assertThat(page.getFirstRowCount().intValue(), is(startIndex));
+        assertThat(page.getLastRowCount().intValue(), is(Math.min(startIndex + docsPerPage - 1,
+                docCount)));
+        assertThat(page.getPageNumber().intValue(), is(pageNumber));
+        if (page.hasNextPage() || docCount % docsPerPage == 0) {
+            assertThat(page.getRows().size(), is(docsPerPage));
         } else {
-            assertThat(page.getResultList().size(), is(docCount % docsPerPage));
+            assertThat(page.getRows().size(), is(docCount % docsPerPage));
         }
         checkDocumentTitles(page, docCount, docsPerPage, pageNumber, descending);
     }
@@ -721,15 +736,17 @@ public class ViewsTest {
     /**
      * Check that we can page through a view in ascending order where the number of results
      * is an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses the same {@link View} instance for each page query.
-     * Page forward to the last page, back to the first page, forward to the last page and back to
-     * the first page.
+     * we expect. Page forward to the last page, back to the first page, forward to the last page
+     * and back to the first page.
      */
     @Test
-    public void paginationAscendingReusingViewAllTheWayInEachDirectionTwice() {
-        View view = db.view("example/foo")
-                .reduce(false);
-        checkPagination(false, 6, 2, view, 3, 1, 3, 1);
+    public void paginationAscendingReusingViewAllTheWayInEachDirectionTwice() throws Exception {
+        CheckPagination.newTest()
+                .docCount(6)
+                .docsPerPage(2)
+                .descending(false)
+                .pageToPages(3, 1, 3, 1)
+                .runTest(db);
     }
 
     /**
@@ -737,28 +754,30 @@ public class ViewsTest {
      * test on views using an array of multi-value keys.
      */
     @Test
-    public void paginationAscendingReusingMVKeyViewAllTheWayInEachDirectionTwice() {
-        new CheckPaginationWithMultiValueKey()
+    public void paginationAscendingReusingMVKeyViewAllTheWayInEachDirectionTwice() throws
+            Exception {
+        CheckPagination.newTest(CheckPagination.Type.MULTI)
                 .descending(false)
                 .docCount(6)
                 .docsPerPage(2)
                 .pageToPages(3, 1, 3, 1)
-                .runTest();
+                .runTest(db);
     }
 
     /**
      * Check that we can page through a view in descending order where the number of results
      * is an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses the same {@link View} instance for each page query.
-     * Page forward to the last page, back to the first page, forward to the last page and back to
-     * the first page.
+     * we expect. Page forward to the last page, back to the first page, forward to the last page
+     * and back to the first page.
      */
     @Test
-    public void paginationDescendingReusingViewAllTheWayInEachDirectionTwice() {
-        View view = db.view("example/foo")
-                .reduce(false)
-                .descending(true);
-        checkPagination(true, 6, 2, view, 3, 1, 3, 1);
+    public void paginationDescendingReusingViewAllTheWayInEachDirectionTwice() throws Exception {
+        CheckPagination.newTest()
+                .docCount(6)
+                .docsPerPage(2)
+                .descending(true)
+                .pageToPages(3, 1, 3, 1)
+                .runTest(db);
     }
 
     /**
@@ -766,27 +785,31 @@ public class ViewsTest {
      * test on views using an array of multi-value keys.
      */
     @Test
-    public void paginationDescendingReusingMVKeyViewAllTheWayInEachDirectionTwice() {
-        new CheckPaginationWithMultiValueKey()
+    public void paginationDescendingReusingMVKeyViewAllTheWayInEachDirectionTwice() throws
+            Exception {
+        CheckPagination.newTest(CheckPagination.Type.MULTI)
                 .descending(true)
                 .docCount(6)
                 .docsPerPage(2)
                 .pageToPages(3, 1, 3, 1)
-                .runTest();
+                .runTest(db);
     }
 
     /**
      * Check that we can page through a view in ascending order where the number of results
      * is not an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses the same {@link View} instance for each page query.
-     * Page forward to the last page, back to the first page, forward to the last page and back to
-     * the first page.
+     * we expect. Page forward to the last page, back to the first page, forward to the last page
+     * and back to the first page.
      */
     @Test
-    public void paginationAscendingReusingViewPartialLastPageAllTheWayInEachDirectionTwice() {
-        View view = db.view("example/foo")
-                .reduce(false);
-        checkPagination(false, 5, 2, view, 3, 1, 3, 1);
+    public void paginationAscendingReusingViewPartialLastPageAllTheWayInEachDirectionTwice()
+            throws Exception {
+        CheckPagination.newTest()
+                .docCount(5)
+                .docsPerPage(2)
+                .descending(false)
+                .pageToPages(3, 1, 3, 1)
+                .runTest(db);
     }
 
     /**
@@ -794,30 +817,33 @@ public class ViewsTest {
      * Twice test on views using an array of multi-value keys.
      */
     @Test
-    public void paginationAscendingReusingMVKeyViewPartialLastPageAllTheWayInEachDirectionTwice() {
-        new CheckPaginationWithMultiValueKey()
+    public void paginationAscendingReusingMVKeyViewPartialLastPageAllTheWayInEachDirectionTwice()
+            throws Exception {
+        CheckPagination.newTest(CheckPagination.Type.MULTI)
                 .descending(false)
                 .docCount(5)
                 .docsPerPage(2)
                 .pageToPages(3, 1, 3, 1)
-                .runTest();
+                .runTest(db);
     }
 
     /**
      * Check that we can page through a view in descending order where the number of results
      * is not an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses the same {@link View} instance for each page query.
-     * Page forward to the last page, back to the first page, forward to the last page and back to
-     * the first page.
+     * we expect. Page forward to the last page, back to the first page, forward to the last page
+     * and back to the first page.
      *
      * Run the same check above on an array of multi-value key views.
      */
     @Test
-    public void paginationDescendingReusingViewPartialLastPageAllTheWayInEachDirectionTwice() {
-        View view = db.view("example/foo")
-                .reduce(false)
-                .descending(true);
-        checkPagination(true, 5, 2, view, 3, 1, 3, 1);
+    public void paginationDescendingReusingViewPartialLastPageAllTheWayInEachDirectionTwice()
+            throws Exception {
+        CheckPagination.newTest()
+                .docCount(5)
+                .docsPerPage(2)
+                .descending(true)
+                .pageToPages(3, 1, 3, 1)
+                .runTest(db);
     }
 
     /**
@@ -825,135 +851,30 @@ public class ViewsTest {
      * Twice test on views using an array of multi-value keys.
      */
     @Test
-    public void paginationDescendingReusingMVKeyViewPartialLastPageAllTheWayInEachDirectionTwice() {
-        new CheckPaginationWithMultiValueKey()
+    public void paginationDescendingReusingMVKeyViewPartialLastPageAllTheWayInEachDirectionTwice
+    () throws Exception {
+        CheckPagination.newTest(CheckPagination.Type.MULTI)
                 .descending(true)
                 .docCount(5)
                 .docsPerPage(2)
                 .pageToPages(3, 1, 3, 1)
-                .runTest();
+                .runTest(db);
     }
 
     /**
      * Check that we can page through a view in ascending order where the number of results
      * is an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses a new {@link View} instance for each page query.
-     * Page forward to the last page, back to the first page, forward to the last page and back to
-     * the first page.
+     * we expect. Page part way forward, and part way back a few times before paging to the last
+     * page.
      */
     @Test
-    public void paginationAscendingNewViewAllTheWayInEachDirectionTwice() {
-        checkPagination(false, 6, 2, null, 3, 1, 3, 1);
-    }
-
-    /**
-     * Run the same check as paginationAscendingNewViewAllTheWayInEachDirectionTwice
-     * test on views using an array of multi-value keys.
-     */
-    @Test
-    public void paginationAscendingNewMVKeyViewAllTheWayInEachDirectionTwice() {
-        new CheckPaginationWithMultiValueKey()
+    public void paginationAscendingReusingViewPartWayInEachDirection() throws Exception {
+        CheckPagination.newTest()
                 .descending(false)
-                .useNewView(true)
-                .docCount(6)
-                .docsPerPage(2)
-                .pageToPages(3, 1, 3, 1)
-                .runTest();
-    }
-
-    /**
-     * Check that we can page through a view in descending order where the number of results
-     * is an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses a new {@link View} instance for each page query.
-     * Page forward to the last page, back to the first page, forward to the last page and back to
-     * the first page.
-     */
-    @Test
-    public void paginationDescendingNewViewAllTheWayInEachDirectionTwice() {
-        checkPagination(true, 6, 2, null, 3, 1, 3, 1);
-    }
-
-    /**
-     * Run the same check as paginationDescendingNewViewAllTheWayInEachDirectionTwice
-     * test on views using an array of multi-value keys.
-     */
-    @Test
-    public void paginationDescendingNewMVKeyViewAllTheWayInEachDirectionTwice() {
-        new CheckPaginationWithMultiValueKey()
-                .descending(true)
-                .useNewView(true)
-                .docCount(6)
-                .docsPerPage(2)
-                .pageToPages(3, 1, 3, 1)
-                .runTest();
-    }
-
-    /**
-     * Check that we can page through a view in ascending order where the number of results
-     * is not an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses a new {@link View} instance for each page query.
-     * Page forward to the last page, back to the first page, forward to the last page and back to
-     * the first page.
-     */
-    @Test
-    public void paginationAscendingNewViewPartialLastPageAllTheWayInEachDirectionTwice() {
-        checkPagination(false, 5, 2, null, 3, 1, 3, 1);
-    }
-
-    /**
-     * Run the same check as paginationAscendingNewViewPartialLastPageAllTheWayInEachDirectionTwice
-     * test on views using an array of multi-value keys.
-     */
-    @Test
-    public void paginationAscendingNewMVKeyViewPartialLastPageAllTheWayInEachDirectionTwice() {
-        new CheckPaginationWithMultiValueKey()
-                .descending(false)
-                .useNewView(true)
-                .docCount(5)
-                .docsPerPage(2)
-                .pageToPages(3, 1, 3, 1)
-                .runTest();
-    }
-
-    /**
-     * Check that we can page through a view in descending order where the number of results
-     * is not an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses a newfuture {@link View} instance for each page query.
-     * Page forward to the last page, back to the first page, forward to the last page and back to
-     * the first page.
-     */
-    @Test
-    public void paginationDescendingNewViewPartialLastPageAllTheWayInEachDirectionTwice() {
-        checkPagination(true, 5, 2, null, 3, 1, 3, 1);
-    }
-
-    /**
-     * Run the same check as paginationDescendingNewViewPartialLastPageAllTheWayInEachDirectionTwice
-     * test on views using an array of multi-value keys.
-     */
-    @Test
-    public void paginationDescendingNewMVKeyViewPartialLastPageAllTheWayInEachDirectionTwice() {
-        //checkPaginationWithMultiValueKey(true, 5, 2, 3, 1, 3, 1);
-        new CheckPaginationWithMultiValueKey()
-                .descending(true)
-                .useNewView(true)
-                .docCount(5)
-                .docsPerPage(2)
-                .pageToPages(3, 1, 3, 1)
-                .runTest();
-    }
-
-    /**
-     * Check that we can page through a view in ascending order where the number of results
-     * is an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses the same {@link View} instance for each page query.
-     * Page part way forward, and part way back a few times before paging to the last page.
-     */
-    @Test
-    public void paginationAscendingReusingViewPartWayInEachDirection() {
-        View view = db.view("example/foo")
-                .reduce(false);
-        checkPagination(false, 30, 5, view, 4, 2, 5, 3, 4, 2, 6);
+                .docCount(30)
+                .docsPerPage(5)
+                .pageToPages(4, 2, 5, 3, 4, 2, 6)
+                .runTest(db);
     }
 
     /**
@@ -961,27 +882,29 @@ public class ViewsTest {
      * test on views using an array of multi-value keys.
      */
     @Test
-    public void paginationAscendingReusingMVKeyViewPartWayInEachDirection() {
-        new CheckPaginationWithMultiValueKey()
+    public void paginationAscendingReusingMVKeyViewPartWayInEachDirection() throws Exception {
+        CheckPagination.newTest(CheckPagination.Type.MULTI)
                 .descending(false)
                 .docCount(30)
                 .docsPerPage(5)
                 .pageToPages(4, 2, 5, 3, 4, 2, 6)
-                .runTest();
+                .runTest(db);
     }
 
     /**
      * Check that we can page through a view in descending order where the number of results
      * is an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses the same {@link View} instance for each page query.
-     * Page part way forward, and part way back a few times before paging to the last page.
+     * we expect. Page part way forward, and part way back a few times before paging to the last
+     * page.
      */
     @Test
-    public void paginationDescendingReusingViewPartWayInEachDirection() {
-        View view = db.view("example/foo")
-                .reduce(false)
-                .descending(true);
-        checkPagination(true, 30, 5, view, 4, 2, 5, 3, 4, 2, 6);
+    public void paginationDescendingReusingViewPartWayInEachDirection() throws Exception {
+        CheckPagination.newTest()
+                .descending(true)
+                .docCount(30)
+                .docsPerPage(5)
+                .pageToPages(4, 2, 5, 3, 4, 2, 6)
+                .runTest(db);
     }
 
     /**
@@ -989,26 +912,30 @@ public class ViewsTest {
      * test on views using an array of multi-value keys.
      */
     @Test
-    public void paginationDescendingReusingMVKeyViewPartWayInEachDirection() {
-        new CheckPaginationWithMultiValueKey()
+    public void paginationDescendingReusingMVKeyViewPartWayInEachDirection() throws Exception {
+        CheckPagination.newTest(CheckPagination.Type.MULTI)
                 .descending(true)
                 .docCount(30)
                 .docsPerPage(5)
                 .pageToPages(4, 2, 5, 3, 4, 2, 6)
-                .runTest();
+                .runTest(db);
     }
 
     /**
      * Check that we can page through a view in ascending order where the number of results
      * is not an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses the same {@link View} instance for each page query.
-     * Page part way forward, and part way back a few times before paging to the last page.
+     * we expect. Page part way forward, and part way back a few times before paging to the last
+     * page.
      */
     @Test
-    public void paginationAscendingReusingViewPartialLastPagePartWayInEachDirection() {
-        View view = db.view("example/foo")
-                .reduce(false);
-        checkPagination(false, 28, 5, view, 4, 2, 5, 3, 4, 2, 6);
+    public void paginationAscendingReusingViewPartialLastPagePartWayInEachDirection() throws
+            Exception {
+        CheckPagination.newTest()
+                .descending(false)
+                .docCount(28)
+                .docsPerPage(5)
+                .pageToPages(4, 2, 5, 3, 4, 2, 6)
+                .runTest(db);
     }
 
     /**
@@ -1016,27 +943,31 @@ public class ViewsTest {
      * test on views using an array of multi-value keys.
      */
     @Test
-    public void paginationAscendingReusingMVKeyViewPartialLastPagePartWayInEachDirection() {
-        new CheckPaginationWithMultiValueKey()
+    public void paginationAscendingReusingMVKeyViewPartialLastPagePartWayInEachDirection() throws
+            Exception {
+        CheckPagination.newTest(CheckPagination.Type.MULTI)
                 .descending(false)
                 .docCount(28)
                 .docsPerPage(5)
                 .pageToPages(4, 2, 5, 3, 4, 2, 6)
-                .runTest();
+                .runTest(db);
     }
 
     /**
      * Check that we can page through a view in descending order where the number of results
      * is not an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses the same {@link View} instance for each page query.
-     * Page part way forward, and part way back a few times before paging to the last page.
+     * we expect. Page part way forward, and part way back a few times before paging to the last
+     * page.
      */
     @Test
-    public void paginationDescendingReusingViewPartialLastPagePartWayInEachDirection() {
-        View view = db.view("example/foo")
-                .reduce(false)
-                .descending(true);
-        checkPagination(true, 28, 5, view, 4, 2, 5, 3, 4, 2, 6);
+    public void paginationDescendingReusingViewPartialLastPagePartWayInEachDirection() throws
+            Exception {
+        CheckPagination.newTest()
+                .descending(true)
+                .docCount(28)
+                .docsPerPage(5)
+                .pageToPages(4, 2, 5, 3, 4, 2, 6)
+                .runTest(db);
     }
 
     /**
@@ -1044,237 +975,14 @@ public class ViewsTest {
      * test on views using an array of multi-value keys.
      */
     @Test
-    public void paginationDescendingReusingMVKeyViewPartialLastPagePartWayInEachDirection() {
-        new CheckPaginationWithMultiValueKey()
+    public void paginationDescendingReusingMVKeyViewPartialLastPagePartWayInEachDirection()
+            throws Exception {
+        CheckPagination.newTest(CheckPagination.Type.MULTI)
                 .descending(true)
                 .docCount(28)
                 .docsPerPage(5)
                 .pageToPages(4, 2, 5, 3, 4, 2, 6)
-                .runTest();
-    }
-
-    /**
-     * Check that we can page through a view in ascending order where the number of results
-     * is an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses a new {@link View} instance for each page query.
-     * Page part way forward, and part way back a few times before paging to the last page.
-     */
-    @Test
-    public void paginationAscendingNewViewPartWayInEachDirection() {
-        checkPagination(false, 30, 5, null, 4, 2, 5, 3, 4, 2, 6);
-    }
-
-    /**
-     * Run the same check as paginationAscendingNewViewPartWayInEachDirection
-     * test on views using an array of multi-value keys.
-     */
-    @Test
-    public void paginationAscendingNewMVKeyViewPartWayInEachDirection() {
-        new CheckPaginationWithMultiValueKey()
-                .descending(false)
-                .useNewView(true)
-                .docCount(30)
-                .docsPerPage(5)
-                .pageToPages(4, 2, 5, 3, 4, 2, 6)
-                .runTest();
-    }
-
-    /**
-     * Check that we can page through a view in descending order where the number of results
-     * is an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses a new {@link View} instance for each page query.
-     * Page part way forward, and part way back a few times before paging to the last page.
-     */
-    @Test
-    public void paginationDescendingNewViewPartWayInEachDirection() {
-        checkPagination(true, 30, 5, null, 4, 2, 5, 3, 4, 2, 6);
-    }
-
-    /**
-     * Run the same check as paginationDescendingNewViewPartWayInEachDirection
-     * test on views using an array of multi-value keys.
-     */
-    @Test
-    public void paginationDescendingNewMVKeyViewPartWayInEachDirection() {
-        new CheckPaginationWithMultiValueKey()
-                .descending(true)
-                .useNewView(true)
-                .docCount(30)
-                .docsPerPage(5)
-                .pageToPages(4, 2, 5, 3, 4, 2, 6)
-                .runTest();
-    }
-
-    /**
-     * Check that we can page through a view in ascending order where the number of results
-     * is not an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses a new {@link View} instance for each page query.
-     * Page part way forward, and part way back a few times before paging to the last page.
-     */
-    @Test
-    public void paginationAscendingNewViewPartialLastPagePartWayInEachDirection() {
-        checkPagination(false, 28, 5, null, 4, 2, 5, 3, 4, 2, 6);
-    }
-
-    /**
-     * Run the same check as paginationAscendingNewViewPartialLastPagePartWayInEachDirection
-     * test on views using an array of multi-value keys.
-     */
-    @Test
-    public void paginationAscendingNewMVKeyViewPartialLastPagePartWayInEachDirection() {
-        new CheckPaginationWithMultiValueKey()
-                .descending(false)
-                .useNewView(true)
-                .docCount(28)
-                .docsPerPage(5)
-                .pageToPages(4, 2, 5, 3, 4, 2, 6)
-                .runTest();
-    }
-
-    /**
-     * Check that we can page through a view in descending order where the number of results
-     * is not an exact multiple of the number of pages. Check each page contains the documents
-     * we expect. This test uses a newfuture {@link View} instance for each page query.
-     * Page part way forward, and part way back a few times before paging to the last page.
-     */
-    @Test
-    public void paginationDescendingNewViewPartialLastPagePartWayInEachDirection() {
-        checkPagination(true, 28, 5, null, 4, 2, 5, 3, 4, 2, 6);
-    }
-
-    /**
-     * Run the same check as paginationDescendingNewViewPartialLastPagePartWayInEachDirection
-     * test on views using an array of multi-value keys.
-     */
-    @Test
-    public void paginationDescendingNewMVKeyViewPartialLastPagePartWayInEachDirection() {
-        new CheckPaginationWithMultiValueKey()
-                .descending(true)
-                .useNewView(true)
-                .docCount(28)
-                .docsPerPage(5)
-                .pageToPages(4, 2, 5, 3, 4, 2, 6)
-                .runTest();
-    }
-
-    /**
-     * This helper function uses the given {@code view} to query for a page of
-     * results. The {@code param} indicates whether we should be getting a next or previous
-     * page. If {@code view} is null, a new {@link View} is created to perform the query,
-     * otherwise the given {@code view} is used.
-     *
-     * @param expectedPageNumber the page number of the page we expect to be returned.
-     * @param param              the request parameter to use to query a page, or {@code null} to
-     *                           return the first page.
-     * @param descending         true if the view should be created in descending order, and false
-     *                           otherwise.
-     * @param docCount           the total number of documents in the view.
-     * @param docsPerPage        the maximum number of documents per page in the view.
-     * @param view               the {@link View} object to use to perform the query, or {@code
-     *                           null} to create a new {@link View}
-     * @return the page of results.
-     */
-    private static Page queryAndCheckPage(int expectedPageNumber, String param, boolean
-            descending, int docCount, int docsPerPage, View view) {
-        View queryView = view;
-        if (queryView == null) {
-            queryView = db.view("example/foo")
-                    .reduce(false)
-                    .descending(descending);
-        }
-        Page page = queryView.queryPage(docsPerPage, param, Foo.class);
-        checkPage(page, docCount, docsPerPage, expectedPageNumber, descending);
-        return page;
-    }
-
-    /**
-     * Helper to test paging the view with multiple changes of direction.
-     * <p/>
-     * Starting from page 1, page through to each page identified by the page numbers in
-     * {@code pageToPages}, checking all the intervening pages as well as the pages specified
-     * in {@code pageToPages} are as expected.
-     * <p/>
-     * For example, if {@code pageToPages} contains {@code 4, 2, 5}, this will check pages in the
-     * following order: 1, 2, 3, 4, 3, 2, 3, 4, 5.
-     *
-     * @param descending  true if the view is in descending order, and false otherwise.
-     * @param docCount    the total number of documents in the view.
-     * @param docsPerPage the maximum number of documents per page in the view.
-     * @param view        the {@link View} object to use to perform the query (or null to create a
-     *                    new
-     *                    view for the query).
-     * @param pageToPages the list of page numbers to page to.
-     */
-    private void checkPagination(boolean descending, int docCount, int docsPerPage, View view,
-                                 int... pageToPages) {
-
-        for (int i = 0; i < docCount; ++i) {
-            Foo foo = new Foo(generateUUID(), docTitle(i + 1));
-            db.save(foo);
-        }
-
-        // Get the first page of results.
-        Page page = queryAndCheckPage(1, null, descending, docCount, docsPerPage, view);
-
-        int currentPage = 1;
-        for (int i = 0; i < pageToPages.length; ++i) {
-            if (pageToPages[i] > currentPage) {
-                page = checkPagesForward(currentPage, pageToPages[i] - currentPage, page,
-                        descending, docCount, docsPerPage, view);
-            } else {
-                page = checkPagesBackward(currentPage, currentPage - pageToPages[i], page,
-                        descending, docCount, docsPerPage, view);
-            }
-            currentPage = pageToPages[i];
-        }
-    }
-
-    /**
-     * Check all the pages going forwards until we reach the last page. This assumes the given
-     * {@code page} is the first page of results.
-     *
-     * @param currentPage   the page number of the {@code page}.
-     * @param numberOfPages the number of pages to page forwards.
-     * @param page          the page from which to start paging forwards.
-     * @param descending    true if the view is in descending order, and false otherwise.
-     * @param docCount      the total number of documents in the view.
-     * @param docsPerPage   the maximum number of documents per page.
-     * @param view          the {@link View} object to use to perform the query (or null to create
-     *                      a new
-     *                      view for the query).
-     * @return the last page in the view.
-     */
-    private Page checkPagesForward(int currentPage, int numberOfPages, Page page, boolean
-            descending, int docCount, int docsPerPage, View view) {
-        for (int i = 0; i < numberOfPages; ++i) {
-            page = queryAndCheckPage(currentPage + i + 1, page.getNextParam(), descending,
-                    docCount, docsPerPage, view);
-        }
-        return page;
-    }
-
-    /**
-     * Check all the pages going backwards until we reach the first page. This assumes the
-     * given {@code page} is the last page of results.
-     *
-     * @param currentPage   the page number of the {@code page}.
-     * @param numberOfPages the number of pages to page backwards.
-     * @param page          the page from which to start paging backwards.
-     * @param descending    true if the view is in descending order, and false otherwise.
-     * @param docCount      the total number of documents in the view.
-     * @param docsPerPage   the maximum number of documents per page.
-     * @param view          the {@link View} object to use to perform the query (or null to create
-     *                      a new
-     *                      view for the query).
-     * @return the first page in the view
-     */
-    private Page checkPagesBackward(int currentPage, int numberOfPages, Page page, boolean
-            descending, int docCount, int docsPerPage, View view) {
-        for (int i = 0; i < numberOfPages; ++i) {
-            page = queryAndCheckPage(currentPage - i - 1, page.getPreviousParam(), descending,
-                    docCount, docsPerPage, view);
-        }
-        return page;
+                .runTest(db);
     }
 
     private static void init() {
@@ -1298,7 +1006,7 @@ public class ViewsTest {
         db.save(foo);
     }
 
-    private static JsonObject multiValueKeyInit(Foo foo, int i) {
+    public static JsonObject multiValueKeyInit(Foo foo, int i) {
         //JSON object for multi value key array tests
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("creator", "uuid");
@@ -1312,29 +1020,26 @@ public class ViewsTest {
         JsonArray jsonArray = new JsonArray();
         jsonArray.add(jsonObject);
 
-        if(foo != null) {
+        if (foo != null) {
             foo.setContentArray(jsonArray);
         }
 
         return jsonObject;
     }
 
-    private static String generateUUID() {
-        return UUID.randomUUID().toString().replace("-", "");
-    }
-
     /**
      * Helper method to assert that keys and values in two JSON objects are equal.
+     *
      * @param expectedJson the expected JSON element(s)
-     * @param actualJson the actual JSON element(s) from test result list
+     * @param actualJson   the actual JSON element(s) from test result list
      */
     private void assertJsonObjectKeysAndValues(ArrayList<JsonObject> expectedJson,
-                                         ArrayList<JsonObject> actualJson) {
+                                               ArrayList<JsonObject> actualJson) {
 
         assertEquals(expectedJson.size(),
                 actualJson.size());
 
-        for(int i = 0; i < actualJson.size(); i++) {
+        for (int i = 0; i < actualJson.size(); i++) {
             JsonObject expectedJsonObject = expectedJson.get(i).getAsJsonObject();
             JsonObject actualJsonObject = actualJson.get(i).getAsJsonObject();
 
@@ -1346,7 +1051,7 @@ public class ViewsTest {
                 String expectedJsonKey = expectedJsonMap.getKey();
                 JsonElement expectedJsonValue = expectedJsonMap.getValue();
 
-                if(actualJsonIter.hasNext()) {
+                if (actualJsonIter.hasNext()) {
                     Map.Entry<String, JsonElement> actualJsonMap = actualJsonIter.next();
                     assertEquals(expectedJsonKey, actualJsonMap.getKey());
                     assertEquals(expectedJsonValue, actualJsonMap.getValue());
@@ -1357,14 +1062,15 @@ public class ViewsTest {
 
     /**
      * Helper method to assert that keys and values in two JSON arrays are equal.
+     *
      * @param expectedJson the expected JSON element(s)
-     * @param actualJson the actual JSON element(s) from test result list
+     * @param actualJson   the actual JSON element(s) from test result list
      */
     private void assertJsonArrayKeysAndValues(ArrayList<JsonArray> expectedJson,
-                                               ArrayList<JsonArray> actualJson) {
+                                              ArrayList<JsonArray> actualJson) {
         assertEquals(expectedJson.size(), actualJson.size());
 
-        for(int i = 0; i < actualJson.size(); i++) {
+        for (int i = 0; i < actualJson.size(); i++) {
             //Check key and values in the JSON array
             JsonArray expectedJsonArray = expectedJson.get(i).getAsJsonArray();
             JsonArray actualJsonArray = actualJson.get(i).getAsJsonArray();
@@ -1388,204 +1094,221 @@ public class ViewsTest {
     }
 
     /**
-     * Helper class for use with multi-value key view tests.
+     * Validate that it is possible to POST multiple requests to a view query and that the
+     * results of each request are as expected.
+     *
+     * @throws IOException
      */
-    private class CheckPaginationWithMultiValueKey {
-        /**
-         * True if the view is in descending order, and false otherwise.
-         */
-        private boolean descending;
-        /**
-         * True for creating a new view for the query, and false otherwise.
-         */
-        private boolean useNewView;
-        /**
-         * The total number of documents in the view.
-         */
-        private int docCount;
-        /**
-         * The maximum number of documents per page.
-         */
-        private int docsPerPage;
-        /**
-         * The list of page numbers to page to.
-         */
-        private int[] pageToPages;
+    @Test
+    @Category(RequiresCloudant.class)
+    public void multiRequest() throws IOException {
+        init();
+        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "foo")
+                .newMultipleRequest(Key.Type.STRING, Object.class)
+                .keys("key-1").add()
+                .keys("key-2").add()
+                .keys("key-3").add()
+                .build();
+        int i = 1;
+        List<ViewResponse<String, Object>> responses = multi.getViewResponses();
+        assertEquals("There should be 3 respones for 3 requests", 3, responses.size());
+        for (ViewResponse<String, Object> response : responses) {
+            assertEquals("There should be 1 row in each response", 1, response.getRows().size());
+            assertEquals("The returned key should be key-" + i, "key-" + i, response.getKeys()
+                    .get(0));
+            i++;
+        }
+    }
 
-        public CheckPaginationWithMultiValueKey descending(boolean descending) {
-            this.descending = descending;
-            return this;
+    /**
+     * Validate that an IllegalStateException is thrown if an attempt is made to build a multi
+     * request without calling add() before build().
+     *
+     * @throws IOException
+     */
+    @Test(expected = IllegalStateException.class)
+    public void multiRequestBuildOnlyAfterAdd() throws IOException {
+        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "foo")
+                .newMultipleRequest(Key.Type.STRING, Object.class)
+                .keys("key-1").add()
+                .keys("key-2").build();
+    }
+
+    /**
+     * Assert that no additional pages are available on an unpaginated request even if additional
+     * results are available.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void assertNoPagesOnUnpaginated() throws Exception {
+        init();
+        ViewResponse<String, Object> response = db.getViewRequestBuilder("example", "foo")
+                .newRequest(Key.Type.STRING,
+                        Object.class).limit(2).build().getResponse();
+        assertEquals("There should be 2 keys returned", 2, response.getKeys().size());
+        assertFalse("There should be no additional pages", response.hasNextPage());
+        assertNull("The next page should be null", response.nextPage());
+    }
+
+    /**
+     * Validate that it is possible to loop through pages using an enhanced for loop. Verify that
+     * the results are expected on each page.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void enhancedForPagination() throws Exception {
+        init();
+        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
+                .newPaginatedRequest(Key.Type.STRING,
+                        Object.class).rowsPerPage(1).build();
+        int i = 1;
+        for (ViewResponse<String, Object> page : paginatedQuery.getResponse()) {
+            assertEquals("There should be one key on each page", 1, page.getKeys().size());
+            assertEquals("The key should be key-" + i, "key-" + i, page.getKeys().get(0));
+            i++;
+        }
+    }
+
+    /**
+     * Assert that an IllegalArgumentException is thrown when rowsPerPage exceeds MAX_INT-1.
+     *
+     * @throws Exception
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void rowsPerPageValidationMax() throws Exception {
+        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
+                .newPaginatedRequest(Key.Type.STRING,
+                        Object.class).rowsPerPage(Integer.MAX_VALUE).build();
+    }
+
+    /**
+     * Assert that an IllegalArgumentException is thrown when rowsPerPage is zero.
+     *
+     * @throws Exception
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void rowsPerPageValidationZero() throws Exception {
+        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
+                .newPaginatedRequest(Key.Type.STRING,
+                        Object.class).rowsPerPage(0).build();
+    }
+
+    /**
+     * Assert that an IllegalArgumentException is thrown when rowsPerPage is negative.
+     *
+     * @throws Exception
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void rowsPerPageValidationMin() throws Exception {
+        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
+                .newPaginatedRequest(Key.Type.STRING,
+                        Object.class).rowsPerPage(-25).build();
+    }
+
+    /**
+     * Assert that an IllegalArgumentException is thrown when specifying both reduce=true and
+     * include_docs=true
+     *
+     * @throws Exception
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void validationIncludeDocsReduceView() throws Exception {
+        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
+                .newRequest(Key.Type.STRING,
+                        Object.class).includeDocs(true).reduce(true).build();
+    }
+
+    /**
+     * Test that no validation exception is thrown when reduce is not specified, but include_docs
+     * is true. This is because whilst reduce=true and include_docs=true are mutually exclusive
+     * and even though reduce defaults to true, if the view does not actually have a reduce function
+     * then include_docs is still valid on the server.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void noExceptionWhenReduceTrueByDefault() throws Exception {
+        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
+                .newRequest(Key.Type.STRING,
+                        Object.class).includeDocs(true).build();
+    }
+
+    /**
+     * Tests than an IllegalArgumentException is thrown when group_level is set without using a
+     * complex key.
+     *
+     * @throws Exception
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void validationGroupLevelWithSimpleKey() throws Exception {
+        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
+                .newRequest(Key.Type.STRING,
+                        Object.class).groupLevel(1).build();
+    }
+
+    /**
+     * Tests than an IllegalArgumentException is thrown when group_level is set without using a
+     * reduce view.
+     *
+     * @throws Exception
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void validationGroupLevelWithNonReduce() throws Exception {
+        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
+                .newRequest(Key.Type.STRING,
+                        Object.class).reduce(false).groupLevel(1).build();
+    }
+
+    /**
+     * Tests than an IllegalArgumentException is thrown when group is set without using a
+     * reduce view.
+     *
+     * @throws Exception
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void validationGroupWithNonReduce() throws Exception {
+        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
+                .newRequest(Key.Type.STRING,
+                        Object.class).reduce(false).group(true).build();
+    }
+
+
+    /**
+     * Test that start and end keys are honoured when paging
+     *
+     * @throws Exception
+     */
+    @Test
+    public void endKeyPaging() throws Exception {
+
+        //init some docs
+        for (int i = 0; i < 11; ++i) {
+            Foo foo = new Foo(CheckPagination.generateUUID(), docTitle(i + 1));
+            db.save(foo);
         }
 
-        public CheckPaginationWithMultiValueKey useNewView(boolean useNewView) {
-            this.useNewView = useNewView;
-            return this;
+        ViewResponse<String, String> page = db.getViewRequestBuilder("example", "foo")
+                .newPaginatedRequest(Key.Type.STRING, String.class).reduce(false).descending
+                        (false).rowsPerPage(4).startKey("003").endKey("011").build().getResponse();
+
+        //check the start key is as expected
+        assertEquals("The start key should be 003", "003", page.getKeys().get(0));
+
+        //get the last page
+        while (page.hasNextPage()) {
+            page = page.nextPage();
         }
+        //check the end key is as expected
+        assertEquals("The end key should be 011", "011", page.getKeys().get(page.getKeys().size()
+                - 1));
 
-        public CheckPaginationWithMultiValueKey docCount(int docCount) {
-            this.docCount = docCount;
-            return this;
+        //now page backwards and ensure the last key we get is the start key
+        while (page.hasPreviousPage()) {
+            page = page.previousPage();
         }
-
-        public CheckPaginationWithMultiValueKey docsPerPage(int docsPerPage) {
-            this.docsPerPage = docsPerPage;
-            return this;
-        }
-
-        public CheckPaginationWithMultiValueKey pageToPages(int... pageToPages) {
-            this.pageToPages = pageToPages;
-            return this;
-        }
-
-        /**
-         * For use with multi-value key view tests.
-         *
-         * This helper function uses the given {@code view} to query for a page of
-         * results. The {@code param} indicates whether we should be getting a next or previous
-         * page. If {@code view} is null, a new {@link View} is created to perform the query,
-         * otherwise the given {@code view} is used.
-         *
-         * @param expectedPageNumber the page number of the page we expect to be returned.
-         * @param param              the request parameter to use to query a page, or {@code
-         * null} to
-         *                           return the first page.
-         * @param descending         true if the view should be created in descending order, and
-         *                           false
-         *                           otherwise.
-         * @param docCount           the total number of documents in the view.
-         * @param docsPerPage        the maximum number of documents per page in the view.
-         * @param view               the {@link View} object to use to perform the query, or {@code
-         *                           null} to create a new {@link View}
-         * @param viewCount          the current view in the array of multi-value key views.
-         *                           This value is used when view parameter is null.
-         * @return the page of results.
-         */
-        private Page queryAndCheckPageWithMultiValueKey(int expectedPageNumber, String param,
-                                                        boolean
-                descending, int docCount, int docsPerPage, View view, int viewCount) {
-            View queryView = view;
-            if (queryView == null) {
-                queryView = db.view(testViews[viewCount])
-                        .reduce(false)
-                        .descending(descending);
-            }
-            Page page = queryView.queryPage(docsPerPage, param, Foo.class);
-            checkPage(page, docCount, docsPerPage, expectedPageNumber, descending);
-            return page;
-        }
-
-        /**
-         * For use with multi-value key view tests.
-         *
-         * Check all the pages going forwards until we reach the last page. This assumes the given
-         * {@code page} is the first page of results.
-         *
-         * @param currentPage   the page number of the {@code page}.
-         * @param numberOfPages the number of pages to page forwards.
-         * @param page          the page from which to start paging forwards.
-         * @param descending    true if the view is in descending order, and false otherwise.
-         * @param docCount      the total number of documents in the view.
-         * @param docsPerPage   the maximum number of documents per page.
-         * @param view          the {@link View} object to use to perform the query (or null to
-         *                      create
-         *                      a new
-         *                      view for the query).
-         * @param viewCount     the current view in the array of multi-value key views. This
-         *                      value is
-         *                      used when view parameter is null.
-         * @return the last page in the view.
-         */
-        private Page checkPagesForwardMultiValueKey(int currentPage, int numberOfPages, Page
-                page, boolean
-                descending, int docCount, int docsPerPage, View view, int viewCount) {
-            for (int i = 0; i < numberOfPages; ++i) {
-                page = queryAndCheckPageWithMultiValueKey(currentPage + i + 1, page.getNextParam(),
-                        descending,
-                        docCount, docsPerPage, view, viewCount);
-            }
-            return page;
-        }
-
-        /**
-         * For use with multi-value key view tests.
-         *
-         * Check all the pages going backwards until we reach the first page. This assumes the
-         * given {@code page} is the last page of results.
-         *
-         * @param currentPage   the page number of the {@code page}.
-         * @param numberOfPages the number of pages to page backwards.
-         * @param page          the page from which to start paging backwards.
-         * @param descending    true if the view is in descending order, and false otherwise.
-         * @param docCount      the total number of documents in the view.
-         * @param docsPerPage   the maximum number of documents per page.
-         * @param view          the {@link View} object to use to perform the query (or null to
-         *                      create
-         *                      a new
-         *                      view for the query).
-         * @param viewCount     the current view in the array of multi-value key views. This
-         *                      value is
-         *                      used when view parameter is null.
-         * @return the first page in the view
-         */
-        private Page checkPagesBackwardMultiValueKey(int currentPage, int numberOfPages, Page
-                page, boolean
-                descending, int docCount, int docsPerPage, View view, int viewCount) {
-            for (int i = 0; i < numberOfPages; ++i) {
-                page = queryAndCheckPageWithMultiValueKey(currentPage - i - 1, page
-                                .getPreviousParam(), descending,
-                        docCount, docsPerPage, view, viewCount);
-            }
-            return page;
-        }
-
-
-        /**
-         * Run tests for paging the view with multiple changes of direction. Uses a pre-defined
-         * array of queries for multi-value key testing.
-         *
-         * <p/>
-         * Starting from page 1, page through to each page identified by the page numbers in
-         * {@code pageToPages}, checking all the intervening pages as well as the pages specified
-         * in {@code pageToPages} are as expected.
-         * <p/>
-         * For example, if {@code pageToPages} contains {@code 4, 2, 5}, this will check pages in
-         * the
-         * following order: 1, 2, 3, 4, 3, 2, 3, 4, 5.
-         */
-        public void runTest() {
-            for (int i = 0; i < docCount; ++i) {
-                Foo foo = new Foo(generateUUID(), docTitle(i + 1));
-                multiValueKeyInit(foo, i);
-                db.save(foo);
-            }
-
-            // Run all views
-            for (int viewCount = 0; viewCount < testViews.length; viewCount++) {
-                View view = null;
-                if (!useNewView) {
-                    view = db.view(testViews[viewCount])
-                            .reduce(false)
-                            .descending(descending);
-                }
-
-                // Get the first page of results.
-                Page page = queryAndCheckPageWithMultiValueKey(1, null, descending, docCount,
-                        docsPerPage, view, viewCount);
-
-                int currentPage = 1;
-                for (int i = 0; i < pageToPages.length; ++i) {
-                    if (pageToPages[i] > currentPage) {
-                        page = checkPagesForwardMultiValueKey(currentPage, pageToPages[i] -
-                                        currentPage, page,
-                                descending, docCount, docsPerPage, view, viewCount);
-                    } else {
-                        page = checkPagesBackwardMultiValueKey(currentPage, currentPage -
-                                        pageToPages[i], page,
-                                descending, docCount, docsPerPage, view, viewCount);
-                    }
-                    currentPage = pageToPages[i];
-                }
-            }
-        }
+        //check the start key is as expected
+        assertEquals("The start key should be 003", "003", page.getKeys().get(0));
     }
 }
