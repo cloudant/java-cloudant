@@ -14,7 +14,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.lightcouch.CouchDbException;
+import com.cloudant.client.org.lightcouch.CouchDbException;
 
 import java.io.BufferedWriter;
 import java.io.FileInputStream;

@@ -1,21 +1,21 @@
 package com.cloudant.client.api;
 
 import static java.lang.String.format;
-import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.internal.CouchDbUtil.listResources;
-import static org.lightcouch.internal.CouchDbUtil.readFile;
-import static org.lightcouch.internal.CouchDbUtil.removeExtension;
-import static org.lightcouch.internal.URIBuilder.buildUri;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.listResources;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.readFile;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.removeExtension;
+import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
 import com.cloudant.client.api.model.DesignDocument;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import org.lightcouch.CouchDatabase;
-import org.lightcouch.CouchDatabaseBase;
-import org.lightcouch.CouchDbDesign;
-import org.lightcouch.DesignDocument.MapReduce;
-import org.lightcouch.Response;
+import com.cloudant.client.org.lightcouch.CouchDatabase;
+import com.cloudant.client.org.lightcouch.CouchDatabaseBase;
+import com.cloudant.client.org.lightcouch.CouchDbDesign;
+import com.cloudant.client.org.lightcouch.DesignDocument.MapReduce;
+import com.cloudant.client.org.lightcouch.Response;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//import org.lightcouch.DesignDocument;
+//import DesignDocument;
 
 public class DbDesign {
 

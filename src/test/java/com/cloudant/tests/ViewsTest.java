@@ -39,7 +39,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.lightcouch.NoDocumentException;
+import com.cloudant.client.org.lightcouch.NoDocumentException;
 
 import java.util.ArrayList;
 import java.util.Arrays;

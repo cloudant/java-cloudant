@@ -1,8 +1,8 @@
 package com.cloudant.client.api;
 
-import org.lightcouch.Replication;
-import org.lightcouch.ReplicatorDocument;
-import org.lightcouch.Response;
+import com.cloudant.client.org.lightcouch.Replication;
+import com.cloudant.client.org.lightcouch.ReplicatorDocument;
+import com.cloudant.client.org.lightcouch.Response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,9 +46,9 @@ import java.util.Map;
  * @since 0.0.1
  */
 public class Replicator {
-    private org.lightcouch.Replicator replicator;
+    private com.cloudant.client.org.lightcouch.Replicator replicator;
 
-    Replicator(org.lightcouch.Replicator replicator) {
+    Replicator(com.cloudant.client.org.lightcouch.Replicator replicator) {
         this.replicator = replicator;
     }
 

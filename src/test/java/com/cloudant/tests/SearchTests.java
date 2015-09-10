@@ -2,7 +2,6 @@ package com.cloudant.tests;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.lightcouch.internal.CouchDbUtil.JsonToObject;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -11,9 +10,6 @@ import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.api.model.SearchResult;
 import com.cloudant.client.api.model.SearchResult.SearchResultRows;
 import com.cloudant.test.main.RequiresCloudant;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -21,7 +17,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.lightcouch.internal.URIBuilder;
+import com.cloudant.client.org.lightcouch.internal.URIBuilder;
 
 import java.net.URI;
 import java.util.Iterator;

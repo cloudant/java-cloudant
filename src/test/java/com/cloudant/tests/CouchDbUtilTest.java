@@ -19,7 +19,7 @@ package com.cloudant.tests;
 
 
 import static org.junit.Assert.assertEquals;
-import static org.lightcouch.internal.CouchDbUtil.JsonToObject;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.JsonToObject;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;

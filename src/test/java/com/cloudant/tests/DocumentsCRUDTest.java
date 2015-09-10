@@ -35,8 +35,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.lightcouch.DocumentConflictException;
-import org.lightcouch.NoDocumentException;
+import com.cloudant.client.org.lightcouch.DocumentConflictException;
+import com.cloudant.client.org.lightcouch.NoDocumentException;
 
 import java.io.IOException;
 import java.io.InputStream;

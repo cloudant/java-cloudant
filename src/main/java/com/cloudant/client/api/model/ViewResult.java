@@ -1,6 +1,6 @@
 package com.cloudant.client.api.model;
 
-import org.lightcouch.View;
+import com.cloudant.client.org.lightcouch.View;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,13 +13,13 @@ import java.util.List;
  * @since 0.0.1
  */
 public class ViewResult<K, V, T> {
-    private org.lightcouch.ViewResult<K, V, T> viewResult;
+    private com.cloudant.client.org.lightcouch.ViewResult<K, V, T> viewResult;
 
     public ViewResult() {
-        viewResult = new org.lightcouch.ViewResult<K, V, T>();
+        viewResult = new com.cloudant.client.org.lightcouch.ViewResult<K, V, T>();
     }
 
-    public ViewResult(org.lightcouch.ViewResult<K, V, T> viewResult) {
+    public ViewResult(com.cloudant.client.org.lightcouch.ViewResult<K, V, T> viewResult) {
         this.viewResult = viewResult;
     }
 
@@ -59,9 +59,9 @@ public class ViewResult<K, V, T> {
      */
     public List<Rows> getRows() {
         List<Rows> rows = new ArrayList<Rows>();
-        List<org.lightcouch.ViewResult<K, V, T>.Rows> couchDbRows = viewResult.getRows();
+        List<com.cloudant.client.org.lightcouch.ViewResult<K, V, T>.Rows> couchDbRows = viewResult.getRows();
         for (int i = 0; i < couchDbRows.size(); i++) {
-            org.lightcouch.ViewResult<K, V, T>.Rows couchDbRow = couchDbRows.get(i);
+            com.cloudant.client.org.lightcouch.ViewResult<K, V, T>.Rows couchDbRow = couchDbRows.get(i);
             Rows row = new Rows(couchDbRow);
             rows.add(row);
         }
@@ -95,11 +95,10 @@ public class ViewResult<K, V, T> {
      * @param rows
      */
     public void setRows(List<Rows> rows) {
-        List<org.lightcouch.ViewResult<K, V, T>.Rows> rowsList = new ArrayList<org.lightcouch
-                .ViewResult<K, V, T>.Rows>();
+        List<com.cloudant.client.org.lightcouch.ViewResult<K, V, T>.Rows> rowsList = new ArrayList<com.cloudant.client.org.lightcouch.ViewResult<K, V, T>.Rows>();
         for (int i = 0; i < rows.size(); i++) {
             Rows row = rows.get(i);
-            org.lightcouch.ViewResult<K, V, T>.Rows lightcouchRows = row.getRows().getrows();
+            com.cloudant.client.org.lightcouch.ViewResult<K, V, T>.Rows lightcouchRows = row.getRows().getrows();
             rowsList.add(lightcouchRows);
         }
         viewResult.setRows(rowsList);
@@ -113,14 +112,14 @@ public class ViewResult<K, V, T> {
     }
 
     public class Rows {
-        private org.lightcouch.ViewResult<K, V, T>.Rows rows;
+        private com.cloudant.client.org.lightcouch.ViewResult<K, V, T>.Rows rows;
 
 
         public Rows() {
             rows = viewResult.new Rows();
         }
 
-        Rows(org.lightcouch.ViewResult<K, V, T>.Rows rows) {
+        Rows(com.cloudant.client.org.lightcouch.ViewResult<K, V, T>.Rows rows) {
             this.rows = rows;
         }
 
@@ -195,7 +194,7 @@ public class ViewResult<K, V, T> {
             return rows.toString();
         }
 
-        org.lightcouch.ViewResult<K, V, T>.Rows getrows() {
+        com.cloudant.client.org.lightcouch.ViewResult<K, V, T>.Rows getrows() {
             return rows;
 
         }

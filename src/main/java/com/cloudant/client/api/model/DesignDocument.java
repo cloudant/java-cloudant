@@ -10,11 +10,11 @@ import com.cloudant.client.api.DbDesign;
  * @see DbDesign
  * @since 0.0.1
  */
-public class DesignDocument extends org.lightcouch.DesignDocument {
+public class DesignDocument extends com.cloudant.client.org.lightcouch.DesignDocument {
 
 
     public class MapReduce {
-        private org.lightcouch.DesignDocument.MapReduce mapReduce;
+        private com.cloudant.client.org.lightcouch.DesignDocument.MapReduce mapReduce;
 
         public String getMap() {
             return mapReduce.getMap();
@@ -40,7 +40,7 @@ public class DesignDocument extends org.lightcouch.DesignDocument {
             return mapReduce.equals(obj);
         }
 
-        org.lightcouch.DesignDocument.MapReduce getMapReduce() {
+        com.cloudant.client.org.lightcouch.DesignDocument.MapReduce getMapReduce() {
             return mapReduce;
         }
 

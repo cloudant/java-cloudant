@@ -1,8 +1,8 @@
 package com.cloudant.client.api;
 
-import org.lightcouch.CouchDatabaseBase;
-import org.lightcouch.Page;
-import org.lightcouch.ViewResult;
+import com.cloudant.client.org.lightcouch.CouchDatabaseBase;
+import com.cloudant.client.org.lightcouch.Page;
+import com.cloudant.client.org.lightcouch.ViewResult;
 
 import java.io.InputStream;
 import java.util.List;
@@ -35,19 +35,19 @@ import java.util.List;
  * @since 0.0.1
  */
 public class View {
-    private org.lightcouch.View view;
+    private com.cloudant.client.org.lightcouch.View view;
 
     /**
      * @return the view
      */
-    org.lightcouch.View getView() {
+    com.cloudant.client.org.lightcouch.View getView() {
         return view;
     }
 
     /**
      * @param view the view to set
      */
-    void setView(org.lightcouch.View view) {
+    void setView(com.cloudant.client.org.lightcouch.View view) {
         this.view = view;
     }
 

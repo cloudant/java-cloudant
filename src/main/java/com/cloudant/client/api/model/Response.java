@@ -12,13 +12,13 @@ package com.cloudant.client.api.model;
  * @since 0.0.1
  */
 public class Response {
-    private org.lightcouch.Response response;
+    private com.cloudant.client.org.lightcouch.Response response;
 
     public Response() {
-        this.response = new org.lightcouch.Response();
+        this.response = new com.cloudant.client.org.lightcouch.Response();
     }
 
-    public Response(org.lightcouch.Response response) {
+    public Response(com.cloudant.client.org.lightcouch.Response response) {
         this.response = response;
     }
 
