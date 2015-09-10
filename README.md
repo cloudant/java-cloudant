@@ -20,7 +20,7 @@ Maven:
 <dependency>
   <groupId>com.cloudant</groupId>
   <artifactId>cloudant-client</artifactId>
-  <version>1.1.2</version>
+  <version>1.2.0</version>
 </dependency>
 
 ~~~
@@ -29,17 +29,18 @@ Gradle:
 
 ```groovy
 dependencies {
-    compile group: 'com.cloudant', name: 'cloudant-client', version:'1.1.2'
+    compile group: 'com.cloudant', name: 'cloudant-client', version:'1.2.0'
 }
 ```
 
 Alternately download the dependencies
-  [cloudant.jar](http://search.maven.org/remotecontent?filepath=com/cloudant/cloudant-client/1.0.1/cloudant-client-1.0.1.jar)
-  [HttpClient 4.3.3](http://hc.apache.org/downloads.cgi)
-  [HttpCore 4.3.2](http://hc.apache.org/downloads.cgi)
-  [Commons Codec 1.6](http://commons.apache.org/codec/download_codec.cgi)
-  [Commons Logging 1.1.3](http://commons.apache.org/logging/download_logging.cgi)
-  [Gson 2.2.4](http://code.google.com/p/google-gson/downloads/list)
+
+* [cloudant.jar](http://search.maven.org/remotecontent?filepath=com/cloudant/cloudant-client/)
+* [HttpClient 4.3.3](http://hc.apache.org/downloads.cgi)
+* [HttpCore 4.3.2](http://hc.apache.org/downloads.cgi)
+* [Commons Codec 1.6](http://commons.apache.org/codec/download_codec.cgi)
+* [Commons Logging 1.1.3](http://commons.apache.org/logging/download_logging.cgi)
+* [Gson 2.2.4](http://code.google.com/p/google-gson/downloads/list)
 
 ### Getting Started
 

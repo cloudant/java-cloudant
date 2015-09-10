@@ -1,12 +1,14 @@
-# Unreleased
+# 1.2.0 (2015-09-10)
+- [FIXED] `NullPointerException` when parsing `{doc: null}` JSON in search or view results.
 - [FIXED] Fixed issue with pagination numbering when using `queryPage` with
-  a clustered DB
-- [FIXED] Fixed issue where `queryPage` could not handle JSON values emitted
-  from views.
+  a clustered DB.
+- [FIXED] Fixed issue where `queryPage` could not handle JSON values emitted from views.  
+- [IMPROVED] Various documentation updates.
+- [DEPRECATED] `com.cloudant.client.api.model.Page` setter methods.
 
 # 1.1.2 (2015-08-14)
 
-- [IMPROVED] Removed unconditional GET request when creating `Database` objects
+- [IMPROVED] Removed unconditional GET request when creating `Database` objects.
   This offered little protection to the developer while performing a hidden HTTP request.
 - [FIXED] Fixed issue where URL parameters would be appended rather than replaced. This could cause very
   long URLs to be accidentally created.
