@@ -1,11 +1,25 @@
+/*
+ * Copyright (c) 2015 IBM Corp. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions
+ * and limitations under the License.
+ */
+
 package com.cloudant.client.api;
 
-import static org.lightcouch.internal.CouchDbUtil.JsonToObject;
-import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.internal.CouchDbUtil.close;
-import static org.lightcouch.internal.CouchDbUtil.getAsLong;
-import static org.lightcouch.internal.CouchDbUtil.getAsString;
-import static org.lightcouch.internal.CouchDbUtil.getStream;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.JsonToObject;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsLong;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getStream;
 
 import com.cloudant.client.api.model.SearchResult;
 import com.google.gson.JsonArray;
@@ -16,7 +30,7 @@ import com.google.gson.JsonParser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.methods.HttpGet;
-import org.lightcouch.internal.URIBuilder;
+import com.cloudant.client.org.lightcouch.internal.URIBuilder;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;

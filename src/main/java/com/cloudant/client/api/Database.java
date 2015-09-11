@@ -1,14 +1,28 @@
+/*
+ * Copyright (c) 2015 IBM Corp. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions
+ * and limitations under the License.
+ */
+
 package com.cloudant.client.api;
 
-import static org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.internal.CouchDbUtil.close;
-import static org.lightcouch.internal.CouchDbUtil.createPost;
-import static org.lightcouch.internal.CouchDbUtil.getAsString;
-import static org.lightcouch.internal.CouchDbUtil.getResponse;
-import static org.lightcouch.internal.CouchDbUtil.getResponseList;
-import static org.lightcouch.internal.CouchDbUtil.getStream;
-import static org.lightcouch.internal.CouchDbUtil.setEntity;
-import static org.lightcouch.internal.URIBuilder.buildUri;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponseList;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getStream;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.setEntity;
+import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
 import com.cloudant.client.api.model.DbInfo;
 import com.cloudant.client.api.model.FindByIndexOptions;
@@ -36,15 +50,15 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.lightcouch.Changes;
-import org.lightcouch.CouchDatabase;
-import org.lightcouch.CouchDbDesign;
-import org.lightcouch.CouchDbException;
-import org.lightcouch.CouchDbInfo;
-import org.lightcouch.DocumentConflictException;
-import org.lightcouch.NoDocumentException;
-import org.lightcouch.Response;
-import org.lightcouch.View;
+import com.cloudant.client.org.lightcouch.Changes;
+import com.cloudant.client.org.lightcouch.CouchDatabase;
+import com.cloudant.client.org.lightcouch.CouchDbDesign;
+import com.cloudant.client.org.lightcouch.CouchDbException;
+import com.cloudant.client.org.lightcouch.CouchDbInfo;
+import com.cloudant.client.org.lightcouch.DocumentConflictException;
+import com.cloudant.client.org.lightcouch.NoDocumentException;
+import com.cloudant.client.org.lightcouch.Response;
+import com.cloudant.client.org.lightcouch.View;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;

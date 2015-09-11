@@ -1,3 +1,17 @@
+/*
+ * Copyright (c) 2015 IBM Corp. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions
+ * and limitations under the License.
+ */
+
 package com.cloudant.client.api.model;
 
 
@@ -7,10 +21,10 @@ package com.cloudant.client.api.model;
  * @see com.cloudant.client.api.model.Document#addAttachment(String, Attachment)
  */
 public class Attachment {
-    private org.lightcouch.Attachment attachement;
+    private com.cloudant.client.org.lightcouch.Attachment attachement;
 
     public Attachment() {
-        this.attachement = new org.lightcouch.Attachment();
+        this.attachement = new com.cloudant.client.org.lightcouch.Attachment();
     }
 
     /**
@@ -18,10 +32,10 @@ public class Attachment {
      * @param contentType The Content-Type of the attachment.
      */
     public Attachment(String data, String contentType) {
-        this.attachement = new org.lightcouch.Attachment(data, contentType);
+        this.attachement = new com.cloudant.client.org.lightcouch.Attachment(data, contentType);
     }
 
-    Attachment(org.lightcouch.Attachment attachement) {
+    Attachment(com.cloudant.client.org.lightcouch.Attachment attachement) {
         this.attachement = attachement;
     }
 
@@ -81,7 +95,7 @@ public class Attachment {
         attachement.setData(data);
     }
 
-    org.lightcouch.Attachment getAttachement() {
+    com.cloudant.client.org.lightcouch.Attachment getAttachement() {
         return attachement;
     }
 

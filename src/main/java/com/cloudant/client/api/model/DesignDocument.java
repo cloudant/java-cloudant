@@ -1,3 +1,17 @@
+/*
+ * Copyright (c) 2015 IBM Corp. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions
+ * and limitations under the License.
+ */
+
 package com.cloudant.client.api.model;
 
 import com.cloudant.client.api.DbDesign;
@@ -10,11 +24,11 @@ import com.cloudant.client.api.DbDesign;
  * @see DbDesign
  * @since 0.0.1
  */
-public class DesignDocument extends org.lightcouch.DesignDocument {
+public class DesignDocument extends com.cloudant.client.org.lightcouch.DesignDocument {
 
 
     public class MapReduce {
-        private org.lightcouch.DesignDocument.MapReduce mapReduce;
+        private com.cloudant.client.org.lightcouch.DesignDocument.MapReduce mapReduce;
 
         public String getMap() {
             return mapReduce.getMap();
@@ -40,7 +54,7 @@ public class DesignDocument extends org.lightcouch.DesignDocument {
             return mapReduce.equals(obj);
         }
 
-        org.lightcouch.DesignDocument.MapReduce getMapReduce() {
+        com.cloudant.client.org.lightcouch.DesignDocument.MapReduce getMapReduce() {
             return mapReduce;
         }
 

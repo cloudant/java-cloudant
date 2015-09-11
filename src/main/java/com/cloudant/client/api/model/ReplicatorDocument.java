@@ -1,9 +1,23 @@
+/*
+ * Copyright (c) 2015 IBM Corp. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions
+ * and limitations under the License.
+ */
+
 package com.cloudant.client.api.model;
 
 import com.google.gson.JsonObject;
 
-import org.lightcouch.Attachment;
-import org.lightcouch.Replicator;
+import com.cloudant.client.org.lightcouch.Attachment;
+import com.cloudant.client.org.lightcouch.Replicator;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,14 +31,14 @@ import java.util.Map;
  * @since 0.0.1
  */
 public class ReplicatorDocument {
-    private org.lightcouch.ReplicatorDocument replicatorDocument;
+    private com.cloudant.client.org.lightcouch.ReplicatorDocument replicatorDocument;
 
 
     public ReplicatorDocument() {
-        replicatorDocument = new org.lightcouch.ReplicatorDocument();
+        replicatorDocument = new com.cloudant.client.org.lightcouch.ReplicatorDocument();
     }
 
-    public ReplicatorDocument(org.lightcouch.ReplicatorDocument replicatorDocument) {
+    public ReplicatorDocument(com.cloudant.client.org.lightcouch.ReplicatorDocument replicatorDocument) {
         this.replicatorDocument = replicatorDocument;
     }
 
@@ -180,7 +194,7 @@ public class ReplicatorDocument {
      * @return
      */
     public UserCtx getUserCtx() {
-        org.lightcouch.ReplicatorDocument.UserCtx couchDbUserCtx = replicatorDocument.getUserCtx();
+        com.cloudant.client.org.lightcouch.ReplicatorDocument.UserCtx couchDbUserCtx = replicatorDocument.getUserCtx();
         UserCtx userCtx = new UserCtx(couchDbUserCtx);
         return userCtx;
     }
@@ -355,13 +369,13 @@ public class ReplicatorDocument {
 
 
     public class UserCtx {
-        private org.lightcouch.ReplicatorDocument.UserCtx userCtx;
+        private com.cloudant.client.org.lightcouch.ReplicatorDocument.UserCtx userCtx;
 
         public UserCtx() {
             this.userCtx = replicatorDocument.new UserCtx();
         }
 
-        UserCtx(org.lightcouch.ReplicatorDocument.UserCtx userCtx) {
+        UserCtx(com.cloudant.client.org.lightcouch.ReplicatorDocument.UserCtx userCtx) {
             this.userCtx = userCtx;
         }
 
@@ -400,7 +414,7 @@ public class ReplicatorDocument {
             userCtx.setRoles(roles);
         }
 
-        private org.lightcouch.ReplicatorDocument.UserCtx getLightCouchUserCtx() {
+        private com.cloudant.client.org.lightcouch.ReplicatorDocument.UserCtx getLightCouchUserCtx() {
             return userCtx;
 
         }
