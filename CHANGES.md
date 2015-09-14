@@ -1,3 +1,7 @@
+# 1.2.1 (2015-09-14)
+- [FIXED] `org.apache.http.conn.UnsupportedSchemeException: http protocol is not supported`
+  when using a proxy server with `http` and a server with `https`
+
 # 1.2.0 (2015-09-10)
 - [FIXED] `NullPointerException` when parsing `{doc: null}` JSON in search or view results.
 - [FIXED] Fixed issue with pagination numbering when using `queryPage` with
