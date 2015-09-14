@@ -252,7 +252,6 @@ public class CouchDbClient extends CouchDbClientBase {
         RegistryBuilder<ConnectionSocketFactory> registry = RegistryBuilder
                 .<ConnectionSocketFactory>create();
 
-        if ("https".equals(props.getProtocol())) {
             if (props.isSSLAuthenticationDisabled()) {
                 // No SSL authentication.
                 // No need for a custom SSLSocketFactory in this case.
@@ -264,29 +263,29 @@ public class CouchDbClient extends CouchDbClientBase {
                             }
                         }).build();
 
-                return registry.register("https", new SSLConnectionSocketFactory(sslcontext,
-                        SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)).build();
+                registry.register("https", new SSLConnectionSocketFactory(sslcontext,
+                        SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER));
             } else {
                 // With SSL authentication enabled.
                 // A custom SSLSocketFactory can be set to enhance security in specific
                 // environments.
                 SSLSocketFactory factory = props.getAuthenticatedModeSSLSocketFactory();
                 if (factory != null) {
-                    return registry.register(
-                               "https",
-                               new SSLConnectionSocketFactory(factory,
-                                   SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER)).build();
+                    registry.register(
+                            "https",
+                            new SSLConnectionSocketFactory(factory,
+                                    SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER));
                 } else {
                     // Use the default SSL configuration and truststore of the JRE.
-                    return registry.register(
-                               "https",
-                               new SSLConnectionSocketFactory(SSLContexts.createDefault(),
-                                   SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER)).build();
+                    registry.register(
+                            "https",
+                            new SSLConnectionSocketFactory(SSLContexts.createDefault(),
+                                    SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER));
                 }
             }
-        } else {
-            return registry.register("http", PlainConnectionSocketFactory.INSTANCE).build();
-        }
+
+        //always return a plain http socket factory as well as whatever SSL was registered.
+        return registry.register("http", PlainConnectionSocketFactory.INSTANCE).build();
 
     }
 
