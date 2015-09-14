@@ -252,37 +252,37 @@ public class CouchDbClient extends CouchDbClientBase {
         RegistryBuilder<ConnectionSocketFactory> registry = RegistryBuilder
                 .<ConnectionSocketFactory>create();
 
-            if (props.isSSLAuthenticationDisabled()) {
-                // No SSL authentication.
-                // No need for a custom SSLSocketFactory in this case.
-                SSLContext sslcontext = SSLContexts.custom()
-                        .loadTrustMaterial(null, new TrustStrategy() {
-                            public boolean isTrusted(X509Certificate[] chain, String authType)
-                                    throws CertificateException {
-                                return true;
-                            }
-                        }).build();
+        if (props.isSSLAuthenticationDisabled()) {
+            // No SSL authentication.
+            // No need for a custom SSLSocketFactory in this case.
+            SSLContext sslcontext = SSLContexts.custom()
+                    .loadTrustMaterial(null, new TrustStrategy() {
+                        public boolean isTrusted(X509Certificate[] chain, String authType)
+                                throws CertificateException {
+                            return true;
+                        }
+                    }).build();
 
-                registry.register("https", new SSLConnectionSocketFactory(sslcontext,
-                        SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER));
+            registry.register("https", new SSLConnectionSocketFactory(sslcontext,
+                    SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER));
+        } else {
+            // With SSL authentication enabled.
+            // A custom SSLSocketFactory can be set to enhance security in specific
+            // environments.
+            SSLSocketFactory factory = props.getAuthenticatedModeSSLSocketFactory();
+            if (factory != null) {
+                registry.register(
+                        "https",
+                        new SSLConnectionSocketFactory(factory,
+                                SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER));
             } else {
-                // With SSL authentication enabled.
-                // A custom SSLSocketFactory can be set to enhance security in specific
-                // environments.
-                SSLSocketFactory factory = props.getAuthenticatedModeSSLSocketFactory();
-                if (factory != null) {
-                    registry.register(
-                            "https",
-                            new SSLConnectionSocketFactory(factory,
-                                    SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER));
-                } else {
-                    // Use the default SSL configuration and truststore of the JRE.
-                    registry.register(
-                            "https",
-                            new SSLConnectionSocketFactory(SSLContexts.createDefault(),
-                                    SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER));
-                }
+                // Use the default SSL configuration and truststore of the JRE.
+                registry.register(
+                        "https",
+                        new SSLConnectionSocketFactory(SSLContexts.createDefault(),
+                                SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER));
             }
+        }
 
         //always return a plain http socket factory as well as whatever SSL was registered.
         return registry.register("http", PlainConnectionSocketFactory.INSTANCE).build();
