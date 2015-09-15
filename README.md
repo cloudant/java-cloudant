@@ -861,7 +861,7 @@ To query using the index, use the `.findByIndex()` method.
 
 ~~~ java
 
-List<Movie> movies = db.findByIndex("{
+List<Movie> movies = db.findByIndex("\"selector\": {
                      \"Movie_year\": {\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\"
                      }",
 					Movie.class,
