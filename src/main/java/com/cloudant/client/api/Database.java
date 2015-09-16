@@ -33,6 +33,10 @@ import com.cloudant.client.api.model.IndexField.SortOrder;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.model.Shard;
+import com.cloudant.client.api.views.AllDocsRequestBuilder;
+import com.cloudant.client.api.views.ViewRequestBuilder;
+import com.cloudant.client.internal.views.AllDocsRequestBuilderImpl;
+import com.cloudant.client.internal.views.ViewQueryParameters;
 import com.cloudant.client.org.lightcouch.Changes;
 import com.cloudant.client.org.lightcouch.CouchDatabase;
 import com.cloudant.client.org.lightcouch.CouchDbDesign;
@@ -41,7 +45,7 @@ import com.cloudant.client.org.lightcouch.CouchDbInfo;
 import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.client.org.lightcouch.Response;
-import com.cloudant.client.org.lightcouch.View;
+import com.cloudant.client.org.lightcouch.internal.URIBuilder;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
@@ -60,15 +64,6 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
-import com.cloudant.client.org.lightcouch.Changes;
-import com.cloudant.client.org.lightcouch.CouchDatabase;
-import com.cloudant.client.org.lightcouch.CouchDbDesign;
-import com.cloudant.client.org.lightcouch.CouchDbException;
-import com.cloudant.client.org.lightcouch.CouchDbInfo;
-import com.cloudant.client.org.lightcouch.DocumentConflictException;
-import com.cloudant.client.org.lightcouch.NoDocumentException;
-import com.cloudant.client.org.lightcouch.Response;
-import com.cloudant.client.org.lightcouch.View;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -389,19 +384,6 @@ public class Database {
         return new DbDesign(db, client);
     }
 
-
-    /**
-     * Provides access to CouchDB <tt>View</tt> APIs.
-     *
-     * @see View
-     */
-    public com.cloudant.client.api.View view(String viewId) {
-        View couchDbview = db.view(viewId);
-        com.cloudant.client.api.View view = new com.cloudant.client.api.View();
-        view.setView(couchDbview);
-        return view;
-    }
-
     /**
      * @param designDoc containing the view
      * @param viewName  the view name
@@ -426,7 +408,7 @@ public class Database {
      */
     public AllDocsRequestBuilder getAllDocsRequestBuilder() {
         return new AllDocsRequestBuilderImpl(new ViewQueryParameters<String,
-                Document.Revision>(client, this, "", "", String.class, Document.Revision.class) {
+                        Document.Revision>(client, this, "", "", String.class, Document.Revision.class) {
             protected URIBuilder getViewURIBuilder() {
                 return URIBuilder.buildUri(db.getDBUri()).path("_all_docs");
             }

@@ -78,16 +78,6 @@ public abstract class CouchDatabaseBase {
     }
 
     /**
-     * Provides access to CouchDB <tt>View</tt> APIs.
-     *
-     * @see View
-     */
-    public View view(String viewId) {
-        return new View(this, viewId);
-    }
-
-
-    /**
      * Provides access to <tt>Change Notifications</tt> API.
      *
      * @see Changes
