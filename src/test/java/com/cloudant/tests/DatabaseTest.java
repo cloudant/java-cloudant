@@ -52,7 +52,7 @@ public class DatabaseTest {
         account = CloudantClientHelper.getClient();
         // replciate the animals db for search tests
         com.cloudant.client.api.Replication r = account.replication();
-        r.source("https://examples.cloudant.com/animaldb");
+        r.source("https://clientlibs-test.cloudant.com/animaldb");
         r.createTarget(true);
         r.target(CloudantClientHelper.SERVER_URI.toString() + "/animaldb");
         r.trigger();

@@ -23,6 +23,7 @@ import com.cloudant.client.api.Search;
 import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.api.model.SearchResult;
 import com.cloudant.client.api.model.SearchResult.SearchResultRows;
+import com.cloudant.client.org.lightcouch.internal.URIBuilder;
 import com.cloudant.test.main.RequiresCloudant;
 
 import org.apache.commons.logging.Log;
@@ -31,7 +32,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import com.cloudant.client.org.lightcouch.internal.URIBuilder;
 
 import java.net.URI;
 import java.util.Iterator;
@@ -52,7 +52,7 @@ public class SearchTests {
 
         // replciate the animals db for search tests
         com.cloudant.client.api.Replication r = account.replication();
-        r.source("https://examples.cloudant.com/animaldb");
+        r.source("https://clientlibs-test.cloudant.com/animaldb");
         r.createTarget(true);
         r.target(CloudantClientHelper.SERVER_URI.toString() + "/animaldb");
         r.trigger();

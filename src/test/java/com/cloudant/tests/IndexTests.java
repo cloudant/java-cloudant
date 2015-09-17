@@ -49,7 +49,7 @@ public class IndexTests {
 
         // create the movies-demo db for our index tests
         com.cloudant.client.api.Replication r = account.replication();
-        r.source("https://examples.cloudant.com/movies-demo");
+        r.source("https://clientlibs-test.cloudant.com/movies-demo");
         r.createTarget(true);
         r.target(CloudantClientHelper.SERVER_URI.toString() + "/movies-demo");
         r.trigger();
