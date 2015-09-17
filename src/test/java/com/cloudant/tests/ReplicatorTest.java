@@ -145,11 +145,11 @@ public class ReplicatorTest {
         // we need the replication to finish before continuing
         Utils.waitForReplicatorToComplete(account, response.getId());
 
-        foodb2 = db2.find(Foo.class, docId);
+        foodb2 = Utils.findDocumentWithRetries(db2, docId, Foo.class, 20);
         foodb2.setTitle("titleY");
         db2.update(foodb2);
 
-        foodb1 = db1.find(Foo.class, docId);
+        foodb1 = Utils.findDocumentWithRetries(db1, docId, Foo.class, 20);
         foodb1.setTitle("titleZ");
         db1.update(foodb1);
 

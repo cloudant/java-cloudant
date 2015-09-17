@@ -16,14 +16,14 @@ package com.cloudant.tests;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ReplicationResult;
 import com.cloudant.client.api.model.ReplicationResult.ReplicationHistory;
-import com.cloudant.client.api.model.ReplicatorDocument;
-import com.cloudant.client.api.model.Response;
 import com.cloudant.client.api.model.ViewResult;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.Utils;
@@ -103,33 +103,24 @@ public class ReplicationTest {
     }
 
     @Test
-    public void replicatorDB() throws Exception {
-        String version = account.serverVersion();
-        if (version.startsWith("0") || version.startsWith("1.0")) {
-            return;
-        }
+    public void replicateDatabaseUsingReplicationTrigger() throws Exception {
+
+        String docId = Utils.generateUUID();
+        Foo fooOnDb1 = new Foo(docId);
+        db1.save(fooOnDb1);
 
         // trigger a replication
-        Response response = account.replicator()
-                .source(db1URI)
-                .target(db2URI).continuous(true)
-                .createTarget(true)
-                .save();
+        ReplicationResult result = account.replication().source(db1URI)
+                .target(db2URI).createTarget(true).trigger();
 
-        // we need the replication to finish before continuing
-        Utils.waitForReplicatorToStart(account, response.getId());
+        assertTrue("The replication should complete ok", result.isOk());
 
-
-        // find all replicator docs
-        List<ReplicatorDocument> replicatorDocs = account.replicator()
-                .findAll();
-        assertThat(replicatorDocs.size(), is(not(0)));
-
-        Utils.removeReplicatorTestDoc(account, response.getId());
+        Foo fooOnDb2 = Utils.findDocumentWithRetries(db2, docId, Foo.class, 20);
+        assertNotNull("The document should have been replicated", fooOnDb2);
     }
 
     @Test
-    public void replication_conflict() {
+    public void replication_conflict() throws Exception{
         String docId = Utils.generateUUID();
         Foo foodb1 = new Foo(docId, "title");
         Foo foodb2 = null;
@@ -141,11 +132,11 @@ public class ReplicationTest {
         account.replication().source(db1URI)
                 .target(db2URI).trigger();
 
-        foodb2 = db2.find(Foo.class, docId);
+        foodb2 = Utils.findDocumentWithRetries(db2, docId, Foo.class, 20);
         foodb2.setTitle("titleY");
         db2.update(foodb2);
 
-        foodb1 = db1.find(Foo.class, docId);
+        foodb1 = Utils.findDocumentWithRetries(db1, docId, Foo.class, 20);
         foodb1.setTitle("titleZ");
         db1.update(foodb1);
 

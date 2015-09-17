@@ -22,6 +22,7 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
+import com.cloudant.client.org.lightcouch.NoDocumentException;
 
 import org.apache.commons.logging.Log;
 import org.apache.http.HttpResponse;
@@ -128,5 +129,43 @@ public class Utils {
 
     public static String generateUUID() {
         return UUID.randomUUID().toString().replace("-", "");
+    }
+
+    /**
+     * <P>
+     * When testing against a cluster requests can be routed to different nodes. This means after
+     * a save a document may not appear for all subsequent requests until an internal replication
+     * has finished between all the nodes. This method tries to find a document up to maxRetries
+     * times, with retries separated by 0.5 s. Retrying may route the request to a node that
+     * already has the document and the delay between retries also gives an opportunity for
+     * internal replication to complete between nodes increasing the chance of retrieving the
+     * document.
+     * </P>
+     * <P>
+     * It should be noted that trying to read back a document immediately after writing to a cluster
+     * is not a best practice, but is needed in some test cases to reproduce, for example,
+     * conflict conditions. It is also worth noting that a document being returned from this
+     * method is not a guarantee that it has reached all nodes, only that it has reached a node
+     * that received one of the requests.
+     * </P>
+     *
+     * @param db
+     * @param docId
+     */
+    public static <T> T findDocumentWithRetries(Database db, String docId, Class<T> clazz, int
+            maxRetries) throws Exception {
+        for (int i = 1; i <= maxRetries; i++) {
+            try {
+                return db.find(clazz, docId);
+            } catch (NoDocumentException e) {
+                if (i == maxRetries) {
+                    throw e;
+                } else {
+                    //sleep for 0.5 s before trying again
+                    Thread.sleep(500);
+                }
+            }
+        }
+        throw new Exception("Retries exceeded");
     }
 }
