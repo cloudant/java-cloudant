@@ -18,6 +18,7 @@ package com.cloudant.client.org.lightcouch;
 import static java.lang.String.format;
 import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
+import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
