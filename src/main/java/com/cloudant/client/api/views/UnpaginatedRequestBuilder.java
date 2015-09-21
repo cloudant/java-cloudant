@@ -44,7 +44,8 @@ package com.cloudant.client.api.views;
  *            {@link ViewRequestBuilder}
  * @since 2.0.0
  */
-public interface UnpaginatedRequestBuilder<K, V> extends SingleRequestBuilder<K, V,
-        UnpaginatedRequestBuilder<K, V>>, SettableViewParameters.Unpaginated<K,
-        UnpaginatedRequestBuilder<K, V>> {
+public interface UnpaginatedRequestBuilder<K, V> extends
+        SingleRequestBuilder<K, V, UnpaginatedRequestBuilder<K, V>>,
+        SettableViewParameters.Unpaginated<K, UnpaginatedRequestBuilder<K, V>>,
+        SettableViewParameters.Reduceable<K, UnpaginatedRequestBuilder<K, V>> {
 }
