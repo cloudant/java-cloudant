@@ -29,6 +29,14 @@ import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.model.Shard;
 import com.cloudant.client.api.model.Task;
 import com.cloudant.client.api.views.Key;
+import com.cloudant.client.org.lightcouch.Changes;
+import com.cloudant.client.org.lightcouch.CouchDbClient;
+import com.cloudant.client.org.lightcouch.CouchDbDesign;
+import com.cloudant.client.org.lightcouch.CouchDbProperties;
+import com.cloudant.client.org.lightcouch.Replication;
+import com.cloudant.client.org.lightcouch.Replicator;
+import com.cloudant.client.org.lightcouch.Response;
+import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -38,14 +46,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
-import com.cloudant.client.org.lightcouch.Changes;
-import com.cloudant.client.org.lightcouch.CouchDbClient;
-import com.cloudant.client.org.lightcouch.CouchDbDesign;
-import com.cloudant.client.org.lightcouch.CouchDbProperties;
-import com.cloudant.client.org.lightcouch.Replication;
-import com.cloudant.client.org.lightcouch.Replicator;
-import com.cloudant.client.org.lightcouch.Response;
-import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -117,7 +117,7 @@ import java.util.Map;
  * {@link Search db.search("views101/animals)}
  *
  * <h2>View APIs</h2>
- * {@link View db.view()}
+ * {@link com.cloudant.client.api.views}
  *
  * <h2>Change Notifications</h2>
  * {@link Changes db.changes()}
@@ -429,7 +429,7 @@ public class CloudantClient {
                 .registerTypeAdapter(new TypeToken<Map<String, EnumSet<Permissions>>>() {
                         }.getType(),
                         new SecurityDeserializer())
-        .registerTypeAdapter(Key.ComplexKey.class, new Key.ComplexKeyDeserializer());
+                .registerTypeAdapter(Key.ComplexKey.class, new Key.ComplexKeyDeserializer());
         client.setGsonBuilder(gsonBuilder);
     }
 
