@@ -21,6 +21,7 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.IndexField.SortOrder;
+import com.cloudant.client.api.views.Key;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresDB;
 import com.google.gson.JsonObject;
@@ -131,7 +132,7 @@ public class UnicodeTest {
      *
      * @param destination An Appendable (such as a StringBuilder, a Writer, or a PrintStream).
      * @param reader      A Reader that wraps the InputStream of the entity returned by the given
-     *                       URI.
+     *                    URI.
      *                    Should be buffered.
      * @throws RuntimeException if there is an exception reading the entity
      * @throws IOException      if there is an exception writing to the destination
@@ -348,7 +349,7 @@ public class UnicodeTest {
     // panel "Encoding", set the encoding to ISO-8859-1.
     @Test
     @Category(RequiresCloudant.class)
-    public void testUnicodeInObject() {
+    public void testUnicodeInObject() throws Exception {
         db.createIndex(
                 "myview", "mydesigndoc", "json",
                 new IndexField[]{
@@ -364,7 +365,9 @@ public class UnicodeTest {
         db.save(object);
         // We can now retrieve the matching documents through
         // GET /wladmin/_design/mydesigndoc/_view/myview?reduce=false&include_docs=true
-        List<MyObject> result = db.view("mydesigndoc/myview").reduce(false).includeDocs(true).query(MyObject.class);
+        List<MyObject> result = db.getViewRequestBuilder("mydesigndoc", "myview").newRequest(Key
+                .Type.STRING, String.class).reduce(false).includeDocs(true).build().getResponse()
+                .getDocsAs(MyObject.class);
         assertEquals(1, result.size());
         String value = result.get(0).foo;
         assertEquals(TESTSTRING, value);

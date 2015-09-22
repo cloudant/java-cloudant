@@ -22,7 +22,8 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
-import com.cloudant.client.api.model.ViewResult;
+import com.cloudant.client.api.views.Key;
+import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.Utils;
 
@@ -159,8 +160,9 @@ public class ReplicatorTest {
         // we need the replication to finish before continuing
         Utils.waitForReplicatorToComplete(account, secondResponse.getId());
 
-        ViewResult<String[], String, Foo> conflicts = db2.view("conflicts/conflict")
-                .includeDocs(true).queryView(String[].class, String.class, Foo.class);
+        ViewResponse<Key.ComplexKey, String> conflicts = db2.getViewRequestBuilder
+                ("conflicts", "conflict").newRequest(Key.Type.COMPLEX, String.class).build()
+                .getResponse();
 
         assertThat(conflicts.getRows().size(), is(not(0)));
 
