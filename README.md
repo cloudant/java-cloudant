@@ -183,9 +183,9 @@ If you run this example, you will see:
 	- [Inline attachment](#inline-attachment)
 	- [Standalone Attachments](#standalone-attachments)
 - [Design Document Functions](#design-document-functions)
-	- [query on a view](#query-on-a-view)
 	- [retrieving the design doc from server](#retrieving-the-design-doc-from-server)
-	- [synchronizing design doc ](#synchronizing-design-doc)
+  - [Creating a View (Map-Reduce Index)](#creating-a-view-map-reduce-index)
+- [Query a View](#query-a-view)
 - [Cloudant Query](#cloudant-query)
 - [Cloudant Search](#cloudant-search)
 - [Cookie Authentication](#cookie-authentication)
@@ -681,24 +681,30 @@ List<Response> responses = db.bulk(newDocs);
 
 ### Fetch all/multiple documents
 
-List all the docs in the database with optional query string additions `params`.
+List all the doc IDs in the database.
 
 ~~~ java
 
-List<Foo> docs = dbClient.view("_all_docs")
-					  .includeDocs(true)
-					  .query(Foo.class);
+List<String> allDocIds = db.getAllDocsRequestBuilder().build()
+                          .getRepsonse().getKeys();
 
 ~~~
 
-List multiple documents specified by docID's in the database .
+Fetch all the docs in the database.
+
 ~~~ java
 
-List<String> keys = Arrays.asList(new String[]{"doc-id-1", "doc-id-2"});
-List<Foo> docs = dbClient.view("_all_docs")
-					  .includeDocs(true)
-					  .keys(keys)
-					  .query(Foo.class);
+List<Foo> allFoos = db.getAllDocsRequestBuilder().includeDocs(true).build()
+                          .getRepsonse().getDocsAs(Foo.class);
+
+~~~
+
+Fetch multiple documents specified by docID's in the database .
+~~~ java
+
+String[] docIds = new String[]{"doc-id-1", "doc-id-2"};
+List<Foo> foosWithIds = db.getAllDocsRequestBuilder().keys(docIds).includeDocs(true)
+                          .build().getRepsonse().getDocsAs(Foo.class);
 
 ~~~
 
@@ -744,44 +750,6 @@ InputStream in = db.find( "doc_id/foo.txt");
 
 These functions are for working with views and design documents, including querying the database using map-reduce views, [Cloudant Search](#cloudant-search), and [Cloudant Query](#cloudant-query).
 
-### query on a view
-
-Call a view of the specified design to get the list of documents.
-
-~~~ java
-
-List<Foo> foos = db.view("example/foo")
-			        .includeDocs(true)
-				.query(Foo.class);
-~~~
- If you're looking to filter the view results by key(s), pass multiple keys as the argument of key() function
-
-~~~ java
-
-List<Foo> foos = db.view("example/foo")
-				.includeDocs(true)
-				.key("key-1","key-2")
-				.query(Foo.class);
-~~~
-
-If you're looking to filter the view results by a range of keys, call startKey(key) and endKey(key) method
-
-~~~ java
-
-List<Foo> foos = db.view("example/foo")
-				.startKey("key-1")
-				.endKey("key-2")
-				.includeDocs(true)
-				.query(Foo.class);
-
-~~~
-
-To get the primitive value  call the scalar methods e.g queryForInt() or queryForLong()
-
-~~~ java
-
-int count = dbClient.view("example/by_tag").key("cloudantdb").queryForInt();
-~~~
 ### retrieving the design doc from server
 call getFromDb(design-doc) to retrieve the server copy .
 ~~~ java
@@ -789,8 +757,7 @@ call getFromDb(design-doc) to retrieve the server copy .
 DesignDocument designDoc = db.design().getFromDb("_design/example");
 ~~~
 
-
-## Creating a View (Map-Reduce Index)
+### Creating a View (Map-Reduce Index)
 
 To create a view, upload a design document containing the index:
 
@@ -820,9 +787,11 @@ view_ddoc.put("views", views);
 db.save(view_ddoc);
 ```
 
-Take a look at the [CouchDB wiki](http://wiki.apache.org/couchdb/Formatting_with_Show_and_List#Showing_Documents) for possible query paramaters and more information on show functions.
+Take a look at the [Cloudant Design Documents documentation](https://docs.cloudant.com/design_documents.html) for possible parameters and more information on show functions.
 
+## Query a View
 
+Refer to the [javadoc for the com.cloudant.client.api.views package](http://www.javadoc.io/doc/com.cloudant/cloudant-client/) for information about and examples of querying a view.
 
 ## Cloudant Query
 

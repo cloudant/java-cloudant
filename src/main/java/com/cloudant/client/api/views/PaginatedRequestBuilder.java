@@ -47,7 +47,8 @@ package com.cloudant.client.api.views;
  *            {@link ViewRequestBuilder}
  * @since 2.0.0
  */
-public interface PaginatedRequestBuilder<K, V> extends SingleRequestBuilder<K, V,
-        PaginatedRequestBuilder<K, V>>, SettableViewParameters.Paginated<K,
-        PaginatedRequestBuilder<K, V>> {
+public interface PaginatedRequestBuilder<K, V> extends
+        SingleRequestBuilder<K, V, PaginatedRequestBuilder<K, V>>,
+        SettableViewParameters.Paginated<K, PaginatedRequestBuilder<K, V>>,
+        SettableViewParameters.Reduceable<K, PaginatedRequestBuilder<K, V>> {
 }

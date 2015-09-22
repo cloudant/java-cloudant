@@ -1,6 +1,16 @@
+# Unreleased
+- [NEW] - Introduced new view query API. More information is available in the javadoc,
+  including usage and migration examples. Note the absence of an equivalent for `queryForStream()`.
+  If you were using the `queryForStream()` method we would be interested in feedback about your use case.
+  For example, if you were using the `InputStream` directly for streaming API parsing with an alternative
+  JSON library we might be able to make this easier by handling the streams and providing a callback.
+- [BREAKING CHANGE] - Removed version 1.x view query API.
+- [BREAKING CHANGE] - LightCouch classes moved to package com.cloudant.client.org.lightcouch.
+  This should only have a visible impact for `CouchDbException` and its subclasses.
+
 # 1.2.1 (2015-09-14)
 - [FIXED] `org.apache.http.conn.UnsupportedSchemeException: http protocol is not supported`
-  when using a proxy server with `http` and a server with `https`
+  when using a proxy server with `http` and a server with `https`.
 
 # 1.2.0 (2015-09-10)
 - [FIXED] `NullPointerException` when parsing `{doc: null}` JSON in search or view results.
