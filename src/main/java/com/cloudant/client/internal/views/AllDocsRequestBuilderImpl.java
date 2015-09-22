@@ -14,14 +14,15 @@
 
 package com.cloudant.client.internal.views;
 
-import com.cloudant.client.api.model.Document;
+import com.cloudant.client.api.views.AllDocsRequest;
 import com.cloudant.client.api.views.AllDocsRequestBuilder;
-import com.cloudant.client.api.views.ViewRequest;
 
-public class AllDocsRequestBuilderImpl extends CommonViewRequestBuilder<String, Document.Revision,
+public class AllDocsRequestBuilderImpl extends CommonViewRequestBuilder<String,
+        AllDocsRequestResponse.Revision,
         AllDocsRequestBuilder> implements AllDocsRequestBuilder {
 
-    public AllDocsRequestBuilderImpl(ViewQueryParameters<String, Document.Revision> parameters) {
+    public AllDocsRequestBuilderImpl(ViewQueryParameters<String, AllDocsRequestResponse.Revision>
+                                             parameters) {
         super(parameters);
     }
 
@@ -31,7 +32,7 @@ public class AllDocsRequestBuilderImpl extends CommonViewRequestBuilder<String, 
     }
 
     @Override
-    public ViewRequest<String, Document.Revision> build() {
-        return new ViewRequestImpl<String, Document.Revision>(viewQueryParameters);
+    public AllDocsRequest build() {
+        return new AllDocsRequestResponse(viewQueryParameters);
     }
 }

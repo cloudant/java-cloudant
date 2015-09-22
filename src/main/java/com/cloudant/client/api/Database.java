@@ -25,7 +25,6 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.setEntity;
 import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
 import com.cloudant.client.api.model.DbInfo;
-import com.cloudant.client.api.model.Document;
 import com.cloudant.client.api.model.FindByIndexOptions;
 import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
@@ -36,6 +35,7 @@ import com.cloudant.client.api.model.Shard;
 import com.cloudant.client.api.views.AllDocsRequestBuilder;
 import com.cloudant.client.api.views.ViewRequestBuilder;
 import com.cloudant.client.internal.views.AllDocsRequestBuilderImpl;
+import com.cloudant.client.internal.views.AllDocsRequestResponse;
 import com.cloudant.client.internal.views.ViewQueryParameters;
 import com.cloudant.client.org.lightcouch.Changes;
 import com.cloudant.client.org.lightcouch.CouchDatabase;
@@ -408,7 +408,8 @@ public class Database {
      */
     public AllDocsRequestBuilder getAllDocsRequestBuilder() {
         return new AllDocsRequestBuilderImpl(new ViewQueryParameters<String,
-                        Document.Revision>(client, this, "", "", String.class, Document.Revision.class) {
+                AllDocsRequestResponse.Revision>(client, this, "", "", String.class,
+                AllDocsRequestResponse.Revision.class) {
             protected URIBuilder getViewURIBuilder() {
                 return URIBuilder.buildUri(db.getDBUri()).path("_all_docs");
             }

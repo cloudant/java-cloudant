@@ -29,21 +29,4 @@ public class Document extends com.cloudant.client.org.lightcouch.Document {
         super.addAttachment(name, attachment.getAttachement());
     }
 
-    /*
-     * Object representation of rev field from a JSON object.
-     * <P>
-     * A convenience to allow deserialization of _all_docs JSON revision object data.
-     * </P>
-     */
-    public static final class Revision {
-
-        private String rev;
-
-        /**
-         * @return the value of the document rev field
-         */
-        public String get() {
-            return rev;
-        }
-    }
 }

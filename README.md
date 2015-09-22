@@ -686,7 +686,7 @@ List all the doc IDs in the database.
 ~~~ java
 
 List<String> allDocIds = db.getAllDocsRequestBuilder().build()
-                          .getRepsonse().getKeys();
+                          .getRepsonse().getDocIds();
 
 ~~~
 
