@@ -398,12 +398,12 @@ public class Database {
      * Build a request for the _all_docs endpoint.
      * <P>
      * Example usage:
+     * </P>
      * <pre>
      * {@code
      *  getAllDocsRequestBuilder().build().getResponse();
      * }
      * </pre>
-     * </P>
      * @return a request builder for the _all_docs endpoint of this database
      */
     public AllDocsRequestBuilder getAllDocsRequestBuilder() {
