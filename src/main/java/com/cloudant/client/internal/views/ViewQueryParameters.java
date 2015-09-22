@@ -271,7 +271,7 @@ public class ViewQueryParameters<K, V> extends QueryParameters {
         return new HttpGet(builder.buildEncoded());
     }
 
-    URIBuilder getViewURIBuilder() {
+    protected URIBuilder getViewURIBuilder() {
         return URIBuilder.buildUri(db.getDBUri()).path(designDoc +
                 "/_view/" + viewName);
     }

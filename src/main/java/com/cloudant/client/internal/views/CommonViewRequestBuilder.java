@@ -19,8 +19,10 @@ import com.cloudant.client.api.views.RequestBuilder;
 import com.cloudant.client.api.views.SettableViewParameters;
 
 public abstract class CommonViewRequestBuilder<K, V, RB extends RequestBuilder<RB>> implements
-        SettableViewParameters.Common<K, RB>, SettableViewParameters.Paginated<K, RB>,
-        SettableViewParameters.Unpaginated<K, RB> {
+        SettableViewParameters.Common<K, RB>,
+        SettableViewParameters.Paginated<K, RB>,
+        SettableViewParameters.Unpaginated<K, RB>,
+        SettableViewParameters.Reduceable<K, RB> {
 
     protected final ViewQueryParameters<K, V> viewQueryParameters;
 

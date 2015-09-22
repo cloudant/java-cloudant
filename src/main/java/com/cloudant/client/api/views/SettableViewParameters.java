@@ -84,25 +84,6 @@ public interface SettableViewParameters {
         RB endKeyDocId(String endkey_docid);
 
         /**
-         * Group the results to a group or single row when using a reduce function.
-         *
-         * @param group {@code true} to group, default {@code false},
-         * @return the builder to compose additional parameters or build the request
-         * @since 2.0.0
-         */
-        RB group(boolean group);
-
-        /**
-         * Group reduce results for the specified number of array fields. Only applicable when
-         * using a complex (JSON array) key.
-         *
-         * @param group_level number of array fields to group
-         * @return the builder to compose additional parameters or build the request
-         * @since 2.0.0
-         */
-        RB groupLevel(int group_level);
-
-        /**
          * Include the full content of the documents in the response.
          * <P>
          * Note that using include_docs=true might have
@@ -133,19 +114,6 @@ public interface SettableViewParameters {
          * @since 2.0.0
          */
         RB keys(K... keys);
-
-        /**
-         * Use the reduce function of the view.
-         * <P>
-         * Note that although the default is {@code true} if a view does not have a reduce
-         * function this parameter will have no effect.
-         * </P>
-         *
-         * @param reduce {@code false} to not use reduce, default {@code true}
-         * @return the builder to compose additional parameters or build the request
-         * @since 2.0.0
-         */
-        RB reduce(boolean reduce);
 
         /**
          * Allow the results from a stale view to be used. This makes the request return
@@ -187,6 +155,47 @@ public interface SettableViewParameters {
          * @since 2.0.0
          */
         RB startKeyDocId(String startkey_docid);
+    }
+
+    /**
+     * Setters for parameters applicable to views that have reduce
+     *
+     * @param <K>  the type of the key emitted by the view
+     * @param <RB> the type of the request builder returned after each set operation
+     */
+    interface Reduceable<K, RB extends RequestBuilder> {
+
+        /**
+         * Use the reduce function of the view.
+         * <P>
+         * Note that although the default is {@code true} if a view does not have a reduce
+         * function this parameter will have no effect.
+         * </P>
+         *
+         * @param reduce {@code false} to not use reduce, default {@code true}
+         * @return the builder to compose additional parameters or build the request
+         * @since 2.0.0
+         */
+        RB reduce(boolean reduce);
+
+        /**
+         * Group the results to a group or single row when using a reduce function.
+         *
+         * @param group {@code true} to group, default {@code false},
+         * @return the builder to compose additional parameters or build the request
+         * @since 2.0.0
+         */
+        RB group(boolean group);
+
+        /**
+         * Group reduce results for the specified number of array fields. Only applicable when
+         * using a complex (JSON array) key.
+         *
+         * @param group_level number of array fields to group
+         * @return the builder to compose additional parameters or build the request
+         * @since 2.0.0
+         */
+        RB groupLevel(int group_level);
     }
 
     /**
