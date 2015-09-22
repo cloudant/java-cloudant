@@ -24,7 +24,8 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ReplicationResult;
 import com.cloudant.client.api.model.ReplicationResult.ReplicationHistory;
-import com.cloudant.client.api.model.ViewResult;
+import com.cloudant.client.api.views.Key;
+import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.Utils;
 
@@ -65,7 +66,7 @@ public class ReplicationTest {
 
         db1.syncDesignDocsWithDb();
         db2.syncDesignDocsWithDb();
-        
+
         db2URI = CloudantClientHelper.SERVER_URI.toString() + "/lightcouch-db-test-2";
     }
 
@@ -120,7 +121,7 @@ public class ReplicationTest {
     }
 
     @Test
-    public void replication_conflict() throws Exception{
+    public void replication_conflict() throws Exception {
         String docId = Utils.generateUUID();
         Foo foodb1 = new Foo(docId, "title");
         Foo foodb2 = null;
@@ -143,8 +144,9 @@ public class ReplicationTest {
         account.replication().source(db1URI)
                 .target(db2URI).trigger();
 
-        ViewResult<String[], String, Foo> conflicts = db2.view("conflicts/conflict")
-                .includeDocs(true).queryView(String[].class, String.class, Foo.class);
+        ViewResponse<Key.ComplexKey, String> conflicts = db2.getViewRequestBuilder
+                ("conflicts", "conflict").newRequest(Key.Type.COMPLEX, String.class).build()
+                .getResponse();
 
         assertThat(conflicts.getRows().size(), is(not(0)));
     }

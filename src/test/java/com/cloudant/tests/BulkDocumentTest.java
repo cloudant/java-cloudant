@@ -31,7 +31,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Category(RequiresDB.class)
@@ -70,16 +69,12 @@ public class BulkDocumentTest {
     }
 
     @Test
-    public void bulkDocsRetrieve() {
+    public void bulkDocsRetrieve() throws Exception {
         Response r1 = db.save(new Foo());
         Response r2 = db.save(new Foo());
 
-        List<String> keys = Arrays.asList(new String[]{r1.getId(), r2.getId()});
-
-        List<Foo> docs = db.view("_all_docs")
-                .includeDocs(true)
-                .keys(keys)
-                .query(Foo.class);
+        List<Foo> docs = db.getAllDocsRequestBuilder().includeDocs(true).keys(r1.getId(), r2
+                .getId()).build().getResponse().getDocsAs(Foo.class);
 
         assertThat(docs.size(), is(2));
     }
