@@ -127,7 +127,8 @@ javadoc {
     exclude("**/com/cloudant/tests/**",
             "**/com/cloudant/test/**",
             "**/resources/**",
-            "**/internal/**")
+            "**/internal/**",
+            "**/lightcouch/**")
     include("**/lightcouch/PreconditionFailedException.java",
             "**/lightcouch/DocumentConflictException.java",
             "**/lightcouch/NoDocumentException.java",
