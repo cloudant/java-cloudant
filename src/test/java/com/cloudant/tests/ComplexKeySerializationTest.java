@@ -49,8 +49,9 @@ public class ComplexKeySerializationTest {
         Key.ComplexKey expectedKey = Key.complex("dog", "cat", "mouse");
         Key.ComplexKey deserializedKey = gson.fromJson(STR_CMPLX_KEY_JSON, Key.ComplexKey.class);
         assertEquals(STR_CMPLX_KEY_JSON, deserializedKey.toJson());
+        assertEquals(expectedKey, deserializedKey);
     }
-    
+
     @Test
     public void booleanVarArgsSerialization() {
         Key.ComplexKey key = Key.complex(true, false, true);
@@ -66,8 +67,10 @@ public class ComplexKeySerializationTest {
 
     @Test
     public void booleanDeserialization() {
+        Key.ComplexKey expectedKey = Key.complex(true, false, true);
         Key.ComplexKey deserializedKey = gson.fromJson(BOOL_CMPLX_KEY_JSON, Key.ComplexKey.class);
         assertEquals(BOOL_CMPLX_KEY_JSON, deserializedKey.toJson());
+        assertEquals(expectedKey, deserializedKey);
     }
 
     @Test
@@ -85,8 +88,10 @@ public class ComplexKeySerializationTest {
 
     @Test
     public void numberDeserialization() {
+        Key.ComplexKey expectedKey = Key.complex(1, 12, 15.0, 99999999999999l);
         Key.ComplexKey deserializedKey = gson.fromJson(NUM_CMPLX_KEY_JSON, Key.ComplexKey.class);
         assertEquals(NUM_CMPLX_KEY_JSON, deserializedKey.toJson());
+        assertEquals(expectedKey, deserializedKey);
     }
 
     @Test
@@ -98,8 +103,11 @@ public class ComplexKeySerializationTest {
 
     @Test
     public void mixedDeserialization() {
+        Key.ComplexKey expectedKey = Key.complex("dog").add(true).add(1).add(15.0).add((String)
+                null).add(-3);
         Key.ComplexKey deserializedKey = gson.fromJson(MIXED_CMPLX_KEY_JSON, Key.ComplexKey.class);
         assertEquals(MIXED_CMPLX_KEY_JSON, deserializedKey.toJson());
+        assertEquals(expectedKey, deserializedKey);
     }
 
 }
