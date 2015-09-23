@@ -20,19 +20,21 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 import com.cloudant.client.api.Changes;
-import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ChangesResult;
 import com.cloudant.client.api.model.ChangesResult.Row;
 import com.cloudant.client.api.model.DbInfo;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.test.main.RequiresDB;
+import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.util.DatabaseResource;
 import com.google.gson.JsonObject;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -42,22 +44,19 @@ import java.util.List;
 public class ChangeNotificationsTest {
 
     private static final Log log = LogFactory.getLog(ChangeNotificationsTest.class);
-    private static Database db;
-    private CloudantClient account;
 
+    @ClassRule
+    public static CloudantClientResource clientResource = new CloudantClientResource();
+
+    @Rule
+    public DatabaseResource dbResource = new DatabaseResource(clientResource.get());
+
+    private Database db;
 
     @Before
-    public void setUp() {
-        account = CloudantClientHelper.getClient();
-        db = account.database("lightcouch-db-test", true);
+    public void setup() {
+        db = dbResource.get();
     }
-
-    @After
-    public void tearDown() {
-        account.deleteDB("lightcouch-db-test");
-        account.shutdown();
-    }
-
 
     @Test
     public void changes_normalFeed() {
