@@ -31,7 +31,6 @@ import com.google.gson.JsonObject;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Helper class for use with multi-value key view tests.
@@ -40,7 +39,7 @@ public class CheckPagination {
 
     public enum Type {
         SINGLE,
-        MULTI
+        COMPLEX
     }
 
     public static CheckPagination newTest() {
@@ -49,7 +48,7 @@ public class CheckPagination {
 
     public static CheckPagination newTest(Type type) {
         switch (type) {
-            case MULTI:
+            case COMPLEX:
                 return new CheckPaginationWithMultiValueKey();
             case SINGLE:
             default:
@@ -208,21 +207,22 @@ public class CheckPagination {
         }
     }
 
-    public static String generateUUID() {
-        return UUID.randomUUID().toString().replace("-", "");
-    }
-
     protected void initFoo(Foo foo, int i) {
         //no-op for default Foo
     }
 
-    public void runTest(Database db) throws Exception {
-
+    public void initTest(Database db) throws Exception {
         for (int i = 0; i < docCount; ++i) {
-            Foo foo = new Foo(generateUUID(), ViewsTest.docTitle(i + 1));
+            Foo foo = new Foo(Utils.generateUUID(), ViewsTest.docTitle(i + 1));
             initFoo(foo, i);
             db.save(foo);
         }
+    }
+
+    public void runTest(Database db) throws Exception {
+
+        //initTest
+        initTest(db);
 
         // Run all views
         for (int viewCount = 0; viewCount < testViews.length; viewCount++) {

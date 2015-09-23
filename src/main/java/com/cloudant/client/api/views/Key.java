@@ -177,6 +177,25 @@ public class Key {
             return json.toString();
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            ComplexKey that = (ComplexKey) o;
+
+            return json.equals(that.json);
+
+        }
+
+        @Override
+        public int hashCode() {
+            return json.hashCode();
+        }
     }
 
     /**
