@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
-import com.cloudant.client.api.model.Document;
 import com.cloudant.client.api.views.Key;
 import com.cloudant.client.api.views.ViewMultipleRequest;
 import com.cloudant.client.api.views.ViewRequest;
@@ -654,14 +653,13 @@ public class ViewsTest {
     public void allDocs() throws Exception {
         init();
         db.save(new Foo());
-        List<String> allDocIds = db.getAllDocsRequestBuilder().build().getResponse().getKeys();
+        List<String> allDocIds = db.getAllDocsRequestBuilder().build().getResponse().getDocIds();
         assertThat(allDocIds.size(), not(0));
-        List<Document.Revision> allDocRevs = db.getAllDocsRequestBuilder().build().getResponse()
-                .getValues();
-        assertThat(allDocIds.size(), not(0));
-        for (Document.Revision rev : allDocRevs) {
-            System.out.println(rev.get());
-            assertNotNull("The document _rev value should not be null", rev.get());
+        Map<String, String> idsAndRevs = db.getAllDocsRequestBuilder().build().getResponse()
+                .getIdsAndRevs();
+        assertThat(idsAndRevs.size(), not(0));
+        for (Map.Entry<String, String> doc : idsAndRevs.entrySet()) {
+            assertNotNull("The document _rev value should not be null", doc.getValue());
         }
     }
 

@@ -1,4 +1,6 @@
 # Unreleased
+- [NEW] - Requests for the `_all_docs` endpoint are made via `Database#getAllDocsRequestBuilder()`
+  instead of using a view.
 - [NEW] - Introduced new view query API. More information is available in the javadoc,
   including usage and migration examples. Note the absence of an equivalent for `queryForStream()`.
   If you were using the `queryForStream()` method we would be interested in feedback about your use case.

@@ -14,32 +14,29 @@
 
 package com.cloudant.client.api.views;
 
+import java.io.IOException;
+
 /**
- * Interface for building an unpaginated _all_docs request.
- * <P>
- * Example usage:
- * </P>
- * <pre>
- * {@code
- *
- * AllDocsRequest allDocsRequest =
- * //get a request builder for the "_all_docs" endpoint
- * db.getAllDocsRequestBuilder()
- *
- *   //set any other required parameters e.g. doc id of "foo" or "bar"
- *   .keys("foo", "bar")
- *
- *   //build the request
- *   .build();
- * }
- * </pre>
+ * The AllDocsRequest is used for getting an AllDocsResponse
  */
-public interface AllDocsRequestBuilder extends RequestBuilder<AllDocsRequestBuilder>,
-        SettableViewParameters.Unpaginated<String, AllDocsRequestBuilder> {
+public interface AllDocsRequest {
 
     /**
-     * @return the built AllDocsRequest
+     * Performs the request and returns the response.
+     * <P>
+     * Example usage:
+     * </P>
+     * <pre>
+     * {@code
+     * AllDocsResponse response = db.getAllDocsRequestBuilder()
+     *                              .build()
+     *                              .getResponse();
+     * }
+     * </pre>
+     *
+     * @return the response object
+     * @throws IOException
      * @since 2.0.0
      */
-    AllDocsRequest build();
+    AllDocsResponse getResponse() throws IOException;
 }
