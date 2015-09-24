@@ -28,7 +28,7 @@ import com.google.gson.JsonObject;
 import com.cloudant.client.org.lightcouch.CouchDatabase;
 import com.cloudant.client.org.lightcouch.CouchDatabaseBase;
 import com.cloudant.client.org.lightcouch.CouchDbDesign;
-import com.cloudant.client.org.lightcouch.DesignDocument.MapReduce;
+import com.cloudant.client.api.model.DesignDocument.MapReduce;
 import com.cloudant.client.org.lightcouch.Response;
 
 import java.net.URI;
