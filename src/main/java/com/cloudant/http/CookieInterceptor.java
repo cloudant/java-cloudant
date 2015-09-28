@@ -97,7 +97,7 @@ public  class CookieInterceptor implements HttpConnectionRequestInterceptor, Htt
 
     }
 
-     public String getCookie(URL url){
+     private String getCookie(URL url){
         try {
             URL sessionURL = new URL(String.format("%s://%s:%d/_session",
                     url.getProtocol(),
