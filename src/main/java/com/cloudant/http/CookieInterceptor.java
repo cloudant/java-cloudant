@@ -96,7 +96,7 @@ public  class CookieInterceptor implements HttpConnectionRequestInterceptor, Htt
         return context;
 
     }
-     //TODO possibly make this public for lightcouch CouchDbClientBase?
+
      public String getCookie(URL url){
         try {
             URL sessionURL = new URL(String.format("%s://%s:%d/_session",

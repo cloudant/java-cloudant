@@ -10,8 +10,6 @@
 
 package com.cloudant.http;
 
-import com.google.common.io.Resources;
-
 import org.apache.commons.codec.binary.Base64OutputStream;
 import org.apache.commons.io.IOUtils;
 
@@ -353,12 +351,11 @@ public class HttpConnection  {
     }
 
     private static String getUserAgentFromResource() {
-        final String defaultUserAgent = "CloudantSync";
+        final String defaultUserAgent = "JavaCloudant";
         final URL url = HttpConnection.class.getClassLoader().getResource("mazha.properties");
         final Properties properties = new Properties();
         try {
-            //Resources.asByteSource(url) deprecated and removed in Guava 18.0
-            properties.load(Resources.newInputStreamSupplier(url).getInput());
+            properties.load(url.openStream());
             return properties.getProperty("user.agent", defaultUserAgent);
         } catch (Exception ex) {
             return defaultUserAgent;
