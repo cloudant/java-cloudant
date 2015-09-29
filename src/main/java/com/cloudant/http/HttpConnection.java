@@ -10,7 +10,8 @@
 
 package com.cloudant.http;
 
-import org.apache.commons.codec.binary.Base64OutputStream;
+import com.cloudant.android.Base64OutputStreamFactory;
+
 import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayInputStream;
@@ -184,8 +185,7 @@ public class HttpConnection  {
                 connection.setRequestProperty("User-Agent", AgentHelper.USER_AGENT);
                 if (url.getUserInfo() != null) {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    //Using apache's Base64 instead of sync's Base64OutputStreamFactory
-                    OutputStream bos = new Base64OutputStream(baos, true, 0, null);
+                    OutputStream bos = Base64OutputStreamFactory.get(baos);
                     bos.write(url.getUserInfo().getBytes());
                     bos.flush();
                     bos.close();
