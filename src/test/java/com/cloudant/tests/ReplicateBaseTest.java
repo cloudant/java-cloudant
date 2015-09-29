@@ -30,9 +30,9 @@ public class ReplicateBaseTest {
     protected CloudantClient account = clientResource.get();
 
     @Rule
-    public DatabaseResource db1Resource = new DatabaseResource(account);
+    public DatabaseResource db1Resource = new DatabaseResource(clientResource);
     @Rule
-    public DatabaseResource db2Resource = new DatabaseResource(account);
+    public DatabaseResource db2Resource = new DatabaseResource(clientResource);
 
     protected Database db1;
 
