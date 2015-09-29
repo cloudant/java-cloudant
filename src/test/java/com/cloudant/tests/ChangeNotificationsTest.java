@@ -49,7 +49,7 @@ public class ChangeNotificationsTest {
     public static CloudantClientResource clientResource = new CloudantClientResource();
 
     @Rule
-    public DatabaseResource dbResource = new DatabaseResource(clientResource.get());
+    public DatabaseResource dbResource = new DatabaseResource(clientResource);
 
     private Database db;
 
