@@ -10,6 +10,8 @@
 
 package com.cloudant.http;
 
+import com.cloudant.client.org.lightcouch.CouchDbClient;
+
 import org.apache.commons.codec.binary.Base64OutputStream;
 import org.apache.commons.io.IOUtils;
 
@@ -24,7 +26,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 import java.util.logging.Logger;
 
 
@@ -78,8 +79,6 @@ public class HttpConnection  {
     private long inputLength;
 
     public final HashMap<String, String> requestProperties;
-
-    private static String userAgent = getUserAgent();
 
     public final List<HttpConnectionRequestInterceptor> requestInterceptors;
     public final List<HttpConnectionResponseInterceptor> responseInterceptors;
@@ -184,7 +183,7 @@ public class HttpConnection  {
                     connection.setRequestProperty(key, requestProperties.get(key));
                 }
 
-                connection.setRequestProperty("User-Agent", userAgent);
+                connection.setRequestProperty("User-Agent", CouchDbClient.USER_AGENT);
                 if (url.getUserInfo() != null) {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     //Using apache's Base64 instead of sync's Base64OutputStreamFactory
@@ -335,30 +334,5 @@ public class HttpConnection  {
      */
     public void disconnect() {
         connection.disconnect();
-    }
-
-    private static String getUserAgent() {
-        String userAgent;
-        String ua = getUserAgentFromResource();
-        {
-            userAgent = String.format("%s Java (%s; %s; %s)",
-                    ua,
-                    System.getProperty("os.arch"),
-                    System.getProperty("os.name"),
-                    System.getProperty("os.version"));
-        }
-        return userAgent;
-    }
-
-    private static String getUserAgentFromResource() {
-        final String defaultUserAgent = "JavaCloudant";
-        final URL url = HttpConnection.class.getClassLoader().getResource("mazha.properties");
-        final Properties properties = new Properties();
-        try {
-            properties.load(url.openStream());
-            return properties.getProperty("user.agent", defaultUserAgent);
-        } catch (Exception ex) {
-            return defaultUserAgent;
-        }
     }
 }
