@@ -35,7 +35,7 @@ public class Base64OutputStreamFactory {
             }
         } catch (Exception e) {
             // TODO log
-            return null;
+            throw new RuntimeException(e);
         }
     }
 }
