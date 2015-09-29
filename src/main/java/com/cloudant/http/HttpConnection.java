@@ -10,8 +10,6 @@
 
 package com.cloudant.http;
 
-import com.cloudant.client.org.lightcouch.CouchDbClient;
-
 import org.apache.commons.codec.binary.Base64OutputStream;
 import org.apache.commons.io.IOUtils;
 
@@ -183,7 +181,7 @@ public class HttpConnection  {
                     connection.setRequestProperty(key, requestProperties.get(key));
                 }
 
-                connection.setRequestProperty("User-Agent", CouchDbClient.USER_AGENT);
+                connection.setRequestProperty("User-Agent", AgentHelper.USER_AGENT);
                 if (url.getUserInfo() != null) {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     //Using apache's Base64 instead of sync's Base64OutputStreamFactory
@@ -335,4 +333,5 @@ public class HttpConnection  {
     public void disconnect() {
         connection.disconnect();
     }
+
 }
