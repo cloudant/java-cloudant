@@ -90,4 +90,7 @@ public class DatabaseResource extends ExternalResource {
         return this.database;
     }
 
+    public String getDatabaseName() {
+        return this.databaseName;
+    }
 }

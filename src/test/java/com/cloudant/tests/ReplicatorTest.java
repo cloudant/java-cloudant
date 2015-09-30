@@ -18,8 +18,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.api.views.Key;
@@ -27,51 +25,19 @@ import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.Utils;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 @Category(RequiresDB.class)
-public class ReplicatorTest {
+public class ReplicatorTest extends ReplicateBaseTest {
 
-    private static Properties props;
-    private static Database db1;
-
-    private static Database db2;
-
-    private static String db1URI;
-    private static String db2URI;
-    private CloudantClient account;
-
-    @Before
-    public void setUp() {
-        account = CloudantClientHelper.getClient();
-        db1 = account.database("lightcouch-db-test", true);
-        db1URI = CloudantClientHelper.SERVER_URI.toString() + "/lightcouch-db-test";
-
-
-        db2 = account.database("lightcouch-db-test-2", true);
-        db1.syncDesignDocsWithDb();
-        db2.syncDesignDocsWithDb();
-
-
-        db2URI = CloudantClientHelper.SERVER_URI.toString() + "/lightcouch-db-test-2";
-
-    }
-
-    @After
-    public void tearDown() {
-        account.deleteDB("lightcouch-db-test");
-        account.deleteDB("lightcouch-db-test-2");
-        account.shutdown();
-    }
-
+    //TODO Enable in next PR with Rich's 52593-replicate-tests branch
+    @Ignore
     @Test
     public void replication() throws Exception {
         Response response = account.replicator()
@@ -85,6 +51,7 @@ public class ReplicatorTest {
         Utils.removeReplicatorTestDoc(account, response.getId());
     }
 
+    @Ignore
     @Test
     public void replication_filteredWithQueryParams() throws Exception {
         Map<String, Object> queryParams = new HashMap<String, Object>();
@@ -129,6 +96,7 @@ public class ReplicatorTest {
         Utils.removeReplicatorTestDoc(account, response.getId());
     }
 
+    @Ignore
     @Test
     public void replication_conflict() throws Exception {
         String docId = Utils.generateUUID();

@@ -20,48 +20,35 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.generateUUID;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
-import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getStream;
 import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
 import com.cloudant.client.org.lightcouch.internal.GsonHelper;
+import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
+import com.cloudant.http.HttpConnectionRequestInterceptor;
+import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.Header;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.cookie.BasicClientCookie2;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.util.EntityUtils;
-import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -69,7 +56,6 @@ import java.util.List;
  *
  * @author Ahmed Yehia
  * @see CouchDbClient
- * @see CouchDbClientAndroid
  */
 
 public abstract class CouchDbClientBase {
@@ -77,85 +63,49 @@ public abstract class CouchDbClientBase {
     static final Log log = LogFactory.getLog(CouchDbClient.class);
 
     private URI baseURI;
-    final HttpClient httpClient;
-    final HttpHost host;
+
     private Gson gson;
 
-    final CookieStore cookies = new BasicCookieStore();
+    private Map<String, String> customHeaders;
+
+    private List<HttpConnectionRequestInterceptor> requestInterceptors;
+    private List<HttpConnectionResponseInterceptor> responseInterceptors;
 
     CouchDbClientBase() {
         this(new CouchDbConfig());
     }
 
     CouchDbClientBase(CouchDbConfig config) {
-
         final CouchDbProperties props = config.getProperties();
-        if (props.getAuthCookie() != null) {
-            setCookie(props);
-        }
-        this.httpClient = createHttpClient(props);
-        this.host = new HttpHost(props.getHost(), props.getPort(), props.getProtocol());
+
         this.gson = GsonHelper.initGson(new GsonBuilder()).create();
         final String path = props.getPath() != null ? props.getPath() : "";
-        this.baseURI = buildUri().scheme(props.getProtocol()).host(props.getHost()).port(props
-                .getPort()).path("/").path(path).build();
-
-        // for the authentication using previous session's cookie . do not get the cookie
-        if (props.getAuthCookie() == null) {
-            getCookie(props);
+        //Add username and password if authentication info exists
+        if (props.getUserInfo() != null && !props.getUserInfo().isEmpty()) {
+            this.baseURI = buildUri().scheme(props.getProtocol()).userInfo(props.getUserInfo())
+                    .host(props.getHost()).port(props.getPort())
+                    .path("/").path(path).build();
+        } else {
+            this.baseURI = buildUri().scheme(props.getProtocol()).host(props.getHost()).port(props
+                    .getPort()).path("/").path(path).build();
         }
+
+        this.requestInterceptors = new ArrayList<HttpConnectionRequestInterceptor>();
+        this.responseInterceptors = new ArrayList<HttpConnectionResponseInterceptor>();
+
+        if(props.getRequestInterceptors() != null) {
+            this.requestInterceptors.addAll(props.getRequestInterceptors());
+        }
+
+        if(props.getResponseInterceptors() != null) {
+            this.responseInterceptors.addAll(props.getResponseInterceptors());
+        }
+
+
         props.clearPassword();
     }
 
-
-    private void setCookie(CouchDbProperties props) {
-        BasicClientCookie2 cookie = new BasicClientCookie2("AuthSession", props.getAuthCookie());
-        cookie.setDomain(props.getHost());
-        cookies.addCookie(cookie);
-
-    }
-
-
-    private void getCookie(final CouchDbProperties props) {
-        if (props.getUsername() == null || props.getPassword() == null) {
-            return;
-        }
-        URI uri = buildUri(baseURI).path("_session").build();
-        String body = "name=" + props.getUsername() + "&password=" + props.getPassword();
-
-        HttpResponse response = null;
-        try {
-            response = executeRequest(CouchDbUtil.createPost(uri, body,
-                    "application/x-www-form-urlencoded"));
-            for (Header h : response.getHeaders("set-cookie")) {
-                if (h.getName().equalsIgnoreCase("AuthSession")) {
-                    cookies.addCookie(new BasicClientCookie2("AuthSession", h.getValue()));
-                    break;
-                }
-            }
-        } finally {
-            close(response);
-        }
-
-
-    }
     // Client(s) provided implementation
-
-    /**
-     * @return {@link HttpClient} instance for HTTP request execution.
-     */
-    abstract HttpClient createHttpClient(CouchDbProperties properties);
-
-
-    /**
-     * @return {@link HttpContext} instance for HTTP request execution.
-     */
-    abstract HttpContext createContext();
-
-    /**
-     * Shuts down the connection manager used by this client instance.
-     */
-    abstract void shutdown();
 
     /**
      * @return The base URI.
@@ -164,26 +114,13 @@ public abstract class CouchDbClientBase {
         return baseURI;
     }
 
-    /**
-     * @return The cookie.
-     */
-    public String getCookie() {
-        List<Cookie> cookies2 = cookies.getCookies();
-        for (Cookie cookie : cookies2) {
-            if (cookie.getName().equalsIgnoreCase("AuthSession")) {
-                return cookie.getValue();
-            }
-        }
-        return null;
-    }
-
 
     /**
      * Get an instance of Database class to perform DB operations
      *
      * @param name   The name of the database
      * @param create Should the database be created if it doesn't exist
-     * @throws If the database doesn't exist and create is false, an exception is raised
+     * @throws Exception If the database doesn't exist and create is false, an exception is raised
      */
     abstract CouchDatabaseBase database(String name, boolean create);
 
@@ -220,18 +157,15 @@ public abstract class CouchDbClientBase {
      */
     public void createDB(String dbName) {
         assertNotEmpty(dbName, "dbName");
-        InputStream getresp = null;
-        HttpResponse putresp = null;
+        InputStream is = null;
         final URI uri = buildUri(getBaseUri()).path(dbName).build();
         try {
-            getresp = get(uri);
+            is = get(uri);
         } catch (NoDocumentException e) { // db doesn't exist
-            final HttpPut put = new HttpPut(uri);
-            putresp = executeRequest(put);
+            is = put(uri);
             log.info(String.format("Created Database: '%s'", dbName));
         } finally {
-            close(getresp);
-            close(putresp);
+            close(is);
         }
     }
 
@@ -307,20 +241,29 @@ public abstract class CouchDbClientBase {
 
     /**
      * Executes a HTTP request.
-     * <p><b>Note</b>: The response must be closed after use to release the connection.
+     * <p><b>Note</b>: The stream must be closed after use to release the connection.
      *
-     * @param request The HTTP request to execute.
-     * @return {@link HttpResponse}
+     * @param connection The HTTP request to execute.
+     * @return Class type of object T (i.e. {@link Response}
      */
-    public HttpResponse executeRequest(HttpRequestBase request) {
+    public <T> T executeRequest(HttpConnection connection, Class<T> classType) {
+        InputStream is = null;
         try {
-            return httpClient.execute(host, request, createContext());
-        } catch (IOException e) {
-            request.abort();
-            throw new CouchDbException("Error executing request. ", e);
+            is = this.executeToInputStream(connection);
+            if(classType.isInstance(InputStream.class)) {
+                return (T)is;
+            } else {
+                return getResponse(is, classType, getGson());
+            }
+        } catch (CouchDbException e) {
+            if (e.getStatusCode() == 409) {
+                throw new DocumentConflictException(e.toString());
+            } else {
+                throw e;
+            }
+        } finally {
+            closeQuietly(is);
         }
-
-
     }
 
 
@@ -330,64 +273,92 @@ public abstract class CouchDbClientBase {
      * @return {@link Response}
      */
     Response delete(URI uri) {
-        HttpResponse response = null;
-        try {
-            HttpDelete delete = new HttpDelete(uri);
-            response = executeRequest(delete);
-            return getResponse(response, Response.class, getGson());
-        } finally {
-            close(response);
-        }
+        HttpConnection connection = Http.DELETE(uri);
+        return executeRequest(connection, Response.class);
     }
-
 
     /**
      * Performs a HTTP GET request.
      *
-     * @return {@link InputStream}
+     * @return Input stream with response
      */
-    InputStream get(HttpGet httpGet) {
-        HttpResponse response = executeRequest(httpGet);
-        return getStream(response);
+    public InputStream get(URI uri) {
+        HttpConnection httpConnection = Http.GET(uri);
+        return executeRequest(httpConnection);
     }
 
     /**
      * Performs a HTTP GET request.
      *
-     * @return {@link InputStream}
-     */
-    InputStream get(URI uri) {
-        HttpGet get = new HttpGet(uri);
-        get.addHeader("Accept", "application/json");
-        return get(get);
-    }
-
-    /**
-     * Performs a HTTP GET request.
-     *
-     * @return An object of type T
+     * @return Class type of object T (i.e. {@link Response}
      */
     public <T> T get(URI uri, Class<T> classType) {
-        InputStream in = null;
-        try {
-            in = get(uri);
-            return getGson().fromJson(new InputStreamReader(in, "UTF-8"), classType);
-        } catch (UnsupportedEncodingException e) {
-            // This should never happen as every implementation of the java platform is required
-            // to support UTF-8.
-            throw new RuntimeException(e);
-        } finally {
-            close(in);
+        HttpConnection connection = Http.GET(uri);
+        if(classType.isInstance(HttpConnection.class)) {
+            return (T)connection;
+        } else {
+            //return executeToJsonObject(connection, classType);
+            return executeRequest(connection, classType);
         }
+
     }
 
     /**
      * Performs a HTTP HEAD request.
      *
-     * @return {@link HttpResponse}
+     * @return {@link Response}
      */
-    HttpResponse head(URI uri) {
-        return executeRequest(new HttpHead(uri));
+    InputStream head(URI uri) {
+        HttpConnection connection = Http.HEAD(uri);
+        return executeRequest(connection);
+    }
+
+    /**
+     * Performs a HTTP PUT request, saves or updates a document.
+     *
+     * @return Input stream with response
+     */
+    InputStream put(URI uri) {
+        return put(uri, null);
+    }
+
+    /**
+     * Performs a HTTP PUT request with content type, saves or updates a document.
+     *
+     * @return Input stream with response
+     */
+    InputStream put(URI uri, String contentType) {
+        HttpConnection connection = null;
+        if(contentType != null) {
+            connection = Http.PUT(uri, contentType);
+        } else {
+            connection = Http.PUT(uri, "application/json");
+        }
+
+        return executeRequest(connection);
+    }
+
+    /**
+     * Performs a HTTP PUT request, saves an attachment.
+     *
+     * @return {@link Response}
+     */
+    Response put(URI uri, InputStream instream, String contentType) {
+        HttpConnection connection;
+        try {
+            connection = Http.PUT(uri, contentType);
+
+            StringWriter writer = new StringWriter();
+            IOUtils.copy(instream, writer, "UTF-8");
+            connection.setRequestBody(writer.toString());
+            writer.close();
+
+            return executeRequest(connection, Response.class);
+        } catch (IOException e) {
+            //Error happened while copying stream to string
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
@@ -397,7 +368,6 @@ public abstract class CouchDbClientBase {
      */
     Response put(URI uri, Object object, boolean newEntity) {
         assertNotEmpty(object, "object");
-        HttpResponse response = null;
         try {
             final JsonObject json = getGson().toJsonTree(object).getAsJsonObject();
             String id = getAsString(json, "_id");
@@ -409,43 +379,41 @@ public abstract class CouchDbClientBase {
                 assertNotEmpty(id, "id");
                 assertNotEmpty(rev, "rev");
             }
-            final HttpPut put = new HttpPut(buildUri(uri).pathToEncode(id).buildEncoded());
-            setEntity(put, json.toString());
-            response = executeRequest(put);
-            return getResponse(response, Response.class, getGson());
-        } finally {
-            close(response);
+            HttpConnection connection = Http.PUT(buildUri(uri).pathToEncode(id).buildEncoded(),
+                    "application/json");
+            connection.setRequestBody(json.toString());
+
+            return executeRequest(connection, Response.class);
+        } catch (CouchDbException e) {
+            if (e.getStatusCode() == 409) {
+                throw new DocumentConflictException(e.toString());
+            } else {
+                throw e;
+            }
         }
     }
 
     /**
-     * Performs a HTTP PUT request, saves an attachment.
+     * Performs a HTTP POST request with JSON request body.
      *
-     * @return {@link Response}
+     * @return Input stream with response
      */
-    Response put(URI uri, InputStream instream, String contentType) {
-        HttpResponse response = null;
-        try {
-            final HttpPut httpPut = new HttpPut(uri);
-            final InputStreamEntity entity = new InputStreamEntity(instream, -1);
-            entity.setContentType(contentType);
-            httpPut.setEntity(entity);
-            response = executeRequest(httpPut);
-            return getResponse(response, Response.class, getGson());
-        } finally {
-            close(response);
+    InputStream post(URI uri, String json) {
+        HttpConnection connection = Http.POST(uri,
+                "application/json");
+        if(json != null && !json.isEmpty()) {
+            connection.setRequestBody(json);
         }
+        return executeRequest(connection);
     }
 
     /**
      * Performs a HTTP POST request.
      *
-     * @return {@link HttpResponse}
+     * @return Input stream with response
      */
-    HttpResponse post(URI uri, String json) {
-        HttpPost post = new HttpPost(uri);
-        setEntity(post, json);
-        return executeRequest(post);
+    InputStream post(URI uri) {
+        return post(uri, null);
     }
 
 
@@ -455,13 +423,13 @@ public abstract class CouchDbClientBase {
     /**
      * Sets a JSON String as a request entity.
      *
-     * @param httpRequest The request to set entity.
+     * @param connection The request to set entity.
      * @param json        The JSON String to set.
      */
-    private void setEntity(HttpEntityEnclosingRequestBase httpRequest, String json) {
-        StringEntity entity = new StringEntity(json, "UTF-8");
-        entity.setContentType("application/json");
-        httpRequest.setEntity(entity);
+    public HttpConnection setEntity(HttpConnection connection, String json) {
+        connection.requestProperties.put("Content-Type", "application/json");
+        connection.setRequestBody(json);
+        return connection;
     }
 
     /**
@@ -469,28 +437,27 @@ public abstract class CouchDbClientBase {
      *
      * @param response The HTTP response.
      */
-    void validate(HttpResponse response) throws IOException {
-        final int code = response.getStatusLine().getStatusCode();
+    void validate(HttpConnection response) throws IOException {
+        final int code = response.getConnection().getResponseCode();
         if (code == 200 || code == 201 || code == 202) { // success (ok | created | accepted)
             return;
         }
-        String reason = response.getStatusLine().getReasonPhrase();
+        String reason = response.getConnection().getResponseMessage();
         switch (code) {
-            case HttpStatus.SC_NOT_FOUND: {
+            case HttpURLConnection.HTTP_NOT_FOUND: {
                 throw new NoDocumentException(reason);
             }
-            case HttpStatus.SC_CONFLICT: {
+            case HttpURLConnection.HTTP_CONFLICT: {
                 throw new DocumentConflictException(reason);
             }
-            case HttpStatus.SC_PRECONDITION_FAILED: {
+            case HttpURLConnection.HTTP_PRECON_FAILED: {
                 throw new PreconditionFailedException(reason);
             }
             default: { // other errors: 400 | 401 | 500 etc.
-                throw new CouchDbException(reason += EntityUtils.toString(response.getEntity()));
+                throw new CouchDbException(reason);
             }
         }
     }
-
 
     /**
      * Sets a {@link GsonBuilder} to create {@link Gson} instance.
@@ -512,17 +479,114 @@ public abstract class CouchDbClientBase {
     /**
      * Executes a HTTP request and return a domain object
      *
-     * @param request  The HTTP request to execute.
-     * @param Class<T> class of domain object to return
-     * @return <T> T
+     * @param connection  The HTTP connection to execute.
+     * @return <T> T json object
      */
-    public <T> T executeRequest(HttpRequestBase request, Class<T> classType) {
-        HttpResponse response = null;
+    public InputStream executeRequest(HttpConnection connection) {
+        return executeToInputStream(connection);
+    }
+
+    // - if 2xx then return stream
+    // - map 404 to NoResourceException
+    // - if there's a couch error returned as json, un-marshall and throw
+    // - anything else, just throw the IOException back, use the cause part of the exception?
+
+    // it needs to catch eg FileNotFoundException and rethrow to emulate the previous exception handling behaviour
+    private InputStream executeToInputStream(HttpConnection connection) throws CouchDbException {
+
+        // all CouchClient requests want to receive application/json responses
+        connection.requestProperties.put("Accept", "application/json");
+        this.addCustomHeaders(connection);
+        connection.responseInterceptors.addAll(this.responseInterceptors);
+        connection.requestInterceptors.addAll(this.requestInterceptors);
+        InputStream is = null; // input stream - response from server on success
+        InputStream es = null; // error stream - response from server for a 500 etc
+        int code = -1;
+        Throwable cause = null;
+
+        // first try to execute our request and get the input stream with the server's response
+        // we want to catch IOException because HttpUrlConnection throws these for non-success
+        // responses (eg 404 throws a FileNotFoundException) but we need to map to our own
+        // specific exceptions
         try {
-            response = executeRequest(request);
-            return getResponse(response, classType, getGson());
+            is = connection.execute().responseAsInputStream();
+        } catch (IOException ioe) {
+            cause = ioe;
+        }
+
+        try {
+            JsonObject errorJsonMessage = null;
+            if(cause != null && connection.getConnection().getErrorStream() != null) {
+                String errorString = IOUtils.toString(connection.getConnection()
+                        .getErrorStream(), "UTF-8");
+                errorJsonMessage = gson.fromJson(errorString, JsonObject.class);
+            }
+
+            //User errorStream to get error message if database does not exist or already exists
+            String response = "";
+            if(errorJsonMessage != null && errorJsonMessage.has("reason")) {
+                response = errorJsonMessage.toString();
+            } else {
+                response = connection.getConnection().getResponseMessage();
+            }
+            code = connection.getConnection().getResponseCode();
+            // everything ok? return the stream
+            if (code / 100 == 2) { // success [200,299]
+                return is;
+            } else if (code == 404) {
+                throw new NoDocumentException(response, cause);
+            } else if(code == 412) {
+                //Database already created
+                return is;
+            } else {
+                es = connection.getConnection().getErrorStream();
+
+                CouchDbException ex = getGson().fromJson(new InputStreamReader(es),
+                        CouchDbException.class);
+                if (ex == null && errorJsonMessage != null) {
+                    //Try again with error json message
+                    try {
+                        ex = getGson().fromJson(errorJsonMessage,
+                                CouchDbException.class);
+                        ex.setStatusCode(code);
+                    } catch (NullPointerException e) {
+                        //Create new Exception from scratch
+                        ex = new CouchDbException(response, code);
+                    }
+
+                }
+                throw ex;
+            }
+        } catch (IOException ioe) {
+            throw new CouchDbException("Error retrieving server response", ioe, code);
         } finally {
-            close(response);
+            if (es != null) {
+                try {
+                    es.close();
+                } catch (IOException ioe) {
+                    ;
+                }
+            }
+        }
+    }
+
+    /**
+     * Adds headers from CouchConfig to {@code connection}.
+     * @param connection connection to add headers to.
+     */
+    public void addCustomHeaders(HttpConnection connection) {
+        if (this.customHeaders != null) {
+            connection.requestProperties.putAll(this.customHeaders);
+        }
+    }
+
+    private void closeQuietly(InputStream is) {
+        try {
+            if (is != null) {
+                is.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

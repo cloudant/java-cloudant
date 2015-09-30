@@ -19,10 +19,10 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.internal.util.QueryParameter;
 import com.cloudant.client.internal.util.QueryParameters;
 import com.cloudant.client.org.lightcouch.internal.URIBuilder;
+import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-
-import org.apache.http.client.methods.HttpGet;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -263,12 +263,12 @@ public class ViewQueryParameters<K, V> extends QueryParameters {
 
     /* Parameter output methods */
 
-    public HttpGet asGetRequest() {
+    public HttpConnection asGetRequest() {
         URIBuilder builder = getViewURIBuilder();
         for (Map.Entry<String, Object> queryParameter : processParameters(gson).entrySet()) {
             builder.query(queryParameter.getKey(), queryParameter.getValue());
         }
-        return new HttpGet(builder.buildEncoded());
+        return Http.GET(builder.buildEncoded());
     }
 
     protected URIBuilder getViewURIBuilder() {

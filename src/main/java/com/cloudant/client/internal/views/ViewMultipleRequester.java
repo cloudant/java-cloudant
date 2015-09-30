@@ -16,11 +16,10 @@ package com.cloudant.client.internal.views;
 
 import com.cloudant.client.api.views.ViewMultipleRequest;
 import com.cloudant.client.api.views.ViewResponse;
+import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,10 +44,9 @@ public class ViewMultipleRequester<K, V> implements ViewMultipleRequest<K, V> {
         JsonObject queryJson = new JsonObject();
         queryJson.add("queries", queries);
         //construct and execute the POST request
-        HttpPost post = new HttpPost(viewQueryParameters.getViewURIBuilder().buildEncoded());
-        StringEntity entity = new StringEntity(queryJson.toString(), "UTF-8");
-        entity.setContentType("application/json");
-        post.setEntity(entity);
+        HttpConnection post = Http.POST(viewQueryParameters.getViewURIBuilder().buildEncoded(),
+                "application/json");
+        post.setRequestBody(queryJson.toString());
         JsonObject jsonResponse = ViewRequester.executeRequestWithResponseAsJson
                 (viewQueryParameters, post);
         //loop the returned array creating the ViewResponse objects

@@ -36,4 +36,44 @@ public class CouchDbException extends RuntimeException {
     public CouchDbException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    private int statusCode;
+    private String error = "Unknown error";
+    private String reason = "Unkown reason";
+
+    public CouchDbException() {};
+
+    public CouchDbException(String message, int statusCode) {
+        super(message);
+        this.statusCode = statusCode;
+    }
+
+    public CouchDbException(String message, Throwable cause, int statusCode) {
+        super(message, cause);
+        this.statusCode = statusCode;
+    }
+
+    public int getStatusCode() {
+        return this.statusCode;
+    }
+
+    public void setStatusCode(int statusCode) {
+        this.statusCode = statusCode;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
 }

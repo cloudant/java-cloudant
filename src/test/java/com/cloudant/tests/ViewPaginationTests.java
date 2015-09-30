@@ -70,7 +70,6 @@ public class ViewPaginationTests {
     @After
     public void tearDown() {
         account.deleteDB(dbName);
-        account.shutdown();
     }
 
     /**

@@ -21,7 +21,6 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.generateUU
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponseList;
-import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getStream;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.streamToString;
 import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
@@ -31,9 +30,6 @@ import com.google.gson.reflect.TypeToken;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPut;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -189,7 +185,7 @@ public abstract class CouchDatabaseBase {
      */
     public boolean contains(String id) {
         assertNotEmpty(id, "id");
-        HttpResponse response = null;
+        InputStream response = null;
         try {
             response = client.head(buildUri(getDBUri()).path(id).build());
         } catch (NoDocumentException e) {
@@ -222,7 +218,7 @@ public abstract class CouchDatabaseBase {
      */
     public Response post(Object object) {
         assertNotEmpty(object, "object");
-        HttpResponse response = null;
+        InputStream response = null;
         try {
             URI uri = buildUri(getDBUri()).build();
             response = client.post(uri, getGson().toJson(object));
@@ -239,7 +235,7 @@ public abstract class CouchDatabaseBase {
      */
     public void batch(Object object) {
         assertNotEmpty(object, "object");
-        HttpResponse response = null;
+        InputStream response = null;
         try {
             URI uri = buildUri(getDBUri()).query("batch", "ok").build();
             response = client.post(uri, getGson().toJson(object));
@@ -301,7 +297,7 @@ public abstract class CouchDatabaseBase {
      */
     public List<Response> bulk(List<?> objects, boolean allOrNothing) {
         assertNotEmpty(objects, "objects");
-        HttpResponse response = null;
+        InputStream response = null;
         try {
             final String allOrNothingVal = allOrNothing ? "\"all_or_nothing\": true, " : "";
             final URI uri = buildUri(getDBUri()).path("_bulk_docs").build();
@@ -380,8 +376,8 @@ public abstract class CouchDatabaseBase {
         final String[] v = updateHandlerUri.split("/");
         final String path = String.format("_design/%s/_update/%s/", v[0], v[1]);
         final URI uri = buildUri(getDBUri()).path(path).path(docId).query(query).build();
-        final HttpResponse response = client.executeRequest(new HttpPut(uri));
-        return streamToString(getStream(response));
+        final InputStream response = client.put(uri);
+        return streamToString(response);
     }
 
     /**
@@ -405,8 +401,8 @@ public abstract class CouchDatabaseBase {
         final String path = String.format("_design/%s/_update/%s/", v[0], v[1]);
         final URI uri = buildUri(getDBUri()).path(path).pathToEncode(docId).query(params)
                 .buildEncoded();
-        final HttpResponse response = client.executeRequest(new HttpPut(uri));
-        return streamToString(getStream(response));
+        final InputStream response = client.put(uri);
+        return streamToString(response);
     }
 
 
@@ -440,7 +436,7 @@ public abstract class CouchDatabaseBase {
      * Triggers a database <i>compact</i> request.
      */
     public void compact() {
-        HttpResponse response = null;
+        InputStream response = null;
         try {
             response = client.post(buildUri(getDBUri()).path("_compact").build(), "");
         } finally {
@@ -452,7 +448,7 @@ public abstract class CouchDatabaseBase {
      * Requests the database commits any recent changes to disk.
      */
     public void ensureFullCommit() {
-        HttpResponse response = null;
+        InputStream response = null;
         try {
             response = client.post(buildUri(getDBUri()).path("_ensure_full_commit").build(), "");
         } finally {
@@ -470,10 +466,9 @@ public abstract class CouchDatabaseBase {
 
 
     private void create() {
-        HttpResponse putresp = null;
+        InputStream putresp = null;
         try {
-            final HttpPut put = new HttpPut(dbURI);
-            putresp = client.executeRequest(put);
+            putresp = client.put(dbURI);
             log.info(String.format("Created Database: '%s'", dbName));
         } catch (PreconditionFailedException e) {
             // The PreconditionFailedException is thrown if the database already existed.
@@ -489,12 +484,6 @@ public abstract class CouchDatabaseBase {
         return client.getGson();
     }
 
-
-    InputStream get(HttpGet httpGet) {
-        return client.get(httpGet);
-    }
-
-
     <T> T get(URI uri, Class<T> classType) {
         return client.get(uri, classType);
     }
@@ -504,7 +493,7 @@ public abstract class CouchDatabaseBase {
         return client.get(uri);
     }
 
-    HttpResponse post(URI uri, String json) {
+    InputStream post(URI uri, String json) {
         return client.post(uri, json);
     }
 }

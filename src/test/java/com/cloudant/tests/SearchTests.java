@@ -66,7 +66,6 @@ public class SearchTests {
     @After
     public void tearDown() {
         account.deleteDB("animaldb");
-        account.shutdown();
     }
 
 

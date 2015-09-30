@@ -23,6 +23,8 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
+import com.cloudant.client.org.lightcouch.DocumentConflictException;
+import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.test.main.RequiresCouch;
 import com.cloudant.test.main.RequiresDB;
 import com.google.gson.JsonArray;
@@ -32,8 +34,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import com.cloudant.client.org.lightcouch.DocumentConflictException;
-import com.cloudant.client.org.lightcouch.NoDocumentException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,7 +58,6 @@ public class DocumentsCRUDTest {
     @After
     public void tearDown() {
         account.deleteDB("lightcouch-db-test");
-        account.shutdown();
     }
 
 

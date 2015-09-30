@@ -50,7 +50,6 @@ public class DBServerTest {
     @After
     public void tearDown() {
         account.deleteDB("lightcouch-db-test");
-        account.shutdown();
     }
 
 

@@ -15,39 +15,6 @@
 
 package com.cloudant.client.org.lightcouch;
 
-import org.apache.http.Consts;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.RequestLine;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.client.utils.HttpClientUtils;
-import org.apache.http.config.ConnectionConfig;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContexts;
-import org.apache.http.conn.ssl.TrustStrategy;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -89,11 +56,8 @@ import javax.net.ssl.SSLSocketFactory;
  * .replicator()}
  * <p/>
  * <p/>
- * <p>At the end of a client usage; it's useful to call: {@link #shutdown()} to ensure proper
- * release of resources.
  *
  * @author Ahmed Yehia
- * @see CouchDbClientAndroid
  * @since 0.0.2
  */
 public class CouchDbClient extends CouchDbClientBase {
@@ -189,131 +153,7 @@ public class CouchDbClient extends CouchDbClientBase {
         super(new CouchDbConfig(properties));
     }
 
-    /**
-     * @return {@link CloseableHttpClient} instance.
-     */
-    @Override
-    HttpClient createHttpClient(CouchDbProperties props) {
-        try {
-            Registry<ConnectionSocketFactory> registry = createRegistry(props);
-            PoolingHttpClientConnectionManager ccm = createConnectionManager(props, registry);
-            HttpClientBuilder clientBuilder = HttpClients.custom().setUserAgent(USER_AGENT)
-                    .setConnectionManager(ccm)
-                    .setDefaultConnectionConfig(ConnectionConfig.custom()
-                            .setCharset(Consts.UTF_8).build())
-                    .setDefaultRequestConfig(RequestConfig.custom()
-                            .setSocketTimeout(props.getSocketTimeout())
-                            .setConnectTimeout(props.getConnectionTimeout()).build());
-            if (props.getProxyHost() != null) {
-                clientBuilder.setProxy(new HttpHost(props.getProxyHost(), props.getProxyPort()));
-            }
-            clientBuilder.setDefaultCookieStore(cookies); // use AUTH cookies
-            if (props.getUsername() != null) {
-                // this one is for non account endpoints.
-                CredentialsProvider credsProvider = new BasicCredentialsProvider();
-                credsProvider.setCredentials(new AuthScope(props.getHost(),
-                                props.getPort()),
-                        new UsernamePasswordCredentials(props.getUsername(),
-                                props.getPassword()));
-                clientBuilder.setDefaultCredentialsProvider(credsProvider);
-                //props.clearPassword();
-            }
-            registerInterceptors(clientBuilder);
-            return clientBuilder.build();
-        } catch (Exception e) {
-            throw new IllegalStateException("Error Creating HTTPClient: ", e);
-        }
-    }
 
-    @Override
-    HttpContext createContext() {
-
-        AuthCache authCache = new BasicAuthCache();
-        authCache.put(host, new BasicScheme());
-        HttpContext context = new BasicHttpContext();
-        context.setAttribute(HttpClientContext.AUTH_CACHE, authCache);
-        return context;
-    }
-
-
-    private PoolingHttpClientConnectionManager createConnectionManager(
-            CouchDbProperties props, Registry<ConnectionSocketFactory> registry) {
-        PoolingHttpClientConnectionManager ccm = new PoolingHttpClientConnectionManager(registry);
-        if (props.getMaxConnections() != 0) {
-            ccm.setMaxTotal(props.getMaxConnections());
-            ccm.setDefaultMaxPerRoute(props.getMaxConnections());
-        }
-        return ccm;
-    }
-
-    private Registry<ConnectionSocketFactory> createRegistry(CouchDbProperties props) throws
-            KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
-        RegistryBuilder<ConnectionSocketFactory> registry = RegistryBuilder
-                .<ConnectionSocketFactory>create();
-
-        if (props.isSSLAuthenticationDisabled()) {
-            // No SSL authentication.
-            // No need for a custom SSLSocketFactory in this case.
-            SSLContext sslcontext = SSLContexts.custom()
-                    .loadTrustMaterial(null, new TrustStrategy() {
-                        public boolean isTrusted(X509Certificate[] chain, String authType)
-                                throws CertificateException {
-                            return true;
-                        }
-                    }).build();
-
-            registry.register("https", new SSLConnectionSocketFactory(sslcontext,
-                    SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER));
-        } else {
-            // With SSL authentication enabled.
-            // A custom SSLSocketFactory can be set to enhance security in specific
-            // environments.
-            SSLSocketFactory factory = props.getAuthenticatedModeSSLSocketFactory();
-            if (factory != null) {
-                registry.register(
-                        "https",
-                        new SSLConnectionSocketFactory(factory,
-                                SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER));
-            } else {
-                // Use the default SSL configuration and truststore of the JRE.
-                registry.register(
-                        "https",
-                        new SSLConnectionSocketFactory(SSLContexts.createDefault(),
-                                SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER));
-            }
-        }
-
-        //always return a plain http socket factory as well as whatever SSL was registered.
-        return registry.register("http", PlainConnectionSocketFactory.INSTANCE).build();
-
-    }
-
-    /**
-     * Adds request/response interceptors for logging and validation.
-     *
-     * @param clientBuilder
-     */
-    private void registerInterceptors(HttpClientBuilder clientBuilder) {
-        clientBuilder.addInterceptorFirst(new HttpRequestInterceptor() {
-            public void process(final HttpRequest request,
-                                final HttpContext context) throws IOException {
-                if (log.isDebugEnabled()) {
-                    RequestLine req = request.getRequestLine();
-                    log.debug("> " + req.getMethod() + " " + URLDecoder.decode(req.getUri(),
-                            "UTF-8"));
-                }
-            }
-        });
-        clientBuilder.addInterceptorFirst(new HttpResponseInterceptor() {
-            public void process(final HttpResponse response,
-                                final HttpContext context) throws IOException {
-                if (log.isDebugEnabled()) {
-                    log.debug("< Status: " + response.getStatusLine().getStatusCode());
-                }
-                validate(response);
-            }
-        });
-    }
 
 
     /**
@@ -325,9 +165,5 @@ public class CouchDbClient extends CouchDbClientBase {
      */
     public CouchDatabase database(String name, boolean create) {
         return new CouchDatabase(this, name, create);
-    }
-
-    public void shutdown() {
-        HttpClientUtils.closeQuietly(this.httpClient);
     }
 }
