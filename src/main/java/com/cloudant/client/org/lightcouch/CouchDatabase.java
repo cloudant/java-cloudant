@@ -22,7 +22,7 @@ package com.cloudant.client.org.lightcouch;
  */
 public class CouchDatabase extends CouchDatabaseBase {
 
-    CouchDatabase(CouchDbClientBase client, String name, boolean create) {
+    CouchDatabase(CouchDbClient client, String name, boolean create) {
         super(client, name, create);
     }
 

@@ -17,7 +17,6 @@ package com.cloudant.client.org.lightcouch;
 
 import com.google.gson.Gson;
 
-import org.apache.http.client.methods.HttpGet;
 import com.cloudant.client.org.lightcouch.ChangesResult.Row;
 import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
 import com.cloudant.client.org.lightcouch.internal.URIBuilder;
@@ -67,7 +66,6 @@ import java.net.URI;
 public class Changes {
 
     private BufferedReader reader;
-    private HttpGet httpGet;
     private Row nextRow;
     private boolean stop;
 
@@ -87,8 +85,7 @@ public class Changes {
      */
     public Changes continuousChanges() {
         final URI uri = uriBuilder.query("feed", "continuous").build();
-        httpGet = new HttpGet(uri);
-        final InputStream in = dbc.get(httpGet);
+        final InputStream in = dbc.get(uri);
         try {
             final InputStreamReader is = new InputStreamReader(in, "UTF-8");
             setReader(new BufferedReader(is));
@@ -215,7 +212,6 @@ public class Changes {
     }
 
     private void terminate() {
-        httpGet.abort();
         CouchDbUtil.close(getReader());
     }
 }

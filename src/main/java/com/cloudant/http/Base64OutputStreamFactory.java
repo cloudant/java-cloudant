@@ -23,8 +23,8 @@ import java.lang.reflect.Constructor;
 public class Base64OutputStreamFactory {
     public static OutputStream get(OutputStream os) {
         try {
-            Class androidBase64 = Class.forName("android.util.Base64OutputStream");
-            if (androidBase64 != null) {
+            Class androidBase64 = null;
+            if ((androidBase64 = getAndroidBase64Class()) != null) {
                 Constructor ctor = androidBase64.getDeclaredConstructor(OutputStream.class, int.class);
                 // 2 = android.util.BASE64.NO_WRAP http://developer.android.com/reference/android/util/Base64.html#NO_WRAP
                 return (OutputStream)ctor.newInstance(os, 2);
@@ -36,6 +36,16 @@ public class Base64OutputStreamFactory {
         } catch (Exception e) {
             // TODO log
             throw new RuntimeException(e);
+        }
+    }
+
+    //If the Android Base64OutputStream class exists, return the class.  Else, return null.
+    private static Class getAndroidBase64Class() {
+        try  {
+            Class androidBase64 = Class.forName("android.util.Base64OutputStream");
+            return androidBase64;
+        }  catch (final ClassNotFoundException e) {
+            return null;
         }
     }
 }
