@@ -32,7 +32,7 @@ public class AgentHelper {
     static {
         //default to an unknown version java-cloudant-default, but hopefully generate something
         //more specific from a properties file
-        String ua = "java-cloudant-default";
+        String ua = "java-cloudant";
         String version = "unknown";
         final URL url = CouchDbClient.class.getClassLoader().getResource("client.properties");
         final Properties properties = new Properties();

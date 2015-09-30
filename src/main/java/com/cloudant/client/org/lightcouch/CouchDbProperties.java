@@ -15,6 +15,11 @@
 
 package com.cloudant.client.org.lightcouch;
 
+import com.cloudant.http.HttpConnectionRequestInterceptor;
+import com.cloudant.http.HttpConnectionResponseInterceptor;
+
+import java.util.List;
+
 import javax.net.ssl.SSLSocketFactory;
 
 /**
@@ -44,6 +49,9 @@ public class CouchDbProperties {
     private int proxyPort;
     private boolean disableSSLAuthentication;
     private SSLSocketFactory authenticatedModeSSLSocketFactory;
+
+    private List<HttpConnectionRequestInterceptor> requestInterceptors;
+    private List<HttpConnectionResponseInterceptor> responseInterceptors;
 
     public CouchDbProperties() {
         // default constructor
@@ -109,6 +117,15 @@ public class CouchDbProperties {
 
     public int getProxyPort() {
         return proxyPort;
+    }
+
+    //Retrieve user’s credentials in URI format
+    public String getUserInfo() {
+        if(username != null && password != null) {
+            return String.format("%s:%s", username, password);
+        } else {
+            return null;
+        }
     }
 
     public CouchDbProperties setProtocol(String protocol) {
@@ -227,6 +244,25 @@ public class CouchDbProperties {
      */
     public CouchDbProperties setAuthenticatedModeSSLSocketFactory(SSLSocketFactory factory) {
         this.authenticatedModeSSLSocketFactory = factory;
+        return this;
+    }
+
+    public List<HttpConnectionRequestInterceptor> getRequestInterceptors() {
+        return requestInterceptors;
+    }
+
+    public CouchDbProperties setRequestInterceptors(List<HttpConnectionRequestInterceptor> requestInterceptors) {
+        this.requestInterceptors = requestInterceptors;
+        return this;
+    }
+
+    public List<HttpConnectionResponseInterceptor> getResponseInterceptors() {
+        return responseInterceptors;
+    }
+
+    public CouchDbProperties setResponseInterceptors(List<HttpConnectionResponseInterceptor>
+                                                responseInterceptors) {
+        this.responseInterceptors = responseInterceptors;
         return this;
     }
 }

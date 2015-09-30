@@ -16,7 +16,7 @@ package com.cloudant.client.api;
 
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
-import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponseList;
 import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
@@ -37,17 +37,12 @@ import com.cloudant.client.org.lightcouch.CouchDbProperties;
 import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.Replicator;
 import com.cloudant.client.org.lightcouch.Response;
-import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
+import com.cloudant.http.HttpConnection;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
-
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -129,11 +124,7 @@ import java.util.Map;
  *
  * <h2>Replication</h2>
  * Replication {@link Replication account.replication()} and {@link Replicator account.replicator()}
- *
- * <h2>Shutting down</h2>
- * At the end of a client usage; it's useful to call {@link #shutdown() client.shutdown()} to
- * ensure proper release of resources.
- *
+ * 
  * @author Mario Briggs
  * @since 0.0.1
  */
@@ -217,7 +208,8 @@ public class CloudantClient {
                 h.get("hostname"),
                 new Integer(h.get("port")).intValue(),
                 null, null, null,
-                authCookie);
+                authCookie
+        );
     }
 
     /**
@@ -241,7 +233,6 @@ public class CloudantClient {
                 null, null, connectOptions, authCookie);
     }
 
-
     /**
      * Generate an API key
      *
@@ -249,7 +240,8 @@ public class CloudantClient {
      */
     public ApiKey generateApiKey() {
         URI uri = buildUri(getBaseUri()).path("_api/v2/api_keys").build();
-        return client.executeRequest(createPost(uri, "", ""), ApiKey.class);
+        InputStream response =  client.post(uri, null);
+        return getResponse(response, ApiKey.class, getGson());
     }
 
     /**
@@ -258,10 +250,9 @@ public class CloudantClient {
      * @return List of tasks
      */
     public List<Task> getActiveTasks() {
-        HttpResponse response = null;
-        HttpGet get = new HttpGet(buildUri(getBaseUri()).path("/_active_tasks").build());
+        InputStream response = null;
         try {
-            response = executeRequest(get);
+            response = client.get(buildUri(getBaseUri()).path("_active_tasks").build());
             return getResponseList(response, client.getGson(), Task.class,
                     new TypeToken<List<Task>>() {
                     }.getType());
@@ -271,21 +262,12 @@ public class CloudantClient {
     }
 
     /**
-     * Get the cookieStore
-     *
-     * @return cookieStore
-     */
-    public String getCookie() {
-        return client.getCookie();
-    }
-
-    /**
      * Get the list of nodes in a cluster
      *
      * @return cluster nodes and all nodes
      */
     public Membership getMembership() {
-        Membership membership = client.get(buildUri(getBaseUri()).path("/_membership").build(),
+        Membership membership = client.get(buildUri(getBaseUri()).path("_membership").build(),
                 Membership.class);
         return membership;
     }
@@ -390,15 +372,11 @@ public class CloudantClient {
      * <p><b>Note</b>: The response must be closed after use to release the connection.
      *
      * @param request The HTTP request to execute.
-     * @return {@link HttpResponse}
+     * @return {@link InputStream} with response from {@link HttpConnection}
      */
-    public HttpResponse executeRequest(HttpRequestBase request) {
-
-        HttpResponse response = client.executeRequest(request);
-        return response;
-
+    public InputStream executeRequest(HttpConnection request) {
+        return client.executeToInputStream(request);
     }
-
 
     /**
      * Shuts down the connection manager used by this client instance.
@@ -406,7 +384,6 @@ public class CloudantClient {
     public void shutdown() {
         client.shutdown();
     }
-
 
     /**
      * Request cloudant to send a list of UUIDs.
@@ -474,29 +451,18 @@ public class CloudantClient {
         return client.get(uri, classType);
     }
 
+    /**
+     * Performs a HTTP GET request.
+     *
+     * @return InputStream with response
+     */
+    InputStream get(URI uri) {
+        return client.get(uri);
+    }
 
-    Response put(URI uri, Object object, boolean newEntity, int writeQuorum, Gson gson) {
-        assertNotEmpty(object, "object");
-        HttpResponse response = null;
-        try {
-            final JsonObject json = gson.toJsonTree(object).getAsJsonObject();
-            String id = CouchDbUtil.getAsString(json, "_id");
-            String rev = CouchDbUtil.getAsString(json, "_rev");
-            if (newEntity) { // save
-                CouchDbUtil.assertNull(rev, "rev");
-                id = (id == null) ? CouchDbUtil.generateUUID() : id;
-            } else { // update
-                assertNotEmpty(id, "id");
-                assertNotEmpty(rev, "rev");
-            }
-            final HttpPut put = new HttpPut(buildUri(uri).pathToEncode(id).query("w",
-                    writeQuorum).buildEncoded());
-            CouchDbUtil.setEntity(put, json.toString(), "application/json");
-            response = client.executeRequest(put);
-            return CouchDbUtil.getResponse(response, Response.class, gson);
-        } finally {
-            close(response);
-        }
+
+    Response put(URI uri, Object object, boolean newEntity, int writeQuorum) {
+        return client.put(uri, object, newEntity, writeQuorum);
     }
 
     private Map<String, String> parseAccount(String account) {
@@ -546,6 +512,7 @@ public class CloudantClient {
         if (authCookie == null) {
             props = new CouchDbProperties(scheme, hostname, port,
                     loginUsername, password);
+
         } else {
             props = new CouchDbProperties(scheme, hostname, port,
                     authCookie);

@@ -35,6 +35,7 @@ import java.util.Map;
 @Category(RequiresDB.class)
 public class ReplicatorTest extends ReplicateBaseTest {
 
+    //TODO Enable in next PR with Rich's 52593-replicate-tests branch
     @Test
     public void replication() throws Exception {
         Response response = account.replicator()
