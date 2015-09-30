@@ -10,8 +10,6 @@
 
 package com.cloudant.http;
 
-import com.cloudant.android.Base64OutputStreamFactory;
-
 import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayInputStream;

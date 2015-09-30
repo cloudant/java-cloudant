@@ -12,7 +12,7 @@
  * and limitations under the License.
  */
 
-package com.cloudant.android;
+package com.cloudant.http;
 
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
