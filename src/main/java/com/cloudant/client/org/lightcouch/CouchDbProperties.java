@@ -35,9 +35,9 @@ public class CouchDbProperties {
 
     private String authCookie;
 
-    // optional
-    private int socketTimeout;
-    private int connectionTimeout;
+    // optional, default to 5 minutes
+    private int socketTimeout = 300000;
+    private int connectionTimeout = 300000;
     //default to 6 connections
     private int maxConnections = 6;
     private String proxyHost;
