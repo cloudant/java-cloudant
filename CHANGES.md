@@ -1,6 +1,10 @@
+# Unreleased
+- [CHANGED] Added default of 5 minutes for both connection and socket timeouts instead of waiting forever.
+- [IMPROVED] Upgraded Apache HttpClient from 4.3.3 to 4.3.6.
+
 # 1.2.1 (2015-09-14)
 - [FIXED] `org.apache.http.conn.UnsupportedSchemeException: http protocol is not supported`
-  when using a proxy server with `http` and a server with `https`
+  when using a proxy server with `http` and a server with `https`.
 
 # 1.2.0 (2015-09-10)
 - [FIXED] `NullPointerException` when parsing `{doc: null}` JSON in search or view results.
