@@ -20,7 +20,7 @@ Maven:
 <dependency>
   <groupId>com.cloudant</groupId>
   <artifactId>cloudant-client</artifactId>
-  <version>1.2.1</version>
+  <version>1.2.2</version>
 </dependency>
 
 ~~~
@@ -29,7 +29,7 @@ Gradle:
 
 ```groovy
 dependencies {
-    compile group: 'com.cloudant', name: 'cloudant-client', version:'1.2.1'
+    compile group: 'com.cloudant', name: 'cloudant-client', version:'1.2.2'
 }
 ```
 

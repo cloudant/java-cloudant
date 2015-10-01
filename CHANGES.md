@@ -1,4 +1,4 @@
-# Unreleased
+# 1.2.2 (2015-10-01)
 - [CHANGED] Added default of 5 minutes for both connection and socket timeouts instead of waiting forever.
 - [IMPROVED] Upgraded Apache HttpClient from 4.3.3 to 4.3.6.
 
