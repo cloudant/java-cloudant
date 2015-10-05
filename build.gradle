@@ -36,6 +36,9 @@ tasks.withType(Test) {
             systemProperty prop.key, prop.value
         }
     }
+    testLogging {
+        exceptionFormat = 'full'
+    }
 }
 
 test {

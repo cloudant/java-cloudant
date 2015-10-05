@@ -15,9 +15,12 @@
 package com.cloudant.tests;
 
 import com.cloudant.client.api.CloudantClient;
+import com.cloudant.client.api.model.ConnectOptions;
+import com.cloudant.http.interceptors.TimeoutCustomizationInterceptor;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Rhys Short on 21/05/15.
@@ -32,6 +35,7 @@ public abstract class CloudantClientHelper {
     protected static final URI SERVER_URI;
     protected static final boolean IGNORE_CLOUDANT_SPECIFIC;
 
+    protected static final CloudantClient CLIENT_INSTANCE;
 
     static {
 
@@ -90,15 +94,17 @@ public abstract class CloudantClientHelper {
             COUCH_PORT = Integer.toString(SERVER_URI.getPort());
             HTTP_PROTOCOL = SERVER_URI.getScheme();
 
-
         }
+
+        CLIENT_INSTANCE = new CloudantClient(SERVER_URI.toString(),
+                COUCH_USERNAME, COUCH_PASSWORD, new ConnectOptions().setConnectionTimeout(new
+                TimeoutCustomizationInterceptor.TimeoutOption(1, TimeUnit.MINUTES))
+                .setReadTimeout(new TimeoutCustomizationInterceptor.TimeoutOption(1, TimeUnit
+                        .MINUTES)));
     }
 
     public static CloudantClient getClient() {
-        return new CloudantClient(SERVER_URI.toString(),
-                COUCH_USERNAME, COUCH_PASSWORD
-        );
+        return CLIENT_INSTANCE;
     }
-
 
 }

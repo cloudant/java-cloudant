@@ -40,12 +40,14 @@ public class SingleRequestHttpServer implements Runnable {
     private static final Logger log = Logger.getLogger(SingleRequestHttpServer.class.getName());
     private static boolean localServerReady;
     private static final Object lock = new Object();
+    private final Thread serverThread;
 
     private final List<String> input = new ArrayList<String>();
     private final int port;
 
     private SingleRequestHttpServer(int port) {
         this.port = port;
+        this.serverThread = new Thread(this);
     }
 
     public void run() {
@@ -130,6 +132,10 @@ public class SingleRequestHttpServer implements Runnable {
         }
     }
 
+    public void waitForShutdown() throws InterruptedException {
+        serverThread.join();
+    }
+
     /**
      * Start an HTTPServer instance on a new thread listening on the specified port
      *
@@ -137,7 +143,8 @@ public class SingleRequestHttpServer implements Runnable {
      */
     public static SingleRequestHttpServer startServer(int port) {
         SingleRequestHttpServer server = new SingleRequestHttpServer(port);
-        new Thread(server).start();
+        server.serverThread.start();
         return server;
     }
+
 }

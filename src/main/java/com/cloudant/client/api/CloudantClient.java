@@ -40,6 +40,7 @@ import com.cloudant.client.org.lightcouch.Response;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.interceptors.ProxyAuthInterceptor;
 import com.cloudant.http.interceptors.SSLCustomizerInterceptor;
+import com.cloudant.http.interceptors.TimeoutCustomizationInterceptor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -521,8 +522,8 @@ public class CloudantClient {
         }
 
         if (connectOptions != null) {
-            props.setConnectionTimeout(connectOptions.getConnectionTimeout());
-            props.setSocketTimeout(connectOptions.getSocketTimeout());
+            props.addRequestInterceptors(new TimeoutCustomizationInterceptor(connectOptions
+                    .getConnectionTimeout(), connectOptions.getReadTimeout()));
             props.setMaxConnections(connectOptions.getMaxConnections());
             props.setProxyURL(connectOptions.getProxyURL());
             if (connectOptions.getProxyUser() != null) {

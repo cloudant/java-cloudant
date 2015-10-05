@@ -14,6 +14,8 @@
 
 package com.cloudant.client.api.model;
 
+import com.cloudant.http.interceptors.TimeoutCustomizationInterceptor;
+
 import java.net.URL;
 
 import javax.net.ssl.SSLSocketFactory;
@@ -25,8 +27,8 @@ import javax.net.ssl.SSLSocketFactory;
  */
 public class ConnectOptions {
 
-    private int socketTimeout;
-    private int connectionTimeout;
+    private TimeoutCustomizationInterceptor.TimeoutOption readTimeout;
+    private TimeoutCustomizationInterceptor.TimeoutOption connectionTimeout;
     private int maxConnections;
 
     private URL proxyURL;
@@ -39,12 +41,14 @@ public class ConnectOptions {
         // default constructor
     }
 
-    public ConnectOptions setSocketTimeout(int socketTimeout) {
-        this.socketTimeout = socketTimeout;
+    public ConnectOptions setReadTimeout(TimeoutCustomizationInterceptor.TimeoutOption
+                                                   readTimeout) {
+        this.readTimeout = readTimeout;
         return this;
     }
 
-    public ConnectOptions setConnectionTimeout(int connectionTimeout) {
+    public ConnectOptions setConnectionTimeout(TimeoutCustomizationInterceptor.TimeoutOption
+                                                       connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
         return this;
     }
@@ -96,11 +100,11 @@ public class ConnectOptions {
         return this;
     }
 
-    public int getSocketTimeout() {
-        return socketTimeout;
+    public TimeoutCustomizationInterceptor.TimeoutOption getReadTimeout() {
+        return readTimeout;
     }
 
-    public int getConnectionTimeout() {
+    public TimeoutCustomizationInterceptor.TimeoutOption getConnectionTimeout() {
         return connectionTimeout;
     }
 

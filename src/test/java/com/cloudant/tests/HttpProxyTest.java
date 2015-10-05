@@ -78,5 +78,7 @@ public class HttpProxyTest {
 
             }
         }
+
+        server.waitForShutdown();
     }
 }
