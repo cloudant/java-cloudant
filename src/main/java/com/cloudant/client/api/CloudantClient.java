@@ -39,6 +39,7 @@ import com.cloudant.client.org.lightcouch.Replicator;
 import com.cloudant.client.org.lightcouch.Response;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.interceptors.ProxyAuthInterceptor;
+import com.cloudant.http.interceptors.SSLCustomizerInterceptor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -529,9 +530,15 @@ public class CloudantClient {
                 props.addRequestInterceptors(new ProxyAuthInterceptor(connectOptions.getProxyUser
                         (), connectOptions.getProxyPassword()));
             }
-            props.disableSSLAuthentication(connectOptions.isSSLAuthenticationDisabled());
-            props.setAuthenticatedModeSSLSocketFactory(connectOptions
-                    .getAuthenticatedModeSSLSocketFactory());
+            if (connectOptions.isSSLAuthenticationDisabled()) {
+                props.addRequestInterceptors(SSLCustomizerInterceptor
+                        .SSL_AUTH_DISABLED_INTERCEPTOR);
+            } else {
+                if (connectOptions.getAuthenticatedModeSSLSocketFactory() != null) {
+                    props.addRequestInterceptors(new SSLCustomizerInterceptor(connectOptions
+                            .getAuthenticatedModeSSLSocketFactory()));
+                }
+            }
         }
         this.client = new CouchDbClient(props);
 
