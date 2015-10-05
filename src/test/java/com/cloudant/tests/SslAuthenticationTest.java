@@ -27,7 +27,6 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -45,8 +44,6 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 
-//TODO Enable in next PR with Rich's 53085-ssl-setters branch
-@Ignore
 public class SslAuthenticationTest {
 
     private static final Log log = LogFactory.getLog(SslAuthenticationTest.class);
@@ -203,7 +200,6 @@ public class SslAuthenticationTest {
      */
     @Test
     public void localSslAuthenticationDisabled() {
-        //TODO ConnectOptions needs redesign for HttpConnection
         ConnectOptions connectionOptions = new ConnectOptions();
         connectionOptions.setSSLAuthenticationDisabled(true);
 
