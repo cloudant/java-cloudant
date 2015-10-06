@@ -84,7 +84,10 @@ Output:
     Server version = 1.0.2
     All my databases: example_db, jasons_stuff, scores
 
-When you instaniate a `CloudantClient`, you are authenticating with cloudant using the [cookie authentication](http://guide.couchdb.org/editions/1/en/security.html#cookies) functionality.
+When you instantiate a `CloudantClient`, you are authenticating with cloudant using the [cookie authentication](http://guide.couchdb.org/editions/1/en/security.html#cookies) functionality.
+
+* If you instantiate the `CloudantClient` with an ID and password then the cookie is automatically renewed when it expires.
+* Alternatively, if you instantiate by using an existing auth cookie string then the `CloudantClient` instance will be unable to make successful requests after that cookie has expired. To continue making requests you will need to create a new `CloudantClient` instance.
 
 ## Complete example
 
@@ -221,7 +224,6 @@ System.out.println("Connected to Cloudant");
    */
 })
 ~~~
-
 
 ## Authorization
 
@@ -915,6 +917,7 @@ CloudantClient cookieBasedClient = new
 
 ### Advanced Configuration
 
+#### ConnectOptions
 Besides the account and password options, you can add an optional `com.cloudant.client.api.model.ConnectOptions` value, which will initialize HttpClient (the underlying HTTP library) as you need it.
 
 ~~~ java
@@ -930,6 +933,7 @@ ConnectOptions connectOptions = new ConnectOptions()
 
 ~~~
 
+#### Custom GSON serialization
 java-cloudant internally uses the Gson library to serialize/deserialize JSON to/from Java objects. You can register your custom de-serializers by providing the CloudantClient instance by with your own GsonBuilder instance
 
 ~~~java
@@ -940,6 +944,17 @@ CloudantClient account = new CloudantClient(cloudantaccount,userName,password);
 account.setGsonBuilder(builder);
 ~~~
 
+#### Resource sharing
+
+Client objects are thread-safe with the exception of the `setGsonBuilder` method. All methods aside from `setGsonBuilder` can be called from any thread, meaning `Client` objects can -- and should -- be shared across threads. The `Database` object is thread-safe and a single `Database` object may be shared across threads.
+
+Connection pools are managed per CloudantClient instance. The default size of the connection pool is 6. Use ConnectOptions#setMaxConnections(int) to configure the maximum connections in the pool. Idle connections within the pool may be terminated by the server, so will not remain open indefinitely meaning that this will not completely remove the overhead of creating new connections.
+
+#### J2EE
+
+This library can be used in J2EE environments, but currently does not implement any J2EE standards or provide wrappers for them. As such there is no built-in support for JCA connection management or JNDI lookups of `CloudantClient` instances.
+
+To get JNDI support would require a `javax.naming.spi.ObjectFactory` implementation and configuration of your JNDI provider to register this factory and reference this library.
 
 ## tests
 
