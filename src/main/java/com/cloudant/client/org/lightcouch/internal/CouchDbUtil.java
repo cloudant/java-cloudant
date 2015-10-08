@@ -19,6 +19,7 @@ import static java.lang.String.format;
 
 import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.org.lightcouch.CouchDbException;
+import com.cloudant.client.org.lightcouch.Response;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.google.gson.Gson;
@@ -26,12 +27,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import com.cloudant.client.org.lightcouch.Response;
+import org.apache.commons.io.IOUtils;
 
 import java.io.Closeable;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -202,12 +201,7 @@ final public class CouchDbUtil {
      * @param response The {@link HttpConnection}
      */
     public static void close(InputStream response) {
-        try {
-            if(response != null) {
-                response.close();
-            }
-        } catch (Exception e) {
-        }
+        IOUtils.closeQuietly(response);
     }
 
     /**
@@ -216,12 +210,7 @@ final public class CouchDbUtil {
      * @param c The {@link Closeable} resource.
      */
     public static void close(Closeable c) {
-        try {
-            if(c != null) {
-                c.close();
-            }
-        } catch (Exception e) {
-        }
+        IOUtils.closeQuietly(c);
     }
 
 
@@ -276,7 +265,6 @@ final public class CouchDbUtil {
      */
     public static <T> List<T> getResponseList(InputStream response, Gson gson, Class<T> klazz,
                                               Type typeofT) throws CouchDbException {
-        //InputStream instream = getStream(response);
         try {
             Reader reader = new InputStreamReader(response, "UTF-8");
             return gson.fromJson(reader, typeofT);

@@ -23,10 +23,9 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
-import com.cloudant.client.org.lightcouch.CouchDbClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
-import com.cloudant.http.CookieInterceptor;
+import com.cloudant.http.AgentHelper;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresDB;
@@ -54,15 +53,12 @@ public class CloudantClientTests {
     public void setUp() {
         account = CloudantClientHelper.getClient();
 
+        //TODO review in next PR with cookie interceptor changes
         if (CloudantClientHelper.COUCH_PASSWORD == null) {
             cookieBasedClient = account;
         } else {
-            //TODO review in next PR with cookie interceptor changes
-            CookieInterceptor interceptor = new CookieInterceptor(System.getProperty("test.couch.username"),
-                    System.getProperty("test.couch.password"));
-
-            cookieBasedClient = new CloudantClient(
-                    CloudantClientHelper.SERVER_URI.toString(), interceptor);
+            cookieBasedClient = new CloudantClient(account.getBaseUri().toString(),
+                    CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
         }
 
     }
@@ -139,7 +135,7 @@ public class CloudantClientTests {
     public void testUserAgentHeaderString() {
         assertTrue("The value of the User-Agent header should match the format " +
                 "\"java-cloudant/version [Java (os.arch; os.name; os.version) jvm.vendor; jvm" +
-                ".version; jvm.runtime.version]\"", CouchDbClient.USER_AGENT.matches
+                ".version; jvm.runtime.version]\"", AgentHelper.USER_AGENT.matches
                 (userAgentRegex));
     }
 

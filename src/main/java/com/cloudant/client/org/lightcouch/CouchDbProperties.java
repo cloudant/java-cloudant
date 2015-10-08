@@ -18,9 +18,7 @@ package com.cloudant.client.org.lightcouch;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import javax.net.ssl.SSLSocketFactory;
 
@@ -51,9 +49,6 @@ public class CouchDbProperties {
     private int proxyPort;
     private boolean disableSSLAuthentication;
     private SSLSocketFactory authenticatedModeSSLSocketFactory;
-
-    // Optional custom headers
-    private Map<String, String> customHeaders;
 
     private List<HttpConnectionRequestInterceptor> requestInterceptors;
     private List<HttpConnectionResponseInterceptor> responseInterceptors;
@@ -249,22 +244,6 @@ public class CouchDbProperties {
      */
     public CouchDbProperties setAuthenticatedModeSSLSocketFactory(SSLSocketFactory factory) {
         this.authenticatedModeSSLSocketFactory = factory;
-        return this;
-    }
-
-    public Map<String, String> getCustomHeaders() {
-        return customHeaders;
-    }
-
-    public CouchDbProperties setCustomHeaders(Map<String, String> customHeaders) {
-        List<String> prohibitedHeaders = Arrays.asList("www-authenticate", "host", "connection",
-                "content-type", "accept", "content-length");
-        for (Map.Entry<String, String> header : customHeaders.entrySet()) {
-            if (prohibitedHeaders.contains(header.getKey().toLowerCase())) {
-                throw new IllegalArgumentException("Bad optional HTTP header: " + header);
-            }
-        }
-        this.customHeaders = customHeaders;
         return this;
     }
 

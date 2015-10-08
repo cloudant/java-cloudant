@@ -45,14 +45,14 @@ public abstract class CouchDatabaseBase {
 
     static final Log log = LogFactory.getLog(CouchDatabase.class);
 
-    CouchDbClientBase client;
+    CouchDbClient client;
     private URI dbURI;
 
     private CouchDbDesign design;
     private String dbName;
 
 
-    CouchDatabaseBase(CouchDbClientBase client, String name, boolean create) {
+    CouchDatabaseBase(CouchDbClient client, String name, boolean create) {
         assertNotEmpty(name, "name");
         this.dbName = name;
         this.client = client;

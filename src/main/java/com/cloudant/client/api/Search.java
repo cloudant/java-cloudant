@@ -120,7 +120,7 @@ public class Search {
         key(query);
         URI uri = uriBuilder.build();
         HttpConnection get = Http.GET(uri);
-        get.getConnection().addRequestProperty("Accept", "application/json");
+        get.requestProperties.put("Accept", "application/json");
         return db.executeRequest(get);
     }
 

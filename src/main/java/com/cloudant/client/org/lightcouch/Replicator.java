@@ -80,11 +80,11 @@ public class Replicator {
     private String userCtxName;
     private String[] userCtxRoles;
 
-    private CouchDbClientBase client;
+    private CouchDbClient client;
     private ReplicatorDocument replicatorDoc;
     private URI dbURI;
 
-    public Replicator(CouchDbClientBase client) {
+    public Replicator(CouchDbClient client) {
         this.client = client;
         replicatorDoc = new ReplicatorDocument();
         replicatorDB = "_replicator"; // default replicator db

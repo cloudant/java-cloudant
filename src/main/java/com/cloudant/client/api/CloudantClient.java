@@ -16,6 +16,7 @@ package com.cloudant.client.api;
 
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponseList;
 import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
@@ -35,15 +36,12 @@ import com.cloudant.client.org.lightcouch.CouchDbProperties;
 import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.Replicator;
 import com.cloudant.client.org.lightcouch.Response;
-import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
 import com.cloudant.http.CookieInterceptor;
-import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.InputStream;
@@ -157,6 +155,13 @@ public class CloudantClient {
         this.loginUsername = loginUsername;
         this.password = password;
 
+        CookieInterceptor interceptor = null;
+        if(!loginUsername.isEmpty() && !password.isEmpty()) {
+            interceptor = new CookieInterceptor(
+                    loginUsername,
+                    password);
+        }
+
         doInit(h.get("scheme"),
                 h.get("hostname"),
                 new Integer(h.get("port")).intValue(),
@@ -164,7 +169,7 @@ public class CloudantClient {
                 password,
                 null, //connectoptions
                 null, //authcookie
-                null //interceptor
+                interceptor //interceptor
         );
     }
 
@@ -186,6 +191,10 @@ public class CloudantClient {
         this.loginUsername = loginUsername;
         this.password = password;
 
+        CookieInterceptor interceptor = new CookieInterceptor(
+                loginUsername,
+                password);
+
         doInit(h.get("scheme"),
                 h.get("hostname"),
                 new Integer(h.get("port")).intValue(),
@@ -193,7 +202,7 @@ public class CloudantClient {
                 password,
                 connectOptions,
                 null, //authcookie
-                null //interceptor
+                interceptor //interceptor
         );
     }
 
@@ -241,38 +250,14 @@ public class CloudantClient {
     }
 
     /**
-     * Constructs a new instance of this class and connects to the cloudant account with the
-     * specified credentials
-     *
-     * @param account        For cloudant.com, the cloudant account to connect to. For Cloudant
-     *                       local, the server URL
-     * @param interceptor Cookie interceptor with authentication
-     */
-    public CloudantClient(String account, CookieInterceptor interceptor) {
-        super();
-        Map<String, String> h = parseAccount(account);
-
-        doInit(h.get("scheme"),
-                h.get("hostname"),
-                new Integer(h.get("port")).intValue(),
-                h.get("username"),
-                h.get("password"),
-                null,
-                null, //authcookie
-                interceptor
-        );
-    }
-
-
-    /**
      * Generate an API key
      *
      * @return the generated key and password
      */
     public ApiKey generateApiKey() {
         URI uri = buildUri(getBaseUri()).path("_api/v2/api_keys").build();
-        HttpConnection connection = Http.POST(uri, "application/json");
-        return client.executeRequest(connection, ApiKey.class);
+        InputStream response =  client.post(uri, null);
+        return getResponse(response, ApiKey.class, getGson());
     }
 
     /**
@@ -406,14 +391,14 @@ public class CloudantClient {
      * @return {@link InputStream} with response from {@link HttpConnection}
      */
     public InputStream executeRequest(HttpConnection request) {
-
-        InputStream response = client.executeRequest(request);
-        return response;
-
+        return client.executeToInputStream(request);
     }
 
-    public <T> T executeRequest(HttpConnection request, Class<T> classType) {
-        return client.executeRequest(request, classType);
+    /**
+     * Shuts down the connection manager used by this client instance.
+     */
+    public void shutdown() {
+        client.shutdown();
     }
 
     /**
@@ -489,28 +474,8 @@ public class CloudantClient {
     }
 
 
-    Response put(URI uri, Object object, boolean newEntity, int writeQuorum, Gson gson) {
-        assertNotEmpty(object, "object");
-        InputStream response = null;
-        try {
-            final JsonObject json = gson.toJsonTree(object).getAsJsonObject();
-            String id = CouchDbUtil.getAsString(json, "_id");
-            String rev = CouchDbUtil.getAsString(json, "_rev");
-            if (newEntity) { // save
-                CouchDbUtil.assertNull(rev, "rev");
-                id = (id == null) ? CouchDbUtil.generateUUID() : id;
-            } else { // update
-                assertNotEmpty(id, "id");
-                assertNotEmpty(rev, "rev");
-            }
-            HttpConnection putConnection = Http.PUT(buildUri(uri).pathToEncode(id).query("w",
-                    writeQuorum).buildEncoded(), "application/json");
-            CouchDbUtil.setEntity(putConnection, json.toString(), "application/json");
-            response = client.executeRequest(putConnection);
-            return CouchDbUtil.getResponse(response, Response.class, gson);
-        } finally {
-            close(response);
-        }
+    Response put(URI uri, Object object, boolean newEntity, int writeQuorum) {
+        return client.put(uri, object, newEntity, writeQuorum);
     }
 
     private Map<String, String> parseAccount(String account) {
@@ -525,10 +490,10 @@ public class CloudantClient {
                 h.put("scheme", uri.getScheme());
                 h.put("hostname", uri.getHost());
                 h.put("port", new Integer(uri.getPort()).toString());
-                if(uri.getUserInfo() != null && !uri.getUserInfo().isEmpty()) {
+                /*if(uri.getUserInfo() != null && !uri.getUserInfo().isEmpty()) {
                     h.put("username", uri.getUserInfo().split(":")[0]);
                     h.put("password", uri.getUserInfo().split(":")[1]);
-                }
+                }*/
             } catch (URISyntaxException e) {
 
             }
@@ -578,6 +543,7 @@ public class CloudantClient {
             props.setRequestInterceptors(cookieRequestInterceptor);
             props.setResponseInterceptors(cookieResponseInterceptor);
         }
+
         if (connectOptions != null) {
             props.setConnectionTimeout(connectOptions.getConnectionTimeout());
             props.setSocketTimeout(connectOptions.getSocketTimeout());

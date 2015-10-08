@@ -78,9 +78,9 @@ public class Replication {
     private String tokenSecret;
     private String token;
 
-    private CouchDbClientBase client;
+    private CouchDbClient client;
 
-    public Replication(CouchDbClientBase client) {
+    public Replication(CouchDbClient client) {
         this.client = client;
     }
 

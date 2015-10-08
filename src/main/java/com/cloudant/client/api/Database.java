@@ -144,9 +144,9 @@ public class Database {
 
         InputStream response = null;
         HttpConnection put = Http.PUT(apiV2DBSecurityURI, "application/json");
-        setEntity(put, client.getGson().toJson(perms), "application/json");
+        put.setRequestBody(client.getGson().toJson(perms));
         try {
-            response = executeRequest(put);
+            response = client.executeRequest(put);
             String ok = getAsString(response, "ok");
             if (!ok.equalsIgnoreCase("true")) {
                 //raise exception
@@ -208,9 +208,8 @@ public class Database {
      */
     public List<Shard> getShards() {
         InputStream response = null;
-        //HttpGet get = new HttpGet(buildUri(db.getDBUri()).path("/_shards").build());
         try {
-            response = client.get(buildUri(db.getDBUri()).path("/_shards").build());
+            response = client.get(buildUri(getDBUri()).path("_shards").build());
             return getResponseList(response, client.getGson(), Shard.class,
                     new TypeToken<List<Shard>>() {
                     }.getType());
@@ -257,7 +256,7 @@ public class Database {
         InputStream putresp = null;
         URI uri = buildUri(getDBUri()).path("_index").build();
         try {
-            putresp = client.executeRequest(createPost(uri, null, "application/json"));
+            putresp = client.executeRequest(createPost(uri, indexDefinition, "application/json"));
             String result = getAsString(putresp, "result");
             if (result.equalsIgnoreCase("created")) {
                 log.info(String.format("Created Index: '%s'", indexDefinition));
@@ -550,8 +549,7 @@ public class Database {
      * @throws DocumentConflictException If a conflict is detected during the save.
      */
     public com.cloudant.client.api.model.Response save(Object object, int writeQuorum) {
-        Response couchDbResponse = client.put(getDBUri(), object, true, writeQuorum, client
-                .getGson());
+        Response couchDbResponse = client.put(getDBUri(), object, true, writeQuorum);
         com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model
                 .Response(couchDbResponse);
         return response;
@@ -633,8 +631,7 @@ public class Database {
      * @throws DocumentConflictException If a conflict is detected during the update.
      */
     public com.cloudant.client.api.model.Response update(Object object, int writeQuorum) {
-        Response couchDbResponse = client.put(getDBUri(), object, false, writeQuorum, client
-                .getGson());
+        Response couchDbResponse = client.put(getDBUri(), object, false, writeQuorum);
         com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model
                 .Response(couchDbResponse);
         return response;
@@ -953,18 +950,13 @@ public class Database {
         return finalbody.toString();
     }
 
-    InputStream executeRequest(HttpConnection request) {
-        return client.executeRequest(request);
-    }
-
-    <T> T executeRequest(HttpConnection request, Class<T> classType) {
-        return client.executeRequest(request, classType);
-    }
-
     Gson getGson() {
         return client.getGson();
     }
 
+    public InputStream executeRequest(HttpConnection connection) {
+        return client.executeRequest(connection);
+    }
 }
 
 class ShardDeserializer implements JsonDeserializer<List<Shard>> {
