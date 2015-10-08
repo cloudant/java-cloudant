@@ -269,15 +269,11 @@ public class CouchDbClient {
      * @param connection The HTTP request to execute.
      * @return Class type of object T (i.e. {@link Response}
      */
-    public <T> T executeRequest(HttpConnection connection, Class<T> classType) {
+    public Response executeToResponse(HttpConnection connection) {
         InputStream is = null;
         try {
             is = this.executeToInputStream(connection);
-            if(classType.isInstance(InputStream.class)) {
-                return (T)is;
-            } else {
-                return getResponse(is, classType, getGson());
-            }
+            return getResponse(is, Response.class, getGson());
         } catch (CouchDbException e) {
             if (e.getStatusCode() == 409) {
                 throw new DocumentConflictException(e.toString());
@@ -297,7 +293,7 @@ public class CouchDbClient {
      */
     Response delete(URI uri) {
         HttpConnection connection = Http.DELETE(uri);
-        return executeRequest(connection, Response.class);
+        return executeToResponse(connection);
     }
 
     /**
@@ -317,7 +313,8 @@ public class CouchDbClient {
      */
     public <T> T get(URI uri, Class<T> classType) {
         HttpConnection connection = Http.GET(uri);
-        return executeRequest(connection, classType);
+        InputStream response = executeToInputStream(connection);
+        return getResponse(response, classType, getGson());
     }
 
     /**
@@ -360,7 +357,7 @@ public class CouchDbClient {
 
         connection.setRequestBody(instream);
 
-        return executeRequest(connection, Response.class);
+        return executeToResponse(connection);
     }
 
     /**
@@ -404,7 +401,7 @@ public class CouchDbClient {
             HttpConnection connection = Http.PUT(httpUri, "application/json");
             connection.setRequestBody(json.toString());
 
-            return executeRequest(connection, Response.class);
+            return executeToResponse(connection);
         } catch (CouchDbException e) {
             if (e.getStatusCode() == 409) {
                 throw new DocumentConflictException(e.toString());

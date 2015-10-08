@@ -36,10 +36,7 @@ import com.cloudant.client.org.lightcouch.CouchDbProperties;
 import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.Replicator;
 import com.cloudant.client.org.lightcouch.Response;
-import com.cloudant.http.CookieInterceptor;
 import com.cloudant.http.HttpConnection;
-import com.cloudant.http.HttpConnectionRequestInterceptor;
-import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -47,7 +44,6 @@ import com.google.gson.reflect.TypeToken;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -155,22 +151,13 @@ public class CloudantClient {
         this.loginUsername = loginUsername;
         this.password = password;
 
-        CookieInterceptor interceptor = null;
-        if(loginUsername != null && !loginUsername.isEmpty() &&
-                password != null && !password.isEmpty()) {
-            interceptor = new CookieInterceptor(
-                    loginUsername,
-                    password);
-        }
-
         doInit(h.get("scheme"),
                 h.get("hostname"),
                 new Integer(h.get("port")).intValue(),
                 loginUsername,
                 password,
                 null, //connectoptions
-                null, //authcookie
-                interceptor //interceptor
+                null //authcookie
         );
     }
 
@@ -192,18 +179,13 @@ public class CloudantClient {
         this.loginUsername = loginUsername;
         this.password = password;
 
-        CookieInterceptor interceptor = new CookieInterceptor(
-                loginUsername,
-                password);
-
         doInit(h.get("scheme"),
                 h.get("hostname"),
                 new Integer(h.get("port")).intValue(),
                 loginUsername,
                 password,
                 connectOptions,
-                null, //authcookie
-                interceptor //interceptor
+                null //authcookie
         );
     }
 
@@ -224,8 +206,7 @@ public class CloudantClient {
                 h.get("hostname"),
                 new Integer(h.get("port")).intValue(),
                 null, null, null,
-                authCookie,
-                null //interceptor
+                authCookie
         );
     }
 
@@ -247,7 +228,7 @@ public class CloudantClient {
         doInit(h.get("scheme"),
                 h.get("hostname"),
                 new Integer(h.get("port")).intValue(),
-                null, null, connectOptions, authCookie, null);
+                null, null, connectOptions, authCookie);
     }
 
     /**
@@ -519,7 +500,7 @@ public class CloudantClient {
      */
     private void doInit(String scheme, String hostname, int port,
                         String loginUsername, String password, ConnectOptions connectOptions,
-                        String authCookie, CookieInterceptor interceptor) {
+                        String authCookie) {
 
         CouchDbProperties props;
         if (authCookie == null) {
@@ -529,20 +510,6 @@ public class CloudantClient {
         } else {
             props = new CouchDbProperties(scheme, hostname, port,
                     authCookie);
-        }
-
-        //Set request and response interceptors
-        if(interceptor != null) {
-            List<HttpConnectionRequestInterceptor> cookieRequestInterceptor =
-                    new ArrayList<HttpConnectionRequestInterceptor>();
-            cookieRequestInterceptor.add(interceptor);
-
-            List<HttpConnectionResponseInterceptor> cookieResponseInterceptor =
-                    new ArrayList<HttpConnectionResponseInterceptor>();
-            cookieResponseInterceptor.add(interceptor);
-
-            props.setRequestInterceptors(cookieRequestInterceptor);
-            props.setResponseInterceptors(cookieResponseInterceptor);
         }
 
         if (connectOptions != null) {
