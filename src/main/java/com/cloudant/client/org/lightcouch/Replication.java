@@ -17,16 +17,15 @@ package com.cloudant.client.org.lightcouch;
 
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
-import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getStream;
 import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
+import com.cloudant.client.org.lightcouch.ReplicationResult.ReplicationHistory;
 import com.google.gson.JsonObject;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.HttpResponse;
-import com.cloudant.client.org.lightcouch.ReplicationResult.ReplicationHistory;
 
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -79,9 +78,9 @@ public class Replication {
     private String tokenSecret;
     private String token;
 
-    private CouchDbClientBase client;
+    private CouchDbClient client;
 
-    public Replication(CouchDbClientBase client) {
+    public Replication(CouchDbClient client) {
         this.client = client;
     }
 
@@ -91,7 +90,7 @@ public class Replication {
     public ReplicationResult trigger() {
         assertNotEmpty(source, "Source");
         assertNotEmpty(target, "Target");
-        HttpResponse response = null;
+        InputStream response = null;
         try {
             JsonObject json = createJson();
             if (log.isDebugEnabled()) {
@@ -99,7 +98,7 @@ public class Replication {
             }
             final URI uri = buildUri(client.getBaseUri()).path("_replicate").build();
             response = client.post(uri, json.toString());
-            final InputStreamReader reader = new InputStreamReader(getStream(response), "UTF-8");
+            final InputStreamReader reader = new InputStreamReader(response, "UTF-8");
             return client.getGson().fromJson(reader, ReplicationResult.class);
         } catch (UnsupportedEncodingException e) {
             // This should never happen as every implementation of the java platform is required

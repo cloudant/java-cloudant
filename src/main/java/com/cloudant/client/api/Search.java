@@ -19,9 +19,11 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotE
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsLong;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
-import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getStream;
 
 import com.cloudant.client.api.model.SearchResult;
+import com.cloudant.client.org.lightcouch.internal.URIBuilder;
+import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -29,8 +31,6 @@ import com.google.gson.JsonParser;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.client.methods.HttpGet;
-import com.cloudant.client.org.lightcouch.internal.URIBuilder;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -119,9 +119,9 @@ public class Search {
     public InputStream queryForStream(String query) {
         key(query);
         URI uri = uriBuilder.build();
-        HttpGet get = new HttpGet(uri);
-        get.addHeader("Accept", "application/json");
-        return getStream(db.executeRequest(get));
+        HttpConnection get = Http.GET(uri);
+        get.requestProperties.put("Accept", "application/json");
+        return db.executeRequest(get);
     }
 
     /**
