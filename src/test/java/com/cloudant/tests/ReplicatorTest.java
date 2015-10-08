@@ -25,7 +25,6 @@ import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.Utils;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -37,7 +36,6 @@ import java.util.Map;
 public class ReplicatorTest extends ReplicateBaseTest {
 
     //TODO Enable in next PR with Rich's 52593-replicate-tests branch
-    @Ignore
     @Test
     public void replication() throws Exception {
         Response response = account.replicator()
@@ -51,7 +49,6 @@ public class ReplicatorTest extends ReplicateBaseTest {
         Utils.removeReplicatorTestDoc(account, response.getId());
     }
 
-    @Ignore
     @Test
     public void replication_filteredWithQueryParams() throws Exception {
         Map<String, Object> queryParams = new HashMap<String, Object>();
@@ -96,7 +93,6 @@ public class ReplicatorTest extends ReplicateBaseTest {
         Utils.removeReplicatorTestDoc(account, response.getId());
     }
 
-    @Ignore
     @Test
     public void replication_conflict() throws Exception {
         String docId = Utils.generateUUID();
