@@ -20,8 +20,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ReplicationResult;
 import com.cloudant.client.api.model.ReplicationResult.ReplicationHistory;
 import com.cloudant.client.api.views.Key;
@@ -29,53 +27,15 @@ import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.Utils;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 @Category(RequiresDB.class)
-public class ReplicationTest {
-    private static final Log log = LogFactory.getLog(ReplicationTest.class);
-
-    private static Properties props;
-    private static Database db1;
-
-    private static Database db2;
-
-    private static String db1URI;
-    private static String db2URI;
-    private CloudantClient account;
-
-    @Before
-    public void setUp() {
-        account = CloudantClientHelper.getClient();
-
-        db1 = account.database("lightcouch-db-test", true);
-        db1URI = CloudantClientHelper.SERVER_URI.toString() + "/lightcouch-db-test";
-
-
-        db2 = account.database("lightcouch-db-test-2", true);
-
-        db1.syncDesignDocsWithDb();
-        db2.syncDesignDocsWithDb();
-
-        db2URI = CloudantClientHelper.SERVER_URI.toString() + "/lightcouch-db-test-2";
-    }
-
-    @After
-    public void tearDown() {
-        account.deleteDB("lightcouch-db-test");
-        account.deleteDB("lightcouch-db-test-2");
-        account.shutdown();
-    }
+public class ReplicationTest extends ReplicateBaseTest {
 
     @Test
     public void replication() {
