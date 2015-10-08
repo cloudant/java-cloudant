@@ -6,9 +6,13 @@ This is the official Cloudant library for Java
 * [Installation and Usage](#installation-and-usage)
 * [Getting Started](#getting-started)
 * [API Reference](#api-reference)
+* [Advanced Configuration](#advanced-configuration)
+  * [Connection Options](#connectoptions)
+  * [Custom GSON serialization](#custom-gson-serialization)
+  * [Resource Sharing](#resource-sharing)
+  * [J2EE](#j2ee)
 * [Development](#development)
-  * [Test Suite](#test-suite)
-  * [Using in Other Projects](#using-in-other-projects)
+  * [Test Suite](#tests)
   * [License](#license)
 
 ## Installation and Usage
@@ -956,7 +960,7 @@ This library can be used in J2EE environments, but currently does not implement 
 
 To get JNDI support would require a `javax.naming.spi.ObjectFactory` implementation and configuration of your JNDI provider to register this factory and reference this library.
 
-## tests
+## Tests
 
 The test suite needs access to cloudant account(s) to run.
 To run the test suite first edit the cloudant properties.
