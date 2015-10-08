@@ -419,6 +419,9 @@ public class CloudantClient {
     /**
      * Sets a {@link GsonBuilder} to create {@link Gson} instance.
      * <p>Useful for registering custom serializers/deserializers, such as Datetime formats.
+     *
+     * @deprecated this setter will be removed and customizing the GsonBuilder will be a
+     * CloudantClient initialization option in future
      */
     public void setGsonBuilder(GsonBuilder gsonBuilder) {
         //register additional cloudant deserializers and then let lightcouch init too
