@@ -156,7 +156,8 @@ public class CloudantClient {
         this.password = password;
 
         CookieInterceptor interceptor = null;
-        if(!loginUsername.isEmpty() && !password.isEmpty()) {
+        if(loginUsername != null && !loginUsername.isEmpty() &&
+                password != null && !password.isEmpty()) {
             interceptor = new CookieInterceptor(
                     loginUsername,
                     password);
