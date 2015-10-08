@@ -66,6 +66,7 @@ public class CloudantClientTests {
 
     @After
     public void tearDown() {
+        account.shutdown();
     }
 
     @Test

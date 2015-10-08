@@ -29,6 +29,7 @@ public class CloudantClientResource extends ExternalResource {
 
     @Override
     public void after() {
+        client.shutdown();
     }
 
     public CloudantClient get() {

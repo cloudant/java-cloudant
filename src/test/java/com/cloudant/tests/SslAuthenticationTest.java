@@ -164,6 +164,7 @@ public class SslAuthenticationTest {
 
     @After
     public void tearDown() {
+        dbClient.shutdown();
     }
 
     /**

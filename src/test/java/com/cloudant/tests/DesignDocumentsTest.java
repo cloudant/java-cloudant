@@ -50,6 +50,7 @@ public class DesignDocumentsTest {
     @After
     public void tearDown() {
         account.deleteDB("lightcouch-db-test");
+        account.shutdown();
     }
 
 

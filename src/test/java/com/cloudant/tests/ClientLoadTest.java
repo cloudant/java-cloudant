@@ -62,6 +62,7 @@ public class ClientLoadTest {
 
     @After
     public void tearDown() {
+        dbClient.shutdown();
     }
 
     @Test
