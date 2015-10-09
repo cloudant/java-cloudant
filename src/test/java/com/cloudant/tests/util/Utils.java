@@ -23,13 +23,13 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
+import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
 
 import org.apache.commons.logging.Log;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.utils.HttpClientUtils;
 
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -68,11 +68,10 @@ public class Utils {
 
         //Grab replicator doc revision using HTTP GET command
         String replicatorDb = "_replicator";
-        HttpHead head = new HttpHead(account.getBaseUri() + replicatorDb + "/"
+        URI uri = URI.create(account.getBaseUri() + replicatorDb + "/"
                 + replicatorDocId);
-        HttpResponse response = account.executeRequest(head);
-        String revision = response.getFirstHeader("ETAG").getValue();
-        HttpClientUtils.closeQuietly(response);
+        HttpConnection head = Http.HEAD(uri);
+        String revision = head.execute().getConnection().getHeaderField("ETag");
 
         Database replicator = account.database(replicatorDb, false);
         Response removeResponse = replicator.remove(replicatorDocId,

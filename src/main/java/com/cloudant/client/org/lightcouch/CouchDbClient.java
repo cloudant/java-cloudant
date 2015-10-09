@@ -12,171 +12,96 @@
  * either express or implied. See the License for the specific language governing permissions
  * and limitations under the License.
  */
-
 package com.cloudant.client.org.lightcouch;
 
-import org.apache.http.Consts;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.RequestLine;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.client.utils.HttpClientUtils;
-import org.apache.http.config.ConnectionConfig;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContexts;
-import org.apache.http.conn.ssl.TrustStrategy;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNull;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.generateUUID;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
+import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
+
+import com.cloudant.client.org.lightcouch.internal.GsonHelper;
+import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
+import com.cloudant.http.HttpConnectionRequestInterceptor;
+import com.cloudant.http.HttpConnectionResponseInterceptor;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.Properties;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 
 /**
- * Presents a <i>client</i> to CouchDB database server.
- * <p>This class is the main object to use to gain access to the APIs.
- * <h3>Usage Example:</h3>
- * <p>Create a new client instance:
- * <pre>
- * CouchDbClient dbClient = new CouchDbClient();
- * </pre>
- * <p/>
- * <p>Start using the API by the client:
- * <p/>
- * <p>DB server APIs is accessed by the client directly eg.: {@link CouchDbClientBase#getAllDbs()
- * dbClient.getAllDbs()}
- * <p>DB is accessed by getting to the CouchDatabase from the client
- * <pre>
- * CouchDatabase db = dbClient.database("customers",false);
- * </pre>
- * <p>Documents <code>CRUD</code> APIs is accessed from the CouchDatabase eg.: {@link
- * CouchDatabaseBase#find(Class, String) db.find(Foo.class, "doc-id")}
- * <p>View APIs {@link View db.view()}
- * <p>Change Notifications {@link Changes db.changes()}
- * <p>Design documents {@link CouchDbDesign db.design()}
- * <p/>
- * <p>Replication {@link Replication dbClient.replication()} and {@link Replicator dbClient
- * .replicator()}
- * <p/>
- * <p/>
- * <p>At the end of a client usage; it's useful to call: {@link #shutdown()} to ensure proper
- * release of resources.
+ * Contains a Client Public API implementation.
  *
  * @author Ahmed Yehia
- * @see CouchDbClientAndroid
- * @since 0.0.2
+ * @see CouchDbClient
  */
-public class CouchDbClient extends CouchDbClientBase {
 
-    //User-Agent value for the client
-    public static final String USER_AGENT;
+public class CouchDbClient {
 
-    static {
-        String ua = "java-cloudant";
-        String version = "unknown";
-        final URL url = CouchDbClient.class.getClassLoader().getResource("client.properties");
-        final Properties properties = new Properties();
-        InputStream propStream = null;
-        try {
-            properties.load((propStream = url.openStream()));
-            ua = properties.getProperty("user.agent.name", ua);
-            version = properties.getProperty("user.agent.version", version);
-        } catch (Exception ex) {
-            //swallow exception and keep using default values
-        } finally {
-            if (propStream != null) {
-                try {
-                    propStream.close();
-                } catch (IOException e) {
-                    //can't do anything else
-                }
-            }
+    static final Log log = LogFactory.getLog(CouchDbClient.class);
+
+    private URI baseURI;
+
+    private Gson gson;
+
+    private Map<String, String> customHeaders;
+
+    private List<HttpConnectionRequestInterceptor> requestInterceptors;
+    private List<HttpConnectionResponseInterceptor> responseInterceptors;
+
+    CouchDbClient() {
+        this(new CouchDbConfig());
+    }
+
+    CouchDbClient(CouchDbConfig config) {
+        final CouchDbProperties props = config.getProperties();
+
+        this.gson = GsonHelper.initGson(new GsonBuilder()).create();
+        final String path = props.getPath() != null ? props.getPath() : "";
+        //Add username and password if authentication info exists
+        if (props.getUserInfo() != null && !props.getUserInfo().isEmpty()) {
+            this.baseURI = buildUri().scheme(props.getProtocol()).userInfo(props.getUserInfo())
+                    .host(props.getHost()).port(props.getPort())
+                    .path("/").path(path).build();
+        } else {
+            this.baseURI = buildUri().scheme(props.getProtocol()).host(props.getHost()).port(props
+                    .getPort()).path("/").path(path).build();
         }
-        USER_AGENT = String.format("%s/%s [Java (%s; %s; %s) %s; %s; %s]",
-                ua,
-                version,
-                System.getProperty("os.arch"),
-                System.getProperty("os.name"),
-                System.getProperty("os.version"),
-                System.getProperty("java.vendor"),
-                System.getProperty("java.version"),
-                System.getProperty("java.runtime.version"));
-    }
 
-    /**
-     * Constructs a new instance of this class, expects a configuration file named
-     * <code>couchdb.properties</code> to be available in your application default classpath.
-     */
-    public CouchDbClient() {
-        super();
-    }
+        this.requestInterceptors = new ArrayList<HttpConnectionRequestInterceptor>();
+        this.responseInterceptors = new ArrayList<HttpConnectionResponseInterceptor>();
 
-    /**
-     * Constructs a new instance of this class.
-     *
-     * @param protocol   The protocol to use (i.e http or https)
-     * @param host       The database host address
-     * @param port       The database listening port
-     * @param authCookie The cookie obtained from last login
-     */
-    public CouchDbClient(String protocol, String host, int port,
-                         String authCookie) {
-        super(new CouchDbConfig(new CouchDbProperties(protocol, host, port,
-                authCookie)));
-    }
+        if(props.getRequestInterceptors() != null) {
+            this.requestInterceptors.addAll(props.getRequestInterceptors());
+        }
+
+        if(props.getResponseInterceptors() != null) {
+            this.responseInterceptors.addAll(props.getResponseInterceptors());
+        }
 
 
-    /**
-     * Constructs a new instance of this class.
-     *
-     * @param configFileName The configuration file name.
-     */
-    public CouchDbClient(String configFileName) {
-        super(new CouchDbConfig(configFileName));
-    }
-
-    /**
-     * Constructs a new instance of this class.
-     *
-     * @param protocol The protocol to use (i.e http or https)
-     * @param host     The database host address
-     * @param port     The database listening port
-     * @param username The Username credential
-     * @param password The Password credential
-     */
-    public CouchDbClient(String protocol, String host, int port, String username, String
-            password) {
-        super(new CouchDbConfig(new CouchDbProperties(protocol, host, port, username, password)));
+        props.clearPassword();
     }
 
     /**
@@ -186,148 +111,481 @@ public class CouchDbClient extends CouchDbClientBase {
      * @see {@link CouchDbProperties}
      */
     public CouchDbClient(CouchDbProperties properties) {
-        super(new CouchDbConfig(properties));
+        this(new CouchDbConfig(properties));
     }
 
     /**
-     * @return {@link CloseableHttpClient} instance.
+     * Shuts down and releases resources used by this client instance.
+     * Note: Apache's httpclient was replaced by HttpUrlConnection.
+     * Connection manager is no longer used.
      */
-    @Override
-    HttpClient createHttpClient(CouchDbProperties props) {
-        try {
-            Registry<ConnectionSocketFactory> registry = createRegistry(props);
-            PoolingHttpClientConnectionManager ccm = createConnectionManager(props, registry);
-            HttpClientBuilder clientBuilder = HttpClients.custom().setUserAgent(USER_AGENT)
-                    .setConnectionManager(ccm)
-                    .setDefaultConnectionConfig(ConnectionConfig.custom()
-                            .setCharset(Consts.UTF_8).build())
-                    .setDefaultRequestConfig(RequestConfig.custom()
-                            .setSocketTimeout(props.getSocketTimeout())
-                            .setConnectTimeout(props.getConnectionTimeout()).build());
-            if (props.getProxyHost() != null) {
-                clientBuilder.setProxy(new HttpHost(props.getProxyHost(), props.getProxyPort()));
-            }
-            clientBuilder.setDefaultCookieStore(cookies); // use AUTH cookies
-            if (props.getUsername() != null) {
-                // this one is for non account endpoints.
-                CredentialsProvider credsProvider = new BasicCredentialsProvider();
-                credsProvider.setCredentials(new AuthScope(props.getHost(),
-                                props.getPort()),
-                        new UsernamePasswordCredentials(props.getUsername(),
-                                props.getPassword()));
-                clientBuilder.setDefaultCredentialsProvider(credsProvider);
-                //props.clearPassword();
-            }
-            registerInterceptors(clientBuilder);
-            return clientBuilder.build();
-        } catch (Exception e) {
-            throw new IllegalStateException("Error Creating HTTPClient: ", e);
-        }
-    }
-
-    @Override
-    HttpContext createContext() {
-
-        AuthCache authCache = new BasicAuthCache();
-        authCache.put(host, new BasicScheme());
-        HttpContext context = new BasicHttpContext();
-        context.setAttribute(HttpClientContext.AUTH_CACHE, authCache);
-        return context;
-    }
-
-
-    private PoolingHttpClientConnectionManager createConnectionManager(
-            CouchDbProperties props, Registry<ConnectionSocketFactory> registry) {
-        PoolingHttpClientConnectionManager ccm = new PoolingHttpClientConnectionManager(registry);
-        if (props.getMaxConnections() != 0) {
-            ccm.setMaxTotal(props.getMaxConnections());
-            ccm.setDefaultMaxPerRoute(props.getMaxConnections());
-        }
-        return ccm;
-    }
-
-    private Registry<ConnectionSocketFactory> createRegistry(CouchDbProperties props) throws
-            KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
-        RegistryBuilder<ConnectionSocketFactory> registry = RegistryBuilder
-                .<ConnectionSocketFactory>create();
-
-        if (props.isSSLAuthenticationDisabled()) {
-            // No SSL authentication.
-            // No need for a custom SSLSocketFactory in this case.
-            SSLContext sslcontext = SSLContexts.custom()
-                    .loadTrustMaterial(null, new TrustStrategy() {
-                        public boolean isTrusted(X509Certificate[] chain, String authType)
-                                throws CertificateException {
-                            return true;
-                        }
-                    }).build();
-
-            registry.register("https", new SSLConnectionSocketFactory(sslcontext,
-                    SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER));
-        } else {
-            // With SSL authentication enabled.
-            // A custom SSLSocketFactory can be set to enhance security in specific
-            // environments.
-            SSLSocketFactory factory = props.getAuthenticatedModeSSLSocketFactory();
-            if (factory != null) {
-                registry.register(
-                        "https",
-                        new SSLConnectionSocketFactory(factory,
-                                SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER));
-            } else {
-                // Use the default SSL configuration and truststore of the JRE.
-                registry.register(
-                        "https",
-                        new SSLConnectionSocketFactory(SSLContexts.createDefault(),
-                                SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER));
-            }
-        }
-
-        //always return a plain http socket factory as well as whatever SSL was registered.
-        return registry.register("http", PlainConnectionSocketFactory.INSTANCE).build();
-
+    public void shutdown() {
     }
 
     /**
-     * Adds request/response interceptors for logging and validation.
+     * @return The base URI.
+     */
+    public URI getBaseUri() {
+        return baseURI;
+    }
+
+
+    /**
+     * Get an instance of Database class to perform DB operations
      *
-     * @param clientBuilder
+     * @param name   The name of the database
+     * @param create Should the database be created if it doesn't exist
+     * @throws Exception If the database doesn't exist and create is false, an exception is raised
      */
-    private void registerInterceptors(HttpClientBuilder clientBuilder) {
-        clientBuilder.addInterceptorFirst(new HttpRequestInterceptor() {
-            public void process(final HttpRequest request,
-                                final HttpContext context) throws IOException {
-                if (log.isDebugEnabled()) {
-                    RequestLine req = request.getRequestLine();
-                    log.debug("> " + req.getMethod() + " " + URLDecoder.decode(req.getUri(),
-                            "UTF-8"));
-                }
-            }
-        });
-        clientBuilder.addInterceptorFirst(new HttpResponseInterceptor() {
-            public void process(final HttpResponse response,
-                                final HttpContext context) throws IOException {
-                if (log.isDebugEnabled()) {
-                    log.debug("< Status: " + response.getStatusLine().getStatusCode());
-                }
-                validate(response);
-            }
-        });
-    }
-
+    //abstract CouchDatabaseBase database(String name, boolean create);
 
     /**
-     * Get a database
+     * Get an instance of Database class to perform DB operations
      *
      * @param name   name of database to access
-     * @param create flag indicating whether to create the database if doesnt exist.
+     * @param create flag indicating whether to create the database if it doesn't exist.
      * @return CouchDatabase object
      */
     public CouchDatabase database(String name, boolean create) {
         return new CouchDatabase(this, name, create);
     }
 
-    public void shutdown() {
-        HttpClientUtils.closeQuietly(this.httpClient);
+    /**
+     * Requests CouchDB deletes a database.
+     *
+     * @param dbName  The database name
+     * @param confirm A confirmation string with the value: <tt>delete database</tt>
+     * @Deprecated Use {@link CouchDbClient#deleteDB(String)}
+     */
+    @Deprecated
+    public void deleteDB(String dbName, String confirm) {
+        if (!"delete database".equals(confirm)) {
+            throw new IllegalArgumentException("Invalid confirm!");
+        }
+        deleteDB(dbName);
+    }
+
+    /**
+     * Requests CouchDB deletes a database.
+     *
+     * @param dbName The database name
+     */
+    public void deleteDB(String dbName) {
+        assertNotEmpty(dbName, "dbName");
+        delete(buildUri(getBaseUri()).path(dbName).build());
+    }
+
+    /**
+     * Requests CouchDB creates a new database; if one doesn't exist.
+     *
+     * @param dbName The Database name
+     */
+    public void createDB(String dbName) {
+        assertNotEmpty(dbName, "dbName");
+        InputStream is = null;
+        final URI uri = buildUri(getBaseUri()).path(dbName).build();
+        try {
+            is = get(uri);
+        } catch (NoDocumentException e) { // db doesn't exist
+            is = put(uri);
+            log.info(String.format("Created Database: '%s'", dbName));
+        } finally {
+            close(is);
+        }
+    }
+
+    /**
+     * @return All Server databases.
+     */
+    public List<String> getAllDbs() {
+        InputStream instream = null;
+        try {
+            Type typeOfList = new TypeToken<List<String>>() {
+            }.getType();
+            instream = get(buildUri(getBaseUri()).path("_all_dbs").build());
+            Reader reader = new InputStreamReader(instream, "UTF-8");
+            return getGson().fromJson(reader, typeOfList);
+        } catch (UnsupportedEncodingException e) {
+            // This should never happen as every implementation of the java platform is required
+            // to support UTF-8.
+            throw new RuntimeException(e);
+        } finally {
+            close(instream);
+        }
+    }
+
+    /**
+     * @return DB Server version.
+     */
+    public String serverVersion() {
+        InputStream instream = null;
+        try {
+            instream = get(buildUri(getBaseUri()).build());
+            Reader reader = new InputStreamReader(instream, "UTF-8");
+            return getAsString(new JsonParser().parse(reader).getAsJsonObject(), "version");
+        } catch (UnsupportedEncodingException e) {
+            // This should never happen as every implementation of the java platform is required
+            // to support UTF-8.
+            throw new RuntimeException(e);
+        } finally {
+            close(instream);
+        }
+    }
+
+    /**
+     * Provides access to CouchDB <tt>replication</tt> APIs.
+     *
+     * @see Replication
+     */
+    public Replication replication() {
+        return new Replication(this);
+    }
+
+    /**
+     * Provides access to the <tt>replicator database</tt>.
+     *
+     * @see Replicator
+     */
+    public Replicator replicator() {
+        return new Replicator(this);
+    }
+
+
+    /**
+     * Request a database sends a list of UUIDs.
+     *
+     * @param count The count of UUIDs.
+     */
+    public List<String> uuids(long count) {
+        final String uri = String.format("%s_uuids?count=%d", getBaseUri(), count);
+        final JsonObject json = get(URI.create(uri), JsonObject.class);
+        return getGson().fromJson(json.get("uuids").toString(), new TypeToken<List<String>>() {
+        }.getType());
+    }
+
+
+    /**
+     * Executes a HTTP request.
+     * <p><b>Note</b>: The stream must be closed after use to release the connection.
+     *
+     * @param connection The HTTP request to execute.
+     * @return Class type of object T (i.e. {@link Response}
+     */
+    public Response executeToResponse(HttpConnection connection) {
+        InputStream is = null;
+        try {
+            is = this.executeToInputStream(connection);
+            return getResponse(is, Response.class, getGson());
+        } catch (CouchDbException e) {
+            if (e.getStatusCode() == 409) {
+                throw new DocumentConflictException(e.toString());
+            } else {
+                throw e;
+            }
+        } finally {
+            closeQuietly(is);
+        }
+    }
+
+
+    /**
+     * Performs a HTTP DELETE request.
+     *
+     * @return {@link Response}
+     */
+    Response delete(URI uri) {
+        HttpConnection connection = Http.DELETE(uri);
+        return executeToResponse(connection);
+    }
+
+    /**
+     * Performs a HTTP GET request.
+     *
+     * @return Input stream with response
+     */
+    public InputStream get(URI uri) {
+        HttpConnection httpConnection = Http.GET(uri);
+        return executeToInputStream(httpConnection);
+    }
+
+    /**
+     * Performs a HTTP GET request.
+     *
+     * @return Class type of object T (i.e. {@link Response}
+     */
+    public <T> T get(URI uri, Class<T> classType) {
+        HttpConnection connection = Http.GET(uri);
+        InputStream response = executeToInputStream(connection);
+        return getResponse(response, classType, getGson());
+    }
+
+    /**
+     * Performs a HTTP HEAD request.
+     *
+     * @return {@link Response}
+     */
+    InputStream head(URI uri) {
+        HttpConnection connection = Http.HEAD(uri);
+        return executeToInputStream(connection);
+    }
+
+    /**
+     * Performs a HTTP PUT request, saves or updates a document.
+     * This defaults to "application/json" content type.
+     *
+     * @return Input stream with response
+     */
+    InputStream put(URI uri) {
+        return put(uri, "application/json");
+    }
+
+    /**
+     * Performs a HTTP PUT request with content type, saves or updates a document.
+     *
+     * @return Input stream with response
+     */
+    InputStream put(URI uri, String contentType) {
+        HttpConnection connection = Http.PUT(uri, contentType);
+        return executeToInputStream(connection);
+    }
+
+    /**
+     * Performs a HTTP PUT request, saves an attachment.
+     *
+     * @return {@link Response}
+     */
+    Response put(URI uri, InputStream instream, String contentType) {
+        HttpConnection connection = Http.PUT(uri, contentType);
+
+        connection.setRequestBody(instream);
+
+        return executeToResponse(connection);
+    }
+
+    /**
+     * Performs a HTTP PUT request, saves or updates a document.
+     * @param object Object for updating request
+     * @param newEntity If true, saves a new document. Else, updates an existing one.
+     *
+     * @return {@link Response}
+     */
+    public Response put(URI uri, Object object, boolean newEntity) {
+        return put(uri, object, newEntity, -1);
+    }
+
+    /**
+     * Performs a HTTP PUT request, saves or updates a document.
+     * @param object Object for updating request
+     * @param newEntity If true, saves a new document. Else, updates an existing one.
+     *
+     * @return {@link Response}
+     */
+    public Response put(URI uri, Object object, boolean newEntity, int writeQuorum) {
+        assertNotEmpty(object, "object");
+        try {
+            final JsonObject json = getGson().toJsonTree(object).getAsJsonObject();
+            String id = getAsString(json, "_id");
+            String rev = getAsString(json, "_rev");
+            if (newEntity) { // save
+                assertNull(rev, "rev");
+                id = (id == null) ? generateUUID() : id;
+            } else { // update
+                assertNotEmpty(id, "id");
+                assertNotEmpty(rev, "rev");
+            }
+            URI httpUri = null;
+            if(writeQuorum > -1) {
+                httpUri = buildUri(uri).pathToEncode(id).query("w",
+                        writeQuorum).buildEncoded();
+            } else {
+                httpUri = buildUri(uri).pathToEncode(id).buildEncoded();
+            }
+            HttpConnection connection = Http.PUT(httpUri, "application/json");
+            connection.setRequestBody(json.toString());
+
+            return executeToResponse(connection);
+        } catch (CouchDbException e) {
+            if (e.getStatusCode() == 409) {
+                throw new DocumentConflictException(e.toString());
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    /**
+     * Performs a HTTP POST request with JSON request body.
+     *
+     * @return Input stream with response
+     */
+    public InputStream post(URI uri, String json) {
+        HttpConnection connection = Http.POST(uri,
+                "application/json");
+        if(json != null && !json.isEmpty()) {
+            connection.setRequestBody(json);
+        }
+        return executeToInputStream(connection);
+    }
+
+    /**
+     * Performs a HTTP POST request.
+     *
+     * @return Input stream with response
+     */
+    InputStream post(URI uri) {
+        return post(uri, null);
+    }
+
+
+    // Helpers
+
+    /**
+     * Validates a HTTP response; on error cases logs status and throws relevant exceptions.
+     *
+     * @param response The HTTP response.
+     */
+    void validate(HttpConnection response) throws IOException {
+        final int code = response.getConnection().getResponseCode();
+        if (code == 200 || code == 201 || code == 202) { // success (ok | created | accepted)
+            return;
+        }
+        String reason = response.getConnection().getResponseMessage();
+        switch (code) {
+            case HttpURLConnection.HTTP_NOT_FOUND: {
+                throw new NoDocumentException(reason);
+            }
+            case HttpURLConnection.HTTP_CONFLICT: {
+                throw new DocumentConflictException(reason);
+            }
+            case HttpURLConnection.HTTP_PRECON_FAILED: {
+                throw new PreconditionFailedException(reason);
+            }
+            default: { // other errors: 400 | 401 | 500 etc.
+                throw new CouchDbException(reason);
+            }
+        }
+    }
+
+    /**
+     * Sets a {@link GsonBuilder} to create {@link Gson} instance.
+     * <p>Useful for registering custom serializers/deserializers, such as JodaTime classes.
+     */
+    public void setGsonBuilder(GsonBuilder gsonBuilder) {
+        this.gson = GsonHelper.initGson(gsonBuilder).create();
+    }
+
+
+    /**
+     * @return The Gson instance.
+     */
+    public Gson getGson() {
+        return gson;
+    }
+
+
+    // - if 2xx then return stream
+    // - map 404 to NoResourceException
+    // - if there's a couch error returned as json, un-marshall and throw
+    // - anything else, just throw the IOException back, use the cause part of the exception?
+
+    // it needs to catch eg FileNotFoundException and rethrow to emulate the previous exception handling behaviour
+    public InputStream executeToInputStream(HttpConnection connection) throws CouchDbException {
+
+        // all CouchClient requests want to receive application/json responses
+        connection.requestProperties.put("Accept", "application/json");
+        this.addCustomHeaders(connection);
+        connection.responseInterceptors.addAll(this.responseInterceptors);
+        connection.requestInterceptors.addAll(this.requestInterceptors);
+        InputStream is = null; // input stream - response from server on success
+        InputStream es = null; // error stream - response from server for a 500 etc
+        int code = -1;
+        Throwable cause = null;
+
+        // first try to execute our request and get the input stream with the server's response
+        // we want to catch IOException because HttpUrlConnection throws these for non-success
+        // responses (eg 404 throws a FileNotFoundException) but we need to map to our own
+        // specific exceptions
+        try {
+            is = connection.execute().responseAsInputStream();
+        } catch (IOException ioe) {
+            cause = ioe;
+        }
+
+        try {
+            JsonObject errorJsonMessage = null;
+            if(cause != null && connection.getConnection().getErrorStream() != null) {
+                String errorString = IOUtils.toString(connection.getConnection()
+                        .getErrorStream(), "UTF-8");
+                errorJsonMessage = gson.fromJson(errorString, JsonObject.class);
+            }
+
+            //User errorStream to get error message if database does not exist or already exists
+            String response = "";
+            if(errorJsonMessage != null && errorJsonMessage.has("reason")) {
+                response = errorJsonMessage.toString();
+            } else {
+                response = connection.getConnection().getResponseMessage();
+            }
+            code = connection.getConnection().getResponseCode();
+            // everything ok? return the stream
+            if (code / 100 == 2) { // success [200,299]
+                return is;
+            } else if (code == 404) {
+                throw new NoDocumentException(response, cause);
+            } else if(code == 412) {
+                //Database already created
+                return is;
+            } else {
+                es = connection.getConnection().getErrorStream();
+
+                CouchDbException ex = getGson().fromJson(new InputStreamReader(es),
+                        CouchDbException.class);
+                if (ex == null && errorJsonMessage != null) {
+                    //Try again with error json message
+                    try {
+                        ex = getGson().fromJson(errorJsonMessage,
+                                CouchDbException.class);
+                        ex.setStatusCode(code);
+                    } catch (NullPointerException e) {
+                        //Create new Exception from scratch
+                        ex = new CouchDbException(response, code);
+                    }
+
+                }
+                throw ex;
+            }
+        } catch (IOException ioe) {
+            throw new CouchDbException("Error retrieving server response", ioe, code);
+        } finally {
+            if (es != null) {
+                try {
+                    es.close();
+                } catch (IOException ioe) {
+                    ;
+                }
+            }
+        }
+    }
+
+    /**
+     * Adds headers from CouchConfig to {@code connection}.
+     * @param connection connection to add headers to.
+     */
+    public void addCustomHeaders(HttpConnection connection) {
+        if (this.customHeaders != null) {
+            connection.requestProperties.putAll(this.customHeaders);
+        }
+    }
+
+
+
+    private void closeQuietly(InputStream is) {
+        try {
+            if (is != null) {
+                is.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
