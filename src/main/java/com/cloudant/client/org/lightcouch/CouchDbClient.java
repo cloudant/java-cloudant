@@ -45,6 +45,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -70,9 +71,7 @@ public class CouchDbClient {
     private List<HttpConnectionRequestInterceptor> requestInterceptors;
     private List<HttpConnectionResponseInterceptor> responseInterceptors;
 
-    CouchDbClient() {
-        this(new CouchDbConfig());
-    }
+    private URL proxyUrl = null;
 
     CouchDbClient(CouchDbConfig config) {
         final CouchDbProperties props = config.getProperties();
@@ -88,6 +87,8 @@ public class CouchDbClient {
             this.baseURI = buildUri().scheme(props.getProtocol()).host(props.getHost()).port(props
                     .getPort()).path("/").path(path).build();
         }
+
+        proxyUrl = props.getProxyURL();
 
         this.requestInterceptors = new ArrayList<HttpConnectionRequestInterceptor>();
         this.responseInterceptors = new ArrayList<HttpConnectionResponseInterceptor>();
@@ -491,9 +492,12 @@ public class CouchDbClient {
     // it needs to catch eg FileNotFoundException and rethrow to emulate the previous exception handling behaviour
     public InputStream executeToInputStream(HttpConnection connection) throws CouchDbException {
 
+        if (proxyUrl != null) {
+            connection.setProxy(proxyUrl);
+        }
+
         // all CouchClient requests want to receive application/json responses
         connection.requestProperties.put("Accept", "application/json");
-        this.addCustomHeaders(connection);
         connection.responseInterceptors.addAll(this.responseInterceptors);
         connection.requestInterceptors.addAll(this.requestInterceptors);
         InputStream is = null; // input stream - response from server on success
@@ -566,18 +570,6 @@ public class CouchDbClient {
             }
         }
     }
-
-    /**
-     * Adds headers from CouchConfig to {@code connection}.
-     * @param connection connection to add headers to.
-     */
-    public void addCustomHeaders(HttpConnection connection) {
-        if (this.customHeaders != null) {
-            connection.requestProperties.putAll(this.customHeaders);
-        }
-    }
-
-
 
     private void closeQuietly(InputStream is) {
         try {

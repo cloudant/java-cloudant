@@ -18,6 +18,9 @@ package com.cloudant.client.org.lightcouch;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
 
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.net.ssl.SSLSocketFactory;
@@ -45,15 +48,14 @@ public class CouchDbProperties {
     private int connectionTimeout = 300000;
     //default to 6 connections
     private int maxConnections = 6;
-    private String proxyHost;
-    private int proxyPort;
-    private String proxyUser;
-    private String proxyPassword;
+    private URL proxyURL;
     private boolean disableSSLAuthentication;
     private SSLSocketFactory authenticatedModeSSLSocketFactory;
 
-    private List<HttpConnectionRequestInterceptor> requestInterceptors;
-    private List<HttpConnectionResponseInterceptor> responseInterceptors;
+    private List<HttpConnectionRequestInterceptor> requestInterceptors = new ArrayList
+            <HttpConnectionRequestInterceptor>();
+    private List<HttpConnectionResponseInterceptor> responseInterceptors = new ArrayList
+            <HttpConnectionResponseInterceptor>();
 
     public CouchDbProperties() {
         // default constructor
@@ -113,20 +115,8 @@ public class CouchDbProperties {
         return maxConnections;
     }
 
-    public String getProxyHost() {
-        return proxyHost;
-    }
-
-    public int getProxyPort() {
-        return proxyPort;
-    }
-
-    public String getProxyUser() {
-        return proxyUser;
-    }
-
-    public String getProxyPassword() {
-        return proxyPassword;
+    public URL getProxyURL() {
+        return proxyURL;
     }
 
     //Retrieve user’s credentials in URI format
@@ -183,23 +173,8 @@ public class CouchDbProperties {
         return this;
     }
 
-    public CouchDbProperties setProxyHost(String proxyHost) {
-        this.proxyHost = proxyHost;
-        return this;
-    }
-
-    public CouchDbProperties setProxyPort(int proxyPort) {
-        this.proxyPort = proxyPort;
-        return this;
-    }
-
-    public CouchDbProperties setProxyUser(String proxyUser) {
-        this.proxyUser = proxyUser;
-        return this;
-    }
-
-    public CouchDbProperties setProxyPassword(String proxyPassword) {
-        this.proxyPassword = proxyPassword;
+    public CouchDbProperties setProxyURL(URL proxyURL) {
+        this.proxyURL = proxyURL;
         return this;
     }
 
@@ -271,8 +246,9 @@ public class CouchDbProperties {
         return requestInterceptors;
     }
 
-    public CouchDbProperties setRequestInterceptors(List<HttpConnectionRequestInterceptor> requestInterceptors) {
-        this.requestInterceptors = requestInterceptors;
+    public CouchDbProperties addRequestInterceptors(HttpConnectionRequestInterceptor...
+                                                            requestInterceptors) {
+        this.requestInterceptors.addAll(Arrays.asList(requestInterceptors));
         return this;
     }
 
@@ -280,9 +256,9 @@ public class CouchDbProperties {
         return responseInterceptors;
     }
 
-    public CouchDbProperties setResponseInterceptors(List<HttpConnectionResponseInterceptor>
-                                                responseInterceptors) {
-        this.responseInterceptors = responseInterceptors;
+    public CouchDbProperties addResponseInterceptors(HttpConnectionResponseInterceptor
+                                                             responseInterceptors) {
+        this.responseInterceptors.addAll(Arrays.asList(responseInterceptors));
         return this;
     }
 }
