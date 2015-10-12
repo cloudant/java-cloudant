@@ -47,6 +47,8 @@ public class CouchDbProperties {
     private int maxConnections = 6;
     private String proxyHost;
     private int proxyPort;
+    private String proxyUser;
+    private String proxyPassword;
     private boolean disableSSLAuthentication;
     private SSLSocketFactory authenticatedModeSSLSocketFactory;
 
@@ -119,6 +121,14 @@ public class CouchDbProperties {
         return proxyPort;
     }
 
+    public String getProxyUser() {
+        return proxyUser;
+    }
+
+    public String getProxyPassword() {
+        return proxyPassword;
+    }
+
     //Retrieve user’s credentials in URI format
     public String getUserInfo() {
         if(username != null && password != null) {
@@ -180,6 +190,16 @@ public class CouchDbProperties {
 
     public CouchDbProperties setProxyPort(int proxyPort) {
         this.proxyPort = proxyPort;
+        return this;
+    }
+
+    public CouchDbProperties setProxyUser(String proxyUser) {
+        this.proxyUser = proxyUser;
+        return this;
+    }
+
+    public CouchDbProperties setProxyPassword(String proxyPassword) {
+        this.proxyPassword = proxyPassword;
         return this;
     }
 

@@ -29,6 +29,8 @@ public class ConnectOptions {
 
     private String proxyHost;
     private int proxyPort;
+    private String proxyUser;
+    private String proxyPassword;
     private boolean isSSLAuthenticationDisabled;
     private SSLSocketFactory authenticatedModeSSLSocketFactory;
 
@@ -58,6 +60,16 @@ public class ConnectOptions {
 
     public ConnectOptions setProxyPort(int proxyPort) {
         this.proxyPort = proxyPort;
+        return this;
+    }
+
+    public ConnectOptions setProxyUser(String proxyUser) {
+        this.proxyUser = proxyUser;
+        return this;
+    }
+
+    public ConnectOptions setProxyPassword(String proxyPassword) {
+        this.proxyPassword = proxyPassword;
         return this;
     }
 
@@ -106,6 +118,14 @@ public class ConnectOptions {
 
     public int getProxyPort() {
         return proxyPort;
+    }
+
+    public String getProxyUser() {
+        return proxyUser;
+    }
+
+    public String getProxyPassword() {
+        return proxyPassword;
     }
 
     /**
