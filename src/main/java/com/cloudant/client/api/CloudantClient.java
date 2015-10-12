@@ -535,6 +535,8 @@ public class CloudantClient {
 
             props.setProxyHost(connectOptions.getProxyHost());
             props.setProxyPort(connectOptions.getProxyPort());
+            props.setProxyUser(connectOptions.getProxyUser());
+            props.setProxyPassword(connectOptions.getProxyPassword());
             props.disableSSLAuthentication(connectOptions.isSSLAuthenticationDisabled());
             props.setAuthenticatedModeSSLSocketFactory(connectOptions
                     .getAuthenticatedModeSSLSocketFactory());

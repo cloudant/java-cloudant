@@ -960,8 +960,10 @@ ConnectOptions connectOptions = new ConnectOptions()
                                         .setSocketTimeout(50)
                                         .setConnectionTimeout(50)
                                         .setMaxConnections(100)
-                                        .setProxyHost("http://localhost")
+                                        .setProxyHost("localhost")
                                         .setProxyPort(8080)
+                                        .setProxyUser("exampleProxyUser")
+                                        .setProxyPassword("exampleProxyPassword")
                                         .setSSLAuthenticationDisabled(true);
  CloudantClient client = new CloudantClient("cloudant.com","test","password",
                                                   connectOptions );
