@@ -14,6 +14,8 @@
 
 package com.cloudant.client.api.model;
 
+import java.net.URL;
+
 import javax.net.ssl.SSLSocketFactory;
 
 /**
@@ -27,8 +29,7 @@ public class ConnectOptions {
     private int connectionTimeout;
     private int maxConnections;
 
-    private String proxyHost;
-    private int proxyPort;
+    private URL proxyURL;
     private String proxyUser;
     private String proxyPassword;
     private boolean isSSLAuthenticationDisabled;
@@ -53,13 +54,8 @@ public class ConnectOptions {
         return this;
     }
 
-    public ConnectOptions setProxyHost(String proxyHost) {
-        this.proxyHost = proxyHost;
-        return this;
-    }
-
-    public ConnectOptions setProxyPort(int proxyPort) {
-        this.proxyPort = proxyPort;
+    public ConnectOptions setProxyURL(URL proxyURL) {
+        this.proxyURL = proxyURL;
         return this;
     }
 
@@ -112,12 +108,8 @@ public class ConnectOptions {
         return maxConnections;
     }
 
-    public String getProxyHost() {
-        return proxyHost;
-    }
-
-    public int getProxyPort() {
-        return proxyPort;
+    public URL getProxyURL() {
+        return proxyURL;
     }
 
     public String getProxyUser() {
