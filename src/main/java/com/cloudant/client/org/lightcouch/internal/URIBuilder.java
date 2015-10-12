@@ -38,7 +38,6 @@ public class URIBuilder {
     private final StringBuilder query = new StringBuilder();
     /* key=value params */
     private final Params qParams = new Params();
-    private String userInfo = "";
 
     public static URIBuilder buildUri() {
         return new URIBuilder();
@@ -46,14 +45,8 @@ public class URIBuilder {
 
     public static URIBuilder buildUri(URI uri) {
         URIBuilder builder;
-        if(uri.getUserInfo() != null && !uri.getUserInfo().isEmpty()) {
-            builder = URIBuilder.buildUri().scheme(uri.getScheme())
-                    .userInfo(uri.getUserInfo()).host(uri.getHost())
-                    .port(uri.getPort()).path(uri.getPath());
-        } else {
-            builder = URIBuilder.buildUri().scheme(uri.getScheme())
-                    .host(uri.getHost()).port(uri.getPort()).path(uri.getPath());
-        }
+        builder = URIBuilder.buildUri().scheme(uri.getScheme())
+                .host(uri.getHost()).port(uri.getPort()).path(uri.getPath());
         return builder;
     }
 
@@ -74,12 +67,7 @@ public class URIBuilder {
             }
             String q = (queryBuilder.length() == 0) ? "" : "?" + queryBuilder.toString();
             String uriString;
-            if(userInfo != null && !userInfo.isEmpty()) {
-                uriString = String.format("%s://%s@%s:%s%s%s", scheme, userInfo, host, port,
-                        path, q);
-            } else {
-                uriString = String.format("%s://%s:%s%s%s", scheme, host, port, path, q);
-            }
+            uriString = String.format("%s://%s:%s%s%s", scheme, host, port, path, q);
             return new URI(uriString);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(e);
@@ -94,13 +82,8 @@ public class URIBuilder {
         try {
             String q = (query.length() == 0) ? "" : "?" + query;
             String uri = "";
-            if(userInfo != null) {
-                uri = String.format("%s://%s@%s:%s%s%s%s", scheme, userInfo, host, port, path,
-                        encodedPath, q);
-            } else {
-                uri = String.format("%s://%s:%s%s%s%s", scheme, host, port, path, encodedPath,
-                        q);
-            }
+            uri = String.format("%s://%s:%s%s%s%s", scheme, host, port, path, encodedPath,
+                    q);
             return new URI(uri);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(e);
@@ -124,11 +107,6 @@ public class URIBuilder {
 
     public URIBuilder path(String path) {
         this.path += path;
-        return this;
-    }
-
-    public URIBuilder userInfo(String userInfo) {
-        this.userInfo += userInfo;
         return this;
     }
 
