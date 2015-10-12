@@ -78,15 +78,8 @@ public class CouchDbClient {
 
         this.gson = GsonHelper.initGson(new GsonBuilder()).create();
         final String path = props.getPath() != null ? props.getPath() : "";
-        //Add username and password if authentication info exists
-        if (props.getUserInfo() != null && !props.getUserInfo().isEmpty()) {
-            this.baseURI = buildUri().scheme(props.getProtocol()).userInfo(props.getUserInfo())
-                    .host(props.getHost()).port(props.getPort())
-                    .path("/").path(path).build();
-        } else {
-            this.baseURI = buildUri().scheme(props.getProtocol()).host(props.getHost()).port(props
-                    .getPort()).path("/").path(path).build();
-        }
+        this.baseURI = buildUri().scheme(props.getProtocol()).host(props.getHost()).port(props
+                .getPort()).path("/").path(path).build();
 
         proxyUrl = props.getProxyURL();
 

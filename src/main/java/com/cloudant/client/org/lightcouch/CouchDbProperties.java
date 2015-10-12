@@ -57,22 +57,10 @@ public class CouchDbProperties {
         // default constructor
     }
 
-    public CouchDbProperties(String protocol, String host, int port,
-                             String authCookie) {
+    public CouchDbProperties(String protocol, String host, int port) {
         this.protocol = protocol;
         this.host = host;
         this.port = port;
-        this.authCookie = authCookie;
-    }
-
-    public CouchDbProperties(String protocol,
-                             String host, int port, String username, String password) {
-
-        this.protocol = protocol;
-        this.host = host;
-        this.port = port;
-        this.username = username;
-        this.password = password;
     }
 
     public String getProtocol() {
@@ -91,14 +79,6 @@ public class CouchDbProperties {
         return port;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
     public int getSocketTimeout() {
         return socketTimeout;
     }
@@ -113,15 +93,6 @@ public class CouchDbProperties {
 
     public URL getProxyURL() {
         return proxyURL;
-    }
-
-    //Retrieve user’s credentials in URI format
-    public String getUserInfo() {
-        if(username != null && password != null) {
-            return String.format("%s:%s", username, password);
-        } else {
-            return null;
-        }
     }
 
     public CouchDbProperties setProtocol(String protocol) {
@@ -172,14 +143,6 @@ public class CouchDbProperties {
     public CouchDbProperties setProxyURL(URL proxyURL) {
         this.proxyURL = proxyURL;
         return this;
-    }
-
-    public String getAuthCookie() {
-        return authCookie;
-    }
-
-    public void setAuthCookie(String authCookie) {
-        this.authCookie = authCookie;
     }
 
     public void clearPassword() {

@@ -37,10 +37,8 @@ import com.cloudant.tests.util.TestLog;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -113,27 +111,6 @@ public class CloudantClientTests {
 
         Membership membership = cookieBasedClient.getMembership();
         assertNotNull(membership);
-    }
-
-    //TODO Enable in next PR with cookie interceptor changes
-    @Ignore
-    @Test
-    @Category(RequiresDB.class)
-    public void cookieNegativeTest() {
-        String cookie = "";//account.getCookie() + "XXX";
-        boolean exceptionRaised = true;
-        try {
-            new CloudantClient(
-                    CloudantClientHelper.SERVER_URI.toString(), cookie).getAllDbs();
-            exceptionRaised = false;
-        } catch (CouchDbException e) {
-            if (e.getMessage().contains("Forbidden")) {
-                exceptionRaised = true;
-            }
-        }
-        if (exceptionRaised == false) {
-            Assert.fail("could connect to cloudant with random AuthSession cookie");
-        }
     }
 
     private final String userAgentRegex = "java-cloudant/[^\\s]+ " +

@@ -37,6 +37,7 @@ import com.cloudant.client.org.lightcouch.CouchDbProperties;
 import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.Replicator;
 import com.cloudant.client.org.lightcouch.Response;
+import com.cloudant.http.CookieInterceptor;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.interceptors.ProxyAuthInterceptor;
 import com.cloudant.http.interceptors.SSLCustomizerInterceptor;
@@ -127,7 +128,7 @@ import java.util.Map;
  *
  * <h2>Replication</h2>
  * Replication {@link Replication account.replication()} and {@link Replicator account.replicator()}
- * 
+ *
  * @author Mario Briggs
  * @since 0.0.1
  */
@@ -161,8 +162,7 @@ public class CloudantClient {
                 new Integer(h.get("port")).intValue(),
                 loginUsername,
                 password,
-                null, //connectoptions
-                null //authcookie
+                null //connectoptions
         );
     }
 
@@ -189,8 +189,7 @@ public class CloudantClient {
                 new Integer(h.get("port")).intValue(),
                 loginUsername,
                 password,
-                connectOptions,
-                null //authcookie
+                connectOptions
         );
     }
 
@@ -198,20 +197,17 @@ public class CloudantClient {
      * Constructs a new instance of this class and connects to the cloudant account with the
      * specified credentials
      *
-     * @param account    For cloudant.com, the cloudant account to connect to. For Cloudant
-     *                   local, the server URL
-     * @param authCookie The cookie obtained from last login
+     * @param account For cloudant.com, the cloudant account to connect to. For Cloudant
+     *                local, the server URL
      */
-    public CloudantClient(String account, String authCookie) {
+    public CloudantClient(String account) {
         super();
         Map<String, String> h = parseAccount(account);
-        assertNotEmpty(authCookie, "AuthCookie");
 
         doInit(h.get("scheme"),
                 h.get("hostname"),
                 new Integer(h.get("port")).intValue(),
-                null, null, null,
-                authCookie
+                null, null, null
         );
     }
 
@@ -222,18 +218,16 @@ public class CloudantClient {
      * @param account        For cloudant.com, the cloudant account to connect to. For Cloudant
      *                       local, the server URL
      * @param account        The cloudant account to connect to
-     * @param authCookie     The cookie obtained from last login
      * @param connectOptions optional properties to connect e.g connectionTime,socketTimeout,etc
      */
-    public CloudantClient(String account, String authCookie, ConnectOptions connectOptions) {
+    public CloudantClient(String account, ConnectOptions connectOptions) {
         super();
         Map<String, String> h = parseAccount(account);
-        assertNotEmpty(authCookie, "AuthCookie");
 
         doInit(h.get("scheme"),
                 h.get("hostname"),
                 new Integer(h.get("port")).intValue(),
-                null, null, connectOptions, authCookie);
+                null, null, connectOptions);
     }
 
     /**
@@ -243,7 +237,7 @@ public class CloudantClient {
      */
     public ApiKey generateApiKey() {
         URI uri = buildUri(getBaseUri()).path("_api/v2/api_keys").build();
-        InputStream response =  client.post(uri, null);
+        InputStream response = client.post(uri, null);
         return getResponse(response, ApiKey.class, getGson());
     }
 
@@ -505,20 +499,27 @@ public class CloudantClient {
      * @param loginUsername
      * @param password
      * @param connectOptions
-     * @param authCookie
      */
     private void doInit(String scheme, String hostname, int port,
-                        String loginUsername, String password, ConnectOptions connectOptions,
-                        String authCookie) {
+                        String loginUsername, String password, ConnectOptions connectOptions) {
 
-        CouchDbProperties props;
-        if (authCookie == null) {
-            props = new CouchDbProperties(scheme, hostname, port,
-                    loginUsername, password);
+        CouchDbProperties props = new CouchDbProperties(scheme, hostname, port);
 
+        if (loginUsername != null && password != null) {
+            //make interceptor if both username and password are not null
+
+            //Create cookie interceptor and set in HttpConnection interceptors
+            CookieInterceptor cookieInterceptor = new CookieInterceptor(loginUsername, password);
+
+            props.addRequestInterceptors(cookieInterceptor);
+            props.addResponseInterceptors(cookieInterceptor);
         } else {
-            props = new CouchDbProperties(scheme, hostname, port,
-                    authCookie);
+            //If username or password is null, throw an exception
+            if (loginUsername != null || password != null) {
+                //Username and password both have to contain values
+                throw new CouchDbException("Either a username and password must be provided, or " +
+                        "both values must be null. Please check the credentials and try again.");
+            }
         }
 
         if (connectOptions != null) {
