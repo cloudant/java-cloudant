@@ -37,6 +37,7 @@ import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.Replicator;
 import com.cloudant.client.org.lightcouch.Response;
 import com.cloudant.http.HttpConnection;
+import com.cloudant.http.interceptors.ProxyAuthInterceptor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -515,9 +516,12 @@ public class CloudantClient {
             props.setConnectionTimeout(connectOptions.getConnectionTimeout());
             props.setSocketTimeout(connectOptions.getSocketTimeout());
             props.setMaxConnections(connectOptions.getMaxConnections());
-
-            props.setProxyHost(connectOptions.getProxyHost());
-            props.setProxyPort(connectOptions.getProxyPort());
+            props.setProxyURL(connectOptions.getProxyURL());
+            if (connectOptions.getProxyUser() != null) {
+                //if there was proxy auth information create an interceptor for it
+                props.addRequestInterceptors(new ProxyAuthInterceptor(connectOptions.getProxyUser
+                        (), connectOptions.getProxyPassword()));
+            }
             props.disableSSLAuthentication(connectOptions.isSSLAuthenticationDisabled());
             props.setAuthenticatedModeSSLSocketFactory(connectOptions
                     .getAuthenticatedModeSSLSocketFactory());

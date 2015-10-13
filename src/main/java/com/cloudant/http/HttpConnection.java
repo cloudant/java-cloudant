@@ -10,15 +10,18 @@
 
 package com.cloudant.http;
 
+import com.cloudant.http.interceptors.BasicAuthInterceptor;
+
 import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -79,6 +82,8 @@ public class HttpConnection  {
 
     public final List<HttpConnectionRequestInterceptor> requestInterceptors;
     public final List<HttpConnectionResponseInterceptor> responseInterceptors;
+
+    private Proxy proxy = null;
 
     private int numberOfRetries = 10;
 
@@ -174,23 +179,19 @@ public class HttpConnection  {
             while (retry && n-- > 0) {
 
                 System.setProperty("http.keepAlive", "false");
-
-                connection = (HttpURLConnection) url.openConnection();
+                if (proxy != null) {
+                    connection = (HttpURLConnection) url.openConnection(proxy);
+                } else {
+                    connection = (HttpURLConnection) url.openConnection();
+                }
                 for (String key : requestProperties.keySet()) {
                     connection.setRequestProperty(key, requestProperties.get(key));
                 }
 
                 connection.setRequestProperty("User-Agent", AgentHelper.USER_AGENT);
                 if (url.getUserInfo() != null) {
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    OutputStream bos = Base64OutputStreamFactory.get(baos);
-                    bos.write(url.getUserInfo().getBytes());
-                    bos.flush();
-                    bos.close();
-                    String encodedAuth = baos.toString();
-                    connection.setRequestProperty("Authorization", String.format("Basic %s", encodedAuth));
+                    requestInterceptors.add(new BasicAuthInterceptor(url.getUserInfo()));
                 }
-
 
                 // always read the result, so we can retrieve the HTTP response code
                 connection.setDoInput(true);
@@ -332,4 +333,20 @@ public class HttpConnection  {
         connection.disconnect();
     }
 
+    /**
+     * Set a proxy server address. Note that this method must be called before {@link
+     * HttpConnection#execute()} to have any effect.
+     *
+     * @param proxyAddress the URL of the HTTP proxy to use for this connection
+     */
+    public void setProxy(URL proxyAddress) {
+        if ("http".equals(proxyAddress.getProtocol()) || "https".equals(proxyAddress.getProtocol
+                ())) {
+            this.proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyAddress.getHost(),
+                    proxyAddress.getPort()));
+        } else {
+            throw new IllegalArgumentException("Only HTTP type proxies are supported");
+        }
+    }
+    
 }
