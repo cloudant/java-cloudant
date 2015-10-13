@@ -27,12 +27,14 @@ import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
+import com.cloudant.http.ok.OkHttpClientHttpUrlConnectionFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import com.squareup.okhttp.ConnectionPool;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,9 +44,9 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 
@@ -66,7 +68,10 @@ public class CouchDbClient {
     private List<HttpConnectionRequestInterceptor> requestInterceptors;
     private List<HttpConnectionResponseInterceptor> responseInterceptors;
 
-    private URL proxyUrl = null;
+    private HttpConnection.HttpUrlConnectionFactory factory =
+            (OkHttpClientHttpUrlConnectionFactory.isOkUsable())
+                    ? new OkHttpClientHttpUrlConnectionFactory()
+                    : new HttpConnection.DefaultHttpUrlConnectionFactory();
 
     CouchDbClient(CouchDbConfig config) {
         final CouchDbProperties props = config.getProperties();
@@ -75,7 +80,25 @@ public class CouchDbClient {
         this.baseURI = buildUri().scheme(props.getProtocol()).host(props.getHost()).port(props
                 .getPort()).path("/").build();
 
-        proxyUrl = props.getProxyURL();
+        //if OkHttp is available then use it for connection pooling, otherwise default to the
+        //JVM built-in pooling for HttpUrlConnection
+        if (OkHttpClientHttpUrlConnectionFactory.isOkUsable() && props.getMaxConnections() > 0) {
+            OkHttpClientHttpUrlConnectionFactory factory = new
+                    OkHttpClientHttpUrlConnectionFactory();
+            //keep connections open for as long as possible, anything over 2.5 minutes will be
+            //longer than the server
+            ConnectionPool pool = new ConnectionPool(props.getMaxConnections(), TimeUnit.MINUTES
+                    .toMillis(3));
+            factory.getOkHttpClient().setConnectionPool(pool);
+            this.factory = factory;
+        } else {
+            factory = new HttpConnection.DefaultHttpUrlConnectionFactory();
+        }
+
+        //set the proxy if it has been configured
+        if (props.getProxyURL() != null) {
+            factory.setProxy(props.getProxyURL());
+        }
 
         this.requestInterceptors = new ArrayList<HttpConnectionRequestInterceptor>();
         this.responseInterceptors = new ArrayList<HttpConnectionResponseInterceptor>();
@@ -424,9 +447,9 @@ public class CouchDbClient {
      * @throws CouchDbException for HTTP error codes or if an IOException was thrown
      */
     public HttpConnection execute(HttpConnection connection) {
-        if (proxyUrl != null) {
-            connection.setProxy(proxyUrl);
-        }
+
+        //set our HttpUrlFactory on the connection
+        connection.connectionFactory = factory;
 
         // all CouchClient requests want to receive application/json responses
         connection.requestProperties.put("Accept", "application/json");

@@ -83,10 +83,12 @@ public class HttpConnection  {
     public final List<HttpConnectionRequestInterceptor> requestInterceptors;
     public final List<HttpConnectionResponseInterceptor> responseInterceptors;
 
-    private Proxy proxy = null;
+    /**
+     * A connectionFactory for opening the URLs, can be set, but configured with a default
+     */
+    public HttpUrlConnectionFactory connectionFactory = new DefaultHttpUrlConnectionFactory();
 
     private int numberOfRetries = 10;
-
 
     public HttpConnection(String requestMethod,
                           URL url,
@@ -177,12 +179,7 @@ public class HttpConnection  {
             boolean retry = true;
             int n = numberOfRetries;
             while (retry && n-- > 0) {
-
-                if (proxy != null) {
-                    connection = (HttpURLConnection) url.openConnection(proxy);
-                } else {
-                    connection = (HttpURLConnection) url.openConnection();
-                }
+                connection = connectionFactory.openConnection(url);
 
                 connection.setRequestProperty("User-Agent", AgentHelper.USER_AGENT);
                 if (url.getUserInfo() != null) {
@@ -336,19 +333,50 @@ public class HttpConnection  {
     }
 
     /**
-     * Set a proxy server address. Note that this method must be called before {@link
-     * HttpConnection#execute()} to have any effect.
-     *
-     * @param proxyAddress the URL of the HTTP proxy to use for this connection
+     * Factory used by HttpConnection to produce HttpUrlConnections.
      */
-    public void setProxy(URL proxyAddress) {
-        if ("http".equals(proxyAddress.getProtocol()) || "https".equals(proxyAddress.getProtocol
-                ())) {
-            this.proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyAddress.getHost(),
-                    proxyAddress.getPort()));
-        } else {
-            throw new IllegalArgumentException("Only HTTP type proxies are supported");
+    public interface HttpUrlConnectionFactory {
+
+        /**
+         * Called by HttpConnection to open URLs, can be implemented to provide customization.
+         *
+         * @param url
+         * @return HttpURLConnection for the specified URL
+         * @throws IOException
+         */
+        HttpURLConnection openConnection(URL url) throws IOException;
+
+        /**
+         * Set a proxy server address. Note that this method must be called before {@link
+         * HttpConnection#execute()} to have any effect.
+         *
+         * @param proxyUrl the URL of the HTTP proxy to use for this connection
+         */
+        void setProxy(URL proxyUrl);
+    }
+
+    public static class DefaultHttpUrlConnectionFactory implements HttpUrlConnectionFactory {
+
+        protected Proxy proxy = null;
+
+        @Override
+        public HttpURLConnection openConnection(URL url) throws IOException {
+            if (proxy != null) {
+                return (HttpURLConnection) url.openConnection(proxy);
+            } else {
+                return (HttpURLConnection) url.openConnection();
+            }
+        }
+
+        @Override
+        public void setProxy(URL proxyUrl) {
+            if ("http".equals(proxyUrl.getProtocol()) || "https".equals(proxyUrl.getProtocol
+                    ())) {
+                proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyUrl.getHost(),
+                        proxyUrl.getPort()));
+            } else {
+                throw new IllegalArgumentException("Only HTTP type proxies are supported");
+            }
         }
     }
-    
 }

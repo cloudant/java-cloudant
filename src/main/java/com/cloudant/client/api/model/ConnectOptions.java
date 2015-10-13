@@ -53,6 +53,18 @@ public class ConnectOptions {
         return this;
     }
 
+    /**
+     * Set the maximum number of connections to maintain in the connection pool for the
+     * CloudantClient instance.
+     * <P>
+     * Note: this setting only applies if using the optional OkHttp dependency. If OkHttp is not
+     * present then the JVM configuration is used for pooling. Consult the JVM documentation for
+     * the http.maxConnections property for further details.
+     * </P>
+     *
+     * @param maxConnections the maximum number of connections to open to the server
+     * @return this ConnectOptions object for setting additional options
+     */
     public ConnectOptions setMaxConnections(int maxConnections) {
         this.maxConnections = maxConnections;
         return this;
