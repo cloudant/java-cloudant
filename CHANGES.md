@@ -10,6 +10,10 @@
 - [BREAKING CHANGE] - LightCouch classes moved to package com.cloudant.client.org.lightcouch.
   This should only have a visible impact for `CouchDbException` and its subclasses.
 
+# 1.2.3 (2015-10-14)
+- [NEW] Added Basic Auth for HTTP proxies. Configure via `ConnectOption#setProxyUser`
+  and `ConnectOptions#setProxyPassword`.
+
 # 1.2.2 (2015-10-01)
 - [CHANGED] Added default of 5 minutes for both connection and socket timeouts instead of waiting forever.
 - [IMPROVED] Upgraded Apache HttpClient from 4.3.3 to 4.3.6.
