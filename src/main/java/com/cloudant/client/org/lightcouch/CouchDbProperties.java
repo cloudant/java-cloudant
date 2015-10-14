@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.net.ssl.SSLSocketFactory;
-
 /**
  * Represents configuration properties for connecting to CouchDB.
  *
@@ -49,8 +47,6 @@ public class CouchDbProperties {
     //default to 6 connections
     private int maxConnections = 6;
     private URL proxyURL;
-    private boolean disableSSLAuthentication;
-    private SSLSocketFactory authenticatedModeSSLSocketFactory;
 
     private List<HttpConnectionRequestInterceptor> requestInterceptors = new ArrayList
             <HttpConnectionRequestInterceptor>();
@@ -189,57 +185,6 @@ public class CouchDbProperties {
     public void clearPassword() {
         setPassword("");
         setPassword(null);
-    }
-
-    /**
-     * Enables/disables hostname verification, certificate chain validation,
-     * and the use of the optional
-     * {@link #getAuthenticatedModeSSLSocketFactory()}.
-     *
-     * @param disabled set to true to disable or false to enable.
-     * @return the updated {@link CouchDbProperties} object.
-     * @see #isSSLAuthenticationDisabled
-     */
-    public CouchDbProperties disableSSLAuthentication(boolean disabled) {
-        this.disableSSLAuthentication = disabled;
-        return this;
-    }
-
-    /**
-     * @return true if hostname verification, certificate chain validation,
-     * and the use of the optional
-     * {@link #getAuthenticatedModeSSLSocketFactory()} are disabled, or
-     * false otherwise.
-     * @see #disableSSLAuthentication(boolean)
-     */
-    public boolean isSSLAuthenticationDisabled() {
-        return disableSSLAuthentication;
-    }
-
-    /**
-     * Returns the SSLSocketFactory that gets used when connecting to
-     * CouchDB over a <code>https</code> URL, when SSL authentication is
-     * enabled.
-     *
-     * @return An SSLSocketFactory, or <code>null</code>, which stands for
-     *         the default SSLSocketFactory of the JRE.
-     * @see #setAuthenticatedModeSSLSocketFactory(javax.net.ssl.SSLSocketFactory)
-     */
-    public SSLSocketFactory getAuthenticatedModeSSLSocketFactory() {
-        return authenticatedModeSSLSocketFactory;
-    }
-
-    /**
-     * Specifies the SSLSocketFactory to use when connecting to CouchDB
-     * over a <code>https</code> URL, when SSL authentication is enabled.
-     *
-     * @param factory An SSLSocketFactory, or <code>null</code> for the
-     *                default SSLSocketFactory of the JRE.
-     * @see #getAuthenticatedModeSSLSocketFactory()
-     */
-    public CouchDbProperties setAuthenticatedModeSSLSocketFactory(SSLSocketFactory factory) {
-        this.authenticatedModeSSLSocketFactory = factory;
-        return this;
     }
 
     public List<HttpConnectionRequestInterceptor> getRequestInterceptors() {
