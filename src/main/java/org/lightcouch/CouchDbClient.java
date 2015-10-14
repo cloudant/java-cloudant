@@ -205,19 +205,30 @@ public class CouchDbClient extends CouchDbClientBase {
                     .setDefaultRequestConfig(RequestConfig.custom()
                             .setSocketTimeout(props.getSocketTimeout())
                             .setConnectTimeout(props.getConnectionTimeout()).build());
+
+            //set up a credsProvider, but it will only be used if creds have been supplied
+            CredentialsProvider credsProvider = new BasicCredentialsProvider();
+            boolean credsProviderUsed = false;
             if (props.getProxyHost() != null) {
                 clientBuilder.setProxy(new HttpHost(props.getProxyHost(), props.getProxyPort()));
+                if (props.getProxyUser() != null) {
+                    credsProviderUsed = true;
+                    credsProvider.setCredentials(new AuthScope(props.getProxyHost(), props
+                            .getProxyPort()), new UsernamePasswordCredentials(props.getProxyUser
+                            (), props.getProxyPassword()));
+                }
             }
             clientBuilder.setDefaultCookieStore(cookies); // use AUTH cookies
             if (props.getUsername() != null) {
+                credsProviderUsed = true;
                 // this one is for non account endpoints.
-                CredentialsProvider credsProvider = new BasicCredentialsProvider();
                 credsProvider.setCredentials(new AuthScope(props.getHost(),
                                 props.getPort()),
                         new UsernamePasswordCredentials(props.getUsername(),
                                 props.getPassword()));
+            }
+            if (credsProviderUsed) {
                 clientBuilder.setDefaultCredentialsProvider(credsProvider);
-                //props.clearPassword();
             }
             registerInterceptors(clientBuilder);
             return clientBuilder.build();
