@@ -30,10 +30,10 @@ import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -93,11 +93,11 @@ public class CouchDbClient {
         this.requestInterceptors = new ArrayList<HttpConnectionRequestInterceptor>();
         this.responseInterceptors = new ArrayList<HttpConnectionResponseInterceptor>();
 
-        if(props.getRequestInterceptors() != null) {
+        if (props.getRequestInterceptors() != null) {
             this.requestInterceptors.addAll(props.getRequestInterceptors());
         }
 
-        if(props.getResponseInterceptors() != null) {
+        if (props.getResponseInterceptors() != null) {
             this.responseInterceptors.addAll(props.getResponseInterceptors());
         }
 
@@ -284,7 +284,7 @@ public class CouchDbClient {
                 throw e;
             }
         } finally {
-            closeQuietly(is);
+            close(is);
         }
     }
 
@@ -365,9 +365,9 @@ public class CouchDbClient {
 
     /**
      * Performs a HTTP PUT request, saves or updates a document.
-     * @param object Object for updating request
-     * @param newEntity If true, saves a new document. Else, updates an existing one.
      *
+     * @param object    Object for updating request
+     * @param newEntity If true, saves a new document. Else, updates an existing one.
      * @return {@link Response}
      */
     public Response put(URI uri, Object object, boolean newEntity) {
@@ -376,9 +376,9 @@ public class CouchDbClient {
 
     /**
      * Performs a HTTP PUT request, saves or updates a document.
-     * @param object Object for updating request
-     * @param newEntity If true, saves a new document. Else, updates an existing one.
      *
+     * @param object    Object for updating request
+     * @param newEntity If true, saves a new document. Else, updates an existing one.
      * @return {@link Response}
      */
     public Response put(URI uri, Object object, boolean newEntity, int writeQuorum) {
@@ -395,7 +395,7 @@ public class CouchDbClient {
                 assertNotEmpty(rev, "rev");
             }
             URI httpUri = null;
-            if(writeQuorum > -1) {
+            if (writeQuorum > -1) {
                 httpUri = buildUri(uri).pathToEncode(id).query("w",
                         writeQuorum).buildEncoded();
             } else {
@@ -422,7 +422,7 @@ public class CouchDbClient {
     public InputStream post(URI uri, String json) {
         HttpConnection connection = Http.POST(uri,
                 "application/json");
-        if(json != null && !json.isEmpty()) {
+        if (json != null && !json.isEmpty()) {
             connection.setRequestBody(json);
         }
         return executeToInputStream(connection);
@@ -489,7 +489,8 @@ public class CouchDbClient {
     // - if there's a couch error returned as json, un-marshall and throw
     // - anything else, just throw the IOException back, use the cause part of the exception?
 
-    // it needs to catch eg FileNotFoundException and rethrow to emulate the previous exception handling behaviour
+    // it needs to catch eg FileNotFoundException and rethrow to emulate the previous exception
+    // handling behaviour
     public InputStream executeToInputStream(HttpConnection connection) throws CouchDbException {
 
         if (proxyUrl != null) {
@@ -502,6 +503,7 @@ public class CouchDbClient {
         connection.requestInterceptors.addAll(this.requestInterceptors);
         InputStream is = null; // input stream - response from server on success
         InputStream es = null; // error stream - response from server for a 500 etc
+        String response = null;
         int code = -1;
         Throwable cause = null;
 
@@ -516,68 +518,33 @@ public class CouchDbClient {
         }
 
         try {
-            JsonObject errorJsonMessage = null;
-            if(cause != null && connection.getConnection().getErrorStream() != null) {
-                String errorString = IOUtils.toString(connection.getConnection()
-                        .getErrorStream(), "UTF-8");
-                errorJsonMessage = gson.fromJson(errorString, JsonObject.class);
-            }
-
-            //User errorStream to get error message if database does not exist or already exists
-            String response = "";
-            if(errorJsonMessage != null && errorJsonMessage.has("reason")) {
-                response = errorJsonMessage.toString();
-            } else {
-                response = connection.getConnection().getResponseMessage();
-            }
             code = connection.getConnection().getResponseCode();
+            response = connection.getConnection().getResponseMessage();
             // everything ok? return the stream
             if (code / 100 == 2) { // success [200,299]
                 return is;
             } else if (code == 404) {
                 throw new NoDocumentException(response, cause);
-            } else if(code == 412) {
-                //Database already created
-                return is;
+            } else if (code == 412) {
+                throw new PreconditionFailedException(response, cause);
             } else {
+                CouchDbException ex = new CouchDbException(response, code);
                 es = connection.getConnection().getErrorStream();
-
-                CouchDbException ex = getGson().fromJson(new InputStreamReader(es),
-                        CouchDbException.class);
-                if (ex == null && errorJsonMessage != null) {
-                    //Try again with error json message
+                if (es != null) {
                     try {
-                        ex = getGson().fromJson(errorJsonMessage,
+                        ex = getGson().fromJson(new InputStreamReader(es),
                                 CouchDbException.class);
                         ex.setStatusCode(code);
-                    } catch (NullPointerException e) {
-                        //Create new Exception from scratch
-                        ex = new CouchDbException(response, code);
+                    } catch (JsonParseException e) {
+                        //supress and just throw ex momentarily
                     }
-
                 }
                 throw ex;
             }
         } catch (IOException ioe) {
             throw new CouchDbException("Error retrieving server response", ioe, code);
         } finally {
-            if (es != null) {
-                try {
-                    es.close();
-                } catch (IOException ioe) {
-                    ;
-                }
-            }
-        }
-    }
-
-    private void closeQuietly(InputStream is) {
-        try {
-            if (is != null) {
-                is.close();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+            close(es);
         }
     }
 }
