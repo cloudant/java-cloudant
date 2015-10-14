@@ -1,5 +1,5 @@
-# Unreleased
-- [IMPROVED] Added Basic Auth for HTTP proxies. Configure via `ConnectOption#setProxyUser`
+# 1.2.3 (2015-10-14)
+- [NEW] Added Basic Auth for HTTP proxies. Configure via `ConnectOption#setProxyUser`
   and `ConnectOptions#setProxyPassword`.
 
 # 1.2.2 (2015-10-01)
