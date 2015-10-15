@@ -21,8 +21,9 @@ import static org.junit.Assert.assertTrue;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.model.ConnectOptions;
 import com.cloudant.http.interceptors.ProxyAuthInterceptor;
-import com.cloudant.tests.util.SingleRequestHttpServer;
+import com.cloudant.tests.util.SimpleHttpServer;
 
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.net.URL;
@@ -31,6 +32,9 @@ import java.util.regex.Pattern;
 
 public class HttpProxyTest {
 
+    @ClassRule
+    public static SimpleHttpServer server = new SimpleHttpServer();
+
     /**
      * This test validates that proxy configuration is correctly used.
      * It does not test the actual function of a proxy, just that the URL and authentication
@@ -38,17 +42,16 @@ public class HttpProxyTest {
      */
     @Test
     public void proxyConfiguration() throws Exception {
-        int serverPort = 54321;
-        SingleRequestHttpServer server = SingleRequestHttpServer.startServer(serverPort);
+
         //wait for the server to be ready
-        server.waitForServer();
+        server.await();
 
         //instantiating the client performs a single post request
         //create a client with a bogus address (TEST-NET)
         String mockProxyUser = "alpha";
         String mockProxyPass = "alphaPass";
         CloudantClient client = new CloudantClient("http://192.0.2.0", "", "", new ConnectOptions()
-                .setProxyURL(new URL("http://localhost:" + serverPort))
+                .setProxyURL(new URL(server.getUrl()))
                 .setProxyUser(mockProxyUser)
                 .setProxyPassword(mockProxyPass));
 
@@ -57,7 +60,7 @@ public class HttpProxyTest {
 
         //assert that the request had the expected proxy auth header
         boolean foundProxyAuthHeader = false;
-        for (String line : server.getRequestInput()) {
+        for (String line : server.getLastInputRequestLines()) {
             if (line.contains("Proxy-Authorization")) {
                 foundProxyAuthHeader = true;
                 Matcher m = Pattern.compile("Proxy-Authorization\\s*:\\s*(.*)", Pattern
@@ -79,6 +82,5 @@ public class HttpProxyTest {
             }
         }
 
-        server.waitForShutdown();
     }
 }

@@ -31,7 +31,7 @@ import com.cloudant.http.interceptors.TimeoutCustomizationInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.util.SingleRequestHttpServer;
+import com.cloudant.tests.util.SimpleHttpServer;
 import com.cloudant.tests.util.TestLog;
 
 import org.apache.commons.io.IOUtils;
@@ -43,17 +43,12 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.io.BufferedWriter;
-import java.io.OutputStreamWriter;
-import java.net.ServerSocket;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-
-import javax.net.ServerSocketFactory;
 
 public class CloudantClientTests {
 
@@ -162,36 +157,37 @@ public class CloudantClientTests {
     @Test
     public void testUserAgentHeaderIsAddedToRequest() throws Exception {
 
-        int serverPort = 54321;
-        SingleRequestHttpServer server = SingleRequestHttpServer.startServer(serverPort);
-        //wait for the server to be ready
-        server.waitForServer();
+        SimpleHttpServer server = new SimpleHttpServer();
+        try {
+            server.start();
+            //wait for the server to be ready
+            server.await();
 
-        //instantiating the client performs a single post request
-        CloudantClient client = new CloudantClient("http://localhost:" + serverPort, null,
-                (String) null);
-        client.executeRequest(createPost(client.getBaseUri(), null, "application/json"));
-        //assert that the request had the expected header
-        boolean foundUserAgentHeaderOnRequest = false;
-        boolean userAgentHeaderMatchedExpectedForm = false;
-        for (String line : server.getRequestInput()) {
-            if (line.contains("User-Agent")) {
-                foundUserAgentHeaderOnRequest = true;
-                if (line.matches(".*" + userAgentRegex)) {
-                    userAgentHeaderMatchedExpectedForm = true;
+            //instantiating the client performs a single post request
+            CloudantClient client = new CloudantClient(server.getUrl(), null, (String) null);
+            client.executeRequest(createPost(client.getBaseUri(), null, "application/json"));
+            //assert that the request had the expected header
+            boolean foundUserAgentHeaderOnRequest = false;
+            boolean userAgentHeaderMatchedExpectedForm = false;
+            for (String line : server.getLastInputRequestLines()) {
+                if (line.contains("User-Agent")) {
+                    foundUserAgentHeaderOnRequest = true;
+                    if (line.matches(".*" + userAgentRegex)) {
+                        userAgentHeaderMatchedExpectedForm = true;
+                    }
                 }
             }
+            assertTrue("The User-Agent header should be present on the request",
+                    foundUserAgentHeaderOnRequest);
+            assertTrue("The value of the User-Agent header value on the request should match the " +
+                            "format " +
+                            "\"java-cloudant/version [Java (os.arch; os.name; os.version) jvm" +
+                            ".vendor; jvm" +
+                            ".version; jvm.runtime.version]\"",
+                    userAgentHeaderMatchedExpectedForm);
+        } finally {
+            server.stop();
         }
-        assertTrue("The User-Agent header should be present on the request",
-                foundUserAgentHeaderOnRequest);
-        assertTrue("The value of the User-Agent header value on the request should match the " +
-                        "format " +
-                        "\"java-cloudant/version [Java (os.arch; os.name; os.version) jvm" +
-                        ".vendor; jvm" +
-                        ".version; jvm.runtime.version]\"",
-                userAgentHeaderMatchedExpectedForm);
-
-        server.waitForShutdown();
     }
 
     /**
@@ -228,17 +224,31 @@ public class CloudantClientTests {
      * Check that the connection timeout throws a SocketTimeoutException when it can't connect
      * within the timeout.
      */
-    @Test(expected=SocketTimeoutException.class)
+    @Test(expected = SocketTimeoutException.class)
     public void connectionTimeout() throws Throwable {
 
-        //create a socket on port 54321 with only 1 backlog
-        ServerSocket serverSocket = new ServerSocket(54321, 1);
-        //block the socket
-        Socket socket = new Socket();
-        socket.connect(serverSocket.getLocalSocketAddress());
+        //start a simple http server
+        SimpleHttpServer server = new SimpleHttpServer() {
 
+            @Override
+            public void start() throws Exception {
+                //we don't actually want this server to loop, just create a socket
+                //so set finished to true
+                finished.set(true);
+                super.start();
+            }
+
+        };
+        server.start();
+        server.await();
+
+        //block the single connection to our server
+        Socket socket = new Socket();
+        socket.connect(server.getSocketAddress());
+
+        //now try to connect, but should timeout because there is no connection available
         try {
-            CloudantClient c = new CloudantClient("http://localhost:54321", null, (String) null, new
+            CloudantClient c = new CloudantClient(server.getUrl(), null, (String) null, new
                     ConnectOptions().setConnectionTimeout(new TimeoutCustomizationInterceptor
                     .TimeoutOption(100, TimeUnit.MILLISECONDS)));
 
@@ -256,77 +266,50 @@ public class CloudantClientTests {
             }
         } finally {
             //make sure we close the sockets
-            IOUtils.closeQuietly(serverSocket);
             IOUtils.closeQuietly(socket);
+            server.stop();
         }
     }
 
     /**
      * Checks that the read timeout works. The test sets a read timeout of 0.25 s and the mock
-     * server waits 0.5 s before continuing to send data down the stream so the timeout should be
-     * triggered.
+     * server thread sleeps for twice the duration of the read timeout. If things are working
+     * correctly then the client should see a SocketTimeoutException for the read.
      */
-    @Test(expected=SocketTimeoutException.class)
+    @Test(expected = SocketTimeoutException.class)
     public void readTimeout() throws Throwable {
 
-        final CountDownLatch startupLatch = new CountDownLatch(1);
-        final CountDownLatch cleanupLatch = new CountDownLatch(1);
+        final Long READ_TIMEOUT = 250l;
 
-        Thread server = new Thread(new Runnable() {
+        //start a simple http server
+        SimpleHttpServer server = new SimpleHttpServer() {
             @Override
-            public void run() {
-                ServerSocket serverSocket = null;
-                Socket socket = null;
-                BufferedWriter w = null;
-                try {
-                    //create a socket on port 54321
-                    serverSocket = ServerSocketFactory.getDefault()
-                            .createServerSocket(54321);
-                    startupLatch.countDown();
-                    //wait for a connection
-                    socket = serverSocket.accept();
-
-                    // Just send a simple success response.
-                    w = new BufferedWriter(new OutputStreamWriter(socket
-                            .getOutputStream()));
-                    w.write("HTTP/1.0 200 OK");
-                    w.flush();
-                    //now sleep for longer than the timeout
-                    Thread.sleep(500);
-                } catch (Throwable e) {
-                    TEST_LOG.logger.log(Level.SEVERE, "Exception in readTimeout test server", e);
-                } finally {
-                    //make sure we count down to free up the test if something went wrong
-                    startupLatch.countDown();
-                    //close resources
-                    IOUtils.closeQuietly(w);
-                    IOUtils.closeQuietly(socket);
-                    IOUtils.closeQuietly(serverSocket);
-                    cleanupLatch.countDown();
-                }
+            protected void serverAction(InputStream is, OutputStream os) throws Exception {
+                //sleep for longer than the read timeout
+                Thread.sleep(READ_TIMEOUT * 2);
             }
-        });
-        //start the server
-        server.start();
-        //wait for the server to be listening for connections
-        startupLatch.await();
+        };
 
         try {
-            CloudantClient c = new CloudantClient("http://localhost:54321", null, (String) null, new
-                    ConnectOptions().setReadTimeout(new TimeoutCustomizationInterceptor
-                    .TimeoutOption(250, TimeUnit.MILLISECONDS)));
-            //do a call that expects a response
-            c.getAllDbs();
-        } catch (CouchDbException e) {
-            //unwrap the CouchDbException
-            if (e.getCause() != null) {
-                throw e.getCause();
-            } else {
-                throw e;
+            server.start();
+            server.await();
+
+            try {
+                CloudantClient c = new CloudantClient(server.getUrl(), null, (String) null, new
+                        ConnectOptions().setReadTimeout(new TimeoutCustomizationInterceptor
+                        .TimeoutOption(READ_TIMEOUT, TimeUnit.MILLISECONDS)));
+                //do a call that expects a response
+                c.getAllDbs();
+            } catch (CouchDbException e) {
+                //unwrap the CouchDbException
+                if (e.getCause() != null) {
+                    throw e.getCause();
+                } else {
+                    throw e;
+                }
             }
         } finally {
-            //wait for the other thread to cleanup before moving to the next test
-            cleanupLatch.await();
+            server.stop();
         }
     }
 }
