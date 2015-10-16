@@ -32,6 +32,7 @@ import com.cloudant.client.api.views.Key;
 import com.cloudant.client.org.lightcouch.Changes;
 import com.cloudant.client.org.lightcouch.CouchDbClient;
 import com.cloudant.client.org.lightcouch.CouchDbDesign;
+import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.CouchDbProperties;
 import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.Replicator;
@@ -47,6 +48,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
@@ -505,12 +507,17 @@ public class CloudantClient {
             // user is specifying a uri
             try {
                 URI uri = new URI(account);
-                uri.getPort();
+                int port = uri.getPort();
+                if (port < 0) {
+                    port = uri.toURL().getDefaultPort();
+                }
                 h.put("scheme", uri.getScheme());
                 h.put("hostname", uri.getHost());
-                h.put("port", new Integer(uri.getPort()).toString());
+                h.put("port", new Integer(port).toString());
             } catch (URISyntaxException e) {
-
+                throw new CouchDbException(e);
+            } catch (MalformedURLException e2) {
+                throw new CouchDbException(e2);
             }
         } else {
             h.put("scheme", "https");
