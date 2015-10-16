@@ -14,6 +14,7 @@
 
 package com.cloudant.tests;
 
+import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -22,6 +23,9 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
+import com.cloudant.client.org.lightcouch.CouchDbClient;
+import com.cloudant.client.org.lightcouch.CouchDbException;
+import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresDB;
@@ -35,9 +39,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import com.cloudant.client.org.lightcouch.CouchDbClient;
-import com.cloudant.client.org.lightcouch.CouchDbException;
-import com.cloudant.client.org.lightcouch.NoDocumentException;
 
 import java.util.List;
 
@@ -202,6 +203,15 @@ public class CloudantClientTests {
             //clean up the DB created by this test
             cookieBasedClient.deleteDB("existing");
         }
+    }
+
+    @Test
+    public void testDefaultPorts() {
+        CloudantClient c = new CloudantClient("http://192.0.2.0", null, (String) null);
+        assertEquals("The http port should be 80", 80, c.getBaseUri().getPort());
+
+        c = new CloudantClient("https://192.0.2.0", null, (String) null);
+        assertEquals("The http port should be 443", 443, c.getBaseUri().getPort());
     }
 
 }
