@@ -218,20 +218,18 @@ final public class CouchDbUtil {
      * @return A JSON element as a String, or null if not found, from the response
      */
     public static String getAsString(InputStream response, String e) {
-        InputStream instream = null;
-
+        Reader reader = null;
         try {
-            Reader reader = new InputStreamReader(instream, "UTF-8");
+            reader = new InputStreamReader(response, "UTF-8");
             return getAsString(new JsonParser().parse(reader).getAsJsonObject(), e);
         } catch (UnsupportedEncodingException e1) {
             // This should never happen as every implementation of the java platform is required
             // to support UTF-8.
             throw new RuntimeException(e1);
         } finally {
-            close(instream);
+            close(reader);
+            close(response);
         }
-
-
     }
 
     /**
