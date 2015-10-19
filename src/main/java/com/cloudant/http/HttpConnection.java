@@ -184,9 +184,6 @@ public class HttpConnection  {
                 } else {
                     connection = (HttpURLConnection) url.openConnection();
                 }
-                for (String key : requestProperties.keySet()) {
-                    connection.setRequestProperty(key, requestProperties.get(key));
-                }
 
                 connection.setRequestProperty("User-Agent", AgentHelper.USER_AGENT);
                 if (url.getUserInfo() != null) {
@@ -204,6 +201,12 @@ public class HttpConnection  {
 
                 for (HttpConnectionRequestInterceptor requestInterceptor : requestInterceptors) {
                     currentContext = requestInterceptor.interceptRequest(currentContext);
+                }
+
+                //set request properties after interceptors, in case the interceptors have added
+                // to the properties map
+                for (String key : requestProperties.keySet()) {
+                    connection.setRequestProperty(key, requestProperties.get(key));
                 }
 
                 if (input != null) {
