@@ -14,8 +14,14 @@
 
 package com.cloudant.tests;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertThat;
+
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
+import com.cloudant.client.api.views.Key;
+import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
 
@@ -51,5 +57,12 @@ public class ReplicateBaseTest {
         db2 = db2Resource.get();
         db2URI = CloudantClientHelper.SERVER_URI + "/" + db2Resource.getDatabaseName();
         db2.syncDesignDocsWithDb();
+    }
+
+    protected void assertConflictsNotZero(Database db) throws Exception {
+        ViewResponse<Key.ComplexKey, String> conflicts = db.getViewRequestBuilder
+                ("conflicts", "conflict").newRequest(Key.Type.COMPLEX, String.class).build()
+                .getResponse();
+        assertThat(conflicts.getRows().size(), is(not(0)));
     }
 }

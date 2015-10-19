@@ -88,7 +88,18 @@ public class SimpleHttpServer extends ExternalResource implements Runnable {
      * Stop is exposed here for manual use.
      */
     public void stop() {
-        finished.set(true);
+        if (!finished.getAndSet(true)) {
+            //if the server hadn't already finished then connect to it here to unblock the last
+            //socket.accept() call and allow the server to terminate cleanly
+            Socket socket = new Socket();
+            try {
+                socket.connect(getSocketAddress());
+            } catch (Exception e) {
+                log.log(Level.SEVERE, "Exception when shutting down ", e);
+            } finally {
+                IOUtils.closeQuietly(socket);
+            }
+        }
         IOUtils.closeQuietly(serverSocket);
         try {
             //wait for the server thread to finish
@@ -117,6 +128,7 @@ public class SimpleHttpServer extends ExternalResource implements Runnable {
                     log.fine("Server waiting for connections");
                     //release a permit as we are about to accept connections
                     semaphore.release();
+
                     //block for connections
                     socket = serverSocket.accept();
 

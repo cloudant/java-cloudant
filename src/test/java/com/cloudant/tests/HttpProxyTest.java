@@ -14,12 +14,12 @@
 
 package com.cloudant.tests;
 
-import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost;
-import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.model.ConnectOptions;
+import com.cloudant.http.Http;
 import com.cloudant.http.interceptors.ProxyAuthInterceptor;
 import com.cloudant.tests.util.SimpleHttpServer;
 
@@ -50,12 +50,12 @@ public class HttpProxyTest {
         //create a client with a bogus address (TEST-NET)
         String mockProxyUser = "alpha";
         String mockProxyPass = "alphaPass";
-        CloudantClient client = new CloudantClient("http://192.0.2.0", "", "", new ConnectOptions()
+        CloudantClient client = new CloudantClient("http://192.0.2.0", new ConnectOptions()
                 .setProxyURL(new URL(server.getUrl()))
                 .setProxyUser(mockProxyUser)
                 .setProxyPassword(mockProxyPass));
 
-        client.executeRequest(createPost(client.getBaseUri(), null, "application/json"));
+        client.executeRequest(Http.GET(client.getBaseUri()));
         //if it wasn't a 20x then an exception should have been thrown by now
 
         //assert that the request had the expected proxy auth header
@@ -63,12 +63,10 @@ public class HttpProxyTest {
         for (String line : server.getLastInputRequestLines()) {
             if (line.contains("Proxy-Authorization")) {
                 foundProxyAuthHeader = true;
-                Matcher m = Pattern.compile("Proxy-Authorization\\s*:\\s*(.*)", Pattern
+                Matcher m = Pattern.compile("Proxy-Authorization: Basic (.*)", Pattern
                         .CASE_INSENSITIVE).matcher(line);
                 assertTrue("The Proxy-Authorization header should match the pattern", m.matches());
-                assertEquals("There should be 2 groups, one for the header key and one for the " +
-                        "value", 2, m.groupCount());
-
+                assertEquals("There should be 1 group for the value", 1, m.groupCount());
                 //create an interceptor with the same creds so we can easily get the expected value
                 final String encodedCreds = new ProxyAuthInterceptor(mockProxyUser, mockProxyPass) {
                     String getEncodedCreds() {
@@ -81,6 +79,6 @@ public class HttpProxyTest {
 
             }
         }
-
+        assertTrue(foundProxyAuthHeader);
     }
 }
