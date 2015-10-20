@@ -104,7 +104,8 @@ public class CouchDbClient extends CouchDbClientBase {
     static {
         String ua = "java-cloudant";
         String version = "unknown";
-        final URL url = CouchDbClient.class.getClassLoader().getResource("client.properties");
+        final URL url = CouchDbClient.class.getClassLoader()
+                .getResource("META-INF/client.properties");
         final Properties properties = new Properties();
         InputStream propStream = null;
         try {
