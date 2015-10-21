@@ -2,6 +2,7 @@ package com.cloudant.tests;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.http.CookieInterceptor;
+import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
@@ -23,11 +24,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 public class HttpTest {
@@ -199,5 +200,102 @@ public class HttpTest {
         Assert.assertTrue(response.get("ok").getAsBoolean());
         Assert.assertTrue(response.has("id"));
         Assert.assertTrue(response.has("rev"));
+    }
+
+    /**
+     * This test validates that the client does not make body content available for reading until
+     * after receiving the 100 continue. This is primarily a validation of the 100 continue
+     * performance enhancement functioning correctly in whatever underlying http library is being
+     * used to back our HttpConnection.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void expectContinue() throws Exception {
+
+        final AtomicBoolean foundExpectHeader = new AtomicBoolean();
+        final AtomicBoolean readyBefore100 = new AtomicBoolean();
+        final AtomicBoolean bodyAvailableBefore100 = new AtomicBoolean();
+        final AtomicBoolean bodyReadAfter100 = new AtomicBoolean();
+
+        //Mock server for validating the Expect: 100-continue behaviour
+        SimpleHttpServer server = new SimpleHttpServer() {
+            private int invocationCount = 0;
+
+            @Override
+            protected void serverAction(InputStream is, OutputStream os) throws Exception {
+
+                invocationCount++;
+
+                //we only want to do this once, otherwise this server is a no-op
+                if (invocationCount == 1) {
+                    //read headers from input stream i.e. up to the CRLF between headers and body
+                    BufferedReader r = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+                    String line;
+                    while ((line = r.readLine()) != null && !line.isEmpty()) {
+                        log.finest(line);
+                        //check for the Expect header
+                        if (!foundExpectHeader.get()) {
+                            foundExpectHeader.set(Pattern.compile
+                                    ("Expect\\s*:\\s*100-continue", Pattern.CASE_INSENSITIVE)
+                                    .matcher(line).matches());
+                        }
+                        //if the body content was read before 100-continue was sent then set the
+                        // fail flag
+                        if (line.contains(data)) {
+                            bodyAvailableBefore100.set(true);
+                        }
+                    }
+
+                    readyBefore100.set(r.ready());
+
+                    //write the 100 continue
+                    log.fine("Writing 100 interim response");
+                    BufferedWriter w = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+                    w.write("HTTP/1.1 100 Continue\r\n\r\n");
+                    w.flush();
+
+                    log.fine("Reading body");
+                    while ((line = r.readLine()) != null && !line.isEmpty()) {
+                        log.finest(line);
+                        //if the body content wasn't read here set the fail flag
+                        if (line.contains(data)) {
+                            bodyReadAfter100.set(true);
+                        }
+                    }
+                    super.writeOK(os);
+                } else {
+                    log.fine("Server action invoked more than once, expected for server stop");
+                }
+            }
+        };
+
+
+        try {
+            //start and wait for our simple server to be ready
+            server.start();
+            server.await();
+
+            //create a client to connect to post to the simple server
+            CloudantClient c = new CloudantClient(server.getUrl());
+            HttpConnection conn = Http.POST(c.getBaseUri(), "application/json");
+            //set the body content, add some new lines to make it easier for the simple server
+            conn.setRequestBody(data + "\r\n\r\n");
+            //do the request
+            c.executeRequest(conn);
+
+            //the simple server stores some booleans in the test assertions object
+            // now we validate those assertions
+            Assert.assertTrue("The Expect:100-continue header should be present",
+                    foundExpectHeader.get());
+            Assert.assertFalse("The body should not be readable before 100-continue",
+                    bodyAvailableBefore100.get());
+            Assert.assertFalse("The stream should not be ready before 100-continue",
+                    readyBefore100.get());
+            Assert.assertTrue("The body should have been read after 100-continue",
+                    bodyReadAfter100.get());
+        } finally {
+            server.stop();
+        }
     }
 }

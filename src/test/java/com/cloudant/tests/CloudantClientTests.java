@@ -32,12 +32,11 @@ import com.cloudant.http.interceptors.TimeoutCustomizationInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresDB;
+import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.SimpleHttpServer;
 import com.cloudant.tests.util.TestLog;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -54,29 +53,9 @@ public class CloudantClientTests {
     @ClassRule
     public static final TestLog TEST_LOG = new TestLog();
 
-    public static CloudantClient cookieBasedClient;
-    private CloudantClient account;
-
-    @Before
-    public void setUp() {
-        account = CloudantClientHelper.getClient();
-
-        //TODO review in next PR with cookie interceptor changes
-        if (CloudantClientHelper.COUCH_PASSWORD == null) {
-            cookieBasedClient = account;
-        } else {
-            cookieBasedClient = new CloudantClient(account.getBaseUri().toString(),
-                    CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
-        }
-
-    }
-
-
-    @After
-    public void tearDown() {
-        account.shutdown();
-        cookieBasedClient.shutdown();
-    }
+    @ClassRule
+    public static CloudantClientResource clientResource = new CloudantClientResource();
+    private CloudantClient account = clientResource.get();
 
     @Test
     @Category(RequiresCloudantService.class)
@@ -109,7 +88,7 @@ public class CloudantClientTests {
     @Category(RequiresCloudant.class)
     public void cookieTest() {
 
-        Membership membership = cookieBasedClient.getMembership();
+        Membership membership = account.getMembership();
         assertNotNull(membership);
     }
 
@@ -175,7 +154,7 @@ public class CloudantClientTests {
     @Category(RequiresDB.class)
     public void nonExistentDatabaseException() {
         //try and get a DB that doesn't exist
-        Database db = cookieBasedClient.database("not_really_there", false);
+        Database db = account.database("not_really_there", false);
         //try an operation against the non-existant DB
         db.info();
     }
@@ -188,13 +167,13 @@ public class CloudantClientTests {
     public void existingDatabaseCreateException() {
         try {
             //create a DB for this test
-            cookieBasedClient.createDB("existing");
+            account.createDB("existing");
 
             //do a get with create true for the already existing DB
-            cookieBasedClient.database("existing", true);
+            account.database("existing", true);
         } finally {
             //clean up the DB created by this test
-            cookieBasedClient.deleteDB("existing");
+            account.deleteDB("existing");
         }
     }
 
