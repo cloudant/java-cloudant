@@ -99,7 +99,7 @@ public abstract class CloudantClientHelper {
         CLIENT_INSTANCE = new CloudantClient(SERVER_URI.toString(),
                 COUCH_USERNAME, COUCH_PASSWORD, new ConnectOptions().setConnectionTimeout(new
                 TimeoutCustomizationInterceptor.TimeoutOption(1, TimeUnit.MINUTES))
-                .setReadTimeout(new TimeoutCustomizationInterceptor.TimeoutOption(1, TimeUnit
+                .setReadTimeout(new TimeoutCustomizationInterceptor.TimeoutOption(3, TimeUnit
                         .MINUTES)));
     }
 
