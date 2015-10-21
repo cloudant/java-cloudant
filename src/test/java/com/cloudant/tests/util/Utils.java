@@ -144,7 +144,7 @@ public class Utils {
             delay *= 2;
         }
         if (!finished) {
-            throw new TimeoutException("Timed out waiting for replication to compelte");
+            throw new TimeoutException("Timed out waiting for replication to complete");
         }
         return replicatorDoc;
     }
