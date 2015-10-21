@@ -23,14 +23,15 @@ import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.IndexField.SortOrder;
 import com.cloudant.test.main.RequiresCloudant;
+import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.util.DatabaseResource;
 import com.google.gson.GsonBuilder;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.RuleChain;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,30 +40,26 @@ import java.util.Map;
 
 public class IndexTests {
 
-    private static final Log log = LogFactory.getLog(IndexTests.class);
-    private static Database db;
-    private CloudantClient account;
+    private static CloudantClientResource clientResource = new CloudantClientResource();
+    private static DatabaseResource dbResource = new DatabaseResource(clientResource);
+    @ClassRule
+    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
 
-    @Before
-    public void setUp() {
-        account = CloudantClientHelper.getClient();
+    private static Database db;
+    private static CloudantClient account;
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        account = clientResource.get();
+        db = dbResource.get();
 
         // create the movies-demo db for our index tests
         com.cloudant.client.api.Replication r = account.replication();
         r.source("https://clientlibs-test.cloudant.com/movies-demo");
         r.createTarget(true);
-        r.target(CloudantClientHelper.SERVER_URI.toString() + "/movies-demo");
+        r.target(dbResource.getDbURIWithUserInfo());
         r.trigger();
-        db = account.database("movies-demo", false);
-
     }
-
-    @After
-    public void tearDown() {
-        account.deleteDB("movies-demo");
-        account.shutdown();
-    }
-
 
     @Test
     @Category(RequiresCloudant.class)

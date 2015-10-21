@@ -26,33 +26,36 @@ import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.api.views.Key;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresDB;
+import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.util.Utils;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.RuleChain;
 
 import java.util.List;
 import java.util.Map;
 
 @Category(RequiresDB.class)
 public class DesignDocumentsTest {
+
+    private static CloudantClientResource clientResource = new CloudantClientResource();
+    private static DatabaseResource dbResource = new DatabaseResource(clientResource);
+    @ClassRule
+    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
+
     private static Database db;
     private CloudantClient account;
 
 
     @Before
     public void setUp() {
-        account = CloudantClientHelper.getClient();
-        db = account.database("lightcouch-db-test", true);
+        account = clientResource.get();
+        db = dbResource.get();
     }
-
-    @After
-    public void tearDown() {
-        account.deleteDB("lightcouch-db-test");
-        account.shutdown();
-    }
-
 
     @Test
     public void designDocSync() {
@@ -94,10 +97,10 @@ public class DesignDocumentsTest {
         //replicate animaldb into our test database
         Replication r = account.replication();
         r.source("https://clientlibs-test.cloudant.com/animaldb");
-        r.target(CloudantClientHelper.SERVER_URI.toString() + "/lightcouch-db-test");
+        r.target(dbResource.getDbURIWithUserInfo());
         r.trigger();
 
-        String copiedDbName = "reducedanimaldb";
+        String copiedDbName = "reducedanimaldb" + Utils.generateUUID();
 
         //find the diet_count map reduce view and set the dbcopy value
         DesignDocument dd = db.design().getFromDb("_design/views101");
@@ -128,7 +131,7 @@ public class DesignDocumentsTest {
                     reducedDocIds.size());
 
         } finally {
-            //clean up the copied db (lightcouch-db-test will be cleaned up in tearDown)
+            //clean up the copied db (the original db will be cleaned up in the dbResource clean up)
             account.deleteDB(copiedDbName);
         }
     }

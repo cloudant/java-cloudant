@@ -93,4 +93,15 @@ public class DatabaseResource extends ExternalResource {
     public String getDatabaseName() {
         return this.databaseName;
     }
+
+    /**
+     * Get a string representation of the URI for the specified DB resource that includes
+     * credentials. This is needed for replication cases where the DB needs to be able to obtain
+     * creds for the DB.
+     *
+     * @return the URI for the DB with creds
+     */
+    public String getDbURIWithUserInfo() throws Exception {
+        return clientResource.getBaseURIWithUserInfo() + "/" + getDatabaseName();
+    }
 }
