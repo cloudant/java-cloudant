@@ -146,7 +146,7 @@ public class SslAuthenticationTest {
         ConnectOptions connectionOptions = new ConnectOptions();
         connectionOptions.setSSLAuthenticationDisabled(false);
 
-        dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI.toString(),
+        dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI,
                 CloudantClientHelper.COUCH_USERNAME,
                 CloudantClientHelper.COUCH_PASSWORD,
                 connectionOptions);
@@ -166,7 +166,7 @@ public class SslAuthenticationTest {
         ConnectOptions connectionOptions = new ConnectOptions();
         connectionOptions.setSSLAuthenticationDisabled(true);
 
-        dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI.toString(),
+        dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI,
                 CloudantClientHelper.COUCH_USERNAME,
                 CloudantClientHelper.COUCH_PASSWORD,
                 connectionOptions);

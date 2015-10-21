@@ -27,14 +27,15 @@ import com.cloudant.test.main.RequiresCloudantLocal;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresCouch;
 import com.cloudant.test.main.RequiresDB;
+import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.util.DatabaseResource;
 import com.google.gson.GsonBuilder;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.RuleChain;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -43,28 +44,28 @@ import java.util.Map;
 
 @Category(RequiresDB.class)
 public class DatabaseTest {
-    private static final Log log = LogFactory.getLog(DatabaseTest.class);
-    private static Database db;
-    private CloudantClient account;
 
-    @Before
-    public void setUp() {
-        account = CloudantClientHelper.getClient();
-        // replciate the animals db for search tests
+    public static CloudantClientResource clientResource = new CloudantClientResource();
+    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
+
+    @ClassRule
+    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
+
+    private static Database db;
+    private static CloudantClient account;
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        account = clientResource.get();
+        db = dbResource.get();
+
+        //replicate animaldb for tests
         com.cloudant.client.api.Replication r = account.replication();
         r.source("https://clientlibs-test.cloudant.com/animaldb");
         r.createTarget(true);
-        r.target(CloudantClientHelper.SERVER_URI.toString() + "/animaldb");
+        r.target(dbResource.getDbURIWithUserInfo());
         r.trigger();
-        db = account.database("animaldb", false);
     }
-
-    @After
-    public void tearDown() {
-        account.deleteDB("animaldb");
-        account.shutdown();
-    }
-
 
     @Test
     @Category(RequiresCloudantService.class)

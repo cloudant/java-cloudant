@@ -25,13 +25,14 @@ import com.cloudant.client.api.model.SearchResult;
 import com.cloudant.client.api.model.SearchResult.SearchResultRows;
 import com.cloudant.client.org.lightcouch.internal.URIBuilder;
 import com.cloudant.test.main.RequiresCloudant;
+import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.util.DatabaseResource;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.RuleChain;
 
 import java.net.URI;
 import java.util.Iterator;
@@ -42,33 +43,31 @@ import java.util.Map.Entry;
 @Category(RequiresCloudant.class)
 public class SearchTests {
 
-    private static final Log log = LogFactory.getLog(SearchTests.class);
-    private static Database db;
-    private CloudantClient account;
+    public static CloudantClientResource clientResource = new CloudantClientResource();
+    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
 
-    @Before
-    public void setUp() {
-        account = CloudantClientHelper.getClient();
+    @ClassRule
+    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
+
+    private static Database db;
+    private static CloudantClient account;
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        account = clientResource.get();
+        db = dbResource.get();
 
         // replciate the animals db for search tests
         com.cloudant.client.api.Replication r = account.replication();
         r.source("https://clientlibs-test.cloudant.com/animaldb");
         r.createTarget(true);
-        r.target(CloudantClientHelper.SERVER_URI.toString() + "/animaldb");
+        r.target(dbResource.getDbURIWithUserInfo());
         r.trigger();
-        db = account.database("animaldb", false);
 
         // sync the design doc for faceted search
         DesignDocument designDoc = db.design().getFromDesk("views101");
         db.design().synchronizeWithDb(designDoc);
     }
-
-    @After
-    public void tearDown() {
-        account.deleteDB("animaldb");
-        account.shutdown();
-    }
-
 
     @Test
     public void searchCountsTest() {

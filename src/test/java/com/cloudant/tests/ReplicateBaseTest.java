@@ -48,14 +48,14 @@ public class ReplicateBaseTest {
     protected static String db2URI;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
 
         db1 = db1Resource.get();
-        db1URI = CloudantClientHelper.SERVER_URI + "/" + db1Resource.getDatabaseName();
+        db1URI = db1Resource.getDbURIWithUserInfo();
         db1.syncDesignDocsWithDb();
 
         db2 = db2Resource.get();
-        db2URI = CloudantClientHelper.SERVER_URI + "/" + db2Resource.getDatabaseName();
+        db2URI = db2Resource.getDbURIWithUserInfo();
         db2.syncDesignDocsWithDb();
     }
 

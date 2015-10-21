@@ -54,7 +54,7 @@ public class ClientLoadTest {
         ConnectOptions connectionoptions = new ConnectOptions();
         connectionoptions.setMaxConnections(MAX_CONNECTIONS);
 
-        dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI.toString(),
+        dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI,
                 CloudantClientHelper.COUCH_USERNAME,
                 CloudantClientHelper.COUCH_PASSWORD, connectionoptions);
         db = dbClient.database("lightcouch-db-load", true);

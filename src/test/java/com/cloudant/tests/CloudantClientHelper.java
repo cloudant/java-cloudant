@@ -19,7 +19,7 @@ import com.cloudant.client.api.model.ConnectOptions;
 import com.cloudant.http.interceptors.TimeoutCustomizationInterceptor;
 
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,73 +27,56 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class CloudantClientHelper {
 
-    protected static final String COUCH_USERNAME;
-    protected static final String COUCH_PASSWORD;
-    protected static final String COUCH_HOST;
-    protected static final String COUCH_PORT;
-    protected static final String HTTP_PROTOCOL;
-    protected static final URI SERVER_URI;
-    protected static final boolean IGNORE_CLOUDANT_SPECIFIC;
+    private static final String COUCH_HOST;
+    private static final String COUCH_PORT;
+    private static final String HTTP_PROTOCOL;
+
+    //some tests need access to the creds or URIs
+    public static final String COUCH_USERNAME;
+    public static final String COUCH_PASSWORD;
+    public static final String SERVER_URI;
+    public static final String SERVER_URI_WITH_USER_INFO;
 
     protected static final CloudantClient CLIENT_INSTANCE;
 
     static {
 
-
-        String URI = System.getProperty("test.couch.uri");
-        IGNORE_CLOUDANT_SPECIFIC = !Boolean.parseBoolean(System.getProperty(
-                "test.cloudant.specific",
-                Boolean.toString(Boolean.FALSE)));
-
-        if (URI == null) {
-
-            COUCH_USERNAME = System.getProperty("test.couch.username");
-            COUCH_PASSWORD = System.getProperty("test.couch.password");
-            COUCH_HOST = System.getProperty("test.couch.host", "localhost");
-            COUCH_PORT = System.getProperty("test.couch.port", "5984");
-            HTTP_PROTOCOL = System.getProperty("test.couch.http", "http"); //should either be
-            // http or https
-            try {
-
-                if (COUCH_USERNAME == null || COUCH_PASSWORD == null) {
-                    SERVER_URI = new URI(String.format("%s://%s:%s",
-                            HTTP_PROTOCOL,
-                            COUCH_HOST,
-                            COUCH_PORT));
+        try {
+            //a URI might be supplied, otherwise use the separate properties
+            String URI = System.getProperty("test.couch.uri");
+            if (URI != null) {
+                URL couch = new URI(URI).toURL();
+                HTTP_PROTOCOL = couch.getProtocol();
+                COUCH_HOST = couch.getHost();
+                COUCH_PORT = (couch.getPort() < 0) ? Integer.toString(couch.getPort()) : null;
+                String userInfo = couch.getUserInfo();
+                if (userInfo != null) {
+                    COUCH_USERNAME = userInfo.substring(0, userInfo.indexOf(":"));
+                    COUCH_PASSWORD = userInfo.substring(userInfo.indexOf(":"));
                 } else {
-                    SERVER_URI = new URI(String.format("%s://%s:%s@%s:%s",
-                            HTTP_PROTOCOL,
-                            COUCH_USERNAME,
-                            COUCH_PASSWORD,
-                            COUCH_HOST,
-                            COUCH_PORT));
+                    COUCH_USERNAME = null;
+                    COUCH_PASSWORD = null;
                 }
-            } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-
-            try {
-                SERVER_URI = new URI(URI);
-            } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
-            }
-
-
-            if (SERVER_URI.getRawUserInfo() == null) {
-                COUCH_USERNAME = null;
-                COUCH_PASSWORD = null;
             } else {
-                COUCH_USERNAME = SERVER_URI.getRawUserInfo().substring(0, SERVER_URI
-                        .getRawUserInfo()
-                        .indexOf(":"));
-                COUCH_PASSWORD = SERVER_URI.getRawUserInfo().substring(SERVER_URI.getRawUserInfo()
-                        .indexOf(":"));
+                COUCH_USERNAME = System.getProperty("test.couch.username");
+                COUCH_PASSWORD = System.getProperty("test.couch.password");
+                COUCH_HOST = System.getProperty("test.couch.host", "localhost");
+                COUCH_PORT = System.getProperty("test.couch.port", "5984");
+                HTTP_PROTOCOL = System.getProperty("test.couch.http", "http"); //should either be
+                // http or https
             }
-            COUCH_HOST = SERVER_URI.getHost();
-            COUCH_PORT = Integer.toString(SERVER_URI.getPort());
-            HTTP_PROTOCOL = SERVER_URI.getScheme();
 
+            //now build the URLs
+            SERVER_URI = HTTP_PROTOCOL + "://"
+                    + COUCH_HOST
+                    + ((COUCH_PORT != null) ? ":" + COUCH_PORT : ""); //port if supplied
+
+            SERVER_URI_WITH_USER_INFO = HTTP_PROTOCOL + "://"
+                    + ((COUCH_USERNAME != null) ? COUCH_USERNAME + ":" + COUCH_PASSWORD + "@" : "")
+                    + COUCH_HOST
+                    + ((COUCH_PORT != null) ? ":" + COUCH_PORT : ""); //port if supplied
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
         }
 
         CLIENT_INSTANCE = new CloudantClient(SERVER_URI.toString(),
