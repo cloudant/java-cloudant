@@ -14,7 +14,6 @@
  */
 package com.cloudant.tests;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -22,8 +21,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.model.ReplicationResult;
 import com.cloudant.client.api.model.ReplicationResult.ReplicationHistory;
-import com.cloudant.client.api.views.Key;
-import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.Utils;
 
@@ -45,6 +42,8 @@ public class ReplicationTest extends ReplicateBaseTest {
                 .target(db2URI)
                 .trigger();
 
+        assertTrue("The replication should complete ok", result.isOk());
+
         List<ReplicationHistory> histories = result.getHistories();
         assertThat(histories.size(), not(0));
     }
@@ -54,13 +53,15 @@ public class ReplicationTest extends ReplicateBaseTest {
         Map<String, Object> queryParams = new HashMap<String, Object>();
         queryParams.put("somekey1", "value 1");
 
-        account.replication()
+        ReplicationResult result = account.replication()
                 .createTarget(true)
                 .source(db1URI)
                 .target(db2URI)
                 .filter("example/example_filter")
                 .queryParams(queryParams)
                 .trigger();
+
+        assertTrue("The replication should complete ok", result.isOk());
     }
 
     @Test
@@ -83,31 +84,22 @@ public class ReplicationTest extends ReplicateBaseTest {
     @Test
     public void replication_conflict() throws Exception {
         String docId = Utils.generateUUID();
-        Foo foodb1 = new Foo(docId, "title");
-        Foo foodb2 = null;
+        Foo foodb1 = new Foo(docId, "titleX");
+        Foo foodb2 = new Foo(docId, "titleY");
 
-        foodb1 = new Foo(docId, "titleX");
-
+        //save Foo(X) in DB1
         db1.save(foodb1);
+        //save Foo(Y) in DB2
+        db2.save(foodb2);
 
-        account.replication().source(db1URI)
+        //replicate with DB1 with DB2
+        ReplicationResult result = account.replication().source(db1URI)
                 .target(db2URI).trigger();
 
-        foodb2 = Utils.findDocumentWithRetries(db2, docId, Foo.class, 20);
-        foodb2.setTitle("titleY");
-        db2.update(foodb2);
+        assertTrue("The replication should complete ok", result.isOk());
 
-        foodb1 = Utils.findDocumentWithRetries(db1, docId, Foo.class, 20);
-        foodb1.setTitle("titleZ");
-        db1.update(foodb1);
-
-        account.replication().source(db1URI)
-                .target(db2URI).trigger();
-
-        ViewResponse<Key.ComplexKey, String> conflicts = db2.getViewRequestBuilder
-                ("conflicts", "conflict").newRequest(Key.Type.COMPLEX, String.class).build()
-                .getResponse();
-
-        assertThat(conflicts.getRows().size(), is(not(0)));
+        //we replicated with a doc with the same ID but different content in each DB, we should get
+        //a conflict
+        assertConflictsNotZero(db2);
     }
 }

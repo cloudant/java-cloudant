@@ -55,9 +55,6 @@ public class SslAuthenticationTest {
         }
     };
 
-    private static String DUMMY_USERNAME = "username";
-    private static String DUMMY_PASSWORD = "password";
-
     /**
      * Check the exception chain is as expected when the SSL host name authentication fails
      * to be sure we got a CouchDbException for the reason we expect.
@@ -84,8 +81,6 @@ public class SslAuthenticationTest {
         connectionOptions.setSSLAuthenticationDisabled(true);
 
         dbClient = new CloudantClient(server.getUrl(),
-                DUMMY_USERNAME,
-                DUMMY_PASSWORD,
                 connectionOptions);
 
         // Make an arbitrary connection to the DB.
@@ -109,8 +104,6 @@ public class SslAuthenticationTest {
         CouchDbException thrownException = null;
         try {
             dbClient = new CloudantClient(server.getUrl(),
-                    DUMMY_USERNAME,
-                    DUMMY_PASSWORD,
                     connectionOptions);
 
             // Make an arbitrary connection to the DB.
@@ -132,9 +125,7 @@ public class SslAuthenticationTest {
 
         CouchDbException thrownException = null;
         try {
-            dbClient = new CloudantClient(server.getUrl(),
-                    DUMMY_USERNAME,
-                    DUMMY_PASSWORD);
+            dbClient = new CloudantClient(server.getUrl());
 
             // Make an arbitrary connection to the DB.
             dbClient.getAllDbs();

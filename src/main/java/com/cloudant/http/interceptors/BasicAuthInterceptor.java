@@ -33,7 +33,7 @@ public class BasicAuthInterceptor implements HttpConnectionRequestInterceptor {
         this(userinfo, "Authorization");
     }
 
-    public BasicAuthInterceptor(String userinfo, String authHeader) {
+    protected BasicAuthInterceptor(String userinfo, String authHeader) {
         this.encodedAuth = encodedCreds(userinfo);
         this.authHeader = authHeader;
     }
@@ -41,7 +41,7 @@ public class BasicAuthInterceptor implements HttpConnectionRequestInterceptor {
     @Override
     public HttpConnectionInterceptorContext interceptRequest(HttpConnectionInterceptorContext
                                                                      context) {
-        context.connection.requestProperties.put("Authorization", String.format("Basic %s",
+        context.connection.requestProperties.put(authHeader, String.format("Basic %s",
                 encodedAuth));
         return context;
     }

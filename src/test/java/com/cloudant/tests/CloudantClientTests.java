@@ -299,4 +299,22 @@ public class CloudantClientTests {
             server.stop();
         }
     }
+
+    /**
+     * This tests that a CouchDbException is thrown if the user is null, but the password is
+     * supplied.
+     */
+    @Test(expected = CouchDbException.class)
+    public void nullUser() {
+        new CloudantClient("http://192.0.2.0", null, ":0-myPassword");
+    }
+
+    /**
+     * This tests that a CouchDbException is thrown if the user is supplied, but the password is
+     * null.
+     */
+    @Test(expected = CouchDbException.class)
+    public void nullPassword() {
+        new CloudantClient("http://192.0.2.0", "user", null);
+    }
 }

@@ -31,11 +31,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.rules.RuleChain;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -55,11 +55,10 @@ public class UnicodeTest {
 
     @ClassRule
     public static final TestLog TEST_LOG = new TestLog();
-    public static final CloudantClientResource clientResource = new CloudantClientResource();
-    public static final DatabaseResource dbResource = new DatabaseResource(clientResource);
     @ClassRule
-    public static final RuleChain CHAIN = RuleChain.outerRule(clientResource).around(dbResource);
-
+    public static final CloudantClientResource clientResource = new CloudantClientResource();
+    @Rule
+    public final DatabaseResource dbResource = new DatabaseResource(clientResource);
 
     // According to JSON (ECMA-404, section 9 "Strings"):
     // - All Unicode characters except those that must be escaped
@@ -70,10 +69,10 @@ public class UnicodeTest {
     private static final String TESTSTRING_ESCAPED = "Gr\\u00fc\\u00dfe \\u65e5\\u672c\\u8a9e " +
             "\\uD834\\uDD1E.";
 
-    private static Database db;
+    private Database db;
 
-    @BeforeClass
-    public static void setup() {
+    @Before
+    public void setup() {
         db = dbResource.get();
     }
 
@@ -83,7 +82,7 @@ public class UnicodeTest {
     /**
      * Returns the charset of a plain-text entity.
      */
-    private static Charset getPlainTextEntityCharset(HttpConnection connection, URI uri) {
+    private static Charset getPlainTextEntityCharset(HttpConnection connection) {
         // For plain text, use the charset that is mentioned in the response
         // header field 'Content-Type'.
         // See http://stackoverflow.com/questions/3216730/with-httpclient-is-there-a-way-to-get
@@ -98,7 +97,7 @@ public class UnicodeTest {
         String charsetName = null;
         Matcher m = Pattern.compile(".*;\\s*charset=(^;)+.*", Pattern.CASE_INSENSITIVE).matcher
                 (contentType);
-        if (m.matches() && m.groupCount() > 1) {
+        if (m.matches() && m.groupCount() >= 1) {
             charsetName = m.group(1);
         }
 
@@ -190,7 +189,7 @@ public class UnicodeTest {
     private static void pipePlainTextEntity(Appendable destination, HttpConnection connection,
                                             URI uri)
             throws IOException {
-        Charset charset = getPlainTextEntityCharset(connection, uri);
+        Charset charset = getPlainTextEntityCharset(connection);
         InputStream stream;
         try {
             stream = connection.responseAsInputStream();
@@ -235,7 +234,7 @@ public class UnicodeTest {
      */
     private static JsonObject getJSONEntityAsJsonObject(HttpConnection connection, URI uri) {
         // Optimized: Avoids the use of a temporary string.
-        Charset charset = getPlainTextEntityCharset(connection, uri);
+        Charset charset = getPlainTextEntityCharset(connection);
         InputStream stream;
         try {
             stream = connection.responseAsInputStream();
@@ -266,14 +265,14 @@ public class UnicodeTest {
             HttpConnection conn = Http.PUT(uri, "application/json");
             conn.requestProperties.put("Accept", "application/json");
             conn.setRequestBody("{\"foo\":\"" + TESTSTRING + "\"}");
-            conn.execute();
+            clientResource.get().executeRequest(conn);
             assertEquals(201, conn.getConnection().getResponseCode());
             closeResponse(conn);
         }
         {
             HttpConnection conn = Http.GET(uri);
             conn.requestProperties.put("Accept", "application/json");
-            conn.execute();
+            clientResource.get().executeRequest(conn);
             assertEquals(200, conn.getConnection().getResponseCode());
             String result = getPlainTextEntityAsString(conn, uri);
             TEST_LOG.logger.info("testLiteralUnicode: Result as returned in entity: " + result);
@@ -282,7 +281,7 @@ public class UnicodeTest {
         {
             HttpConnection conn = Http.GET(uri);
             conn.requestProperties.put("Accept", "application/json");
-            conn.execute();
+            clientResource.get().executeRequest(conn);
             assertEquals(200, conn.getConnection().getResponseCode());
             JsonObject result = getJSONEntityAsJsonObject(conn, uri);
             String value = result.get("foo").getAsString();
@@ -301,14 +300,14 @@ public class UnicodeTest {
             HttpConnection conn = Http.PUT(uri, "application/json");
             conn.requestProperties.put("Accept", "application/json");
             conn.setRequestBody("{\"foo\":\"" + TESTSTRING_ESCAPED + "\"}");
-            conn.execute();
+            clientResource.get().executeRequest(conn);
             assertEquals(201, conn.getConnection().getResponseCode());
             closeResponse(conn);
         }
         {
             HttpConnection conn = Http.GET(uri);
             conn.requestProperties.put("Accept", "application/json");
-            conn.execute();
+            clientResource.get().executeRequest(conn);
             assertEquals(200, conn.getConnection().getResponseCode());
             String result = getPlainTextEntityAsString(conn, uri);
             TEST_LOG.logger.info("testEscapedUnicode: Result as returned in entity: " + result);
@@ -317,7 +316,7 @@ public class UnicodeTest {
         {
             HttpConnection conn = Http.GET(uri);
             conn.requestProperties.put("Accept", "application/json");
-            conn.execute();
+            clientResource.get().executeRequest(conn);
             assertEquals(200, conn.getConnection().getResponseCode());
             JsonObject result = getJSONEntityAsJsonObject(conn, uri);
             String value = result.get("foo").getAsString();
