@@ -32,7 +32,7 @@ import java.net.HttpURLConnection;
  */
 
 
-public interface HttpConnectionRequestInterceptor {
+public interface HttpConnectionRequestInterceptor extends HttpConnectionInterceptor {
 
     /**
      * Intercept the request.

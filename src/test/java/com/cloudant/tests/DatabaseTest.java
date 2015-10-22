@@ -37,6 +37,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.RuleChain;
 
+import java.net.MalformedURLException;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -147,15 +148,20 @@ public class DatabaseTest {
 
     //Test case for issue #31
     @Test
-    public void customGsonDeserializerTest() {
+    public void customGsonDeserializerTest() throws MalformedURLException {
+        GsonBuilder builder = new GsonBuilder();
+        builder.setDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
+        CloudantClient account  = CloudantClientHelper.getClientBuilder()
+                .gsonBuilder(builder)
+                .build();
+
+        Database db = account.database(dbResource.getDatabaseName(), false);
+
         Map<String, Object> h = new HashMap<String, Object>();
         h.put("_id", "serializertest");
         h.put("date", "2015-01-23T18:25:43.511Z");
         db.save(h);
-
-        GsonBuilder builder = new GsonBuilder();
-        builder.setDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        account.setGsonBuilder(builder);
 
         db.find(Foo.class, "serializertest"); // should not throw a JsonSyntaxException
 

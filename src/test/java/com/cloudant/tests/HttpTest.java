@@ -289,7 +289,7 @@ public class HttpTest {
             server.await();
 
             //create a client to connect to post to the simple server
-            CloudantClient c = new CloudantClient(server.getUrl());
+            CloudantClient c = CloudantClientHelper.newSimpleHttpServerClient(server).build();
             HttpConnection conn = Http.POST(c.getBaseUri(), "application/json");
             //set the body content, add some new lines to make it easier for the simple server
             conn.setRequestBody(data + "\r\n\r\n");
@@ -379,7 +379,10 @@ public class HttpTest {
         server.await();
 
         try {
-            CloudantClient c = new CloudantClient(server.getUrl(), mockUser, mockPass);
+            CloudantClient c = CloudantClientHelper.newSimpleHttpServerClient(server)
+                    .username(mockUser)
+                    .password(mockPass)
+                    .build();
             //the GET request will try to get a session, then perform the GET
             c.executeRequest(Http.GET(c.getBaseUri()));
 
