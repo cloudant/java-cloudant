@@ -134,11 +134,13 @@ public class Utils {
                     .replicatorDocId(replicatorDocId)
                     .find();
 
-            //Check if replicator doc is completed or if continuous replication is triggered
-            if (replicatorDoc != null && replicatorDoc.getReplicationState() != null
-                    && (replicatorDoc.getReplicationState().equalsIgnoreCase(status))) {
-
-                finished = true;
+            //Check if replicator doc is in specified state
+            String state;
+            if (replicatorDoc != null && (state = replicatorDoc.getReplicationState()) != null) {
+                //if we've reached the status or we reached an error then we are finished
+                if (state.equalsIgnoreCase(status) || state.equalsIgnoreCase("error")) {
+                    finished = true;
+                }
             }
             //double the delay for the next iteration
             delay *= 2;

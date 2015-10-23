@@ -35,4 +35,14 @@ public class CloudantClientResource extends ExternalResource {
     public CloudantClient get() {
         return this.client;
     }
+
+    /**
+     * Get the base URI of the client with credentials included which is useful for example for
+     * replication.
+     *
+     * @return String representation of the URI
+     */
+    public String getBaseURIWithUserInfo() {
+        return CloudantClientHelper.SERVER_URI_WITH_USER_INFO;
+    }
 }

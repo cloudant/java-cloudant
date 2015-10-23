@@ -14,6 +14,7 @@
 
 package com.cloudant.tests;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
@@ -23,6 +24,8 @@ import com.cloudant.client.api.model.Response;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.Utils;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -33,17 +36,31 @@ import java.util.Map;
 @Category(RequiresDB.class)
 public class ReplicatorTest extends ReplicateBaseTest {
 
+    private String repDocId;
+
+    @Before
+    public void generateReplicatorDocId() {
+        repDocId = Utils.generateUUID();
+    }
+
+    @After
+    public void cleanUpReplicatorDoc() throws Exception {
+        Utils.removeReplicatorTestDoc(account, repDocId);
+    }
+
     @Test
     public void replication() throws Exception {
         Response response = account.replicator()
+                .replicatorDocId(repDocId)
                 .createTarget(true)
                 .source(db1URI)
                 .target(db2URI)
                 .save();
 
         // find and remove replicator doc
-        Utils.waitForReplicatorToComplete(account, response.getId());
-        Utils.removeReplicatorTestDoc(account, response.getId());
+        ReplicatorDocument repDoc = Utils.waitForReplicatorToComplete(account, response.getId());
+        assertTrue("The replicator should reach completed state", "completed".equalsIgnoreCase
+                (repDoc.getReplicationState()));
     }
 
     @Test
@@ -53,6 +70,7 @@ public class ReplicatorTest extends ReplicateBaseTest {
 
         Response response = account.replicator()
                 .createTarget(true)
+                .replicatorDocId(repDocId)
                 .source(db1URI)
                 .target(db2URI)
                 .filter("example/example_filter")
@@ -60,25 +78,23 @@ public class ReplicatorTest extends ReplicateBaseTest {
                 .save();
 
         // find and remove replicator doc
-        Utils.waitForReplicatorToComplete(account, response.getId());
-        Utils.removeReplicatorTestDoc(account, response.getId());
+        ReplicatorDocument repDoc = Utils.waitForReplicatorToComplete(account, response.getId());
+        assertTrue("The replicator should reach completed state", "completed".equalsIgnoreCase
+                (repDoc.getReplicationState()));
     }
 
     @Test
     public void replicatorDB() throws Exception {
-        String version = account.serverVersion();
-        if (version.startsWith("0") || version.startsWith("1.0")) {
-            return;
-        }
 
         // trigger a replication
         Response response = account.replicator()
+                .replicatorDocId(repDocId)
                 .source(db1URI)
                 .target(db2URI).continuous(true)
                 .createTarget(true)
                 .save();
 
-        // we need the replication to finish before continuing
+        // we need the replication to start before continuing
         Utils.waitForReplicatorToStart(account, response.getId());
 
         // find all replicator docs
@@ -86,8 +102,6 @@ public class ReplicatorTest extends ReplicateBaseTest {
                 .findAll();
         assertThat(replicatorDocs.size(), is(not(0)));
 
-        // find and remove replicator doc
-        Utils.removeReplicatorTestDoc(account, response.getId());
     }
 
     @Test
@@ -103,7 +117,7 @@ public class ReplicatorTest extends ReplicateBaseTest {
 
         //replicate with DB1 with DB2
         Response response = account.replicator().source(db1URI)
-                .target(db2URI).replicatorDocId(docId)
+                .target(db2URI).replicatorDocId(repDocId)
                 .save();
 
         // we need the replication to finish before continuing
@@ -112,8 +126,5 @@ public class ReplicatorTest extends ReplicateBaseTest {
         //we replicated with a doc with the same ID but different content in each DB, we should get
         //a conflict
         assertConflictsNotZero(db2);
-
-        // find and remove replicator doc
-        Utils.removeReplicatorTestDoc(account, response.getId());
     }
 }
