@@ -24,6 +24,7 @@ import com.cloudant.client.api.views.Key;
 import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.util.Utils;
 
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -52,11 +53,11 @@ public class ReplicateBaseTest {
 
         db1 = db1Resource.get();
         db1URI = db1Resource.getDbURIWithUserInfo();
-        db1.syncDesignDocsWithDb();
+        Utils.putDesignDocs(db1);
 
         db2 = db2Resource.get();
         db2URI = db2Resource.getDbURIWithUserInfo();
-        db2.syncDesignDocsWithDb();
+        Utils.putDesignDocs(db2);
     }
 
     protected void assertConflictsNotZero(Database db) throws Exception {

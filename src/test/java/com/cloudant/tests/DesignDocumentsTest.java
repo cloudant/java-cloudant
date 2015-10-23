@@ -21,11 +21,12 @@ import static org.junit.Assert.assertThat;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
+import com.cloudant.client.api.DesignDocumentManager;
 import com.cloudant.client.api.Replication;
 import com.cloudant.client.api.model.DesignDocument;
+import com.cloudant.client.api.model.Response;
 import com.cloudant.client.api.views.AllDocsRequest;
 import com.cloudant.client.api.views.Key;
-import com.cloudant.client.org.lightcouch.Response;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
@@ -38,6 +39,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.RuleChain;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -52,34 +54,52 @@ public class DesignDocumentsTest {
 
     private static Database db;
     private CloudantClient account;
-
+    private File rootDesignDir;
+    private File designDocExample;
+    private DesignDocumentManager designManager;
 
     @Before
     public void setUp() {
         account = clientResource.get();
         db = dbResource.get();
+        rootDesignDir = new File(System.getProperty("user.dir")
+                + "/src/test/resources/design-files");
+        designDocExample = new File(String.format("%s/example_design_doc.js", rootDesignDir));
+        designManager = db.getDesignDocumentManager();
     }
 
     @Test
-    public void designDocSync() {
-        DesignDocument designDoc = db.design().getFromDesk("example");
-        db.design().synchronizeWithDb(designDoc);
+    public void designDocSync() throws Exception {
+        DesignDocument designDoc = DesignDocumentManager.fromFile(designDocExample);
+
+        db.getDesignDocumentManager().put(designDoc);
     }
 
     @Test
-    public void designDocCompare() {
-        DesignDocument designDoc1 = db.design().getFromDesk("example");
-        db.design().synchronizeWithDb(designDoc1);
+    public void designDocCompare() throws Exception {
+        DesignDocument designDoc1 = DesignDocumentManager.fromFile(designDocExample);
+        designManager.put(designDoc1);
 
-        DesignDocument designDoc11 = db.design().getFromDb("_design/example");
+        DesignDocument designDoc11 = db.getDesignDocumentManager().get("_design/example");
 
         assertEquals(designDoc1, designDoc11);
     }
 
     @Test
-    public void designDocs() {
-        List<DesignDocument> designDocs = db.design().getAllFromDesk();
-        db.syncDesignDocsWithDb();
+    public void designDocs() throws Exception {
+        List<DesignDocument> designDocs = DesignDocumentManager.fromDirectory(rootDesignDir);
+        DesignDocument[] docArray = designDocs.toArray(new DesignDocument[designDocs.size()]);
+        designManager.put(docArray);
+
+        assertThat(designDocs.size(), not(0));
+    }
+
+    @Test
+    public void updateDesignDocs() throws Exception {
+        List<DesignDocument> designDocs = DesignDocumentManager.fromDirectory(rootDesignDir);
+
+        DesignDocument[] docArray = designDocs.toArray(new DesignDocument[designDocs.size()]);
+        designManager.put(docArray);
 
         assertThat(designDocs.size(), not(0));
     }
@@ -106,7 +126,7 @@ public class DesignDocumentsTest {
         String copiedDbName = "reducedanimaldb" + Utils.generateUUID();
 
         //find the diet_count map reduce view and set the dbcopy value
-        DesignDocument dd = db.design().getFromDb("_design/views101");
+        DesignDocument dd = db.getDesignDocumentManager().get("_design/views101");
         for (Map.Entry<String, DesignDocument.MapReduce> view
                 : dd.getViews().entrySet()) {
             if (view.getKey().equals("diet_count")) {
@@ -118,12 +138,12 @@ public class DesignDocumentsTest {
 
         try {
             //put the new version back in the database
-            Response response = db.design().synchronizeWithDb(dd);
+            Response response = db.getDesignDocumentManager().put(dd);
             assertNotNull("The design document should have been saved", response);
 
             //query the diet_count view to ensure the indexes are built
             int count = db.getViewRequestBuilder("views101", "diet_count").newRequest(Key.Type
-                            .STRING, Integer.class).build().getSingleValue();
+                    .STRING, Integer.class).build().getSingleValue();
 
             assertEquals("There should be five records", 5, count);
 

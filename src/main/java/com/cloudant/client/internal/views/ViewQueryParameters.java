@@ -18,6 +18,7 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.internal.util.QueryParameter;
 import com.cloudant.client.internal.util.QueryParameters;
+import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
 import com.cloudant.client.org.lightcouch.internal.URIBuilder;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
@@ -106,7 +107,7 @@ public class ViewQueryParameters<K, V> extends QueryParameters {
         this.client = client;
         this.db = db;
         //ensure design doc name starts with _design
-        this.designDoc = designDoc.startsWith("_design") ? designDoc : "_design/" + designDoc;
+        this.designDoc = CouchDbUtil.ensureDesignPrefix(designDoc);
         this.viewName = viewName;
         this.keyType = keyType;
         this.valueType = valueType;

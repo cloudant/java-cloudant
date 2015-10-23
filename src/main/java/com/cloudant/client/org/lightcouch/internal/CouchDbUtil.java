@@ -30,27 +30,17 @@ import com.google.gson.JsonParser;
 import org.apache.commons.io.IOUtils;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.UUID;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 /**
  * Provides various utility methods, for internal use.
@@ -58,6 +48,8 @@ import java.util.jar.JarFile;
  * @author Ahmed Yehia
  */
 final public class CouchDbUtil {
+
+    private static final String DESIGN_PREFIX = "_design/";
 
     private CouchDbUtil() {
         // Utility class
@@ -119,68 +111,6 @@ final public class CouchDbUtil {
     }
 
     // Files
-
-    private static final String LINE_SEP = System.getProperty("line.separator");
-
-    /**
-     * List directory contents for a resource folder. Not recursive.
-     * This is basically a brute-force implementation.
-     * Works for regular files and also JARs.
-     *
-     * @param clazz Any java class that lives in the same place as the resources you want.
-     * @param path  Should end with "/", but not start with one.
-     * @return Just the name of each member item, not the full paths.
-     * @author Greg Briggs (ah!!! i Mario Briggs, need to meet this Greg guy... never wrote code
-     * with another Briggs)
-     */
-    public static List<String> listResources(String path) {
-        try {
-            Class<CouchDbUtil> clazz = CouchDbUtil.class;
-            URL dirURL = clazz.getClassLoader().getResource(path);
-            if (dirURL != null && dirURL.getProtocol().equals("file")) {
-                return Arrays.asList(new File(dirURL.toURI()).list());
-            }
-            if (dirURL != null && dirURL.getProtocol().equals("jar")) {
-                String jarPath = dirURL.getPath().substring(5, dirURL.getPath().indexOf("!"));
-                JarFile jar = new JarFile(URLDecoder.decode(jarPath, "UTF-8"));
-                Enumeration<JarEntry> entries = jar.entries();
-                Set<String> result = new HashSet<String>();
-                while (entries.hasMoreElements()) {
-                    String name = entries.nextElement().getName();
-                    if (name.startsWith(path)) {
-                        String entry = name.substring(path.length());
-                        int checkSubdir = entry.indexOf("/");
-                        if (checkSubdir >= 0) {
-                            entry = entry.substring(0, checkSubdir);
-                        }
-                        if (entry.length() > 0) {
-                            result.add(entry);
-                        }
-                    }
-                }
-                jar.close(); //mdb
-                return new ArrayList<String>(result);
-            }
-            return null;
-        } catch (Exception e) {
-            throw new CouchDbException(e);
-        }
-    }
-
-    public static String readFile(String path) {
-        InputStream instream = CouchDbUtil.class.getResourceAsStream(path);
-        StringBuilder content = new StringBuilder();
-        Scanner scanner = null;
-        try {
-            scanner = new Scanner(instream);
-            while (scanner.hasNextLine()) {
-                content.append(scanner.nextLine() + LINE_SEP);
-            }
-        } finally {
-            scanner.close();
-        }
-        return content.toString();
-    }
 
     public static String removeExtension(String fileName) {
         return fileName.substring(0, fileName.lastIndexOf('.'));
@@ -301,5 +231,16 @@ final public class CouchDbUtil {
             // This should never happen as every implementation of the java platform is required to support UTF-8.
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Certify that the id in the design document contains the necessary `_design` prefix.
+     * If it does, return the id untouched. Else, add the prefix to the id.
+     * @param id The design document's id
+     * @return String in the form of `_design/id`
+     */
+    public static String ensureDesignPrefix(String id)
+    {
+        return id.startsWith(CouchDbUtil.DESIGN_PREFIX) ? id : CouchDbUtil.DESIGN_PREFIX + id;
     }
 }

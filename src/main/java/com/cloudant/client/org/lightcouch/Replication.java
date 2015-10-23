@@ -49,7 +49,6 @@ import java.util.logging.Logger;
  * </pre>
  *
  * @author Ahmed Yehia
- * @see CouchDatabaseBase#replication()
  * @see ReplicationResult
  * @see ReplicationHistory
  * @see Replicator

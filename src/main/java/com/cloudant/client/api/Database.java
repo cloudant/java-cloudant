@@ -37,7 +37,6 @@ import com.cloudant.client.internal.views.AllDocsRequestResponse;
 import com.cloudant.client.internal.views.ViewQueryParameters;
 import com.cloudant.client.org.lightcouch.Changes;
 import com.cloudant.client.org.lightcouch.CouchDatabase;
-import com.cloudant.client.org.lightcouch.CouchDbDesign;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.CouchDbInfo;
 import com.cloudant.client.org.lightcouch.DocumentConflictException;
@@ -226,7 +225,6 @@ public class Database {
         return client.couchDbClient.get(buildUri(getDBUri()).path("_shards/").path(docId).build(), Shard.class);
     }
 
-
     /**
      * Create a new index
      *
@@ -253,7 +251,8 @@ public class Database {
         InputStream putresp = null;
         URI uri = buildUri(getDBUri()).path("_index").build();
         try {
-            putresp = client.couchDbClient.executeToInputStream(createPost(uri, indexDefinition, "application/json"));
+            putresp = client.couchDbClient.executeToInputStream(createPost(uri, indexDefinition,
+                    "application/json"));
             String result = getAsString(putresp, "result");
             if (result.equalsIgnoreCase("created")) {
                 log.info(String.format("Created Index: '%s'", indexDefinition));
@@ -264,7 +263,6 @@ public class Database {
             close(putresp);
         }
     }
-
 
     /**
      * Find documents using an index
@@ -300,7 +298,8 @@ public class Database {
         String body = getFindByIndexBody(selectorJson, options);
         InputStream stream = null;
         try {
-            stream = client.couchDbClient.executeToInputStream(createPost(uri, body, "application/json"));
+            stream = client.couchDbClient.executeToInputStream(createPost(uri, body,
+                    "application/json"));
             Reader reader = new InputStreamReader(stream, "UTF-8");
             JsonArray jsonArray = new JsonParser().parse(reader)
                     .getAsJsonObject().getAsJsonArray("docs");
@@ -370,10 +369,10 @@ public class Database {
     /**
      * Provides access to CouchDB Design Documents.
      *
-     * @see CouchDbDesign
+     * @see DesignDocumentManager
      */
-    public DbDesign design() {
-        return new DbDesign(db, client);
+    public DesignDocumentManager getDesignDocumentManager() {
+        return new DesignDocumentManager(this);
     }
 
     /**
@@ -396,6 +395,7 @@ public class Database {
      *  getAllDocsRequestBuilder().build().getResponse();
      * }
      * </pre>
+     *
      * @return a request builder for the _all_docs endpoint of this database
      */
     public AllDocsRequestBuilder getAllDocsRequestBuilder() {
@@ -407,7 +407,6 @@ public class Database {
             }
         });
     }
-
 
     /**
      * Provides access to <tt>Change Notifications</tt> API.
@@ -421,7 +420,6 @@ public class Database {
         return changes;
     }
 
-
     /**
      * Finds an Object of the specified type.
      *
@@ -434,7 +432,6 @@ public class Database {
     public <T> T find(Class<T> classType, String id) {
         return db.find(classType, id);
     }
-
 
     /**
      * Finds an Object of the specified type.
@@ -451,7 +448,6 @@ public class Database {
         return db.find(classType, id, params.getInternalParams());
     }
 
-
     /**
      * Finds an Object of the specified type.
      *
@@ -466,7 +462,6 @@ public class Database {
         return db.find(classType, id, rev);
     }
 
-
     /**
      * This method finds any document given a URI.
      * <p>The URI must be URI-encoded.
@@ -478,7 +473,6 @@ public class Database {
     public <T> T findAny(Class<T> classType, String uri) {
         return db.findAny(classType, uri);
     }
-
 
     /**
      * Finds a document and return the result as {@link InputStream}.
@@ -493,7 +487,6 @@ public class Database {
         return db.find(id);
     }
 
-
     /**
      * Finds a document given id and revision and returns the result as {@link InputStream}.
      * <p><b>Note</b>: The stream must be closed after use to release the connection.
@@ -507,7 +500,6 @@ public class Database {
         return db.find(id, rev);
     }
 
-
     /**
      * Checks if a document exist in the database.
      *
@@ -517,7 +509,6 @@ public class Database {
     public boolean contains(String id) {
         return db.contains(id);
     }
-
 
     /**
      * Saves an object in the database, using HTTP <tt>PUT</tt> request.
@@ -552,7 +543,6 @@ public class Database {
         return response;
     }
 
-
     /**
      * Saves an object in the database using HTTP <tt>POST</tt> request.
      * <p>The database will be responsible for generating the document id.
@@ -581,7 +571,8 @@ public class Database {
         InputStream response = null;
         try {
             URI uri = buildUri(getDBUri()).query("w", writeQuorum).build();
-            response = client.couchDbClient.executeToInputStream(createPost(uri, client.getGson().toJson(object),
+            response = client.couchDbClient.executeToInputStream(createPost(uri, client.getGson()
+                            .toJson(object),
                     "application/json"));
             Response couchDbResponse = getResponse(response, Response.class, client.getGson());
             com.cloudant.client.api.model.Response cloudantResponse = new com.cloudant.client.api
@@ -592,7 +583,6 @@ public class Database {
         }
     }
 
-
     /**
      * Saves a document with <tt>batch=ok</tt> query param.
      *
@@ -601,7 +591,6 @@ public class Database {
     public void batch(Object object) {
         db.batch(object);
     }
-
 
     /**
      * Updates an object in the database, the object must have the correct <code>_id</code> and
@@ -634,7 +623,6 @@ public class Database {
         return response;
     }
 
-
     /**
      * Removes a document from the database.
      * <p>The object must have the correct <code>_id</code> and <code>_rev</code> values.
@@ -649,7 +637,6 @@ public class Database {
                 .Response(couchDbResponse);
         return response;
     }
-
 
     /**
      * Removes a document from the database given both a document <code>_id</code> and
@@ -666,7 +653,6 @@ public class Database {
                 .Response(couchDbResponse);
         return response;
     }
-
 
     /**
      * Performs a Bulk Documents insert request.
@@ -703,7 +689,6 @@ public class Database {
         return response;
     }
 
-
     /**
      * Saves an attachment to an existing document given both a document id
      * and revision, or save to a new document given only the id, and rev as {@code null}.
@@ -728,7 +713,6 @@ public class Database {
         return response;
     }
 
-
     /**
      * Invokes an Update Handler.
      * <code>String query = "field=foo&amp;value=bar";</code>
@@ -747,7 +731,6 @@ public class Database {
                                       String query) {
         return db.invokeUpdateHandler(updateHandlerUri, docId, query);
     }
-
 
     /**
      * Invokes an Update Handler.
@@ -769,22 +752,12 @@ public class Database {
         return db.invokeUpdateHandler(updateHandlerUri, docId, params.getInternalParams());
     }
 
-
-    /**
-     * Synchronize all design documents with the database.
-     */
-    public void syncDesignDocsWithDb() {
-        db.syncDesignDocsWithDb();
-    }
-
-
     /**
      * @return The database URI.
      */
     public URI getDBUri() {
         return db.getDBUri();
     }
-
 
     /**
      * @return {@link CouchDbInfo} Containing the DB info.
@@ -793,14 +766,12 @@ public class Database {
         return client.couchDbClient.get(buildUri(getDBUri()).build(), DbInfo.class);
     }
 
-
     /**
      * Requests the database commits any recent changes to disk.
      */
     public void ensureFullCommit() {
         db.ensureFullCommit();
     }
-
 
     // private helper methods
 
@@ -847,11 +818,7 @@ public class Database {
 
     /**
      * @param selectorJson
-     * @param sortOrder
-     * @param limit
-     * @param skip
-     * @param returnFields
-     * @param readQuorum
+     * @param options
      * @return
      */
     private String getFindByIndexBody(String selectorJson,
@@ -950,7 +917,6 @@ public class Database {
     Gson getGson() {
         return client.getGson();
     }
-
 }
 
 class ShardDeserializer implements JsonDeserializer<List<Shard>> {

@@ -19,6 +19,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
+import com.cloudant.client.api.DesignDocumentManager;
 import com.cloudant.client.api.Search;
 import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.api.model.SearchResult;
@@ -34,6 +35,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.RuleChain;
 
+import java.io.File;
 import java.net.URI;
 import java.util.Iterator;
 import java.util.List;
@@ -65,8 +67,11 @@ public class SearchTests {
         r.trigger();
 
         // sync the design doc for faceted search
-        DesignDocument designDoc = db.design().getFromDesk("views101");
-        db.design().synchronizeWithDb(designDoc);
+        File designDocViews101 =
+                new File(String.format("%s/views101_design_doc.js", new File(System.getProperty(
+                        "user.dir") + "/src/test/resources/design-docs")));
+        DesignDocument designDoc = DesignDocumentManager.fromFile(designDocViews101);
+        db.getDesignDocumentManager().put(designDoc);
     }
 
     @Test
