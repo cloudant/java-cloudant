@@ -34,16 +34,8 @@ public class CouchDbProperties {
     // required
     private String protocol;
     private String host;
-    private String path;
     private int port;
-    private String username;
-    private String password;
 
-    private String authCookie;
-
-    // optional, default to 5 minutes
-    private int socketTimeout = 300000;
-    private int connectionTimeout = 300000;
     //default to 6 connections
     private int maxConnections = 6;
     private URL proxyURL;
@@ -52,10 +44,6 @@ public class CouchDbProperties {
             <HttpConnectionRequestInterceptor>();
     private List<HttpConnectionResponseInterceptor> responseInterceptors = new ArrayList
             <HttpConnectionResponseInterceptor>();
-
-    public CouchDbProperties() {
-        // default constructor
-    }
 
     public CouchDbProperties(String protocol, String host, int port) {
         this.protocol = protocol;
@@ -71,21 +59,10 @@ public class CouchDbProperties {
         return host;
     }
 
-    public String getPath() {
-        return path;
-    }
-
     public int getPort() {
         return port;
     }
 
-    public int getSocketTimeout() {
-        return socketTimeout;
-    }
-
-    public int getConnectionTimeout() {
-        return connectionTimeout;
-    }
 
     public int getMaxConnections() {
         return maxConnections;
@@ -93,46 +70,6 @@ public class CouchDbProperties {
 
     public URL getProxyURL() {
         return proxyURL;
-    }
-
-    public CouchDbProperties setProtocol(String protocol) {
-        this.protocol = protocol;
-        return this;
-    }
-
-    public CouchDbProperties setHost(String host) {
-        this.host = host;
-        return this;
-    }
-
-    public CouchDbProperties setPath(String path) {
-        this.path = path;
-        return this;
-    }
-
-    public CouchDbProperties setPort(int port) {
-        this.port = port;
-        return this;
-    }
-
-    public CouchDbProperties setUsername(String username) {
-        this.username = username;
-        return this;
-    }
-
-    public CouchDbProperties setPassword(String password) {
-        this.password = password;
-        return this;
-    }
-
-    public CouchDbProperties setSocketTimeout(int socketTimeout) {
-        this.socketTimeout = socketTimeout;
-        return this;
-    }
-
-    public CouchDbProperties setConnectionTimeout(int connectionTimeout) {
-        this.connectionTimeout = connectionTimeout;
-        return this;
     }
 
     public CouchDbProperties setMaxConnections(int maxConnections) {
@@ -143,11 +80,6 @@ public class CouchDbProperties {
     public CouchDbProperties setProxyURL(URL proxyURL) {
         this.proxyURL = proxyURL;
         return this;
-    }
-
-    public void clearPassword() {
-        setPassword("");
-        setPassword(null);
     }
 
     public List<HttpConnectionRequestInterceptor> getRequestInterceptors() {

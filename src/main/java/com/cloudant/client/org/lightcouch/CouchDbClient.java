@@ -75,9 +75,8 @@ public class CouchDbClient {
         final CouchDbProperties props = config.getProperties();
 
         this.gson = GsonHelper.initGson(new GsonBuilder()).create();
-        final String path = props.getPath() != null ? props.getPath() : "";
         this.baseURI = buildUri().scheme(props.getProtocol()).host(props.getHost()).port(props
-                .getPort()).path("/").path(path).build();
+                .getPort()).path("/").build();
 
         proxyUrl = props.getProxyURL();
 
@@ -91,9 +90,6 @@ public class CouchDbClient {
         if (props.getResponseInterceptors() != null) {
             this.responseInterceptors.addAll(props.getResponseInterceptors());
         }
-
-
-        props.clearPassword();
     }
 
     /**
@@ -268,12 +264,6 @@ public class CouchDbClient {
         try {
             is = this.executeToInputStream(connection);
             return getResponse(is, Response.class, getGson());
-        } catch (CouchDbException e) {
-            if (e.getStatusCode() == 409) {
-                throw new DocumentConflictException(e.toString());
-            } else {
-                throw e;
-            }
         } finally {
             close(is);
         }
@@ -374,35 +364,27 @@ public class CouchDbClient {
      */
     public Response put(URI uri, Object object, boolean newEntity, int writeQuorum) {
         assertNotEmpty(object, "object");
-        try {
-            final JsonObject json = getGson().toJsonTree(object).getAsJsonObject();
-            String id = getAsString(json, "_id");
-            String rev = getAsString(json, "_rev");
-            if (newEntity) { // save
-                assertNull(rev, "rev");
-                id = (id == null) ? generateUUID() : id;
-            } else { // update
-                assertNotEmpty(id, "id");
-                assertNotEmpty(rev, "rev");
-            }
-            URI httpUri = null;
-            if (writeQuorum > -1) {
-                httpUri = buildUri(uri).pathToEncode(id).query("w",
-                        writeQuorum).buildEncoded();
-            } else {
-                httpUri = buildUri(uri).pathToEncode(id).buildEncoded();
-            }
-            HttpConnection connection = Http.PUT(httpUri, "application/json");
-            connection.setRequestBody(json.toString());
-
-            return executeToResponse(connection);
-        } catch (CouchDbException e) {
-            if (e.getStatusCode() == 409) {
-                throw new DocumentConflictException(e.toString());
-            } else {
-                throw e;
-            }
+        final JsonObject json = getGson().toJsonTree(object).getAsJsonObject();
+        String id = getAsString(json, "_id");
+        String rev = getAsString(json, "_rev");
+        if (newEntity) { // save
+            assertNull(rev, "rev");
+            id = (id == null) ? generateUUID() : id;
+        } else { // update
+            assertNotEmpty(id, "id");
+            assertNotEmpty(rev, "rev");
         }
+        URI httpUri = null;
+        if (writeQuorum > -1) {
+            httpUri = buildUri(uri).pathToEncode(id).query("w",
+                    writeQuorum).buildEncoded();
+        } else {
+            httpUri = buildUri(uri).pathToEncode(id).buildEncoded();
+        }
+        HttpConnection connection = Http.PUT(httpUri, "application/json");
+        connection.setRequestBody(json.toString());
+
+        return executeToResponse(connection);
     }
 
     /**
@@ -492,48 +474,49 @@ public class CouchDbClient {
         connection.requestProperties.put("Accept", "application/json");
         connection.responseInterceptors.addAll(this.responseInterceptors);
         connection.requestInterceptors.addAll(this.requestInterceptors);
-        InputStream is = null; // input stream - response from server on success
         InputStream es = null; // error stream - response from server for a 500 etc
-        String response = null;
-        int code = -1;
-        Throwable cause = null;
 
         // first try to execute our request and get the input stream with the server's response
         // we want to catch IOException because HttpUrlConnection throws these for non-success
         // responses (eg 404 throws a FileNotFoundException) but we need to map to our own
         // specific exceptions
         try {
-            is = connection.execute().responseAsInputStream();
-        } catch (IOException ioe) {
-            cause = ioe;
-        }
-
-        try {
-            code = connection.getConnection().getResponseCode();
-            response = connection.getConnection().getResponseMessage();
+            connection = connection.execute();
+            int code = connection.getConnection().getResponseCode();
+            String response = connection.getConnection().getResponseMessage();
             // everything ok? return the stream
             if (code / 100 == 2) { // success [200,299]
-                return is;
-            } else if (code == 404) {
-                throw new NoDocumentException(response, cause);
-            } else if (code == 412) {
-                throw new PreconditionFailedException(response, cause);
+                return connection.responseAsInputStream();
             } else {
                 CouchDbException ex = new CouchDbException(response, code);
+                switch (code) {
+                    case 404:
+                        ex = new NoDocumentException(response);
+                        break;
+                    case 409:
+                        ex = new DocumentConflictException(response);
+                        break;
+                    case 412:
+                        ex = new PreconditionFailedException(response);
+                        break;
+                }
                 es = connection.getConnection().getErrorStream();
+                //if there is an error stream try to deserialize into the typed exception
                 if (es != null) {
+                    Class<? extends CouchDbException> exceptionClass = ex.getClass();
                     try {
                         ex = getGson().fromJson(new InputStreamReader(es),
-                                CouchDbException.class);
-                        ex.setStatusCode(code);
+                                exceptionClass);
                     } catch (JsonParseException e) {
-                        //supress and just throw ex momentarily
+                        //suppress and just throw ex momentarily
                     }
                 }
+                //set the status code for the cases where we may not have already
+                ex.setStatusCode(code);
                 throw ex;
             }
         } catch (IOException ioe) {
-            throw new CouchDbException("Error retrieving server response", ioe, code);
+            throw new CouchDbException("Error retrieving server response", ioe);
         } finally {
             close(es);
         }

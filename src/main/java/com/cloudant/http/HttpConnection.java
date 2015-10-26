@@ -178,7 +178,6 @@ public class HttpConnection  {
             int n = numberOfRetries;
             while (retry && n-- > 0) {
 
-                System.setProperty("http.keepAlive", "false");
                 if (proxy != null) {
                     connection = (HttpURLConnection) url.openConnection(proxy);
                 } else {
