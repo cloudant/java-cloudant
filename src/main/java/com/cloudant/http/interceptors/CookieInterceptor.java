@@ -12,8 +12,13 @@
  * and limitations under the License.
  */
 
-package com.cloudant.http;
+package com.cloudant.http.interceptors;
 
+import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
+import com.cloudant.http.HttpConnectionInterceptorContext;
+import com.cloudant.http.HttpConnectionRequestInterceptor;
+import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -24,11 +29,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
  * Adds cookie authentication support to http requests.
  *
  * It does this by adding the cookie header for CouchDB
@@ -40,33 +45,42 @@ import java.util.logging.Logger;
  *
  * If the request to get the cookie for use in future request fails with a 401 status code
  * (or any status that indicates client error) cookie authentication will not be attempted again.
- *
- *
  */
-public  class CookieInterceptor implements HttpConnectionRequestInterceptor, HttpConnectionResponseInterceptor {
+public class CookieInterceptor implements HttpConnectionRequestInterceptor,
+        HttpConnectionResponseInterceptor {
 
-    private final static Logger logger = Logger.getLogger(CookieInterceptor.class.getCanonicalName());
-    final String sessionRequestBody;
+    private final static Logger logger = Logger.getLogger(CookieInterceptor.class
+            .getCanonicalName());
+    private final byte[] sessionRequestBody;
     private String cookie = null;
     private boolean shouldAttemptCookieRequest = true;
-    private final String username;
 
     /**
      * Constructs a cookie interceptor.
+     *
      * @param username The username to use when getting the cookie
      * @param password The password to use when getting the cookie
      */
-    public CookieInterceptor(String username, String password){
-        this.sessionRequestBody = String.format("name=%s&password=%s",username,password);
-        this.username = username;
+    public CookieInterceptor(String username, String password) {
+
+        try {
+            username = URLEncoder.encode(username, "UTF-8");
+            password = URLEncoder.encode(password, "UTF-8");
+            this.sessionRequestBody = String.format("name=%s&password=%s", username, password)
+                    .getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            //all JVMs should support UTF-8, so this should not happen
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public HttpConnectionInterceptorContext interceptRequest(HttpConnectionInterceptorContext context) {
+    public HttpConnectionInterceptorContext interceptRequest(HttpConnectionInterceptorContext
+                                                                         context) {
 
         HttpURLConnection connection = context.connection.getConnection();
 
-        if(shouldAttemptCookieRequest) {
+        if (shouldAttemptCookieRequest) {
             if (cookie == null) {
                 cookie = getCookie(connection.getURL());
             }
@@ -77,27 +91,28 @@ public  class CookieInterceptor implements HttpConnectionRequestInterceptor, Htt
     }
 
     @Override
-    public HttpConnectionInterceptorContext interceptResponse(HttpConnectionInterceptorContext context) {
+    public HttpConnectionInterceptorContext interceptResponse(HttpConnectionInterceptorContext
+                                                                          context) {
         HttpURLConnection connection = context.connection.getConnection();
         try {
             if (context.connection.getConnection().getResponseCode() == 401) {
                 //we need to get a new cookie
                 cookie = getCookie(connection.getURL());
                 //don't resend request, failed to get cookie
-                if(cookie != null) {
+                if (cookie != null) {
                     context.replayRequest = true;
                 } else {
                     context.replayRequest = false;
                 }
             }
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to get response code from request",e);
+            logger.log(Level.SEVERE, "Failed to get response code from request", e);
         }
         return context;
 
     }
 
-     private String getCookie(URL url){
+    private String getCookie(URL url) {
         try {
             URL sessionURL = new URL(String.format("%s://%s:%d/_session",
                     url.getProtocol(),
@@ -110,23 +125,23 @@ public  class CookieInterceptor implements HttpConnectionRequestInterceptor, Htt
             String cookieHeader = connection.getHeaderField("Set-Cookie");
             int responseCode = connection.getResponseCode();
 
-            if(responseCode / 100 == 2){
+            if (responseCode / 100 == 2) {
 
-                if(sessionHasStarted(connection.getInputStream())) {
+                if (sessionHasStarted(connection.getInputStream())) {
                     return cookieHeader.substring(0, cookieHeader.indexOf(";"));
                 } else {
                     return null;
                 }
 
-            } else if(responseCode == 401){
-                shouldAttemptCookieRequest  = false;
+            } else if (responseCode == 401) {
+                shouldAttemptCookieRequest = false;
                 logger.severe("Credentials are incorrect, cookie authentication will not be" +
                         " attempted again by this interceptor object");
-            } else if (responseCode / 100 == 5){
+            } else if (responseCode / 100 == 5) {
                 logger.log(Level.SEVERE,
                         "Failed to get cookie from server, response code %s, cookie auth",
                         responseCode);
-            }  else {
+            } else {
                 // catch any other response code
                 logger.log(Level.SEVERE,
                         "Failed to get cookie from server, response code %s, " +
@@ -136,7 +151,7 @@ public  class CookieInterceptor implements HttpConnectionRequestInterceptor, Htt
             }
 
         } catch (MalformedURLException e) {
-            logger.log(Level.SEVERE,"Failed to create URL for _session endpoint",e);
+            logger.log(Level.SEVERE, "Failed to create URL for _session endpoint", e);
         } catch (UnsupportedEncodingException e) {
             logger.log(Level.SEVERE, "Failed to encode cookieRequest body", e);
         } catch (IOException e) {
@@ -145,17 +160,18 @@ public  class CookieInterceptor implements HttpConnectionRequestInterceptor, Htt
         return null;
     }
 
-    private boolean sessionHasStarted(InputStream responseStream){
+    private boolean sessionHasStarted(InputStream responseStream) {
         //check the response body
         Gson gson = new Gson();
-        //Map<String,Object> jsonResponse = gson.fromJson(new InputStreamReader(responseStream));
-        JsonObject jsonResponse = gson.fromJson(new InputStreamReader(responseStream), JsonObject.class);
+        JsonObject jsonResponse = gson.fromJson(new InputStreamReader(responseStream), JsonObject
+                .class);
 
         // only check for ok:true, https://issues.apache.org/jira/browse/COUCHDB-1356
         // means we cannot check that the name returned is the one we sent.
-       //return jsonResponse.containsKey("ok") && (Boolean) jsonResponse.get("ok");
-        return jsonResponse != null && jsonResponse.has("ok")
-                && !jsonResponse.get("ok").isJsonNull();
-
+        return jsonResponse != null
+                && jsonResponse.has("ok")
+                && jsonResponse.get("ok").isJsonPrimitive()
+                && jsonResponse.getAsJsonPrimitive("ok").isBoolean()
+                && jsonResponse.getAsJsonPrimitive("ok").getAsBoolean();
     }
 }
