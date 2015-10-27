@@ -28,12 +28,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Contains a Database Public API implementation.
@@ -43,7 +41,7 @@ import java.util.List;
  */
 public abstract class CouchDatabaseBase {
 
-    static final Log log = LogFactory.getLog(CouchDatabase.class);
+    static final Logger log = Logger.getLogger(CouchDatabase.class.getCanonicalName());
 
     CouchDbClient client;
     private URI dbURI;

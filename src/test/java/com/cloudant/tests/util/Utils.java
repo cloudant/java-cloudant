@@ -29,8 +29,6 @@ import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
 
-import org.apache.commons.logging.Log;
-
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Properties;
@@ -44,7 +42,7 @@ public class Utils {
     //wait up to 2 minutes for replications to complete
     private static final long TIMEOUT_MILLISECONDS = TimeUnit.MINUTES.toMillis(2);
 
-    public static Properties getProperties(String configFile, Log log) {
+    public static Properties getProperties(String configFile, TestLog log) {
         Properties properties = new Properties();
         try {
             InputStream instream = CloudantClient.class.getClassLoader().getResourceAsStream
@@ -52,7 +50,7 @@ public class Utils {
             properties.load(instream);
         } catch (Exception e) {
             String msg = "Could not read configuration file from the classpath: " + configFile;
-            log.error(msg);
+            log.logger.severe(msg);
             throw new IllegalStateException(msg, e);
         }
         return properties;
