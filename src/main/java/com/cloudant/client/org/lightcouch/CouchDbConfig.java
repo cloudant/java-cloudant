@@ -17,10 +17,8 @@ package com.cloudant.client.org.lightcouch;
 
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.util.Properties;
+import java.util.logging.Logger;
 
 /**
  * Provides configuration to client instance.
@@ -28,7 +26,7 @@ import java.util.Properties;
  * @author Ahmed Yehia
  */
 class CouchDbConfig {
-    private static final Log log = LogFactory.getLog(CouchDbConfig.class);
+    private static final Logger log = Logger.getLogger(CouchDbConfig.class.getCanonicalName());
 
     private Properties properties = new Properties();
     private CouchDbProperties dbProperties;
@@ -49,7 +47,7 @@ class CouchDbConfig {
         String property = properties.getProperty(key);
         if (property == null && isRequired) {
             String msg = String.format("A required property is missing. Key: %s", key);
-            log.error(msg);
+            log.severe(msg);
             throw new IllegalStateException(msg);
         } else {
             return (property != null && property.length() != 0) ? property.trim() : null;

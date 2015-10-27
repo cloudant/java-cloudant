@@ -34,9 +34,6 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -49,6 +46,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 
 /**
@@ -60,7 +58,7 @@ import java.util.Map;
 
 public class CouchDbClient {
 
-    static final Log log = LogFactory.getLog(CouchDbClient.class);
+    static final Logger log = Logger.getLogger(CouchDbClient.class.getCanonicalName());
 
     private URI baseURI;
 

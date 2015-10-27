@@ -23,8 +23,6 @@ import com.cloudant.client.api.model.Response;
 import com.cloudant.test.main.RequiresDB;
 import com.google.gson.JsonObject;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +34,6 @@ import java.util.List;
 @Category(RequiresDB.class)
 public class BulkDocumentTest {
 
-    private static final Log log = LogFactory.getLog(BulkDocumentTest.class);
     private static Database db;
     private CloudantClient account;
 
