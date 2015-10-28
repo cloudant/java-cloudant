@@ -23,7 +23,9 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.Replication;
 import com.cloudant.client.api.model.DesignDocument;
+import com.cloudant.client.api.views.AllDocsRequest;
 import com.cloudant.client.api.views.Key;
+import com.cloudant.client.org.lightcouch.Response;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
@@ -38,6 +40,7 @@ import org.junit.rules.RuleChain;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Category(RequiresDB.class)
 public class DesignDocumentsTest {
@@ -115,17 +118,33 @@ public class DesignDocumentsTest {
 
         try {
             //put the new version back in the database
-            db.design().synchronizeWithDb(dd);
+            Response response = db.design().synchronizeWithDb(dd);
+            assertNotNull("The design document should have been saved", response);
 
             //query the diet_count view to ensure the indexes are built
-            db.getViewRequestBuilder("views101", "diet_count").newRequest(Key.Type.STRING,
-                    Integer.class).build().getSingleValue();
+            int count = db.getViewRequestBuilder("views101", "diet_count").newRequest(Key.Type
+                            .STRING, Integer.class).build().getSingleValue();
 
-            //assert that the db copied into has a result in it
+            assertEquals("There should be five records", 5, count);
+
+            //assert that the db copied into does exist
             Database copied = account.database(copiedDbName, false);
             assertNotNull("The copied database should not be null", copied);
-            List<String> reducedDocIds = copied.getAllDocsRequestBuilder().build().getResponse()
-                    .getDocIds();
+
+            //check the number of documents in the copied database is as expected
+            AllDocsRequest docsRequest = copied.getAllDocsRequestBuilder().build();
+            List<String> reducedDocIds;
+            //The copied database documents are subject to eventual consistency across nodes so we
+            // need an awkward retry loop to try and prevent the test intermittently failing when
+            // the internal replication between nodes has not completed. Allow up to 2 minutes and
+            // try every second.
+            long timeout = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(2);
+            do {
+                Thread.sleep(1000);
+                reducedDocIds = docsRequest.getResponse().getDocIds();
+            }
+            while (System.currentTimeMillis() < timeout && (reducedDocIds == null ||
+                    reducedDocIds.size() < 3));
             assertNotNull("The list of docs should not be null", reducedDocIds);
             assertEquals("There should be 3 documents (herbivore, carnivore, omnivore)", 3,
                     reducedDocIds.size());
