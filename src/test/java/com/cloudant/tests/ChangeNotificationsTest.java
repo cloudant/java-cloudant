@@ -30,8 +30,6 @@ import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
 import com.google.gson.JsonObject;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -42,8 +40,6 @@ import java.util.List;
 
 @Category(RequiresDB.class)
 public class ChangeNotificationsTest {
-
-    private static final Log log = LogFactory.getLog(ChangeNotificationsTest.class);
 
     @ClassRule
     public static CloudantClientResource clientResource = new CloudantClientResource();

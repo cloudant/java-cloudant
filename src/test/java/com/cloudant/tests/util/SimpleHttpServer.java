@@ -209,8 +209,7 @@ public class SimpleHttpServer extends ExternalResource implements Runnable {
      */
     protected void readInputLines(InputStream is) throws IOException {
         lines = new ArrayList<String>();
-        BufferedReader r = null;
-        r = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+        BufferedReader r = new BufferedReader(new InputStreamReader(is, "UTF-8"));
         String line;
         while ((line = r.readLine()) != null && !line.isEmpty()) {
             lines.add(line);

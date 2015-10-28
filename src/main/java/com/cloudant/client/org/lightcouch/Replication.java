@@ -22,14 +22,13 @@ import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 import com.cloudant.client.org.lightcouch.ReplicationResult.ReplicationHistory;
 import com.google.gson.JsonObject;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This class provides access to the database replication API; a replication request
@@ -58,7 +57,7 @@ import java.util.Map;
  */
 public class Replication {
 
-    static final Log log = LogFactory.getLog(Replication.class);
+    static final Logger log = Logger.getLogger(Replication.class.getCanonicalName());
 
     private String source;
     private String target;
@@ -93,8 +92,8 @@ public class Replication {
         InputStream response = null;
         try {
             JsonObject json = createJson();
-            if (log.isDebugEnabled()) {
-                log.debug(json);
+            if (log.isLoggable(Level.FINE)) {
+                log.fine(json.toString());
             }
             final URI uri = buildUri(client.getBaseUri()).path("_replicate").build();
             response = client.post(uri, json.toString());

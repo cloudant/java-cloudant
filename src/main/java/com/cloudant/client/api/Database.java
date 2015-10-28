@@ -20,7 +20,6 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponseList;
-import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.setEntity;
 import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
 import com.cloudant.client.api.model.DbInfo;
@@ -58,9 +57,6 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.reflect.TypeToken;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -74,6 +70,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Logger;
 
 
 /**
@@ -86,7 +83,7 @@ import java.util.Set;
  */
 public class Database {
 
-    static final Log log = LogFactory.getLog(Database.class);
+    static final Logger log = Logger.getLogger(Database.class.getCanonicalName());
     private CouchDatabase db;
     private CloudantClient client;
     private final URI apiV2DBSecurityURI;
@@ -261,7 +258,7 @@ public class Database {
             if (result.equalsIgnoreCase("created")) {
                 log.info(String.format("Created Index: '%s'", indexDefinition));
             } else {
-                log.warn(String.format("Index already exists : '%s'", indexDefinition));
+                log.warning(String.format("Index already exists : '%s'", indexDefinition));
             }
         } finally {
             close(putresp);
