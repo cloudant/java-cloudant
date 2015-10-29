@@ -24,8 +24,6 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.DbInfo;
 import com.cloudant.test.main.RequiresDB;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +34,6 @@ import java.util.List;
 @Category(RequiresDB.class)
 public class DBServerTest {
 
-    private static final Log log = LogFactory.getLog(DBServerTest.class);
     private static Database db;
     private CloudantClient account;
 

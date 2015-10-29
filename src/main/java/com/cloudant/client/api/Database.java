@@ -20,8 +20,6 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponseList;
-import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getStream;
-import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.setEntity;
 import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
 import com.cloudant.client.api.model.DbInfo;
@@ -46,6 +44,8 @@ import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.client.org.lightcouch.Response;
 import com.cloudant.client.org.lightcouch.internal.URIBuilder;
+import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
@@ -56,14 +56,6 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.reflect.TypeToken;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -78,6 +70,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Logger;
 
 
 /**
@@ -90,7 +83,7 @@ import java.util.Set;
  */
 public class Database {
 
-    static final Log log = LogFactory.getLog(Database.class);
+    static final Logger log = Logger.getLogger(Database.class.getCanonicalName());
     private CouchDatabase db;
     private CloudantClient client;
     private final URI apiV2DBSecurityURI;
@@ -146,11 +139,11 @@ public class Database {
         }
         elem.getAsJsonObject().add(userNameorApikey, jsonPermissions);
 
-        HttpResponse response = null;
-        HttpPut put = new HttpPut(apiV2DBSecurityURI);
-        setEntity(put, client.getGson().toJson(perms), "application/json");
+        InputStream response = null;
+        HttpConnection put = Http.PUT(apiV2DBSecurityURI, "application/json");
+        put.setRequestBody(client.getGson().toJson(perms));
         try {
-            response = executeRequest(put);
+            response = client.couchDbClient.executeToInputStream(put);
             String ok = getAsString(response, "ok");
             if (!ok.equalsIgnoreCase("true")) {
                 //raise exception
@@ -211,10 +204,9 @@ public class Database {
      * @return List of shards
      */
     public List<Shard> getShards() {
-        HttpResponse response = null;
-        HttpGet get = new HttpGet(buildUri(db.getDBUri()).path("/_shards").build());
+        InputStream response = null;
         try {
-            response = client.executeRequest(get);
+            response = client.get(buildUri(getDBUri()).path("_shards").build());
             return getResponseList(response, client.getGson(), Shard.class,
                     new TypeToken<List<Shard>>() {
                     }.getType());
@@ -258,15 +250,15 @@ public class Database {
      */
     public void createIndex(String indexDefinition) {
         assertNotEmpty(indexDefinition, "indexDefinition");
-        HttpResponse putresp = null;
+        InputStream putresp = null;
         URI uri = buildUri(getDBUri()).path("_index").build();
         try {
-            putresp = client.executeRequest(createPost(uri, indexDefinition, "application/json"));
+            putresp = client.couchDbClient.executeToInputStream(createPost(uri, indexDefinition, "application/json"));
             String result = getAsString(putresp, "result");
             if (result.equalsIgnoreCase("created")) {
                 log.info(String.format("Created Index: '%s'", indexDefinition));
             } else {
-                log.warn(String.format("Index already exists : '%s'", indexDefinition));
+                log.warning(String.format("Index already exists : '%s'", indexDefinition));
             }
         } finally {
             close(putresp);
@@ -308,7 +300,7 @@ public class Database {
         String body = getFindByIndexBody(selectorJson, options);
         InputStream stream = null;
         try {
-            stream = getStream(client.executeRequest(createPost(uri, body, "application/json")));
+            stream = client.couchDbClient.executeToInputStream(createPost(uri, body, "application/json"));
             Reader reader = new InputStreamReader(stream, "UTF-8");
             JsonArray jsonArray = new JsonParser().parse(reader)
                     .getAsJsonObject().getAsJsonArray("docs");
@@ -334,10 +326,9 @@ public class Database {
      * @return List of Index
      */
     public List<Index> listIndices() {
-        HttpResponse response = null;
+        InputStream response = null;
         try {
-            response = client.executeRequest(new HttpGet(buildUri(getDBUri()).path("_index/")
-                    .build()));
+            response = client.get(buildUri(getDBUri()).path("_index/").build());
             return getResponseList(response, client.getGson(), Index.class,
                     new TypeToken<List<Index>>() {
                     }.getType());
@@ -357,9 +348,10 @@ public class Database {
         assertNotEmpty(designDocId, "designDocId");
         URI uri = buildUri(getDBUri()).path("_index/").path(designDocId).path("/json/").path
                 (indexName).build();
-        HttpResponse response = null;
+        InputStream response = null;
         try {
-            response = client.executeRequest(new HttpDelete(uri));
+            HttpConnection connection = Http.DELETE(uri);
+            response = client.couchDbClient.executeToInputStream(connection);
             getResponse(response, Response.class, client.getGson());
         } finally {
             close(response);
@@ -372,7 +364,7 @@ public class Database {
      * @see Search
      */
     public Search search(String searchIndexId) {
-        return new Search(this, searchIndexId);
+        return new Search(client, this, searchIndexId);
     }
 
     /**
@@ -554,8 +546,7 @@ public class Database {
      * @throws DocumentConflictException If a conflict is detected during the save.
      */
     public com.cloudant.client.api.model.Response save(Object object, int writeQuorum) {
-        Response couchDbResponse = client.put(getDBUri(), object, true, writeQuorum, client
-                .getGson());
+        Response couchDbResponse = client.put(getDBUri(), object, true, writeQuorum);
         com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model
                 .Response(couchDbResponse);
         return response;
@@ -587,10 +578,10 @@ public class Database {
      */
     public com.cloudant.client.api.model.Response post(Object object, int writeQuorum) {
         assertNotEmpty(object, "object");
-        HttpResponse response = null;
+        InputStream response = null;
         try {
             URI uri = buildUri(getDBUri()).query("w", writeQuorum).build();
-            response = client.executeRequest(createPost(uri, client.getGson().toJson(object),
+            response = client.couchDbClient.executeToInputStream(createPost(uri, client.getGson().toJson(object),
                     "application/json"));
             Response couchDbResponse = getResponse(response, Response.class, client.getGson());
             com.cloudant.client.api.model.Response cloudantResponse = new com.cloudant.client.api
@@ -637,8 +628,7 @@ public class Database {
      * @throws DocumentConflictException If a conflict is detected during the update.
      */
     public com.cloudant.client.api.model.Response update(Object object, int writeQuorum) {
-        Response couchDbResponse = client.put(getDBUri(), object, false, writeQuorum, client
-                .getGson());
+        Response couchDbResponse = client.put(getDBUri(), object, false, writeQuorum);
         com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model
                 .Response(couchDbResponse);
         return response;
@@ -955,10 +945,6 @@ public class Database {
         finalbody.append("}");
 
         return finalbody.toString();
-    }
-
-    HttpResponse executeRequest(HttpRequestBase request) {
-        return client.executeRequest(request);
     }
 
     Gson getGson() {

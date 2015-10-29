@@ -25,12 +25,29 @@ import java.util.Locale;
 
 public class DatabaseResource extends ExternalResource {
 
-    private final CloudantClient client;
+    private final CloudantClientResource clientResource;
+    private CloudantClient client;
     private String databaseName = Utils.generateUUID();
     private Database database;
 
-    public DatabaseResource(CloudantClient client) {
-        this.client = client;
+    /**
+     * Create a database resource from the specified clientResource. Note that if the resources
+     * are at the same level (i.e. Rule or ClassRule) then a RuleChain is required to guarantee
+     * the client is set up before the database e.g.
+     * <pre>
+     * {@code
+     *    public static final CloudantClientResource clientResource = new CloudantClientResource();
+     *    public static final DatabaseResource dbResource = new DatabaseResource(clientResource);
+     *    @ClassRule
+     *    public static final RuleChain CHAIN = RuleChain.outerRule(clientResource).around
+     *    (dbResource);
+     * }
+     * </pre>
+     *
+     * @param clientResource
+     */
+    public DatabaseResource(CloudantClientResource clientResource) {
+        this.clientResource = clientResource;
     }
 
     @Override
@@ -60,6 +77,7 @@ public class DatabaseResource extends ExternalResource {
 
     @Override
     public void before() {
+        client = clientResource.get();
         database = client.database(databaseName, true);
     }
 
@@ -74,5 +92,16 @@ public class DatabaseResource extends ExternalResource {
 
     public String getDatabaseName() {
         return this.databaseName;
+    }
+
+    /**
+     * Get a string representation of the URI for the specified DB resource that includes
+     * credentials. This is needed for replication cases where the DB needs to be able to obtain
+     * creds for the DB.
+     *
+     * @return the URI for the DB with creds
+     */
+    public String getDbURIWithUserInfo() throws Exception {
+        return clientResource.getBaseURIWithUserInfo() + "/" + getDatabaseName();
     }
 }

@@ -19,17 +19,15 @@ import static java.lang.String.format;
 
 import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.org.lightcouch.CouchDbException;
+import com.cloudant.client.org.lightcouch.Response;
+import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-
-import com.cloudant.client.org.lightcouch.Response;
+import org.apache.commons.io.IOUtils;
 
 import java.io.Closeable;
 import java.io.File;
@@ -184,17 +182,6 @@ final public class CouchDbUtil {
         return content.toString();
     }
 
-    /**
-     * @return {@link InputStream} of {@link HttpResponse}
-     */
-    public static InputStream getStream(HttpResponse response) {
-        try {
-            return response.getEntity().getContent();
-        } catch (Exception e) {
-            throw new CouchDbException("Error reading response. ", e);
-        }
-    }
-
     public static String removeExtension(String fileName) {
         return fileName.substring(0, fileName.lastIndexOf('.'));
     }
@@ -211,13 +198,10 @@ final public class CouchDbUtil {
     /**
      * Closes the response input stream.
      *
-     * @param response The {@link HttpResponse}
+     * @param response The {@link HttpConnection}
      */
-    public static void close(HttpResponse response) {
-        try {
-            close(response.getEntity().getContent());
-        } catch (Exception e) {
-        }
+    public static void close(InputStream response) {
+        IOUtils.closeQuietly(response);
     }
 
     /**
@@ -226,67 +210,61 @@ final public class CouchDbUtil {
      * @param c The {@link Closeable} resource.
      */
     public static void close(Closeable c) {
-        try {
-            c.close();
-        } catch (Exception e) {
-        }
+        IOUtils.closeQuietly(c);
     }
 
 
     /**
      * @return A JSON element as a String, or null if not found, from the response
      */
-    public static String getAsString(HttpResponse response, String e) {
-        InputStream instream = null;
-
+    public static String getAsString(InputStream response, String e) {
+        Reader reader = null;
         try {
-            instream = getStream(response);
-            Reader reader = new InputStreamReader(instream, "UTF-8");
+            reader = new InputStreamReader(response, "UTF-8");
             return getAsString(new JsonParser().parse(reader).getAsJsonObject(), e);
         } catch (UnsupportedEncodingException e1) {
             // This should never happen as every implementation of the java platform is required
             // to support UTF-8.
             throw new RuntimeException(e1);
         } finally {
-            close(instream);
+            close(reader);
+            close(response);
         }
-
-
     }
 
     /**
      * create a HTTP POST request.
      *
-     * @return {@link HttpResponse}
+     * @return {@link HttpConnection}
      */
-    public static HttpPost createPost(URI uri, String body, String contentType) {
-        HttpPost post = new HttpPost(uri);
-        setEntity(post, body, contentType);
-        return post;
+    public static HttpConnection createPost(URI uri, String body, String contentType) {
+        HttpConnection connection = Http.POST(uri, "application/json");
+        if(body != null) {
+            setEntity(connection, body, contentType);
+        }
+        return connection;
     }
 
     /**
      * Sets a JSON String as a request entity.
      *
-     * @param httpRequest The request to set entity.
-     * @param json        The JSON String to set.
+     * @param connnection The request of {@link HttpConnection}
+     * @param body        The JSON String to set.
      */
-    public static void setEntity(HttpEntityEnclosingRequestBase httpRequest, String body, String
-            contentType) {
-        StringEntity entity = new StringEntity(body, "UTF-8");
-        entity.setContentType(contentType);
-        httpRequest.setEntity(entity);
+    public static void setEntity(HttpConnection connnection, String body, String contentType) {
+        connnection.requestProperties.put("Content-type", contentType);
+        connnection.setRequestBody(body);
     }
 
     /**
-     * @param response The {@link HttpResponse}
+     * @param response The response from {@link com.cloudant.http.HttpConnection}
+     * @param klazz
      * @return {@link Response}
      */
-    public static <T> List<T> getResponseList(HttpResponse response, Gson gson, Class<T> klazz,
+    public static <T> List<T> getResponseList(InputStream response, Gson gson, Class<T> klazz,
                                               Type typeofT) throws CouchDbException {
-        InputStream instream = getStream(response);
         try {
-            Reader reader = new InputStreamReader(instream, "UTF-8");
+            Reader reader = new InputStreamReader(response, "UTF-8");
             return gson.fromJson(reader, typeofT);
         } catch (UnsupportedEncodingException e) {
             // This should never happen as every implementation of the java platform is required
@@ -296,13 +274,13 @@ final public class CouchDbUtil {
     }
 
     /**
-     * @param response The {@link HttpResponse}
+     * @param response The {@link InputStream} response of {@link HttpConnection}
      * @return {@link Response}
      */
-    public static <T> T getResponse(HttpResponse response, Class<T> classType, Gson gson) throws
+    public static <T> T getResponse(InputStream response, Class<T> classType, Gson gson) throws
             CouchDbException {
         try {
-            InputStreamReader reader = new InputStreamReader(getStream(response), "UTF-8");
+            InputStreamReader reader = new InputStreamReader(response, "UTF-8");
             return gson.fromJson(reader, classType);
         } catch (UnsupportedEncodingException e) {
             // This should never happen as every implementation of the java platform is required to support UTF-8.
@@ -311,14 +289,13 @@ final public class CouchDbUtil {
     }
 
     /**
-     * @param response The {@link HttpResponse}
+     * @param response The {@link InputStream} response of {@link HttpConnection}
      * @return {@link Response}
      */
-    public static Map<String, EnumSet<Permissions>> getResponseMap(HttpResponse response, Gson
+    public static Map<String, EnumSet<Permissions>> getResponseMap(InputStream response, Gson
             gson, Type typeofT) throws CouchDbException {
-        InputStream instream = getStream(response);
         try {
-            Reader reader = new InputStreamReader(instream, "UTF-8");
+            Reader reader = new InputStreamReader(response, "UTF-8");
             return gson.fromJson(reader, typeofT);
         } catch (UnsupportedEncodingException e) {
             // This should never happen as every implementation of the java platform is required to support UTF-8.

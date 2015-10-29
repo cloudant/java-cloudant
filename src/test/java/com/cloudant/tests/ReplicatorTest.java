@@ -14,17 +14,18 @@
 
 package com.cloudant.tests;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
-import com.cloudant.client.api.views.Key;
-import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.Utils;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -35,17 +36,31 @@ import java.util.Map;
 @Category(RequiresDB.class)
 public class ReplicatorTest extends ReplicateBaseTest {
 
+    private String repDocId;
+
+    @Before
+    public void generateReplicatorDocId() {
+        repDocId = Utils.generateUUID();
+    }
+
+    @After
+    public void cleanUpReplicatorDoc() throws Exception {
+        Utils.removeReplicatorTestDoc(account, repDocId);
+    }
+
     @Test
     public void replication() throws Exception {
         Response response = account.replicator()
+                .replicatorDocId(repDocId)
                 .createTarget(true)
                 .source(db1URI)
                 .target(db2URI)
                 .save();
 
         // find and remove replicator doc
-        Utils.waitForReplicatorToComplete(account, response.getId());
-        Utils.removeReplicatorTestDoc(account, response.getId());
+        ReplicatorDocument repDoc = Utils.waitForReplicatorToComplete(account, response.getId());
+        assertTrue("The replicator should reach completed state", "completed".equalsIgnoreCase
+                (repDoc.getReplicationState()));
     }
 
     @Test
@@ -55,6 +70,7 @@ public class ReplicatorTest extends ReplicateBaseTest {
 
         Response response = account.replicator()
                 .createTarget(true)
+                .replicatorDocId(repDocId)
                 .source(db1URI)
                 .target(db2URI)
                 .filter("example/example_filter")
@@ -62,25 +78,23 @@ public class ReplicatorTest extends ReplicateBaseTest {
                 .save();
 
         // find and remove replicator doc
-        Utils.waitForReplicatorToComplete(account, response.getId());
-        Utils.removeReplicatorTestDoc(account, response.getId());
+        ReplicatorDocument repDoc = Utils.waitForReplicatorToComplete(account, response.getId());
+        assertTrue("The replicator should reach completed state", "completed".equalsIgnoreCase
+                (repDoc.getReplicationState()));
     }
 
     @Test
     public void replicatorDB() throws Exception {
-        String version = account.serverVersion();
-        if (version.startsWith("0") || version.startsWith("1.0")) {
-            return;
-        }
 
         // trigger a replication
         Response response = account.replicator()
+                .replicatorDocId(repDocId)
                 .source(db1URI)
                 .target(db2URI).continuous(true)
                 .createTarget(true)
                 .save();
 
-        // we need the replication to finish before continuing
+        // we need the replication to start before continuing
         Utils.waitForReplicatorToStart(account, response.getId());
 
         // find all replicator docs
@@ -88,49 +102,29 @@ public class ReplicatorTest extends ReplicateBaseTest {
                 .findAll();
         assertThat(replicatorDocs.size(), is(not(0)));
 
-        // find and remove replicator doc
-        Utils.removeReplicatorTestDoc(account, response.getId());
     }
 
     @Test
     public void replication_conflict() throws Exception {
         String docId = Utils.generateUUID();
-        Foo foodb1 = new Foo(docId, "title");
-        Foo foodb2 = null;
+        Foo foodb1 = new Foo(docId, "titleX");
+        Foo foodb2 = new Foo(docId, "titleY");
 
-        foodb1 = new Foo(docId, "titleX");
-
+        //save Foo(X) in DB1
         db1.save(foodb1);
+        //save Foo(Y) in DB2
+        db2.save(foodb2);
 
+        //replicate with DB1 with DB2
         Response response = account.replicator().source(db1URI)
-                .target(db2URI).replicatorDocId(docId)
+                .target(db2URI).replicatorDocId(repDocId)
                 .save();
 
         // we need the replication to finish before continuing
         Utils.waitForReplicatorToComplete(account, response.getId());
 
-        foodb2 = Utils.findDocumentWithRetries(db2, docId, Foo.class, 20);
-        foodb2.setTitle("titleY");
-        db2.update(foodb2);
-
-        foodb1 = Utils.findDocumentWithRetries(db1, docId, Foo.class, 20);
-        foodb1.setTitle("titleZ");
-        db1.update(foodb1);
-
-        Response secondResponse = account.replicator().source(db1URI)
-                .target(db2URI).save();
-
-        // we need the replication to finish before continuing
-        Utils.waitForReplicatorToComplete(account, secondResponse.getId());
-
-        ViewResponse<Key.ComplexKey, String> conflicts = db2.getViewRequestBuilder
-                ("conflicts", "conflict").newRequest(Key.Type.COMPLEX, String.class).build()
-                .getResponse();
-
-        assertThat(conflicts.getRows().size(), is(not(0)));
-
-        // find and remove replicator doc
-        Utils.removeReplicatorTestDoc(account, response.getId());
-        Utils.removeReplicatorTestDoc(account, secondResponse.getId());
+        //we replicated with a doc with the same ID but different content in each DB, we should get
+        //a conflict
+        assertConflictsNotZero(db2);
     }
 }

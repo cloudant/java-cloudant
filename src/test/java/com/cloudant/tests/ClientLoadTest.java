@@ -17,12 +17,12 @@ package com.cloudant.tests;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ConnectOptions;
+import com.cloudant.tests.util.TestLog;
 import com.cloudant.tests.util.Utils;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -33,7 +33,9 @@ import java.util.concurrent.Executors;
 @Ignore
 public class ClientLoadTest {
 
-    private static final Log log = LogFactory.getLog(ClientLoadTest.class);
+    @ClassRule
+    TestLog log = new TestLog();
+
     private static CloudantClient dbClient;
     private static Properties props;
     private static Database db;
@@ -54,7 +56,7 @@ public class ClientLoadTest {
         ConnectOptions connectionoptions = new ConnectOptions();
         connectionoptions.setMaxConnections(MAX_CONNECTIONS);
 
-        dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI.toString(),
+        dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI,
                 CloudantClientHelper.COUCH_USERNAME,
                 CloudantClientHelper.COUCH_PASSWORD, connectionoptions);
         db = dbClient.database("lightcouch-db-load", true);

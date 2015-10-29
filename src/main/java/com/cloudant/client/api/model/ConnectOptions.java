@@ -14,6 +14,10 @@
 
 package com.cloudant.client.api.model;
 
+import com.cloudant.http.interceptors.TimeoutCustomizationInterceptor;
+
+import java.net.URL;
+
 import javax.net.ssl.SSLSocketFactory;
 
 /**
@@ -23,12 +27,13 @@ import javax.net.ssl.SSLSocketFactory;
  */
 public class ConnectOptions {
 
-    private int socketTimeout;
-    private int connectionTimeout;
+    private TimeoutCustomizationInterceptor.TimeoutOption readTimeout;
+    private TimeoutCustomizationInterceptor.TimeoutOption connectionTimeout;
     private int maxConnections;
 
-    private String proxyHost;
-    private int proxyPort;
+    private URL proxyURL;
+    private String proxyUser;
+    private String proxyPassword;
     private boolean isSSLAuthenticationDisabled;
     private SSLSocketFactory authenticatedModeSSLSocketFactory;
 
@@ -36,12 +41,14 @@ public class ConnectOptions {
         // default constructor
     }
 
-    public ConnectOptions setSocketTimeout(int socketTimeout) {
-        this.socketTimeout = socketTimeout;
+    public ConnectOptions setReadTimeout(TimeoutCustomizationInterceptor.TimeoutOption
+                                                   readTimeout) {
+        this.readTimeout = readTimeout;
         return this;
     }
 
-    public ConnectOptions setConnectionTimeout(int connectionTimeout) {
+    public ConnectOptions setConnectionTimeout(TimeoutCustomizationInterceptor.TimeoutOption
+                                                       connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
         return this;
     }
@@ -51,13 +58,18 @@ public class ConnectOptions {
         return this;
     }
 
-    public ConnectOptions setProxyHost(String proxyHost) {
-        this.proxyHost = proxyHost;
+    public ConnectOptions setProxyURL(URL proxyURL) {
+        this.proxyURL = proxyURL;
         return this;
     }
 
-    public ConnectOptions setProxyPort(int proxyPort) {
-        this.proxyPort = proxyPort;
+    public ConnectOptions setProxyUser(String proxyUser) {
+        this.proxyUser = proxyUser;
+        return this;
+    }
+
+    public ConnectOptions setProxyPassword(String proxyPassword) {
+        this.proxyPassword = proxyPassword;
         return this;
     }
 
@@ -88,11 +100,11 @@ public class ConnectOptions {
         return this;
     }
 
-    public int getSocketTimeout() {
-        return socketTimeout;
+    public TimeoutCustomizationInterceptor.TimeoutOption getReadTimeout() {
+        return readTimeout;
     }
 
-    public int getConnectionTimeout() {
+    public TimeoutCustomizationInterceptor.TimeoutOption getConnectionTimeout() {
         return connectionTimeout;
     }
 
@@ -100,12 +112,16 @@ public class ConnectOptions {
         return maxConnections;
     }
 
-    public String getProxyHost() {
-        return proxyHost;
+    public URL getProxyURL() {
+        return proxyURL;
     }
 
-    public int getProxyPort() {
-        return proxyPort;
+    public String getProxyUser() {
+        return proxyUser;
+    }
+
+    public String getProxyPassword() {
+        return proxyPassword;
     }
 
     /**

@@ -15,7 +15,13 @@
 
 package com.cloudant.client.org.lightcouch;
 
-import javax.net.ssl.SSLSocketFactory;
+import com.cloudant.http.HttpConnectionRequestInterceptor;
+import com.cloudant.http.HttpConnectionResponseInterceptor;
+
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Represents configuration properties for connecting to CouchDB.
@@ -28,43 +34,21 @@ public class CouchDbProperties {
     // required
     private String protocol;
     private String host;
-    private String path;
     private int port;
-    private String username;
-    private String password;
 
-    private String authCookie;
-
-    // optional, default to 5 minutes
-    private int socketTimeout = 300000;
-    private int connectionTimeout = 300000;
     //default to 6 connections
     private int maxConnections = 6;
-    private String proxyHost;
-    private int proxyPort;
-    private boolean disableSSLAuthentication;
-    private SSLSocketFactory authenticatedModeSSLSocketFactory;
+    private URL proxyURL;
 
-    public CouchDbProperties() {
-        // default constructor
-    }
+    private List<HttpConnectionRequestInterceptor> requestInterceptors = new ArrayList
+            <HttpConnectionRequestInterceptor>();
+    private List<HttpConnectionResponseInterceptor> responseInterceptors = new ArrayList
+            <HttpConnectionResponseInterceptor>();
 
-    public CouchDbProperties(String protocol, String host, int port,
-                             String authCookie) {
+    public CouchDbProperties(String protocol, String host, int port) {
         this.protocol = protocol;
         this.host = host;
         this.port = port;
-        this.authCookie = authCookie;
-    }
-
-    public CouchDbProperties(String protocol,
-                             String host, int port, String username, String password) {
-
-        this.protocol = protocol;
-        this.host = host;
-        this.port = port;
-        this.username = username;
-        this.password = password;
     }
 
     public String getProtocol() {
@@ -75,80 +59,17 @@ public class CouchDbProperties {
         return host;
     }
 
-    public String getPath() {
-        return path;
-    }
-
     public int getPort() {
         return port;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public int getSocketTimeout() {
-        return socketTimeout;
-    }
-
-    public int getConnectionTimeout() {
-        return connectionTimeout;
-    }
 
     public int getMaxConnections() {
         return maxConnections;
     }
 
-    public String getProxyHost() {
-        return proxyHost;
-    }
-
-    public int getProxyPort() {
-        return proxyPort;
-    }
-
-    public CouchDbProperties setProtocol(String protocol) {
-        this.protocol = protocol;
-        return this;
-    }
-
-    public CouchDbProperties setHost(String host) {
-        this.host = host;
-        return this;
-    }
-
-    public CouchDbProperties setPath(String path) {
-        this.path = path;
-        return this;
-    }
-
-    public CouchDbProperties setPort(int port) {
-        this.port = port;
-        return this;
-    }
-
-    public CouchDbProperties setUsername(String username) {
-        this.username = username;
-        return this;
-    }
-
-    public CouchDbProperties setPassword(String password) {
-        this.password = password;
-        return this;
-    }
-
-    public CouchDbProperties setSocketTimeout(int socketTimeout) {
-        this.socketTimeout = socketTimeout;
-        return this;
-    }
-
-    public CouchDbProperties setConnectionTimeout(int connectionTimeout) {
-        this.connectionTimeout = connectionTimeout;
-        return this;
+    public URL getProxyURL() {
+        return proxyURL;
     }
 
     public CouchDbProperties setMaxConnections(int maxConnections) {
@@ -156,77 +77,28 @@ public class CouchDbProperties {
         return this;
     }
 
-    public CouchDbProperties setProxyHost(String proxyHost) {
-        this.proxyHost = proxyHost;
+    public CouchDbProperties setProxyURL(URL proxyURL) {
+        this.proxyURL = proxyURL;
         return this;
     }
 
-    public CouchDbProperties setProxyPort(int proxyPort) {
-        this.proxyPort = proxyPort;
+    public List<HttpConnectionRequestInterceptor> getRequestInterceptors() {
+        return requestInterceptors;
+    }
+
+    public CouchDbProperties addRequestInterceptors(HttpConnectionRequestInterceptor...
+                                                            requestInterceptors) {
+        this.requestInterceptors.addAll(Arrays.asList(requestInterceptors));
         return this;
     }
 
-    public String getAuthCookie() {
-        return authCookie;
+    public List<HttpConnectionResponseInterceptor> getResponseInterceptors() {
+        return responseInterceptors;
     }
 
-    public void setAuthCookie(String authCookie) {
-        this.authCookie = authCookie;
-    }
-
-    public void clearPassword() {
-        setPassword("");
-        setPassword(null);
-    }
-
-    /**
-     * Enables/disables hostname verification, certificate chain validation,
-     * and the use of the optional
-     * {@link #getAuthenticatedModeSSLSocketFactory()}.
-     *
-     * @param disabled set to true to disable or false to enable.
-     * @return the updated {@link CouchDbProperties} object.
-     * @see #isSSLAuthenticationDisabled
-     */
-    public CouchDbProperties disableSSLAuthentication(boolean disabled) {
-        this.disableSSLAuthentication = disabled;
-        return this;
-    }
-
-    /**
-     * @return true if hostname verification, certificate chain validation,
-     * and the use of the optional
-     * {@link #getAuthenticatedModeSSLSocketFactory()} are disabled, or
-     * false otherwise.
-     * @see #disableSSLAuthentication(boolean)
-     */
-    public boolean isSSLAuthenticationDisabled() {
-        return disableSSLAuthentication;
-    }
-
-    /**
-     * Returns the SSLSocketFactory that gets used when connecting to
-     * CouchDB over a <code>https</code> URL, when SSL authentication is
-     * enabled.
-     *
-     * @return An SSLSocketFactory, or <code>null</code>, which stands for
-     *         the default SSLSocketFactory of the JRE.
-     * @see #setAuthenticatedModeSSLSocketFactory(javax.net.ssl.SSLSocketFactory)
-     */
-    public SSLSocketFactory getAuthenticatedModeSSLSocketFactory() {
-        return authenticatedModeSSLSocketFactory;
-    }
-
-    /**
-     * Specifies the SSLSocketFactory to use when connecting to CouchDB
-     * over a <code>https</code> URL, when SSL authentication is enabled.
-     *
-     * @param factory An SSLSocketFactory, or <code>null</code> for the
-     *                default SSLSocketFactory of the JRE.
-     * @see #getAuthenticatedModeSSLSocketFactory()
-     */
-    public CouchDbProperties setAuthenticatedModeSSLSocketFactory(SSLSocketFactory factory) {
-        this.authenticatedModeSSLSocketFactory = factory;
+    public CouchDbProperties addResponseInterceptors(HttpConnectionResponseInterceptor
+                                                             responseInterceptors) {
+        this.responseInterceptors.addAll(Arrays.asList(responseInterceptors));
         return this;
     }
 }

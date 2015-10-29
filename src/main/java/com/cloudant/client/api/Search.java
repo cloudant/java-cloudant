@@ -19,18 +19,15 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotE
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsLong;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
-import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getStream;
 
 import com.cloudant.client.api.model.SearchResult;
+import com.cloudant.client.org.lightcouch.internal.URIBuilder;
+import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.http.client.methods.HttpGet;
-import com.cloudant.client.org.lightcouch.internal.URIBuilder;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -44,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * This class provides access to the Cloudant <tt>Search</tt> APIs.
@@ -85,18 +83,20 @@ import java.util.Set;
  */
 public class Search {
 
-    private static final Log log = LogFactory.getLog(Search.class);
+    private static final Logger log = Logger.getLogger(Search.class.getCanonicalName());
 
     // search fields
     private Integer limit;
     private boolean includeDocs = false;
     private String bookmark;
+    private CloudantClient client;
     private Database db;
     private URIBuilder uriBuilder;
 
 
-    Search(Database db, String searchIndexId) {
+    Search(CloudantClient client, Database db, String searchIndexId) {
         assertNotEmpty(searchIndexId, "searchIndexId");
+        this.client = client;
         this.db = db;
         String search = searchIndexId;
         if (searchIndexId.contains("/")) {
@@ -119,9 +119,9 @@ public class Search {
     public InputStream queryForStream(String query) {
         key(query);
         URI uri = uriBuilder.build();
-        HttpGet get = new HttpGet(uri);
-        get.addHeader("Accept", "application/json");
-        return getStream(db.executeRequest(get));
+        HttpConnection get = Http.GET(uri);
+        get.requestProperties.put("Accept", "application/json");
+        return client.couchDbClient.executeToInputStream(get);
     }
 
     /**
@@ -141,14 +141,14 @@ public class Search {
             JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
             if (json.has("rows")) {
                 if (!includeDocs) {
-                    log.warn("includeDocs set to false and attempting to retrieve doc. " +
+                    log.warning("includeDocs set to false and attempting to retrieve doc. " +
                             "null object will be returned");
                 }
                 for (JsonElement e : json.getAsJsonArray("rows")) {
                     result.add(JsonToObject(db.getGson(), e, "doc", classOfT));
                 }
             } else {
-                log.warn("No ungrouped result available. Use queryGroups() if grouping set");
+                log.warning("No ungrouped result available. Use queryGroups() if grouping set");
             }
             return result;
         } catch (UnsupportedEncodingException e1) {
@@ -181,7 +181,7 @@ public class Search {
                     String groupName = e.getAsJsonObject().get("by").getAsString();
                     List<T> orows = new ArrayList<T>();
                     if (!includeDocs) {
-                        log.warn("includeDocs set to false and attempting to retrieve doc. " +
+                        log.warning("includeDocs set to false and attempting to retrieve doc. " +
                                 "null object will be returned");
                     }
                     for (JsonElement rows : e.getAsJsonObject().getAsJsonArray("rows")) {
@@ -191,7 +191,7 @@ public class Search {
                 }// end for(groups)
             }// end hasgroups
             else {
-                log.warn("No grouped results available. Use query() if non grouped query");
+                log.warning("No grouped results available. Use query() if non grouped query");
             }
             return result;
         } catch (UnsupportedEncodingException e1) {

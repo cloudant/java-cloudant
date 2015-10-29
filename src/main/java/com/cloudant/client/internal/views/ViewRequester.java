@@ -16,12 +16,11 @@ package com.cloudant.client.internal.views;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
+import com.cloudant.http.HttpConnection;
 import com.google.gson.JsonObject;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpRequestBase;
-
 import java.io.IOException;
+import java.io.InputStream;
 
 class ViewRequester {
 
@@ -30,9 +29,9 @@ class ViewRequester {
     }
 
     static JsonObject executeRequestWithResponseAsJson(ViewQueryParameters parameters,
-                                                       HttpRequestBase request) throws IOException {
+                                                       HttpConnection request) throws IOException {
         CloudantClient client = parameters.getClient();
-        HttpResponse response = client.executeRequest(request);
+        InputStream response = client.executeRequest(request).responseAsInputStream();
         return CouchDbUtil.getResponse(response, JsonObject.class, client.getGson());
     }
 }

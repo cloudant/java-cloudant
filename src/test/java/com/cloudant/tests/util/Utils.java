@@ -16,6 +16,7 @@ package com.cloudant.tests.util;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 import com.cloudant.client.api.CloudantClient;
@@ -23,21 +24,25 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
-
-import org.apache.commons.logging.Log;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.utils.HttpClientUtils;
+import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
+import com.cloudant.http.HttpConnectionInterceptorContext;
+import com.cloudant.http.HttpConnectionResponseInterceptor;
 
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Utils {
 
-    private static final long TIMEOUT_MILLISECONDS = 3200;
+    //wait up to 2 minutes for replications to complete
+    private static final long TIMEOUT_MILLISECONDS = TimeUnit.MINUTES.toMillis(2);
 
-    public static Properties getProperties(String configFile, Log log) {
+    public static Properties getProperties(String configFile, TestLog log) {
         Properties properties = new Properties();
         try {
             InputStream instream = CloudantClient.class.getClassLoader().getResourceAsStream
@@ -45,7 +50,7 @@ public class Utils {
             properties.load(instream);
         } catch (Exception e) {
             String msg = "Could not read configuration file from the classpath: " + configFile;
-            log.error(msg);
+            log.logger.severe(msg);
             throw new IllegalStateException(msg, e);
         }
         return properties;
@@ -66,14 +71,27 @@ public class Utils {
     public static void removeReplicatorTestDoc(CloudantClient account, String replicatorDocId)
             throws Exception {
 
-        //Grab replicator doc revision using HTTP GET command
+        //Grab replicator doc revision using HTTP HEAD command
         String replicatorDb = "_replicator";
-        HttpHead head = new HttpHead(account.getBaseUri() + replicatorDb + "/"
+        URI uri = URI.create(account.getBaseUri() + replicatorDb + "/"
                 + replicatorDocId);
-        HttpResponse response = account.executeRequest(head);
-        String revision = response.getFirstHeader("ETAG").getValue();
-        HttpClientUtils.closeQuietly(response);
+        HttpConnection head = Http.HEAD(uri);
 
+        //add a response interceptor to allow us to retrieve the ETag revision header
+        final AtomicReference<String> revisionRef = new AtomicReference<String>();
+        head.responseInterceptors.add(new HttpConnectionResponseInterceptor() {
+
+            @Override
+            public HttpConnectionInterceptorContext interceptResponse
+                    (HttpConnectionInterceptorContext context) {
+                revisionRef.set(context.connection.getConnection().getHeaderField("ETag"));
+                return context;
+            }
+        });
+
+        account.executeRequest(head);
+        String revision = revisionRef.get();
+        assertNotNull("The revision should not be null", revision);
         Database replicator = account.database(replicatorDb, false);
         Response removeResponse = replicator.remove(replicatorDocId,
                 revision.replaceAll("\"", ""));
@@ -114,16 +132,20 @@ public class Utils {
                     .replicatorDocId(replicatorDocId)
                     .find();
 
-            //Check if replicator doc is completed or if continuous replication is triggered
-            if (replicatorDoc != null && replicatorDoc.getReplicationState() != null
-                    && (replicatorDoc.getReplicationState().equalsIgnoreCase(status))) {
-
-                finished = true;
+            //Check if replicator doc is in specified state
+            String state;
+            if (replicatorDoc != null && (state = replicatorDoc.getReplicationState()) != null) {
+                //if we've reached the status or we reached an error then we are finished
+                if (state.equalsIgnoreCase(status) || state.equalsIgnoreCase("error")) {
+                    finished = true;
+                }
             }
             //double the delay for the next iteration
             delay *= 2;
         }
-
+        if (!finished) {
+            throw new TimeoutException("Timed out waiting for replication to complete");
+        }
         return replicatorDoc;
     }
 

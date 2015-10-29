@@ -19,168 +19,41 @@ import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.model.ConnectOptions;
+import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.test.main.RequiresCloudantService;
+import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.util.SimpleHttpsServer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import com.cloudant.client.org.lightcouch.CouchDbException;
 
-import java.io.BufferedWriter;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.net.SocketException;
-import java.security.KeyStore;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLHandshakeException;
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.SSLSocket;
-
 
 public class SslAuthenticationTest {
 
-    private static final Log log = LogFactory.getLog(SslAuthenticationTest.class);
-    private static CloudantClient dbClient;
-    private static HttpsServer server;
+    @ClassRule
+    public static CloudantClientResource dbClientResource = new CloudantClientResource();
+    private static CloudantClient dbClient = dbClientResource.get();
 
-    private static String KEYSTORE_FILE = "src/test/resources/SslAuthenticationTest.keystore";
-    private static String KEYSTORE_PASSWORD = "password";
-    private static String KEY_PASSWORD = "password";
-    private static int LOCAL_SERVER_PORT = 65535;
-    private static String LOCAL_SERVER_URL = "https://127.0.0.1:" + LOCAL_SERVER_PORT;
+    @ClassRule
+    public static SimpleHttpsServer server = new SimpleHttpsServer(){
 
-    private static String DUMMY_USERNAME = "username";
-    private static String DUMMY_PASSWORD = "password";
-
-    private static boolean localServerReady;
-    private static final Object lock = new Object();
-
-    /**
-     * A very simple HTTPS Server that runs on the localhost and has a simple certificate that won't
-     * work for hostname verification.
-     * <p/>
-     * A suitable simple certificate can be generated using the command:<br />
-     * <code>
-     * keytool -genkey -alias alias -keypass password -keystore SslAuthenticationTest.keystore
-     * -storepass password
-     * </code>
-     */
-    private static class HttpsServer implements Runnable {
-
-        private SSLServerSocket serverSocket;
-        private boolean finished;
-
-        public void run() {
-            while (!finished) {
-                try {
-                    KeyStore keystore = KeyStore.getInstance("JKS");
-                    keystore.load(new FileInputStream(KEYSTORE_FILE), KEYSTORE_PASSWORD
-                            .toCharArray());
-                    KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory
-                            .getDefaultAlgorithm());
-                    kmf.init(keystore, KEY_PASSWORD.toCharArray());
-                    SSLContext sslContext = SSLContext.getInstance("TLS");
-                    sslContext.init(kmf.getKeyManagers(), null, null);
-                    SSLServerSocketFactory ssf = sslContext.getServerSocketFactory();
-                    try {
-                        serverSocket = (SSLServerSocket) ssf.createServerSocket(LOCAL_SERVER_PORT);
-                    } catch (SocketException e) {
-                        log.error("Unable to open server socket");
-                        finished = true;
-                    }
-                    // Listening to the port
-                    while (!finished && !Thread.currentThread().isInterrupted()) {
-                        log.debug("Server waiting for connections");
-                        SSLSocket socket;
-                        synchronized (lock) {
-                            localServerReady = true;
-                            lock.notify();
-                        }
-                        socket = (SSLSocket) serverSocket.accept();
-                        localServerReady = false;
-                        log.debug("Server accepted connection");
-
-                        // Just send a simple success response.
-                        BufferedWriter w = new BufferedWriter(new OutputStreamWriter(socket
-                                .getOutputStream()));
-                        w.write("HTTP/1.0 200 OK");
-                        w.flush();
-                        w.close();
-                        socket.close();
-                    }
-                } catch (SocketException e) {
-                    log.debug("Socket closed");
-                } catch (SSLHandshakeException e1) {
-                    log.debug("SSL Handshake failed");
-                } catch (Exception exception) {
-                    exception.printStackTrace();
-                    finished = true;
-                } finally {
-                    closeSocket();
-                    log.debug("Server stopped");
-                }
-            }
-        }
-
-        public void stop() {
-            log.debug("Stopping server");
-            finished = true;
-            closeSocket();
-        }
-
-        private synchronized void closeSocket() {
-            localServerReady = false;
-            if (serverSocket != null) {
-                try {
-                    serverSocket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                serverSocket = null;
-            }
-        }
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-        server = new HttpsServer();
-        new Thread(server).start();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        server.stop();
-    }
-
-    @After
-    public void tearDown() {
-        if (dbClient != null) {
-            dbClient.shutdown();
-        }
-    }
-
-    /**
-     * Wait until the local HTTPS server is ready to accept connections.
-     */
-    private void waitForLocalServer() {
-        synchronized (lock) {
+        //for these tests we only want a 200
+        @Override
+        protected void serverAction(InputStream is, OutputStream os) throws IOException {
             try {
-                while (!localServerReady) {
-                    lock.wait();
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                super.writeOK(os);
+            } catch(SSLHandshakeException e) {
+                //we don't have a valid cert chain here, so we suppress this exception
+                //we only need proof that we attempted to connect with the right options
             }
         }
-    }
+    };
 
     /**
      * Check the exception chain is as expected when the SSL host name authentication fails
@@ -200,15 +73,14 @@ public class SslAuthenticationTest {
      * Connect to the local simple https server with SSL authentication disabled.
      */
     @Test
-    public void localSslAuthenticationDisabled() {
+    public void localSslAuthenticationDisabled() throws Exception {
+
+        server.await();
+
         ConnectOptions connectionOptions = new ConnectOptions();
         connectionOptions.setSSLAuthenticationDisabled(true);
 
-        waitForLocalServer();
-
-        dbClient = new CloudantClient(LOCAL_SERVER_URL,
-                DUMMY_USERNAME,
-                DUMMY_PASSWORD,
+        dbClient = new CloudantClient(server.getUrl(),
                 connectionOptions);
 
         // Make an arbitrary connection to the DB.
@@ -222,17 +94,16 @@ public class SslAuthenticationTest {
      * This should throw an exception because the SSL authentication fails.
      */
     @Test
-    public void localSslAuthenticationEnabled() {
+    public void localSslAuthenticationEnabled() throws Exception {
+
+        server.await();
+
         ConnectOptions connectionOptions = new ConnectOptions();
         connectionOptions.setSSLAuthenticationDisabled(false);
 
-        waitForLocalServer();
-
         CouchDbException thrownException = null;
         try {
-            dbClient = new CloudantClient(LOCAL_SERVER_URL,
-                    DUMMY_USERNAME,
-                    DUMMY_PASSWORD,
+            dbClient = new CloudantClient(server.getUrl(),
                     connectionOptions);
 
             // Make an arbitrary connection to the DB.
@@ -248,14 +119,13 @@ public class SslAuthenticationTest {
      * This should throw an exception because the SSL authentication fails.
      */
     @Test
-    public void localSslAuthenticationEnabledDefault() {
-        waitForLocalServer();
+    public void localSslAuthenticationEnabledDefault() throws Exception {
+
+        server.await();
 
         CouchDbException thrownException = null;
         try {
-            dbClient = new CloudantClient(LOCAL_SERVER_URL,
-                    DUMMY_USERNAME,
-                    DUMMY_PASSWORD);
+            dbClient = new CloudantClient(server.getUrl());
 
             // Make an arbitrary connection to the DB.
             dbClient.getAllDbs();
@@ -276,7 +146,7 @@ public class SslAuthenticationTest {
         ConnectOptions connectionOptions = new ConnectOptions();
         connectionOptions.setSSLAuthenticationDisabled(false);
 
-        dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI.toString(),
+        dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI,
                 CloudantClientHelper.COUCH_USERNAME,
                 CloudantClientHelper.COUCH_PASSWORD,
                 connectionOptions);
@@ -296,7 +166,7 @@ public class SslAuthenticationTest {
         ConnectOptions connectionOptions = new ConnectOptions();
         connectionOptions.setSSLAuthenticationDisabled(true);
 
-        dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI.toString(),
+        dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI,
                 CloudantClientHelper.COUCH_USERNAME,
                 CloudantClientHelper.COUCH_PASSWORD,
                 connectionOptions);

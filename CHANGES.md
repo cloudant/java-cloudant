@@ -6,6 +6,8 @@
   If you were using the `queryForStream()` method we would be interested in feedback about your use case.
   For example, if you were using the `InputStream` directly for streaming API parsing with an alternative
   JSON library we might be able to make this easier by handling the streams and providing a callback.
+- [BREAKING CHANGE] - Removed Apache HttpClient dependency. API methods that used HttpClient classes
+  (e.g. `executeRequest`) now use `HttpConnection` instead.
 - [BREAKING CHANGE] - Removed version 1.x view query API.
 - [BREAKING CHANGE] - LightCouch classes moved to package com.cloudant.client.org.lightcouch.
   This should only have a visible impact for `CouchDbException` and its subclasses.

@@ -47,10 +47,6 @@ import java.util.Map;
 public class Replication {
     private com.cloudant.client.org.lightcouch.Replication replication;
 
-	/*public Replication(CouchDbClientBase client) {
-		this.replication = new Replication(client);
-	}*/
-
     Replication(com.cloudant.client.org.lightcouch.Replication replication) {
         this.replication = replication;
     }

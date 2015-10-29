@@ -14,8 +14,14 @@
 
 package com.cloudant.tests;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertThat;
+
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
+import com.cloudant.client.api.views.Key;
+import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
 
@@ -30,9 +36,9 @@ public class ReplicateBaseTest {
     protected CloudantClient account = clientResource.get();
 
     @Rule
-    public DatabaseResource db1Resource = new DatabaseResource(account);
+    public DatabaseResource db1Resource = new DatabaseResource(clientResource);
     @Rule
-    public DatabaseResource db2Resource = new DatabaseResource(account);
+    public DatabaseResource db2Resource = new DatabaseResource(clientResource);
 
     protected Database db1;
 
@@ -42,14 +48,21 @@ public class ReplicateBaseTest {
     protected static String db2URI;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
 
         db1 = db1Resource.get();
-        db1URI = CloudantClientHelper.SERVER_URI + "/" + db1Resource.getDatabaseName();
+        db1URI = db1Resource.getDbURIWithUserInfo();
         db1.syncDesignDocsWithDb();
 
         db2 = db2Resource.get();
-        db2URI = CloudantClientHelper.SERVER_URI + "/" + db2Resource.getDatabaseName();
+        db2URI = db2Resource.getDbURIWithUserInfo();
         db2.syncDesignDocsWithDb();
+    }
+
+    protected void assertConflictsNotZero(Database db) throws Exception {
+        ViewResponse<Key.ComplexKey, String> conflicts = db.getViewRequestBuilder
+                ("conflicts", "conflict").newRequest(Key.Type.COMPLEX, String.class).build()
+                .getResponse();
+        assertThat(conflicts.getRows().size(), is(not(0)));
     }
 }

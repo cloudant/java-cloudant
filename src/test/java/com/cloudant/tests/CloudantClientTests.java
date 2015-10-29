@@ -14,6 +14,7 @@
 
 package com.cloudant.tests;
 
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -21,54 +22,40 @@ import static org.junit.Assert.assertTrue;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ApiKey;
+import com.cloudant.client.api.model.ConnectOptions;
 import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
-import com.cloudant.client.org.lightcouch.CouchDbClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
+import com.cloudant.http.AgentHelper;
+import com.cloudant.http.interceptors.TimeoutCustomizationInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.util.SingleRequestHttpServer;
+import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.util.SimpleHttpServer;
+import com.cloudant.tests.util.TestLog;
 
-import junit.framework.Assert;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.After;
-import org.junit.Before;
+import org.apache.commons.io.IOUtils;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class CloudantClientTests {
 
-    private static final Log log = LogFactory.getLog(CloudantClientTests.class);
+    @ClassRule
+    public static final TestLog TEST_LOG = new TestLog();
 
-    public static CloudantClient cookieBasedClient;
-    private CloudantClient account;
-
-    @Before
-    public void setUp() {
-        account = CloudantClientHelper.getClient();
-
-        String cookie = account.getCookie();
-        if (CloudantClientHelper.COUCH_PASSWORD == null) {
-            cookieBasedClient = account;
-        } else {
-            cookieBasedClient = new CloudantClient(
-                    CloudantClientHelper.COUCH_USERNAME, cookie);
-        }
-
-    }
-
-
-    @After
-    public void tearDown() {
-        account.shutdown();
-        cookieBasedClient.shutdown();
-    }
+    @ClassRule
+    public static CloudantClientResource clientResource = new CloudantClientResource();
+    private CloudantClient account = clientResource.get();
 
     @Test
     @Category(RequiresCloudantService.class)
@@ -101,27 +88,8 @@ public class CloudantClientTests {
     @Category(RequiresCloudant.class)
     public void cookieTest() {
 
-        Membership membership = cookieBasedClient.getMembership();
+        Membership membership = account.getMembership();
         assertNotNull(membership);
-    }
-
-    @Test
-    @Category(RequiresDB.class)
-    public void cookieNegativeTest() {
-        String cookie = account.getCookie() + "XXX";
-        boolean exceptionRaised = true;
-        try {
-            new CloudantClient(
-                    CloudantClientHelper.SERVER_URI.toString(), cookie).getAllDbs();
-            exceptionRaised = false;
-        } catch (CouchDbException e) {
-            if (e.getMessage().contains("Forbidden")) {
-                exceptionRaised = true;
-            }
-        }
-        if (exceptionRaised == false) {
-            Assert.fail("could connect to cloudant with random AuthSession cookie");
-        }
     }
 
     private final String userAgentRegex = "java-cloudant/[^\\s]+ " +
@@ -135,7 +103,7 @@ public class CloudantClientTests {
     public void testUserAgentHeaderString() {
         assertTrue("The value of the User-Agent header should match the format " +
                 "\"java-cloudant/version [Java (os.arch; os.name; os.version) jvm.vendor; jvm" +
-                ".version; jvm.runtime.version]\"", CouchDbClient.USER_AGENT.matches
+                ".version; jvm.runtime.version]\"", AgentHelper.USER_AGENT.matches
                 (userAgentRegex));
     }
 
@@ -144,35 +112,39 @@ public class CloudantClientTests {
      * process that can handle a single request to receive the request and validate the header.
      */
     @Test
-    public void testUserAgentHeaderIsAddedToRequest() {
+    public void testUserAgentHeaderIsAddedToRequest() throws Exception {
 
-        int serverPort = 54321;
-        SingleRequestHttpServer server = SingleRequestHttpServer.startServer(serverPort);
-        //wait for the server to be ready
-        server.waitForServer();
+        SimpleHttpServer server = new SimpleHttpServer();
+        try {
+            server.start();
+            //wait for the server to be ready
+            server.await();
 
-        //instantiating the client performs a single post request
-        CloudantClient client = new CloudantClient("http://localhost:" + serverPort, "", "");
-        //assert that the request had the expected header
-        boolean foundUserAgentHeaderOnRequest = false;
-        boolean userAgentHeaderMatchedExpectedForm = false;
-        for (String line : server.getRequestInput()) {
-            if (line.contains("User-Agent")) {
-                foundUserAgentHeaderOnRequest = true;
-                if (line.matches(".*" + userAgentRegex)) {
-                    userAgentHeaderMatchedExpectedForm = true;
+            //instantiating the client performs a single post request
+            CloudantClient client = new CloudantClient(server.getUrl(), null, (String) null);
+            client.executeRequest(createPost(client.getBaseUri(), null, "application/json"));
+            //assert that the request had the expected header
+            boolean foundUserAgentHeaderOnRequest = false;
+            boolean userAgentHeaderMatchedExpectedForm = false;
+            for (String line : server.getLastInputRequestLines()) {
+                if (line.contains("User-Agent")) {
+                    foundUserAgentHeaderOnRequest = true;
+                    if (line.matches(".*" + userAgentRegex)) {
+                        userAgentHeaderMatchedExpectedForm = true;
+                    }
                 }
             }
+            assertTrue("The User-Agent header should be present on the request",
+                    foundUserAgentHeaderOnRequest);
+            assertTrue("The value of the User-Agent header value on the request should match the " +
+                            "format " +
+                            "\"java-cloudant/version [Java (os.arch; os.name; os.version) jvm" +
+                            ".vendor; jvm" +
+                            ".version; jvm.runtime.version]\"",
+                    userAgentHeaderMatchedExpectedForm);
+        } finally {
+            server.stop();
         }
-        assertTrue("The User-Agent header should be present on the request",
-                foundUserAgentHeaderOnRequest);
-        assertTrue("The value of the User-Agent header value on the request should match the " +
-                        "format " +
-                        "\"java-cloudant/version [Java (os.arch; os.name; os.version) jvm" +
-                        ".vendor; jvm" +
-                        ".version; jvm.runtime.version]\"",
-                userAgentHeaderMatchedExpectedForm);
-
     }
 
     /**
@@ -182,7 +154,7 @@ public class CloudantClientTests {
     @Category(RequiresDB.class)
     public void nonExistentDatabaseException() {
         //try and get a DB that doesn't exist
-        Database db = cookieBasedClient.database("not_really_there", false);
+        Database db = account.database("not_really_there", false);
         //try an operation against the non-existant DB
         db.info();
     }
@@ -195,13 +167,13 @@ public class CloudantClientTests {
     public void existingDatabaseCreateException() {
         try {
             //create a DB for this test
-            cookieBasedClient.createDB("existing");
+            account.createDB("existing");
 
             //do a get with create true for the already existing DB
-            cookieBasedClient.database("existing", true);
+            account.database("existing", true);
         } finally {
             //clean up the DB created by this test
-            cookieBasedClient.deleteDB("existing");
+            account.deleteDB("existing");
         }
     }
 
@@ -214,4 +186,114 @@ public class CloudantClientTests {
         assertEquals("The http port should be 443", 443, c.getBaseUri().getPort());
     }
 
+    /**
+     * Check that the connection timeout throws a SocketTimeoutException when it can't connect
+     * within the timeout.
+     */
+    @Test(expected = SocketTimeoutException.class)
+    public void connectionTimeout() throws Throwable {
+
+        //start a simple http server
+        SimpleHttpServer server = new SimpleHttpServer() {
+
+            @Override
+            public void start() throws Exception {
+                //we don't actually want this server to loop, just create a socket
+                //so set finished to true
+                finished.set(true);
+                super.start();
+            }
+
+        };
+        server.start();
+        server.await();
+
+        //block the single connection to our server
+        Socket socket = new Socket();
+        socket.connect(server.getSocketAddress());
+
+        //now try to connect, but should timeout because there is no connection available
+        try {
+            CloudantClient c = new CloudantClient(server.getUrl(), null, (String) null, new
+                    ConnectOptions().setConnectionTimeout(new TimeoutCustomizationInterceptor
+                    .TimeoutOption(100, TimeUnit.MILLISECONDS)));
+
+            c.createDB("test");
+        } catch (CouchDbException e) {
+            //unwrap the CouchDbException
+            if (e.getCause() != null) {
+                //whilst it would be really nice to actually assert that this was a connect
+                //exception and not some other SocketTimeoutException there are JVM differences in
+                //this respect (i.e. OpenJDK does not appear to distinguish between read/connect)
+                //in its exception messages
+                throw e.getCause();
+            } else {
+                throw e;
+            }
+        } finally {
+            //make sure we close the sockets
+            IOUtils.closeQuietly(socket);
+            server.stop();
+        }
+    }
+
+    /**
+     * Checks that the read timeout works. The test sets a read timeout of 0.25 s and the mock
+     * server thread sleeps for twice the duration of the read timeout. If things are working
+     * correctly then the client should see a SocketTimeoutException for the read.
+     */
+    @Test(expected = SocketTimeoutException.class)
+    public void readTimeout() throws Throwable {
+
+        final Long READ_TIMEOUT = 250l;
+
+        //start a simple http server
+        SimpleHttpServer server = new SimpleHttpServer() {
+            @Override
+            protected void serverAction(InputStream is, OutputStream os) throws Exception {
+                //sleep for longer than the read timeout
+                Thread.sleep(READ_TIMEOUT * 2);
+            }
+        };
+
+        try {
+            server.start();
+            server.await();
+
+            try {
+                CloudantClient c = new CloudantClient(server.getUrl(), null, (String) null, new
+                        ConnectOptions().setReadTimeout(new TimeoutCustomizationInterceptor
+                        .TimeoutOption(READ_TIMEOUT, TimeUnit.MILLISECONDS)));
+                //do a call that expects a response
+                c.getAllDbs();
+            } catch (CouchDbException e) {
+                //unwrap the CouchDbException
+                if (e.getCause() != null) {
+                    throw e.getCause();
+                } else {
+                    throw e;
+                }
+            }
+        } finally {
+            server.stop();
+        }
+    }
+
+    /**
+     * This tests that a CouchDbException is thrown if the user is null, but the password is
+     * supplied.
+     */
+    @Test(expected = CouchDbException.class)
+    public void nullUser() {
+        new CloudantClient("http://192.0.2.0", null, ":0-myPassword");
+    }
+
+    /**
+     * This tests that a CouchDbException is thrown if the user is supplied, but the password is
+     * null.
+     */
+    @Test(expected = CouchDbException.class)
+    public void nullPassword() {
+        new CloudantClient("http://192.0.2.0", "user", null);
+    }
 }
