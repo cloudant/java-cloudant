@@ -38,13 +38,18 @@ dependencies {
 ```
 
 Alternately download the dependencies
-
-* [cloudant.jar](http://search.maven.org/remotecontent?filepath=com/cloudant/cloudant-client/)
-* [HttpClient 4.3.6](http://hc.apache.org/downloads.cgi)
-* [HttpCore 4.3.3](http://hc.apache.org/downloads.cgi)
-* [Commons Codec 1.6](http://commons.apache.org/codec/download_codec.cgi)
-* [Commons Logging 1.1.3](http://commons.apache.org/logging/download_logging.cgi)
-* [Gson 2.2.4](http://code.google.com/p/google-gson/downloads/list)
+* [1.x](https://github.com/cloudant/java-cloudant/tree/maintenance-1.2#installation-and-usage)
+    * [cloudant.jar](http://search.maven.org/remotecontent?filepath=com/cloudant/cloudant-client/)
+    * [HttpClient 4.3.6](http://hc.apache.org/downloads.cgi)
+    * [HttpCore 4.3.3](http://hc.apache.org/downloads.cgi)
+    * [Commons Codec 1.6](http://commons.apache.org/codec/download_codec.cgi)
+    * [Commons Logging 1.1.3](http://commons.apache.org/logging/download_logging.cgi)
+    * [Gson 2.2.4](http://code.google.com/p/google-gson/downloads/list)
+* Master branch (2.0 milestone)
+    * [cloudant.jar](http://search.maven.org/remotecontent?filepath=com/cloudant/cloudant-client/)
+    * [Commons Codec 1.6](http://commons.apache.org/codec/download_codec.cgi)
+    * [Commons IO 2.4](http://commons.apache.org/io/download_io.cgi)
+    * [Gson 2.2.4](http://code.google.com/p/google-gson/downloads/list)
 
 ### Getting Started
 
@@ -345,11 +350,9 @@ List<ReplicationHistory> histories = result.getHistories();
 This API enables extending Cloudant internal API by allowing a user-defined raw HTTP request to execute against a cloudant client.
 ~~~ java
 
-HttpHead head = new HttpHead(dbClient.getDBUri() + "doc-id");
-HttpResponse response = dbClient.executeRequest(head);
-String revision = response.getFirstHeader("ETAG").getValue();
-HttpClientUtils.closeQuietly(response);
-
+HttpConnection head = com.cloudant.http.Http.HEAD(new URL(db.getDBUri() + "doc-id"));
+HttpConnection response = client.executeRequest(head);
+String revision = response.getConnection().getHeaderField("ETAG");
 ~~~
 
 ### com.cloudant.client.api.CloudantClient.uuids()
@@ -922,7 +925,7 @@ CloudantClient cookieBasedClient = new
 ### Advanced Configuration
 
 #### ConnectOptions
-Besides the account and password options, you can add an optional `com.cloudant.client.api.model.ConnectOptions` value, which will initialize HttpClient (the underlying HTTP library) as you need it.
+Besides the account and password options, you can add an optional `com.cloudant.client.api.model.ConnectOptions` value to specify some advanced configuration options.
 
 ~~~ java
 ConnectOptions connectOptions = new ConnectOptions()
