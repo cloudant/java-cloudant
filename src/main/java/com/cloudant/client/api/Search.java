@@ -89,12 +89,14 @@ public class Search {
     private Integer limit;
     private boolean includeDocs = false;
     private String bookmark;
+    private CloudantClient client;
     private Database db;
     private URIBuilder uriBuilder;
 
 
-    Search(Database db, String searchIndexId) {
+    Search(CloudantClient client, Database db, String searchIndexId) {
         assertNotEmpty(searchIndexId, "searchIndexId");
+        this.client = client;
         this.db = db;
         String search = searchIndexId;
         if (searchIndexId.contains("/")) {
@@ -119,7 +121,7 @@ public class Search {
         URI uri = uriBuilder.build();
         HttpConnection get = Http.GET(uri);
         get.requestProperties.put("Accept", "application/json");
-        return db.executeRequest(get);
+        return client.couchDbClient.executeToInputStream(get);
     }
 
     /**
