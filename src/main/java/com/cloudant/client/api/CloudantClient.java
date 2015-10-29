@@ -137,10 +137,6 @@ public class CloudantClient {
 
     CouchDbClient couchDbClient;
 
-    private String accountName;
-    private String loginUsername;
-    private String password;
-
     /**
      * Constructs a new instance of this class and connects to the cloudant server with the
      * specified credentials
@@ -154,8 +150,6 @@ public class CloudantClient {
     public CloudantClient(String account, String loginUsername, String password) {
         super();
         Map<String, String> h = parseAccount(account);
-        this.loginUsername = loginUsername;
-        this.password = password;
 
         doInit(h.get("scheme"),
                 h.get("hostname"),
@@ -181,8 +175,6 @@ public class CloudantClient {
             connectOptions) {
         super();
         Map<String, String> h = parseAccount(account);
-        this.loginUsername = loginUsername;
-        this.password = password;
 
         doInit(h.get("scheme"),
                 h.get("hostname"),
@@ -436,22 +428,6 @@ public class CloudantClient {
 
     // Helper methods
 
-    String getLoginUsername() {
-        return loginUsername;
-    }
-
-    String getPassword() {
-        return password;
-    }
-
-
-    /**
-     * @return the accountName
-     */
-    String getAccountName() {
-        return accountName;
-    }
-
     /**
      * Performs a HTTP GET request.
      *
@@ -477,7 +453,6 @@ public class CloudantClient {
 
     private Map<String, String> parseAccount(String account) {
         assertNotEmpty(account, "accountName");
-        this.accountName = account;
         Map<String, String> h = new HashMap<String, String>();
         if (account.startsWith("http://") || account.startsWith("https://")) {
             // user is specifying a uri
