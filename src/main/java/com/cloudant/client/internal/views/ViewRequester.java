@@ -31,7 +31,7 @@ class ViewRequester {
     static JsonObject executeRequestWithResponseAsJson(ViewQueryParameters parameters,
                                                        HttpConnection request) throws IOException {
         CloudantClient client = parameters.getClient();
-        InputStream response = client.executeRequest(request);
+        InputStream response = client.executeRequest(request).responseAsInputStream();
         return CouchDbUtil.getResponse(response, JsonObject.class, client.getGson());
     }
 }

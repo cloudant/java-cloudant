@@ -456,16 +456,14 @@ public class CouchDbClient {
         return gson;
     }
 
-
-    // - if 2xx then return stream
-    // - map 404 to NoResourceException
-    // - if there's a couch error returned as json, un-marshall and throw
-    // - anything else, just throw the IOException back, use the cause part of the exception?
-
-    // it needs to catch eg FileNotFoundException and rethrow to emulate the previous exception
-    // handling behaviour
-    public InputStream executeToInputStream(HttpConnection connection) throws CouchDbException {
-
+    /**
+     * Execute a HTTP request and handle common error cases.
+     *
+     * @param connection the HttpConnection request to execute
+     * @return the executed HttpConnection
+     * @throws CouchDbException for HTTP error codes or if an IOException was thrown
+     */
+    public HttpConnection execute(HttpConnection connection) {
         if (proxyUrl != null) {
             connection.setProxy(proxyUrl);
         }
@@ -486,17 +484,17 @@ public class CouchDbClient {
             String response = connection.getConnection().getResponseMessage();
             // everything ok? return the stream
             if (code / 100 == 2) { // success [200,299]
-                return connection.responseAsInputStream();
+                return connection;
             } else {
                 CouchDbException ex = new CouchDbException(response, code);
                 switch (code) {
-                    case 404:
+                    case HttpURLConnection.HTTP_NOT_FOUND: //404
                         ex = new NoDocumentException(response);
                         break;
-                    case 409:
+                    case HttpURLConnection.HTTP_CONFLICT: //409
                         ex = new DocumentConflictException(response);
                         break;
-                    case 412:
+                    case HttpURLConnection.HTTP_PRECON_FAILED: //412
                         ex = new PreconditionFailedException(response);
                         break;
                 }
@@ -519,6 +517,20 @@ public class CouchDbClient {
             throw new CouchDbException("Error retrieving server response", ioe);
         } finally {
             close(es);
+        }
+    }
+
+    /**
+     * Execute the HttpConnection request and return the InputStream if there were no errors.
+     * @param connection the request HttpConnection
+     * @return InputStream from the HttpConnection response
+     * @throws CouchDbException for HTTP error codes or if there was an IOException
+     */
+    public InputStream executeToInputStream(HttpConnection connection) throws CouchDbException {
+        try {
+            return execute(connection).responseAsInputStream();
+        } catch (IOException ioe) {
+            throw new CouchDbException("Error retrieving server response", ioe);
         }
     }
 }

@@ -46,6 +46,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -134,12 +135,11 @@ import java.util.Map;
  */
 public class CloudantClient {
 
-    private CouchDbClient client;
+    CouchDbClient couchDbClient;
 
     private String accountName;
     private String loginUsername;
     private String password;
-
 
     /**
      * Constructs a new instance of this class and connects to the cloudant server with the
@@ -237,7 +237,7 @@ public class CloudantClient {
      */
     public ApiKey generateApiKey() {
         URI uri = buildUri(getBaseUri()).path("_api/v2/api_keys").build();
-        InputStream response = client.post(uri, null);
+        InputStream response = couchDbClient.post(uri, null);
         return getResponse(response, ApiKey.class, getGson());
     }
 
@@ -249,8 +249,8 @@ public class CloudantClient {
     public List<Task> getActiveTasks() {
         InputStream response = null;
         try {
-            response = client.get(buildUri(getBaseUri()).path("_active_tasks").build());
-            return getResponseList(response, client.getGson(), Task.class,
+            response = couchDbClient.get(buildUri(getBaseUri()).path("_active_tasks").build());
+            return getResponseList(response, couchDbClient.getGson(), Task.class,
                     new TypeToken<List<Task>>() {
                     }.getType());
         } finally {
@@ -264,7 +264,7 @@ public class CloudantClient {
      * @return cluster nodes and all nodes
      */
     public Membership getMembership() {
-        Membership membership = client.get(buildUri(getBaseUri()).path("_membership").build(),
+        Membership membership = couchDbClient.get(buildUri(getBaseUri()).path("_membership").build(),
                 Membership.class);
         return membership;
     }
@@ -278,7 +278,7 @@ public class CloudantClient {
      * @return Database object
      */
     public Database database(String name, boolean create) {
-        return new Database(this, client.database(name, create));
+        return new Database(this, couchDbClient.database(name, create));
     }
 
 
@@ -291,7 +291,7 @@ public class CloudantClient {
      */
     @Deprecated
     public void deleteDB(String dbName, String confirm) {
-        client.deleteDB(dbName, confirm);
+        couchDbClient.deleteDB(dbName, confirm);
     }
 
     /**
@@ -300,7 +300,7 @@ public class CloudantClient {
      * @param dbName The database name
      */
     public void deleteDB(String dbName) {
-        client.deleteDB(dbName);
+        couchDbClient.deleteDB(dbName);
     }
 
 
@@ -310,7 +310,7 @@ public class CloudantClient {
      * @param dbName The Database name
      */
     public void createDB(String dbName) {
-        client.createDB(dbName);
+        couchDbClient.createDB(dbName);
     }
 
 
@@ -318,7 +318,7 @@ public class CloudantClient {
      * @return The base URI.
      */
     public URI getBaseUri() {
-        return client.getBaseUri();
+        return couchDbClient.getBaseUri();
     }
 
 
@@ -326,7 +326,7 @@ public class CloudantClient {
      * @return All Server databases.
      */
     public List<String> getAllDbs() {
-        return client.getAllDbs();
+        return couchDbClient.getAllDbs();
     }
 
 
@@ -334,7 +334,7 @@ public class CloudantClient {
      * @return Cloudant Server version.
      */
     public String serverVersion() {
-        return client.serverVersion();
+        return couchDbClient.serverVersion();
     }
 
 
@@ -344,7 +344,7 @@ public class CloudantClient {
      * @see Replication
      */
     public com.cloudant.client.api.Replication replication() {
-        Replication couchDbReplication = client.replication();
+        Replication couchDbReplication = couchDbClient.replication();
         com.cloudant.client.api.Replication replication = new com.cloudant.client.api.Replication
                 (couchDbReplication);
         return replication;
@@ -357,7 +357,7 @@ public class CloudantClient {
      * @see Replication
      */
     public com.cloudant.client.api.Replicator replicator() {
-        Replicator couchDbReplicator = client.replicator();
+        Replicator couchDbReplicator = couchDbClient.replicator();
         com.cloudant.client.api.Replicator replicator = new com.cloudant.client.api.Replicator
                 (couchDbReplicator);
         return replicator;
@@ -366,20 +366,33 @@ public class CloudantClient {
 
     /**
      * Executes a HTTP request. This method provides a mechanism to extend the API
-     * <p><b>Note</b>: The response must be closed after use to release the connection.
+     * <p><b>Note</b>: Streams obtained from the HttpConnection must be closed after use to release
+     * the connection.
+     * </p>
+     * <pre>
+     * {@code
+     * HttpConnection response = account.executeRequest(Http.GET(new URL(account.getBaseUri() +
+     *         "/aNewAPI")));
+     * if (response.getConnection().getResponseCode() == HttpURLConnection.HTTP_OK) {
+     *     InputStream stream = response.responseAsInputStream();
+     *     //process stream
+     * }
+     * }
+     * </pre>
      *
-     * @param request The HTTP request to execute.
-     * @return {@link InputStream} with response from {@link HttpConnection}
+     * @param request The HTTP request to execute, obtained from {@link com.cloudant.http.Http}.
+     * @return {@link HttpConnection} that has been executed
+     * @throws CouchDbException for error HTTP status codes or if there is an {@link IOException}
      */
-    public InputStream executeRequest(HttpConnection request) {
-        return client.executeToInputStream(request);
+    public HttpConnection executeRequest(HttpConnection request) {
+            return couchDbClient.execute(request);
     }
 
     /**
      * Shuts down the connection manager used by this client instance.
      */
     public void shutdown() {
-        client.shutdown();
+        couchDbClient.shutdown();
     }
 
     /**
@@ -388,7 +401,7 @@ public class CloudantClient {
      * @param count The count of UUIDs.
      */
     public List<String> uuids(long count) {
-        return client.uuids(count);
+        return couchDbClient.uuids(count);
     }
 
 
@@ -409,7 +422,7 @@ public class CloudantClient {
                         }.getType(),
                         new SecurityDeserializer())
                 .registerTypeAdapter(Key.ComplexKey.class, new Key.ComplexKeyDeserializer());
-        client.setGsonBuilder(gsonBuilder);
+        couchDbClient.setGsonBuilder(gsonBuilder);
     }
 
 
@@ -417,7 +430,7 @@ public class CloudantClient {
      * @return The Gson instance.
      */
     public Gson getGson() {
-        return client.getGson();
+        return couchDbClient.getGson();
     }
 
 
@@ -445,7 +458,7 @@ public class CloudantClient {
      * @return An object of type T
      */
     <T> T get(URI uri, Class<T> classType) {
-        return client.get(uri, classType);
+        return couchDbClient.get(uri, classType);
     }
 
     /**
@@ -454,12 +467,12 @@ public class CloudantClient {
      * @return InputStream with response
      */
     InputStream get(URI uri) {
-        return client.get(uri);
+        return couchDbClient.get(uri);
     }
 
 
     Response put(URI uri, Object object, boolean newEntity, int writeQuorum) {
-        return client.put(uri, object, newEntity, writeQuorum);
+        return couchDbClient.put(uri, object, newEntity, writeQuorum);
     }
 
     private Map<String, String> parseAccount(String account) {
@@ -542,7 +555,7 @@ public class CloudantClient {
                 }
             }
         }
-        this.client = new CouchDbClient(props);
+        this.couchDbClient = new CouchDbClient(props);
 
         // set a custom gsonbuilder that includes additional cloudant deserializers
         setGsonBuilder(new GsonBuilder());

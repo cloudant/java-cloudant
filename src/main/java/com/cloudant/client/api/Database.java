@@ -143,7 +143,7 @@ public class Database {
         HttpConnection put = Http.PUT(apiV2DBSecurityURI, "application/json");
         put.setRequestBody(client.getGson().toJson(perms));
         try {
-            response = client.executeRequest(put);
+            response = client.couchDbClient.executeToInputStream(put);
             String ok = getAsString(response, "ok");
             if (!ok.equalsIgnoreCase("true")) {
                 //raise exception
@@ -253,7 +253,7 @@ public class Database {
         InputStream putresp = null;
         URI uri = buildUri(getDBUri()).path("_index").build();
         try {
-            putresp = client.executeRequest(createPost(uri, indexDefinition, "application/json"));
+            putresp = client.couchDbClient.executeToInputStream(createPost(uri, indexDefinition, "application/json"));
             String result = getAsString(putresp, "result");
             if (result.equalsIgnoreCase("created")) {
                 log.info(String.format("Created Index: '%s'", indexDefinition));
@@ -300,7 +300,7 @@ public class Database {
         String body = getFindByIndexBody(selectorJson, options);
         InputStream stream = null;
         try {
-            stream = client.executeRequest(createPost(uri, body, "application/json"));
+            stream = client.couchDbClient.executeToInputStream(createPost(uri, body, "application/json"));
             Reader reader = new InputStreamReader(stream, "UTF-8");
             JsonArray jsonArray = new JsonParser().parse(reader)
                     .getAsJsonObject().getAsJsonArray("docs");
@@ -351,7 +351,7 @@ public class Database {
         InputStream response = null;
         try {
             HttpConnection connection = Http.DELETE(uri);
-            response = client.executeRequest(connection);
+            response = client.couchDbClient.executeToInputStream(connection);
             getResponse(response, Response.class, client.getGson());
         } finally {
             close(response);
@@ -364,7 +364,7 @@ public class Database {
      * @see Search
      */
     public Search search(String searchIndexId) {
-        return new Search(this, searchIndexId);
+        return new Search(client, this, searchIndexId);
     }
 
     /**
@@ -581,7 +581,7 @@ public class Database {
         InputStream response = null;
         try {
             URI uri = buildUri(getDBUri()).query("w", writeQuorum).build();
-            response = client.executeRequest(createPost(uri, client.getGson().toJson(object),
+            response = client.couchDbClient.executeToInputStream(createPost(uri, client.getGson().toJson(object),
                     "application/json"));
             Response couchDbResponse = getResponse(response, Response.class, client.getGson());
             com.cloudant.client.api.model.Response cloudantResponse = new com.cloudant.client.api
@@ -951,9 +951,6 @@ public class Database {
         return client.getGson();
     }
 
-    public InputStream executeRequest(HttpConnection connection) {
-        return client.executeRequest(connection);
-    }
 }
 
 class ShardDeserializer implements JsonDeserializer<List<Shard>> {
