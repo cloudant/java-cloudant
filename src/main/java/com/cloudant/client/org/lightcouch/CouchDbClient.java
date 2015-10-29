@@ -45,7 +45,6 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
 
@@ -63,8 +62,6 @@ public class CouchDbClient {
     private URI baseURI;
 
     private Gson gson;
-
-    private Map<String, String> customHeaders;
 
     private List<HttpConnectionRequestInterceptor> requestInterceptors;
     private List<HttpConnectionResponseInterceptor> responseInterceptors;
@@ -401,44 +398,7 @@ public class CouchDbClient {
         return executeToInputStream(connection);
     }
 
-    /**
-     * Performs a HTTP POST request.
-     *
-     * @return Input stream with response
-     */
-    InputStream post(URI uri) {
-        return post(uri, null);
-    }
-
-
     // Helpers
-
-    /**
-     * Validates a HTTP response; on error cases logs status and throws relevant exceptions.
-     *
-     * @param response The HTTP response.
-     */
-    void validate(HttpConnection response) throws IOException {
-        final int code = response.getConnection().getResponseCode();
-        if (code == 200 || code == 201 || code == 202) { // success (ok | created | accepted)
-            return;
-        }
-        String reason = response.getConnection().getResponseMessage();
-        switch (code) {
-            case HttpURLConnection.HTTP_NOT_FOUND: {
-                throw new NoDocumentException(reason);
-            }
-            case HttpURLConnection.HTTP_CONFLICT: {
-                throw new DocumentConflictException(reason);
-            }
-            case HttpURLConnection.HTTP_PRECON_FAILED: {
-                throw new PreconditionFailedException(reason);
-            }
-            default: { // other errors: 400 | 401 | 500 etc.
-                throw new CouchDbException(reason);
-            }
-        }
-    }
 
     /**
      * Sets a {@link GsonBuilder} to create {@link Gson} instance.
