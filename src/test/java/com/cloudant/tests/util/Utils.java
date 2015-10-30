@@ -18,6 +18,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -189,5 +190,22 @@ public class Utils {
             }
         }
         throw new Exception("Retries exceeded");
+    }
+
+    /**
+     * Test utility that splits a string and asserts that the expected number of separators were
+     * found. Expected number is for separators, but the assertion is done on parts, so this
+     * method is not safe for strings that end in their separator sequence.
+     *
+     * @param toSplit        the string to split
+     * @param splitOn        the separator string
+     * @param expectedNumber the expected number of separators
+     * @return
+     */
+    public static String[] splitAndAssert(String toSplit, String splitOn, int expectedNumber) {
+        String[] parts = toSplit.split(splitOn);
+        assertEquals("There should be " + expectedNumber + " instances of " + splitOn + " in the " +
+                "content", expectedNumber + 1, parts.length);
+        return parts;
     }
 }

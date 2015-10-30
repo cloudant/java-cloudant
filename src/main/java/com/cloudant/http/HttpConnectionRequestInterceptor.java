@@ -17,6 +17,8 @@ package com.cloudant.http;
  * Created by tomblench on 30/03/15.
  */
 
+import com.cloudant.http.interceptors.CookieInterceptor;
+
 import java.net.HttpURLConnection;
 
 /**

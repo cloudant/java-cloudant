@@ -37,7 +37,7 @@ import com.cloudant.client.org.lightcouch.CouchDbProperties;
 import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.Replicator;
 import com.cloudant.client.org.lightcouch.Response;
-import com.cloudant.http.CookieInterceptor;
+import com.cloudant.http.interceptors.CookieInterceptor;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.interceptors.ProxyAuthInterceptor;
 import com.cloudant.http.interceptors.SSLCustomizerInterceptor;

@@ -1,14 +1,15 @@
 package com.cloudant.tests;
 
 import com.cloudant.client.api.CloudantClient;
-import com.cloudant.http.CookieInterceptor;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
+import com.cloudant.http.interceptors.CookieInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
 import com.cloudant.tests.util.SimpleHttpServer;
+import com.cloudant.tests.util.Utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -18,6 +19,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -26,9 +28,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class HttpTest {
@@ -294,6 +302,94 @@ public class HttpTest {
                     readyBefore100.get());
             Assert.assertTrue("The body should have been read after 100-continue",
                     bodyReadAfter100.get());
+        } finally {
+            server.stop();
+        }
+    }
+
+    /**
+     * This test mocks up a server to receive the _session request and asserts that the request
+     * body is correctly encoded (per application/x-www-form-urlencoded). Because it requires a
+     * body this test also relies on Expect: 100-continue working in the client as that is enabled
+     * by default.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void cookieInterceptorURLEncoding() throws Exception {
+        final String mockUser = "myStrangeUsername=&?";
+        String mockPass = "?&=NotAsStrangeInAPassword";
+
+        final AtomicReference<String> readBody = new AtomicReference<String>();
+
+        final List<List<String>> requests = new ArrayList<List<String>>();
+        SimpleHttpServer server = new SimpleHttpServer() {
+            int count = 0;
+
+            @Override
+            protected void serverAction(InputStream is, OutputStream os) throws Exception {
+                count++;
+                if (count == 1) {
+                    //read the headers
+                    super.readInputLines(is);
+                    //work out how long the body is
+                    int contentLength = 0;
+                    for (String header : getLastInputRequestLines()) {
+                        Matcher m = Pattern.compile("Content-Length\\s*:\\s*(\\d+)", Pattern
+                                .CASE_INSENSITIVE).matcher(header);
+                        if (m.matches() && m.groupCount() == 1) {
+                            contentLength = Integer.valueOf(m.group(1));
+                        }
+                    }
+                    //write the continue to allow the body to be sent faster
+                    OutputStreamWriter osw = new OutputStreamWriter(new BufferedOutputStream(os));
+                    osw.write("HTTP/1.1 100 Continue\r\n\r\n");
+                    osw.flush();
+                    //now read the body
+                    BufferedReader r = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+                    //wait for the client to be ready with the body
+                    while (!r.ready()) {
+                        Thread.sleep(100);
+                    }
+                    StringWriter w = new StringWriter();
+                    int nRead = 0;
+                    while (nRead < contentLength) {
+                        w.write(r.read());
+                        nRead++;
+                    }
+                    readBody.set(w.toString());
+                    //send back a mock cookie
+                    osw.write("HTTP/1.1 200 OK\r\n");
+                    osw.write("Set-Cookie: " +
+                            "AuthSession=\"a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz" +
+                            "\";\r\n\r\n");
+                    osw.write(("{\"ok\":true,\"name\":\"" + mockUser + "\",\"roles\":[]}\r\n"));
+                    osw.flush();
+                } else {
+                    super.serverAction(is, os);
+                }
+            }
+        };
+
+        server.start();
+        server.await();
+
+        try {
+            CloudantClient c = new CloudantClient(server.getUrl(), mockUser, mockPass);
+            //the GET request will try to get a session, then perform the GET
+            c.executeRequest(Http.GET(c.getBaseUri()));
+
+            String sessionRequestContent = readBody.get();
+            Assert.assertNotNull("The _session request should have non-null content",
+                    sessionRequestContent);
+            //expecting name=...&password=...
+            String[] parts = Utils.splitAndAssert(sessionRequestContent, "&", 1);
+            String username = URLDecoder.decode(Utils.splitAndAssert(parts[0], "=", 1)[1], "UTF-8");
+            Assert.assertEquals("The username URL decoded username should match", mockUser,
+                    username);
+            String password = URLDecoder.decode(Utils.splitAndAssert(parts[1], "=", 1)[1], "UTF-8");
+            Assert.assertEquals("The username URL decoded password should match", mockPass,
+                    password);
         } finally {
             server.stop();
         }
