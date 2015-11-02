@@ -23,6 +23,11 @@ dependencies {
     compile group: 'com.google.code.gson', name: 'gson', version: '2.2.4'
     compile group: 'commons-io', name: 'commons-io', version: '2.4'
     compile group: 'commons-codec', name: 'commons-codec', version: '1.6'
+    //needed to compile, but optional for consumers of java-cloudant
+    compile(group: 'com.squareup.okhttp', name: 'okhttp-urlconnection', version: '2.5.0') {
+        ext.optional = true
+    }
+    //test dependencies
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
@@ -218,3 +223,19 @@ uploadArchives {
         }
     }
 }
+
+//add optional dependency attribute to pom (workaround for https://issues.gradle.org/browse/GRADLE-1749)
+//get the gradle dependencies and make a map of artifactId to dependency object
+def compileDependencies = configurations.compile.dependencies.collectEntries { [it.name, it] }
+//identify pom tasks
+def installer = install.repositories.mavenInstaller
+def deployer = uploadArchives.repositories.mavenDeployer
+//when any pom tasks are being configured then analyze the gradle dependency for optional property
+//and apply the optional property to the pom if it was set in the gradle
+[installer, deployer]*.pom*.whenConfigured { pom ->
+    pom.dependencies.findAll {
+        def compileDependency = compileDependencies.get(it.artifactId)
+        return compileDependency?.hasProperty('optional') && compileDependency.optional
+    }.each { dep -> dep.optional = true }
+}
+

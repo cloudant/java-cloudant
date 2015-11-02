@@ -1,6 +1,9 @@
 # Cloudant Java Client
 [![Build Status](https://travis-ci.org/cloudant/java-cloudant.svg?branch=master)](https://travis-ci.org/cloudant/java-cloudant)
 
+This README applies to the unreleased **master** branch.
+[**See the version 1.x README**](https://github.com/cloudant/java-cloudant/tree/maintenance-1.2).
+
 This is the official Cloudant library for Java
 
 * [Installation and Usage](#installation-and-usage)
@@ -17,25 +20,45 @@ This is the official Cloudant library for Java
 
 ## Installation and Usage
 
+Gradle:
+```groovy
+dependencies {
+    compile group: 'com.cloudant', name: 'cloudant-client', version: '1.2.3'
+}
+```
+
+Gradle with optional `okhttp-urlconnection` dependency:
+```groovy
+dependencies {
+    compile group: 'com.cloudant', name: 'cloudant-client', version: '1.2.3'
+    compile group: 'com.squareup.okhttp', name: 'okhttp-urlconnection', version: '2.5.0'
+}
+```
+
 Maven:
+~~~ xml
+<dependency>
+  <groupId>com.cloudant</groupId>
+  <artifactId>cloudant-client</artifactId>
+  <version>1.2.3</version>
+</dependency>
+~~~
+
+Maven with optional `okhttp-urlconnection` dependency:
 
 ~~~ xml
-
 <dependency>
   <groupId>com.cloudant</groupId>
   <artifactId>cloudant-client</artifactId>
   <version>1.2.3</version>
 </dependency>
 
+<dependency>
+  <groupId>com.squareup.okhttp</groupId>
+  <artifactId>okhttp-urlconnection</artifactId>
+  <version>2.5.0</version>
+</dependency>
 ~~~
-
-Gradle:
-
-```groovy
-dependencies {
-    compile group: 'com.cloudant', name: 'cloudant-client', version:'1.2.3'
-}
-```
 
 Alternately download the dependencies
 * [1.x](https://github.com/cloudant/java-cloudant/tree/maintenance-1.2#installation-and-usage)
@@ -50,6 +73,7 @@ Alternately download the dependencies
     * [Commons Codec 1.6](http://commons.apache.org/codec/download_codec.cgi)
     * [Commons IO 2.4](http://commons.apache.org/io/download_io.cgi)
     * [Gson 2.2.4](http://code.google.com/p/google-gson/downloads/list)
+    * [OkHttp 2.5.0](http://square.github.io/okhttp/#download) (OPTIONAL - note: to use this dependency requires Java 1.7 minimum)
 
 ### Getting Started
 
