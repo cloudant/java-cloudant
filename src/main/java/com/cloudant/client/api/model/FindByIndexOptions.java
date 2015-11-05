@@ -24,7 +24,7 @@ import java.util.List;
  * <p>Example:
  * <pre>
  * database.findByIndex(
- * 	   " "selector": { "Movie_year": {"$gt": 1960}, "Person_name": "Alec Guinness" }"
+ * 	   " \"selector\": { \"Movie_year\": {\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\" }"
  * 		Movie.class,
  * 		new FindByIndexOptions()
  * .sort(new IndexField("Movie_year", SortOrder.desc))
@@ -50,6 +50,7 @@ public class FindByIndexOptions {
 
     /**
      * @param limit limit the number of results return
+     * @return this to set additional options
      */
     public FindByIndexOptions limit(Integer limit) {
         this.limit = limit;
@@ -58,6 +59,7 @@ public class FindByIndexOptions {
 
     /**
      * @param skip Skips <i>n</i> number of results.
+     * @return this to set additional options
      */
     public FindByIndexOptions skip(Integer skip) {
         this.skip = skip;
@@ -66,6 +68,7 @@ public class FindByIndexOptions {
 
     /**
      * @param readQuorum set the readQuorum
+     * @return this to set additional options
      */
     public FindByIndexOptions readQuorum(Integer readQuorum) {
         this.readQuorum = readQuorum;
@@ -76,6 +79,7 @@ public class FindByIndexOptions {
      * Can be called multiple times to set the sort syntax
      *
      * @param sort add a sort syntax field
+     * @return this to set additional options
      */
     public FindByIndexOptions sort(IndexField sort) {
         this.sort.add(sort);
@@ -87,6 +91,7 @@ public class FindByIndexOptions {
      * Can be called multiple times to set the list of return fields
      *
      * @param field set the return fields
+     * @return this to set additional options
      */
     public FindByIndexOptions fields(String field) {
         this.fields.add(field);
@@ -97,6 +102,7 @@ public class FindByIndexOptions {
      * Specify a specific index to run the query against
      *
      * @param designDocument set the design document to use
+     * @return this to set additional options
      */
     public FindByIndexOptions useIndex(String designDocument) {
         this.useIndex = "\"" + designDocument + "\"";
@@ -108,6 +114,7 @@ public class FindByIndexOptions {
      *
      * @param designDocument set the design document to use
      * @param indexName set the index name to use
+     * @return this to set additional options
      */
     public FindByIndexOptions useIndex(String designDocument, String indexName) {
         this.useIndex = "[\"" + designDocument + "\",\"" + indexName + "\"]";

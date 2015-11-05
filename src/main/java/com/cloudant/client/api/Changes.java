@@ -21,8 +21,9 @@ import com.cloudant.client.api.model.ChangesResult.Row;
 /**
  * <p>Contains the Change Notifications API, supports <i>normal</i> and <i>continuous</i> feed
  * Changes.
- * <h3>Usage Example:</h3>
+ * <p>Usage example for normal feed limiting to 10 results, with a filter:</p>
  * <pre>
+ * {@code
  * // feed type normal
  * String since = db.info().getUpdateSeq(); // latest update seq
  * ChangesResult changeResult = db.changes()
@@ -31,11 +32,16 @@ import com.cloudant.client.api.model.ChangesResult.Row;
  * 	.filter("example/filter")
  * 	.getChanges();
  *
+ * //process the ChangesResult
  * for (ChangesResult.Row row : changeResult.getResults()) {
  *   String docId = row.getId()
  *   JsonObject doc = row.getDoc();
  * }
- *
+ * }
+ * </pre>
+ * <P>Usage example for continuous feed, including document content:</P>
+ * <pre>
+ * {@code
  * // feed type continuous
  * Changes changes = db.changes()
  * 	.includeDocs(true)
@@ -46,13 +52,18 @@ import com.cloudant.client.api.model.ChangesResult.Row;
  * 	ChangesResult.Row feed = changes.next();
  *  String docId = feed.getId();
  *  JsonObject doc = feed.getDoc();
- * 	// changes.stop(); // stop continuous feed
+ * }
+ *
+ * //while loop blocks; stop from another thread
+ * changes.stop(); // stop continuous feed
  * }
  * </pre>
  *
  * @author Ganesh K Choudhary
  * @see ChangesResult
  * @since 0.0.1
+ * @see <a href="https://docs.cloudant.com/database.html#get-changes">Databases - get
+ * changes</a>
  */
 public class Changes {
     private com.cloudant.client.org.lightcouch.Changes changes;
@@ -63,7 +74,8 @@ public class Changes {
 
     /**
      * Requests Change notifications of feed type continuous.
-     * <p>Feed notifications are accessed in an <i>iterator</i> style.
+     * <p>Feed notifications are accessed in an <i>iterator</i> style.</p>
+     * @return this Changes object configured for continuous feed.
      */
     public Changes continuousChanges() {
         changes = changes.continuousChanges();
@@ -73,6 +85,8 @@ public class Changes {
     /**
      * Checks whether a feed is available in the continuous stream, blocking
      * until a feed is received.
+     *
+     * @return true if there is a change
      */
     public boolean hasNext() {
         return changes.hasNext();
@@ -96,6 +110,7 @@ public class Changes {
 
     /**
      * Requests Change notifications of feed type normal.
+     * @return {@link ChangesResult} encapsulating the normal feed changes
      */
     public ChangesResult getChanges() {
         com.cloudant.client.org.lightcouch.ChangesResult couchDbChangesResult = changes.getChanges();

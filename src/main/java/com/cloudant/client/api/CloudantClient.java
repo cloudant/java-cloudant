@@ -41,12 +41,20 @@ import java.util.List;
 
 /**
  * Exposes the Cloudant client API
- * <p>This class is the main object to use to gain access to the Cloudant APIs.
+ * <P>
+ * This class is the main object to use to gain access to the Cloudant APIs. Instances of
+ * CloudantClient are created using a ClientBuilder. Once created a CloudantClient is immutable
+ * and safe to access from multiple threads.
+ *
+ * </P>
  * <h1>Usage Examples:</h1>
  *
  * <h2>Create a new Cloudant client instance</h2>
  * <code>
- * CloudantClient client = new CloudantClient("mycloudantaccount","myusername","mypassword");
+ * CloudantClient client = ClientBuilder.account
+ *
+ * CloudantClient("mycloudantaccount","myusername",
+ * "mypassword");
  * </code>
  *
  * <h2>Client use of the API</h2>
@@ -83,8 +91,8 @@ import java.util.List;
  * {@link Database#findByIndex(String, Class)} e.g.:
  * <p>
  * <code>
- * db.findByIndex(" "selector": {
- * "Person_name": "Alec Guinness" }", Movie.class)}
+ * db.findByIndex(" \"selector\": {
+ * \"Person_name\": \"Alec Guinness\" }", Movie.class)}
  * </code>
  * </p>
  * </li>
@@ -99,7 +107,7 @@ import java.util.List;
  * </ul>
  *
  * <h2>Cloudant Search</h2>
- * {@link Search db.search("views101/animals)}
+ * {@link Search db.search("views101/animals")}
  *
  * <h2>View APIs</h2>
  * {@link com.cloudant.client.api.views}
@@ -134,9 +142,24 @@ public class CloudantClient {
     }
 
     /**
-     * Generate an API key
+     * Use the authorization feature to generate new API keys to access your data. An API key is
+     * similar to a username/password pair for granting others access to your data.
+     * <P>Example usage:
+     * </P>
+     * <pre>
+     * {@code
+     * ApiKey key = client.generateApiKey();
+     * System.out.println(key);
+     * }
+     * </pre>
+     * <P> Example output:
+     * </P>
+     * <pre>
+     * {@code key: isdaingialkyciffestontsk password: XQiDHmwnkUu4tknHIjjs2P64}
+     * </pre>
      *
      * @return the generated key and password
+     * @see Database#setPermissions(String, EnumSet)
      */
     public ApiKey generateApiKey() {
         URI uri = buildUri(getBaseUri()).path("_api/v2/api_keys").build();
@@ -145,9 +168,10 @@ public class CloudantClient {
     }
 
     /**
-     * Get all active tasks
+     * Get the list of active tasks from the server.
      *
      * @return List of tasks
+     * @see <a href="https://docs.cloudant.com/active_tasks.html">Active tasks</a>
      */
     public List<Task> getActiveTasks() {
         InputStream response = null;
@@ -162,9 +186,10 @@ public class CloudantClient {
     }
 
     /**
-     * Get the list of nodes in a cluster
+     * Get the list of all nodes and the list of active nodes in the cluster.
      *
-     * @return cluster nodes and all nodes
+     * @return Membership object encapsulating lists of all nodes and the cluster nodes
+     * @see <a href="https://docs.cloudant.com/advanced.html#get-/_membership">_membership</a>
      */
     public Membership getMembership() {
         Membership membership = couchDbClient.get(buildUri(getBaseUri()).path("_membership")
@@ -174,41 +199,38 @@ public class CloudantClient {
     }
 
     /**
-     * Get a database
+     * Get a database reference for the database with the specified name.
      *
      * @param name   name of database to access
-     * @param create flag indicating whether to create the database if it does not exist.
+     * @param create flag indicating whether to create the database if it does not exist
      * @return Database object
+     * @throws com.cloudant.client.org.lightcouch.NoDocumentException if the database does not
+     *                                                                exist and create was false
+     * @see <a href="https://docs.cloudant.com/database.html#read">Databases - read</a>
      */
     public Database database(String name, boolean create) {
         return new Database(this, couchDbClient.database(name, create));
     }
 
     /**
-     * Request to  delete a database.
+     * Request to delete the database with the specified name.
      *
-     * @param dbName  The database name
-     * @param confirm A confirmation string with the value: <tt>delete database</tt>
-     * @deprecated use {@link CloudantClient#deleteDB(String)}
-     */
-    @Deprecated
-    public void deleteDB(String dbName, String confirm) {
-        couchDbClient.deleteDB(dbName, confirm);
-    }
-
-    /**
-     * Request to  delete a database.
-     *
-     * @param dbName The database name
+     * @param dbName the database name
+     * @see <a href="https://docs.cloudant.com/database.html#deleting-a-database">Databases - delete
+     * </a>
      */
     public void deleteDB(String dbName) {
         couchDbClient.deleteDB(dbName);
     }
 
     /**
-     * Request to create a new database; if one doesn't exist.
+     * Request to create a new database with the specified name.
      *
-     * @param dbName The Database name
+     * @param dbName the database name
+     * @throws com.cloudant.client.org.lightcouch.PreconditionFailedException if a database with
+     *                                                                        the same name
+     *                                                                        already exists
+     * @see <a href="https://docs.cloudant.com/database.html#create">Databases - create</a>
      */
     public void createDB(String dbName) {
         couchDbClient.createDB(dbName);
@@ -222,14 +244,21 @@ public class CloudantClient {
     }
 
     /**
-     * @return All Server databases.
+     * List all the databases on the server for the Cloudant account.
+     *
+     * @return List of the names of all the databases
+     * @see <a href="https://docs.cloudant.com/database.html#get-databases">
+     * Databases - get databases</a>
      */
     public List<String> getAllDbs() {
         return couchDbClient.getAllDbs();
     }
 
     /**
-     * @return Cloudant Server version.
+     * Get the reported server version from the welcome message metadata.
+     *
+     * @return Cloudant server version.
+     * @see <a href="https://docs.cloudant.com/advanced.html#get-/">Welcome message</a>
      */
     public String serverVersion() {
         return couchDbClient.serverVersion();
@@ -238,7 +267,11 @@ public class CloudantClient {
     /**
      * Provides access to Cloudant <tt>replication</tt> APIs.
      *
-     * @see Replication
+     * @return Replication object for configuration and triggering
+     * @see com.cloudant.client.api.Replication
+     * @see <a href="https://docs.cloudant.com/replication.html#the-/_replicate-endpoint">
+     * Replication - _replicate
+     * </a>
      */
     public com.cloudant.client.api.Replication replication() {
         Replication couchDbReplication = couchDbClient.replication();
@@ -250,7 +283,11 @@ public class CloudantClient {
     /**
      * Provides access to Cloudant <tt>replication</tt> APIs.
      *
-     * @see Replication
+     * @return Replicator object for interacting with the _replicator DB
+     * @see com.cloudant.client.api.Replicator
+     * @see <a href="https://docs.cloudant.com/replication.html#the-/_replicator-database">
+     * Replication - _replicator
+     * </a>
      */
     public com.cloudant.client.api.Replicator replicator() {
         Replicator couchDbReplicator = couchDbClient.replicator();
@@ -260,7 +297,8 @@ public class CloudantClient {
     }
 
     /**
-     * Executes a HTTP request. This method provides a mechanism to extend the API
+     * Executes a HTTP request. This method provides a mechanism to perform operations not
+     * currently available in the client API.
      * <p><b>Note</b>: Streams obtained from the HttpConnection must be closed after use to release
      * the connection.
      * </p>
@@ -291,9 +329,11 @@ public class CloudantClient {
     }
 
     /**
-     * Request cloudant to send a list of UUIDs.
+     * Request a list of generated UUIDs from the Cloudant server.
      *
-     * @param count The count of UUIDs.
+     * @param count the number of UUIDs
+     * @return a List of UUID Strings
+     * @see <a href="https://docs.cloudant.com/advanced.html#get-/_uuids">_uuids</a>
      */
     public List<String> uuids(long count) {
         return couchDbClient.uuids(count);

@@ -42,36 +42,47 @@ import java.util.Map;
  * <p>A replication is triggered by persisting a document, and cancelled by removing the document
  * that triggered the replication.
  * <p/>
- * <h3>Usage Example:</h3>
+ * <P>
+ * Replicates source to target, the target must exist prior to replication. Use {@link
+ * #createTarget(Boolean)} to have it created automatically.
+ * </P>
+ * <P>Usage Example:</P>
  * <pre>
+ * {@code
  * Response response = db.replicator()
- * 	.source("source-db")
- * 	.target("target-db")
+ * 	.source("https://source.example/source-db")
+ * 	.target("https://target.example/target-db")
  * 	.continuous(true)
  * 	.createTarget(true)
  * 	.replicatorDB("replicator-db-name") // optional, defaults to _replicator
  * 	.replicatorDocId("doc-id")          // optional, defaults to UUID
- * 	.save(); // trigger replication
+ * 	.save(); // persist the document to the _replicator database
  *
+ * 	//the replication is controlled by the server and will start soon after the save
+ *
+ * //get a specific replicator document
  * ReplicatorDocument replicatorDoc = db.replicator()
  * 	.replicatorDocId("doc-id")
  * 	.replicatorDocRev("doc-rev") // optional
  * 	.find();
  *
- * {@code
+ * //get all the replicator documents
  * List<ReplicatorDocument> replicatorDocs = db.replicator().findAll();
- * }
  *
+ * //remove a replicator document to cancel replication
  * Response response = db.replicator()
  * 	.replicatorDocId("doc-id")
  * 	.replicatorDocRev("doc-rev")
  * 	.remove(); // cancels a replication
+ * 	}
  * </pre>
  *
  * @author Ahmed Yehia
- * @see CouchDatabaseBase#replicator()
- * @see Replication
  * @see ReplicatorDocument
+ * @see <a href="https://docs.cloudant.com/replication.html#the-/_replicator-database">
+ * Replication - _replicator
+ * </a>
+ *
  * @since 0.0.2
  */
 public class Replicator {

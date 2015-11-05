@@ -16,7 +16,7 @@ package com.cloudant.client.api.model;
 
 
 /**
- * Represents an in-line document attachment.
+ * Encapsulates an in-line document attachment.
  *
  * @see com.cloudant.client.api.model.Document#addAttachment(String, Attachment)
  */
@@ -46,43 +46,28 @@ public class Attachment {
         return attachement.getData();
     }
 
-    /**
-     * @return
-     */
     public String getContentType() {
         return attachement.getContentType();
     }
 
-    /**
-     * @return
-     */
     public int getRevpos() {
         return attachement.getRevpos();
     }
 
-    /**
-     * @return
-     */
     public String getDigest() {
         return attachement.getDigest();
     }
 
-    /**
-     * @return
-     */
     public long getLength() {
         return attachement.getLength();
     }
 
-    /**
-     * @return
-     */
     public boolean isStub() {
         return attachement.isStub();
     }
 
     /**
-     * @param contentType
+     * @param contentType the media type of the attachment
      */
     public void setContentType(String contentType) {
         attachement.setContentType(contentType);

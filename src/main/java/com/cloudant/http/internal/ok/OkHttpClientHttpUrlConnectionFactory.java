@@ -12,9 +12,9 @@
  * and limitations under the License.
  */
 
-package com.cloudant.http.ok;
+package com.cloudant.http.internal.ok;
 
-import com.cloudant.http.HttpConnection;
+import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.OkUrlFactory;
 
@@ -25,8 +25,7 @@ import java.net.URL;
 /**
  * Provides HttpUrlConnections by using an OkHttpClient.
  */
-public class OkHttpClientHttpUrlConnectionFactory extends HttpConnection
-        .DefaultHttpUrlConnectionFactory {
+public class OkHttpClientHttpUrlConnectionFactory extends DefaultHttpUrlConnectionFactory {
 
     private final OkHttpClient client;
     private final OkUrlFactory factory;

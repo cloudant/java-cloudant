@@ -35,7 +35,7 @@ public interface AllDocsRequest {
      * </pre>
      *
      * @return the response object
-     * @throws IOException
+     * @throws IOException if there is an error communicating with the server
      * @since 2.0.0
      */
     AllDocsResponse getResponse() throws IOException;

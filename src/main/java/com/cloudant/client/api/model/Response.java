@@ -51,14 +51,14 @@ public class Response {
     }
 
     /**
-     * @return
+     * @return error string returned by the server or {@code null}
      */
     public String getError() {
         return response.getError();
     }
 
     /**
-     * @return
+     * @return reason phrase returned by the server or {@code null}
      */
     public String getReason() {
         return response.getReason();

@@ -23,7 +23,7 @@ import com.google.gson.annotations.SerializedName;
 import java.util.Map;
 
 /**
- * Represents a design document.
+ * Encapsulates a design document.
  *
  * @author Ahmed Yehia
  * @see CouchDbDesign
@@ -222,7 +222,7 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
     }
 
     /**
-     * Holds Map Reduce functions in a view.
+     * Encapsulates a Map-Reduce function in a view.
      *
      * @author Ahmed Yehia
      */

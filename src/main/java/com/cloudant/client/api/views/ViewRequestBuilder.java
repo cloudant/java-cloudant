@@ -49,7 +49,7 @@ public class ViewRequestBuilder {
      *
      * @param client    the cloudant client
      * @param database  the database
-     * @param designDoc the design doc holding the view (optionally prefixed with "_design/")
+     * @param designDoc the design doc containing the view (optionally prefixed with "_design/")
      * @param viewName  the view to build a query request for
      */
     public ViewRequestBuilder(CloudantClient client, Database database, String designDoc, String

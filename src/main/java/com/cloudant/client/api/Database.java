@@ -38,7 +38,6 @@ import com.cloudant.client.internal.views.ViewQueryParameters;
 import com.cloudant.client.org.lightcouch.Changes;
 import com.cloudant.client.org.lightcouch.CouchDatabase;
 import com.cloudant.client.org.lightcouch.CouchDbException;
-import com.cloudant.client.org.lightcouch.CouchDbInfo;
 import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.client.org.lightcouch.Response;
@@ -108,11 +107,25 @@ public class Database {
      * </a> such as Cloudant DBaaS. For unsupported databases consider using the /db/_security
      * endpoint.
      * </p>
+     * <p>Example usage to set read-only access for a new key on the "example" database:</p>
+     * <pre>
+     * {@code
+     * // generate an API key
+     * ApiKey key = client.generateApiKey();
      *
-     * @param userNameorApikey
+     * // get the "example" database
+     * Database db = client.database("example", false);
+     *
+     * // set read-only permissions
+     * db.setPermissions(key.getKey(), EnumSet.<Permissions>of(Permissions._reader));
+     * }
+     * </pre>
+     *
+     * @param userNameorApikey the user or key to apply permissions to
      * @param permissions      permissions to grant
      * @throws UnsupportedOperationException if called on a database that does not provide the
      *                                       Cloudant authorization API
+     * @see CloudantClient#generateApiKey()
      * @see <a href="http://docs.cloudant.com/authorization.html#roles">Roles</a>
      * @see <a href="http://docs.cloudant.com/authorization.html#modifying-permissions">Modifying
      * permissions</a>
@@ -198,9 +211,10 @@ public class Database {
     }
 
     /**
-     * Get info about the shards in the database
+     * Get info about the shards in the database.
      *
      * @return List of shards
+     * @see <a href="https://docs.cloudant.com/advanced.html#get-/$db/_shards">_shards</a>
      */
     public List<Shard> getShards() {
         InputStream response = null;
@@ -215,10 +229,11 @@ public class Database {
     }
 
     /**
-     * Get info about the shard a document belongs to
+     * Get info about the shard a document belongs to.
      *
      * @param docId document ID
      * @return Shard info
+     * @see <a href="https://docs.cloudant.com/advanced.html#get-/$db/_shards">_shards</a>
      */
     public Shard getShard(String docId) {
         assertNotEmpty(docId, "docId");
@@ -227,6 +242,25 @@ public class Database {
 
     /**
      * Create a new index
+     * <P>
+     * Example usage creating an index that sorts ascending on name, then by year.
+     * </P>
+     * <pre>
+     * {@code
+     * db.createIndex("Person_name", "Person_name", null, new IndexField[]{
+     *       new IndexField("Person_name",SortOrder.asc),
+     *       new IndexField("Movie_year",SortOrder.asc)});
+     * }
+     * </pre>
+     * <P>
+     * Example usage creating an index that sorts ascending by year.
+     * </P>
+     * <pre>
+     * {@code
+     * db.createIndex("Movie_year", "Movie_year", null, new IndexField[]{
+     *      new IndexField("Movie_year",SortOrder.asc)});
+     * }
+     * </pre>
      *
      * @param indexName     optional name of the index (if not provided one will be generated)
      * @param designDocName optional name of the design doc in which the index will be created
@@ -240,9 +274,10 @@ public class Database {
     }
 
     /**
-     * create a new Index
+     * Create a new index from a JSON string
      *
-     * @param indexDefinition
+     * @param indexDefinition String representation of the index definition JSON
+     * @see #createIndex(String, String, String, IndexField[])
      * @see <a href="http://docs.cloudant.com/api/cloudant-query.html#creating-a-new-index">
      * index definition</a>
      */
@@ -267,10 +302,12 @@ public class Database {
     /**
      * Find documents using an index
      *
-     * @param selectorJson JSON object describing criteria used to select documents.
-     *                     Is of the form <code>"selector": {&lt;your data here&gt;} </code>
+     * @param selectorJson String representation of a JSON object describing criteria used to
+     *                     select documents. For example {@code "\"selector\": {<your data here>}"}.
      * @param classOfT     The class of Java objects to be returned
+     * @param <T>          the type of the Java object to be returned
      * @return List of classOfT objects
+     * @see #findByIndex(String, Class, FindByIndexOptions)
      * @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">
      * selector syntax</a>
      */
@@ -280,11 +317,27 @@ public class Database {
 
     /**
      * Find documents using an index
+     * <P>
+     * Example usage to return the name and year of movies starring
+     * Alec Guinness since 1960 with the results sorted by year descending:
+     * </P>
+     * <pre>
+     * {@code
+     * List <Movie> movies = db.findByIndex("\"selector\": {
+     * \"Movie_year\": {\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\"
+     * }",
+     * Movie.class,
+     * new FindByIndexOptions()
+     * .sort(new IndexField("Movie_year", SortOrder.desc))
+     * .fields("Movie_name").fields("Movie_year"));
+     * }
+     * </pre>
      *
-     * @param selectorJson JSON object describing criteria used to select documents.
-     *                     Is of the form <code>"selector": {&lt;your data here&gt;} </code>
+     * @param selectorJson String representation of a JSON object describing criteria used to
+     *                     select documents. For example {@code "\"selector\": {<your data here>}"}.
      * @param options      {@link FindByIndexOptions query Index options}
      * @param classOfT     The class of Java objects to be returned
+     * @param <T>          the type of the Java object to be returned
      * @return List of classOfT objects
      * @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">
      * selector syntax</a>
@@ -321,8 +374,14 @@ public class Database {
 
     /**
      * List all indices
+     * <P>Example usage:</P>
+     * <pre>
+     * {@code
+     * List <Index> indices = db.listIndices();
+     * }
+     * </pre>
      *
-     * @return List of Index
+     * @return List of Index objects
      */
     public List<Index> listIndices() {
         InputStream response = null;
@@ -360,15 +419,18 @@ public class Database {
     /**
      * Provides access to Cloudant <tt>Search</tt> APIs.
      *
-     * @see Search
+     * @param searchIndexId the name of the index to search
+     * @return Search object for searching the index
+     * @see <a href="https://docs.cloudant.com/search.html">Search</a>
      */
     public Search search(String searchIndexId) {
         return new Search(client, this, searchIndexId);
     }
 
     /**
-     * Provides access to CouchDB Design Documents.
-     *
+     * Get a manager that has convenience methods for managing design documents.
+     * 
+     * @return a {@link DesignDocumentManager} for this database
      * @see DesignDocumentManager
      */
     public DesignDocumentManager getDesignDocumentManager() {
@@ -380,6 +442,7 @@ public class Database {
      * @param viewName  the view name
      * @return a builder to build view requests for the specified design document and view of
      * this database
+     * @see <a href="https://docs.cloudant.com/creating_views.html#using-views">Using views</a>
      */
     public ViewRequestBuilder getViewRequestBuilder(String designDoc, String viewName) {
         return new ViewRequestBuilder(client, this, designDoc, viewName);
@@ -409,9 +472,15 @@ public class Database {
     }
 
     /**
-     * Provides access to <tt>Change Notifications</tt> API.
+     * Provides access for interacting with the changes feed.
+     * <P>
+     * See the {@link com.cloudant.client.api.Changes} API for examples.
+     * </P>
      *
-     * @see Changes
+     * @return a Changes object for using the changes feed
+     * @see com.cloudant.client.api.Changes
+     * @see <a href="https://docs.cloudant.com/database.html#get-changes">Databases - get
+     * changes</a>
      */
     public com.cloudant.client.api.Changes changes() {
         Changes couchDbChanges = db.changes();
@@ -421,27 +490,41 @@ public class Database {
     }
 
     /**
-     * Finds an Object of the specified type.
+     * Retrieve the document with the specified ID from the database and deserialize to an
+     * instance of the POJO of type T.
      *
-     * @param <T>       Object type.
-     * @param classType The class of type T.
-     * @param id        The document id.
-     * @return An object of type T.
-     * @throws NoDocumentException If the document is not found in the database.
+     * @param <T>       object type
+     * @param classType the class of type T
+     * @param id        the document id
+     * @return an object of type T
+     * @throws NoDocumentException if the document is not found in the database
+     * @see #find(Class, String, String)
+     * @see <a href="https://docs.cloudant.com/document.html#read">Documents - read</a>
      */
     public <T> T find(Class<T> classType, String id) {
         return db.find(classType, id);
     }
 
     /**
-     * Finds an Object of the specified type.
+     * Retrieve the document with the specified ID from the database and deserialize to an
+     * instance of the POJO of type T. Uses the additional parameters specified when making the
+     * {@code GET} request.
+     * <P>Example usage to get inline attachments:</P>
+     * <pre>
+     * {@code
+     * Foo foo = db.find(Foo.class, "exampleId", new Params().attachments());
+     * String attachmentData = foo.getAttachments().get("attachment.txt").getData();
+     * }
+     * </pre>
      *
-     * @param <T>       Object type.
-     * @param classType The class of type T.
-     * @param id        The document id.
-     * @param params    Extra parameters to append.
-     * @return An object of type T.
-     * @throws NoDocumentException If the document is not found in the database.
+     * @param <T>       object type
+     * @param classType the class of type T
+     * @param id        the document id
+     * @param params    extra parameters to append
+     * @return An object of type T
+     * @throws NoDocumentException if the document is not found in the database.
+     * @see Params
+     * @see <a href="https://docs.cloudant.com/document.html#read">Documents - read</a>
      */
     public <T> T find(Class<T> classType, String id, Params params) {
         assertNotEmpty(params, "params");
@@ -449,14 +532,22 @@ public class Database {
     }
 
     /**
-     * Finds an Object of the specified type.
+     * Retrieve the document with the specified ID at the specified revision from the database
+     * and deserialize to an instance of the POJO of type T.
+     * <P>Example usage:</P>
+     * <pre>
+     * {@code
+     *     Foo foo = db.find(Foo.class, "exampleId", "1-12345exampleRev");
+     * }
+     * </pre>
      *
-     * @param <T>       Object type.
-     * @param classType The class of type T.
-     * @param id        The document _id field.
-     * @param rev       The document _rev field.
-     * @return An object of type T.
-     * @throws NoDocumentException If the document is not found in the database.
+     * @param <T>       object type
+     * @param classType the class of type T
+     * @param id        the document _id field
+     * @param rev       the document _rev field
+     * @return an object of type T
+     * @throws NoDocumentException if the document is not found in the database.
+     * @see <a href="https://docs.cloudant.com/document.html#read">Documents - read</a>
      */
     public <T> T find(Class<T> classType, String id, String rev) {
         return db.find(classType, id, rev);
@@ -464,22 +555,32 @@ public class Database {
 
     /**
      * This method finds any document given a URI.
-     * <p>The URI must be URI-encoded.
+     * <p>The URI must be URI-encoded.</p>
+     * <P>
+     * Example usage retrieving the Foo POJO with document ID "exampleId" from the database
+     * "exampleDb" in the "example" Cloudant account.
+     * </P>
+     * <pre>
+     * {@code
+     * Foo foo = db.findAny(Foo.class, "https://example.cloudant.com/exampleDb/exampleId");
+     * }
+     * </pre>
      *
-     * @param classType The class of type T.
-     * @param uri       The URI as string.
-     * @return An object of type T.
+     * @param classType the class of type T
+     * @param uri       the URI as string
+     * @param <T>       the type of Java object to return
+     * @return an object of type T
      */
     public <T> T findAny(Class<T> classType, String uri) {
         return db.findAny(classType, uri);
     }
 
     /**
-     * Finds a document and return the result as {@link InputStream}.
-     * <p><b>Note</b>: The stream must be closed after use to release the connection.
+     * Finds the document with the specified document ID and returns it as an {@link InputStream}.
+     * <p><b>Note</b>: The stream must be closed after use to release the connection.</p>
      *
-     * @param id The document _id field.
-     * @return The result as {@link InputStream}
+     * @param id the document _id field
+     * @return the result as {@link InputStream}
      * @throws NoDocumentException If the document is not found in the database.
      * @see #find(String, String)
      */
@@ -488,34 +589,82 @@ public class Database {
     }
 
     /**
-     * Finds a document given id and revision and returns the result as {@link InputStream}.
-     * <p><b>Note</b>: The stream must be closed after use to release the connection.
+     * Finds the document with the specified document ID and revision and returns it as {@link
+     * InputStream}.
+     * <p><b>Note</b>: The stream must be closed after use to release the connection.</p>
+     * <P>Example usage:</P>
+     * <pre>
+     * {@code
+     * InputStream inputStream = null;
+     * try{
+     *     inputStream = db.find("exampleId", "1-12345exampleRev");
+     *     //do stuff with the stream
+     * } finally {
+     *     //close the input stream
+     *     inputStream.close();
+     * }
+     * }
+     * </pre>
      *
-     * @param id  The document _id field.
-     * @param rev The document _rev field.
-     * @return The result as {@link InputStream}
-     * @throws NoDocumentException If the document is not found in the database.
+     * @param id  the document _id field
+     * @param rev the document _rev field
+     * @return the result as {@link InputStream}
+     * @throws NoDocumentException if the document is not found in the database at the specified
+     *                             revision
+     * @see <a href="https://docs.cloudant.com/document.html#read">Documents - read</a>
      */
     public InputStream find(String id, String rev) {
         return db.find(id, rev);
     }
 
     /**
-     * Checks if a document exist in the database.
+     * Checks if a document exists in the database.
      *
-     * @param id The document _id field.
-     * @return true If the document is found, false otherwise.
+     * @param id the document _id field
+     * @return {@code true} if the document is found, {@code false} otherwise
      */
     public boolean contains(String id) {
         return db.contains(id);
     }
 
     /**
-     * Saves an object in the database, using HTTP <tt>PUT</tt> request.
-     * <p>If the object doesn't have an <code>_id</code> value, the code will assign a
-     * <code>UUID</code> as the document id.
+     * Saves a document in the database.
+     * <p>If the serialized object's JSON does not contain an {@code _id} field, then a UUID will
+     * be generated for the document ID.
+     * </p>
+     * <P>
+     * Example of inserting a JsonObject into the database:
+     * </P>
+     * <pre>
+     * {@code
+     * JsonObject json = new JsonObject();
+     * json.addProperty("_id", "test-doc-id-2");
+     * json.add("json-array", new JsonArray());
+     * Response response = db.save(json);
+     * }
+     * </pre>
+     * <P>
+     * Example of inserting a POJO into the database:
+     * </P>
+     * <pre>
+     * {@code
+     * Foo foo = new Foo();
+     * Response response = db.save(foo);
+     * }
+     * </pre>
+     * <P>
+     * Example of inserting a Map into the database:
+     * </P>
+     * <pre>
+     * {@code
+     * Map<String, Object> map = new HashMap<>();
+     * map.put("_id", "test-doc-id-1");
+     * map.put("title", "test-doc");
+     * Response response = db.save(map);
+     * }
+     * </pre>
      *
-     * @param object The object to save
+     * @param object the object to save
      * @return {@link Response}
      * @throws DocumentConflictException If a conflict is detected during the save.
      */
@@ -527,14 +676,16 @@ public class Database {
     }
 
     /**
-     * Saves an object in the database, using HTTP <tt>PUT</tt> request.
-     * <p>If the object doesn't have an <code>_id</code> value, the code will assign a
-     * <code>UUID</code> as the document id.
+     * Saves a document in the database similarly to {@link Database#save(Object)} but using a
+     * specific write quorum.
      *
-     * @param object      The object to save
-     * @param writeQuorum the write Quorum
+     * @param object      the object to save
+     * @param writeQuorum the write quorum
      * @return {@link Response}
      * @throws DocumentConflictException If a conflict is detected during the save.
+     * @see Database#save(Object)
+     * @see <a href="https://docs.cloudant.com/document.html#quorum---writing-and-reading-data">
+     * Documents - quorum</a>
      */
     public com.cloudant.client.api.model.Response save(Object object, int writeQuorum) {
         Response couchDbResponse = client.couchDbClient.put(getDBUri(), object, true, writeQuorum);
@@ -544,11 +695,22 @@ public class Database {
     }
 
     /**
-     * Saves an object in the database using HTTP <tt>POST</tt> request.
-     * <p>The database will be responsible for generating the document id.
+     * Creates a document in the database using a HTTP {@code POST} request.
+     * <p>If the serialized object's JSON does not contain an {@code _id} field, then the server
+     * will generate a document ID.</p>
+     * <P>
+     * Example of creating a document in the database for a POJO:
+     * </P>
+     * <pre>
+     * {@code
+     * Foo foo = new Foo();
+     * Response response = db.post(foo);
+     * }
+     * </pre>
      *
      * @param object The object to save
      * @return {@link Response}
+     * @see <a href="https://docs.cloudant.com/document.html#documentCreate">Documents - create</a>
      */
     public com.cloudant.client.api.model.Response post(Object object) {
         Response couchDbResponse = db.post(object);
@@ -558,13 +720,15 @@ public class Database {
     }
 
     /**
-     * Saves an object in the database using HTTP <tt>POST</tt> request with specificied write
-     * quorum
-     * <p>The database will be responsible for generating the document id.
+     * Creates a document in the database similarly to {@link Database#post(Object)} but using a
+     * specific write quorum.
      *
      * @param object      The object to save
      * @param writeQuorum the write Quorum
      * @return {@link Response}
+     * @see Database#post(Object)
+     * @see <a href="https://docs.cloudant.com/document.html#quorum---writing-and-reading-data">
+     * Documents - quorum</a>
      */
     public com.cloudant.client.api.model.Response post(Object object, int writeQuorum) {
         assertNotEmpty(object, "object");
@@ -593,12 +757,24 @@ public class Database {
     }
 
     /**
-     * Updates an object in the database, the object must have the correct <code>_id</code> and
-     * <code>_rev</code> values.
+     * Updates an object in the database, the object must have the correct {@code _id} and
+     * {@code _rev} values.
+     * <P>Example usage:</P>
+     * <pre>
+     * {@code
+     * //get a Bar object from the database
+     * Bar bar = db.find(Bar.class, "exampleId");
+     * //change something about bar
+     * bar.setSomeProperty(true);
+     * //now update the remote Bar
+     * Response responseUpdate = db.update(bar);
+     * }
+     * </pre>
      *
-     * @param object The object to update
+     * @param object the object to update
      * @return {@link Response}
-     * @throws DocumentConflictException If a conflict is detected during the update.
+     * @throws DocumentConflictException if a conflict is detected during the update.
+     * @see <a href="https://docs.cloudant.com/document.html#update">Documents - update</a>
      */
     public com.cloudant.client.api.model.Response update(Object object) {
         Response couchDbResponse = db.update(object);
@@ -608,13 +784,16 @@ public class Database {
     }
 
     /**
-     * Updates an object in the database, the object must have the correct <code>_id</code> and
-     * <code>_rev</code> values.
+     * Updates an object in the database similarly to {@link #update(Object)}, but specifying the
+     * write quorum.
      *
-     * @param object      The object to update
-     * @param writeQuorum the write Quorum
+     * @param object      the object to update
+     * @param writeQuorum the write quorum
      * @return {@link Response}
-     * @throws DocumentConflictException If a conflict is detected during the update.
+     * @throws DocumentConflictException if a conflict is detected during the update.
+     * @see Database#update(Object)
+     * @see <a href="https://docs.cloudant.com/document.html#quorum---writing-and-reading-data">
+     * Documents - quorum</a>
      */
     public com.cloudant.client.api.model.Response update(Object object, int writeQuorum) {
         Response couchDbResponse = client.couchDbClient.put(getDBUri(), object, false, writeQuorum);
@@ -625,11 +804,21 @@ public class Database {
 
     /**
      * Removes a document from the database.
-     * <p>The object must have the correct <code>_id</code> and <code>_rev</code> values.
+     * <p>The object must have the correct {@code _id} and {@code _rev} values.</p>
+     * <P>Example usage:</P>
+     * <pre>
+     * {@code
+     * //get a Bar object from the database
+     * Bar bar = db.find(Bar.class, "exampleId");
+     * //now remove the remote Bar
+     * Response response = db.remove(bar);
+     * }
+     * </pre>
      *
-     * @param object The document to remove as object.
+     * @param object the document to remove as an object
      * @return {@link Response}
      * @throws NoDocumentException If the document is not found in the database.
+     * @see <a href="https://docs.cloudant.com/document.html#delete">Documents - delete</a>
      */
     public com.cloudant.client.api.model.Response remove(Object object) {
         Response couchDbResponse = db.remove(object);
@@ -639,13 +828,20 @@ public class Database {
     }
 
     /**
-     * Removes a document from the database given both a document <code>_id</code> and
-     * <code>_rev</code> values.
+     * Removes the document from the database with the specified {@code _id} and {@code _rev}
+     * values.
+     * <P>Example usage:</P>
+     * <pre>
+     * {@code
+     * Response response = db.remove("exampleId", "1-12345exampleRev");
+     * }
+     * </pre>
      *
-     * @param id  The document _id field.
-     * @param rev The document _rev field.
+     * @param id  the document _id field
+     * @param rev the document _rev field
      * @return {@link Response}
      * @throws NoDocumentException If the document is not found in the database.
+     * @see <a href="https://docs.cloudant.com/document.html#delete">Documents - delete</a>
      */
     public com.cloudant.client.api.model.Response remove(String id, String rev) {
         Response couchDbResponse = db.remove(id, rev);
@@ -655,10 +851,25 @@ public class Database {
     }
 
     /**
-     * Performs a Bulk Documents insert request.
+     * Uses the {@code _bulk_docs} endpoint to insert multiple documents into the database in a
+     * single HTTP request.
+     * <P>Example usage:</P>
+     * <pre>
+     * {@code
+     * //create a list
+     * List<Object> newDocs = new ArrayList<Object>();
+     * //add some objects to the list
+     * newDocs.add(new Foo());
+     * newDocs.add(new JsonObject());
+     * //use the bulk insert
+     * List<Response> responses = db.bulk(newDocs);
+     * }
+     * </pre>
      *
-     * @param objects The {@link List} of objects.
-     * @return {@code List<Response>} Containing the resulted entries.
+     * @param objects the {@link List} of objects
+     * @return {@code List<Response>} one per object
+     * @see <a href="https://docs.cloudant.com/document.html#bulk-operations">
+     * Documents - bulk operations</a>
      */
     public List<com.cloudant.client.api.model.Response> bulk(List<?> objects) {
         List<Response> couchDbResponseList = db.bulk(objects, false);
@@ -673,13 +884,23 @@ public class Database {
     }
 
     /**
-     * Saves an attachment to a new document with a generated <tt>UUID</tt> as the document id.
-     * <p>To retrieve an attachment, see {@link #find(String)}.
+     * Creates an attachment from the specified InputStream and a new document with a generated
+     * document ID.
+     * <P>Example usage:</P>
+     * <pre>
+     * {@code
+     * byte[] bytesToDB = "binary data".getBytes();
+     * ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+     * Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain");
+     * }
+     * </pre>
+     * <p>To retrieve an attachment, see {@link #find(Class, String, Params)}</p>
      *
-     * @param in          The {@link InputStream} holding the binary data.
+     * @param in          The {@link InputStream} providing the binary data.
      * @param name        The attachment name.
      * @param contentType The attachment "Content-Type".
      * @return {@link Response}
+     * @see <a href="https://docs.cloudant.com/attachments.html">Attachments</a>
      */
     public com.cloudant.client.api.model.Response saveAttachment(InputStream in, String name,
                                                                  String contentType) {
@@ -690,11 +911,25 @@ public class Database {
     }
 
     /**
+     * Creates or updates an attachment on the given document ID and revision.
+     * <P>
+     * If {@code docId} and {@code docRev} are {@code null} a new document will be created.
+     * </P>
+     * <P>
+     * Example usage:
+     * </P>
+     * <pre>
+     * {@code
+     * byte[] bytesToDB = "binary data".getBytes();
+     * ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+     * Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain","exampleId","3-rev");
+     * }
+     * </pre>
      * Saves an attachment to an existing document given both a document id
      * and revision, or save to a new document given only the id, and rev as {@code null}.
-     * <p>To retrieve an attachment, see {@link #find(String)}.
+     * <p>To retrieve an attachment, see {@link #find(Class, String, Params)}</p>
      *
-     * @param in          The {@link InputStream} holding the binary data.
+     * @param in          The {@link InputStream} providing the binary data.
      * @param name        The attachment name.
      * @param contentType The attachment "Content-Type".
      * @param docId       The document id to save the attachment under, or {@code null} to save
@@ -702,7 +937,8 @@ public class Database {
      * @param docRev      The document revision to save the attachment under, or {@code null}
      *                    when saving to a new document.
      * @return {@link Response}
-     * @throws DocumentConflictException
+     * @throws DocumentConflictException if the attachment cannot be saved because of a conflict
+     * @see <a href="https://docs.cloudant.com/attachments.html">Attachments</a>
      */
     public com.cloudant.client.api.model.Response saveAttachment(InputStream in, String name,
                                                                  String contentType, String
@@ -734,6 +970,17 @@ public class Database {
 
     /**
      * Invokes an Update Handler.
+     * <P>Example usage:</P>
+     * <pre>
+     * {@code
+     * final String newValue = "foo bar";
+     * Params params = new Params()
+     *         .addParam("field", "title")
+     *         .addParam("value", newValue);
+     * String output = db.invokeUpdateHandler("example/example_update", "exampleId", params);
+     *
+     * }
+     * </pre>
      * <pre>
      * Params params = new Params()
      * 	.addParam("field", "foo")
@@ -745,6 +992,8 @@ public class Database {
      * @param docId            The document id to update.
      * @param params           The query parameters as {@link Params}.
      * @return The output of the request.
+     * @see <a href="https://docs.cloudant.com/design_documents.html#update-handlers">
+     * Design documents - update handlers</a>
      */
     public String invokeUpdateHandler(String updateHandlerUri, String docId,
                                       Params params) {
@@ -760,7 +1009,10 @@ public class Database {
     }
 
     /**
-     * @return {@link CouchDbInfo} Containing the DB info.
+     * Get information about this database.
+     *
+     * @return DbInfo encapsulating the database info
+     * @see <a href="https://docs.cloudant.com/database.html#read">Databases - read</a>
      */
     public DbInfo info() {
         return client.couchDbClient.get(buildUri(getDBUri()).build(), DbInfo.class);
@@ -768,6 +1020,11 @@ public class Database {
 
     /**
      * Requests the database commits any recent changes to disk.
+     *
+     * @see <a
+     * href="http://docs.couchdb.org/en/1.6.1/api/database/compact.html#db-ensure-full-commit">
+     * CouchDB _ensure_full_commit
+     * </a>
      */
     public void ensureFullCommit() {
         db.ensureFullCommit();
@@ -816,11 +1073,6 @@ public class Database {
         return json + "] }}";
     }
 
-    /**
-     * @param selectorJson
-     * @param options
-     * @return
-     */
     private String getFindByIndexBody(String selectorJson,
                                       FindByIndexOptions options) {
 

@@ -52,7 +52,8 @@ public class Replication {
     }
 
     /**
-     * Triggers a replication request.
+     * Triggers a replication request, blocks while the replication is in progress.
+     * @return ReplicationResult encapsulating the result
      */
     public com.cloudant.client.api.model.ReplicationResult trigger() {
         ReplicationResult couchDbReplicationResult = replication.trigger();
@@ -61,93 +62,57 @@ public class Replication {
         return replicationResult;
     }
 
-    /**
-     * @param source
-     * @return
-     */
     public Replication source(String source) {
         this.replication = replication.source(source);
         return this;
     }
 
-    /**
-     * @param target
-     * @return
-     */
     public Replication target(String target) {
         this.replication = replication.target(target);
         return this;
     }
 
-    /**
-     * @param continuous
-     * @return
-     */
     public Replication continuous(Boolean continuous) {
         this.replication = replication.continuous(continuous);
         return this;
     }
 
-    /**
-     * @param filter
-     * @return
-     */
     public Replication filter(String filter) {
         this.replication = replication.filter(filter);
         return this;
     }
 
-    /**
-     * @param queryParams
-     * @return
-     */
     public Replication queryParams(String queryParams) {
         this.replication = replication.queryParams(queryParams);
         return this;
     }
 
-    /**
-     * @param queryParams
-     * @return
-     */
-    public Replication queryParams(
-            Map<String, Object> queryParams) {
+    public Replication queryParams(Map<String, Object> queryParams) {
         this.replication = replication.queryParams(queryParams);
         return this;
     }
 
     /**
-     * @param docIds
-     * @return
-     * @see com.cloudant.client.org.lightcouch.Replication#docIds(java.lang.String[])
+     * Limit the replication to the specified document IDs.
+     *
+     * @param docIds one or more document IDs to include in the replication
+     * @return this to set more options or trigger the replication
      */
     public Replication docIds(String... docIds) {
         this.replication = replication.docIds(docIds);
         return this;
     }
 
-    /**
-     * @param proxy
-     * @return
-     */
     public Replication proxy(String proxy) {
         this.replication = replication.proxy(proxy);
         return this;
     }
 
-    /**
-     * @param cancel
-     * @return
-     */
     public Replication cancel(Boolean cancel) {
         this.replication = replication.cancel(cancel);
         return this;
     }
 
-    /**
-     * @param createTarget
-     * @return
-     */
     public Replication createTarget(Boolean createTarget) {
         this.replication = replication.createTarget(createTarget);
         return this;
@@ -156,6 +121,9 @@ public class Replication {
 
     /**
      * Starts a replication since an update sequence.
+     *
+     * @param sinceSeq sequence number
+     * @return this to set more options or trigger the replication
      */
     public Replication sinceSeq(Integer sinceSeq) {
         this.replication = replication.sinceSeq(sinceSeq);
@@ -163,11 +131,13 @@ public class Replication {
     }
 
     /**
-     * @param consumerSecret
-     * @param consumerKey
-     * @param tokenSecret
-     * @param token
-     * @return
+     * Set OAuth 1 authentication credentials for the replication target
+     *
+     * @param consumerSecret client secret
+     * @param consumerKey client identifier
+     * @param tokenSecret OAuth server token secret
+     * @param token OAuth server issued token
+     * @return this to set more options or trigger the replication
      */
     public Replication targetOauth(String consumerSecret,
                                    String consumerKey, String tokenSecret, String token) {

@@ -19,7 +19,6 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotE
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
 import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
-import com.cloudant.client.org.lightcouch.ReplicationResult.ReplicationHistory;
 import com.google.gson.JsonObject;
 
 import java.io.InputStream;
@@ -32,26 +31,38 @@ import java.util.logging.Logger;
 
 /**
  * This class provides access to the database replication API; a replication request
- * is sent via HTTP POST to <code>_replicate</code> URI.
- * <p/>
- * <h3>Usage Example:</h3>
+ * is sent via HTTP {@code POST} to the {@code _replicate} endpoint.
+ * <P>
+ * Replicates source to target, the target must exist prior to replication. Use {@link
+ * #createTarget(Boolean)} to have it created automatically.
+ * </P>
+ * <p>Usage Example:</p>
  * <pre>
+ * {@code
  * ReplicationResult replication = db.replication()
- * 	.source("source-db")
- * 	.target("target-db")
+ * 	.source("https://source.example/source-db")
+ * 	.target("https://target.example/target-db")
  * 	.createTarget(true)
  * 	.filter("example/filter1")
  * 	.trigger();
  *
- * {@code
+ * if (replication.isOk()) {
+ *     //good
+ * } else {
+ *     //error handling
+ * }
+ *
+ * //get replication history
  * List<ReplicationHistory> histories = replication.getHistories();
  * }
  * </pre>
  *
  * @author Ahmed Yehia
  * @see ReplicationResult
- * @see ReplicationHistory
- * @see Replicator
+ * @see com.cloudant.client.api.model.ReplicationResult.ReplicationHistory
+ * @see <a href="https://docs.cloudant.com/replication.html#the-/_replicate-endpoint">
+ * Replication - _replicate
+ * </a>
  * @since 0.0.2
  */
 public class Replication {

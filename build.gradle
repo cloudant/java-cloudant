@@ -133,16 +133,19 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 
 javadoc {
     options.setMemberLevel JavadocMemberLevel.PUBLIC
+    options.overview = "overview.html"
     exclude("**/com/cloudant/tests/**",
             "**/com/cloudant/test/**",
             "**/resources/**",
             "**/internal/**",
-            "**/lightcouch/**")
+            "**/lightcouch/**",
+            "**internal/**",
+            "**/http/interceptors/**")
     include("**/lightcouch/PreconditionFailedException.java",
             "**/lightcouch/DocumentConflictException.java",
             "**/lightcouch/NoDocumentException.java",
             "**/lightcouch/CouchDbException.java",
-            "**/client/**")
+            "**")
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {

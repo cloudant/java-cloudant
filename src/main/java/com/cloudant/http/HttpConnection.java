@@ -11,6 +11,8 @@
 package com.cloudant.http;
 
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
+import com.cloudant.http.internal.AgentHelper;
+import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 
 import org.apache.commons.io.IOUtils;
 
@@ -20,8 +22,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -340,9 +340,9 @@ public class HttpConnection  {
         /**
          * Called by HttpConnection to open URLs, can be implemented to provide customization.
          *
-         * @param url
+         * @param url the address of the URL to open
          * @return HttpURLConnection for the specified URL
-         * @throws IOException
+         * @throws IOException if there is an issue communicating with the server
          */
         HttpURLConnection openConnection(URL url) throws IOException;
 
@@ -355,28 +355,4 @@ public class HttpConnection  {
         void setProxy(URL proxyUrl);
     }
 
-    public static class DefaultHttpUrlConnectionFactory implements HttpUrlConnectionFactory {
-
-        protected Proxy proxy = null;
-
-        @Override
-        public HttpURLConnection openConnection(URL url) throws IOException {
-            if (proxy != null) {
-                return (HttpURLConnection) url.openConnection(proxy);
-            } else {
-                return (HttpURLConnection) url.openConnection();
-            }
-        }
-
-        @Override
-        public void setProxy(URL proxyUrl) {
-            if ("http".equals(proxyUrl.getProtocol()) || "https".equals(proxyUrl.getProtocol
-                    ())) {
-                proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyUrl.getHost(),
-                        proxyUrl.getPort()));
-            } else {
-                throw new IllegalArgumentException("Only HTTP type proxies are supported");
-            }
-        }
-    }
 }

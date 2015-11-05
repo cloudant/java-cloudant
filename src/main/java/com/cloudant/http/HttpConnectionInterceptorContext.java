@@ -16,6 +16,12 @@ package com.cloudant.http;
 /**
  * Created by tomblench on 30/03/15.
  */
+
+/**
+ * Provides the context for a {@link HttpConnectionInterceptor}.
+ *
+ * @since 2.0.0
+ */
 public class HttpConnectionInterceptorContext {
 
     public boolean replayRequest;

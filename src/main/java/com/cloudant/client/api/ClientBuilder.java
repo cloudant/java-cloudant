@@ -291,7 +291,7 @@ public class ClientBuilder {
     }
 
     /**
-     * Set a custom GsonBuilder to use when serializing and de-serializing requests and
+     * Set a custom GsonBuilder to use when serializing and de-serializing JSON in requests and
      * responses between the CloudantClient and the server.
      * <P>
      * Note: the supplied GsonBuilder will be augmented with some internal TypeAdapters.
@@ -407,8 +407,9 @@ public class ClientBuilder {
      * CloudantClient and the server.
      * <P>
      * An example interceptor use might be to apply a custom authorization mechanism. For
-     * instance to use BasicAuth instead of CookieAuth it is possible to add a
-     * {@link com.cloudant.http.interceptors.BasicAuthInterceptor}:
+     * instance to use BasicAuth instead of CookieAuth it is possible to use a
+     * {@link com.cloudant.http.interceptors.BasicAuthInterceptor} that adds the BasicAuth
+     * {@code Authorization} header to the request:
      * </P>
      * <pre>
      * {@code
@@ -491,7 +492,7 @@ public class ClientBuilder {
     }
 
     /**
-     * Class that holds the value of a timeout, bound by the range 0 to {@link Integer#MAX_VALUE}
+     * Class that encapsulates the value of a timeout, bound by the range 0 to {@link Integer#MAX_VALUE}
      * milliseconds. If the specified timeout exceeds the range maximum it will be set to the
      * maximum value and likewise if the value is less than 0 then it will be set at 0.
      * <P>

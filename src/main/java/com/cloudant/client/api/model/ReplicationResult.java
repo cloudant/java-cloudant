@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Holds the result of a replication request, along with previous sessions history.
+ * Encapsulates the result of a replication request, along with previous session's history.
  *
  * @author Ganesh K Choudhary
  * @see Replication
@@ -38,35 +38,35 @@ public class ReplicationResult {
     }
 
     /**
-     * @return
+     * @return true if the replication completed successfully
      */
     public boolean isOk() {
         return replicationResult.isOk();
     }
 
     /**
-     * @return
+     * @return the session ID
      */
     public String getSessionId() {
         return replicationResult.getSessionId();
     }
 
     /**
-     * @return
+     * @return the last sequence number of the replication source
      */
     public String getSourceLastSeq() {
         return replicationResult.getSourceLastSeq();
     }
 
     /**
-     * @return
+     * @return the local ID
      */
     public String getLocalId() {
         return replicationResult.getLocalId();
     }
 
     /**
-     * @return
+     * @return list of previous replication results
      */
     public List<ReplicationHistory> getHistories() {
         List<com.cloudant.client.org.lightcouch.ReplicationResult.ReplicationHistory> couchDbreplicationHistories =
@@ -84,7 +84,7 @@ public class ReplicationResult {
 
 
     /**
-     * Represents a replication session history.
+     * Encapsulates the history of a replication session.
      *
      * @author Ganesh K Choudhary
      */
@@ -100,79 +100,46 @@ public class ReplicationResult {
             this.replicationHistory = replicationHistory;
         }
 
-        /**
-         * @return
-         */
         public String getSessionId() {
             return replicationHistory.getSessionId();
         }
 
-        /**
-         * @return
-         */
         public String getStartTime() {
             return replicationHistory.getStartTime();
         }
 
-        /**
-         * @return
-         */
         public String getEndTime() {
             return replicationHistory.getEndTime();
         }
 
-        /**
-         * @return
-         */
         public String getStartLastSeq() {
             return replicationHistory.getStartLastSeq();
         }
 
-        /**
-         * @return
-         */
         public String getEndLastSeq() {
             return replicationHistory.getEndLastSeq();
         }
 
-        /**
-         * @return
-         */
         public String getRecordedSeq() {
             return replicationHistory.getRecordedSeq();
         }
 
-        /**
-         * @return
-         */
         public long getMissingChecked() {
             return replicationHistory.getMissingChecked();
         }
 
-        /**
-         * @return
-         */
         public long getMissingFound() {
             return replicationHistory.getMissingFound();
         }
 
-        /**
-         * @return
-         */
         public long getDocsRead() {
             return replicationHistory.getDocsRead();
         }
 
-        /**
-         * @return
-         */
         public long getDocsWritten() {
             return replicationHistory.getDocsWritten();
         }
 
-        /**
-         * @return
-         */
         public long getDocWriteFailures() {
             return replicationHistory.getDocWriteFailures();
         }

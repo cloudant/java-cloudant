@@ -215,22 +215,6 @@ public abstract class CouchDatabaseBase {
     }
 
     /**
-     * Saves a document with <tt>batch=ok</tt> query param.
-     *
-     * @param object The object to save.
-     */
-    public void batch(Object object) {
-        assertNotEmpty(object, "object");
-        InputStream response = null;
-        try {
-            URI uri = buildUri(getDBUri()).query("batch", "ok").build();
-            response = couchDbClient.post(uri, getGson().toJson(object));
-        } finally {
-            close(response);
-        }
-    }
-
-    /**
      * Updates an object in the database, the object must have the correct <code>_id</code> and
      * <code>_rev</code> values.
      *
