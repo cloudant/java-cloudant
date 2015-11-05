@@ -748,15 +748,6 @@ public class Database {
     }
 
     /**
-     * Saves a document with <tt>batch=ok</tt> query param.
-     *
-     * @param object The object to save.
-     */
-    public void batch(Object object) {
-        db.batch(object);
-    }
-
-    /**
      * Updates an object in the database, the object must have the correct {@code _id} and
      * {@code _rev} values.
      * <P>Example usage:</P>
@@ -947,25 +938,6 @@ public class Database {
         com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model
                 .Response(couchDbResponse);
         return response;
-    }
-
-    /**
-     * Invokes an Update Handler.
-     * <code>String query = "field=foo&amp;value=bar";</code>
-     * <code>String output = dbClient.invokeUpdateHandler("designDoc/update1", "docId", query);
-     * </code>
-     *
-     * @param updateHandlerUri The Update Handler URI, in the format: <code>designDoc/update1</code>
-     * @param docId            The document id to update.
-     * @param query            The query string parameters, e.g,
-     *                         <code>field=field1&amp;value=value1</code>
-     * @return The output of the request.
-     * @deprecated use {@link #invokeUpdateHandler(String, String, Params)} instead.
-     */
-    @Deprecated
-    public String invokeUpdateHandler(String updateHandlerUri, String docId,
-                                      String query) {
-        return db.invokeUpdateHandler(updateHandlerUri, docId, query);
     }
 
     /**

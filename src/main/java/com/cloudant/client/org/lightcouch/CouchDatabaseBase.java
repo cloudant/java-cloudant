@@ -328,31 +328,6 @@ public abstract class CouchDatabaseBase {
     /**
      * Invokes an Update Handler.
      * <pre>
-     * String query = "field=foo&value=bar";
-     * String output = dbClient.invokeUpdateHandler("designDoc/update1", "docId", query);
-     * </pre>
-     *
-     * @param updateHandlerUri The Update Handler URI, in the format: <code>designDoc/update1</code>
-     * @param docId            The document id to update.
-     * @param query            The query string parameters, e.g,
-     *                         <code>field=field1&value=value1</code>
-     * @return The output of the request.
-     * @deprecated Use {@link #invokeUpdateHandler(String, String, Params)} instead.
-     */
-    @Deprecated
-    public String invokeUpdateHandler(String updateHandlerUri, String docId, String query) {
-        assertNotEmpty(updateHandlerUri, "uri");
-        assertNotEmpty(docId, "docId");
-        final String[] v = updateHandlerUri.split("/");
-        final String path = String.format("_design/%s/_update/%s/", v[0], v[1]);
-        final URI uri = buildUri(getDBUri()).path(path).path(docId).query(query).build();
-        final InputStream response = couchDbClient.put(uri);
-        return streamToString(response);
-    }
-
-    /**
-     * Invokes an Update Handler.
-     * <pre>
      * Params params = new Params()
      * 	.addParam("field", "foo")
      * 	.addParam("value", "bar");

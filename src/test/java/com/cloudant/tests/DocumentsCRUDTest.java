@@ -194,11 +194,6 @@ public class DocumentsCRUDTest {
         db.save(new Foo(id));
     }
 
-    @Test
-    public void batch() {
-        db.batch(new Foo());
-    }
-
     // Update
 
     @Test
