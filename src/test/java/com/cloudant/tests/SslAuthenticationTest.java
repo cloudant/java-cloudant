@@ -18,7 +18,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.model.ConnectOptions;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.tests.util.CloudantClientResource;
@@ -33,6 +32,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLSocketFactory;
 
 public class SslAuthenticationTest {
 
@@ -77,11 +77,10 @@ public class SslAuthenticationTest {
 
         server.await();
 
-        ConnectOptions connectionOptions = new ConnectOptions();
-        connectionOptions.setSSLAuthenticationDisabled(true);
+        dbClient = CloudantClientHelper.newSimpleHttpServerClient(server)
+                .disableSSLAuthentication()
+                .build();
 
-        dbClient = new CloudantClient(server.getUrl(),
-                connectionOptions);
 
         // Make an arbitrary connection to the DB.
         dbClient.getAllDbs();
@@ -98,13 +97,10 @@ public class SslAuthenticationTest {
 
         server.await();
 
-        ConnectOptions connectionOptions = new ConnectOptions();
-        connectionOptions.setSSLAuthenticationDisabled(false);
-
         CouchDbException thrownException = null;
         try {
-            dbClient = new CloudantClient(server.getUrl(),
-                    connectionOptions);
+            dbClient = CloudantClientHelper.newSimpleHttpServerClient(server)
+                    .build();
 
             // Make an arbitrary connection to the DB.
             dbClient.getAllDbs();
@@ -125,7 +121,8 @@ public class SslAuthenticationTest {
 
         CouchDbException thrownException = null;
         try {
-            dbClient = new CloudantClient(server.getUrl());
+            dbClient = CloudantClientHelper.newSimpleHttpServerClient(server)
+                    .build();
 
             // Make an arbitrary connection to the DB.
             dbClient.getAllDbs();
@@ -143,13 +140,10 @@ public class SslAuthenticationTest {
     @Test
     @Category(RequiresCloudantService.class)
     public void remoteSslAuthenticationEnabledTest() {
-        ConnectOptions connectionOptions = new ConnectOptions();
-        connectionOptions.setSSLAuthenticationDisabled(false);
 
-        dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI,
-                CloudantClientHelper.COUCH_USERNAME,
-                CloudantClientHelper.COUCH_PASSWORD,
-                connectionOptions);
+        dbClient = CloudantClientHelper.getClientBuilder()
+                .disableSSLAuthentication()
+                .build();
 
         // Make an arbitrary connection to the DB.
         dbClient.getAllDbs();
@@ -163,18 +157,42 @@ public class SslAuthenticationTest {
     @Test
     @Category(RequiresCloudantService.class)
     public void remoteSslAuthenticationDisabledTest() {
-        ConnectOptions connectionOptions = new ConnectOptions();
-        connectionOptions.setSSLAuthenticationDisabled(true);
 
-        dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI,
-                CloudantClientHelper.COUCH_USERNAME,
-                CloudantClientHelper.COUCH_PASSWORD,
-                connectionOptions);
+        dbClient = CloudantClientHelper.getClientBuilder()
+                .disableSSLAuthentication()
+                .build();
 
         // Make an arbitrary connection to the DB.
         dbClient.getAllDbs();
 
         // Test is successful if no exception is thrown, so no explicit check is needed.
+    }
+
+    /**
+     * Assert that building a client with a custom SSL factory first, then setting the
+     * SSL Authentication disabled will throw an IllegalStateException.
+     */
+    @Test(expected = IllegalStateException.class)
+    public void testCustomSSLFactorySSLAuthDisabled() {
+
+        dbClient = CloudantClientHelper.getClientBuilder()
+                .customSSLSocketFactory((SSLSocketFactory) SSLSocketFactory.getDefault())
+                .disableSSLAuthentication()
+                .build();
+    }
+
+    /**
+     * Assert that building a client with SSL Authentication disabled first, then setting
+     * a custom SSL factory will throw an IllegalStateException.
+     */
+    @Test(expected = IllegalStateException.class)
+    public void testSSLAuthDisabledWithCustomSSLFactory() {
+
+        dbClient = CloudantClientHelper.getClientBuilder()
+                .disableSSLAuthentication()
+                .customSSLSocketFactory((SSLSocketFactory) SSLSocketFactory.getDefault())
+                .build();
+
     }
 
 }

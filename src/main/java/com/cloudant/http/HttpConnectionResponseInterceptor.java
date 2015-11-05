@@ -27,7 +27,7 @@ package com.cloudant.http;
 
  Interceptors are executed in a pipeline and modify the context in a serial fashion.
  */
-public interface HttpConnectionResponseInterceptor {
+public interface HttpConnectionResponseInterceptor extends HttpConnectionInterceptor {
 
     /**
      * Intercept the response

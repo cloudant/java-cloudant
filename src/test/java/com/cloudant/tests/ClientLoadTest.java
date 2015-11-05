@@ -16,7 +16,6 @@ package com.cloudant.tests;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
-import com.cloudant.client.api.model.ConnectOptions;
 import com.cloudant.tests.util.TestLog;
 import com.cloudant.tests.util.Utils;
 
@@ -53,12 +52,10 @@ public class ClientLoadTest {
     public void setUp() {
         props = Utils.getProperties("cloudant.properties", log);
 
-        ConnectOptions connectionoptions = new ConnectOptions();
-        connectionoptions.setMaxConnections(MAX_CONNECTIONS);
+        dbClient = CloudantClientHelper.getClientBuilder()
+                .maxConnections(MAX_CONNECTIONS)
+                .build();
 
-        dbClient = new CloudantClient(CloudantClientHelper.SERVER_URI,
-                CloudantClientHelper.COUCH_USERNAME,
-                CloudantClientHelper.COUCH_PASSWORD, connectionoptions);
         db = dbClient.database("lightcouch-db-load", true);
     }
 

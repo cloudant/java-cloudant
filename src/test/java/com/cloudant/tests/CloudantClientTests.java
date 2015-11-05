@@ -16,19 +16,19 @@ package com.cloudant.tests;
 
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost;
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ApiKey;
-import com.cloudant.client.api.model.ConnectOptions;
 import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.http.AgentHelper;
-import com.cloudant.http.interceptors.TimeoutCustomizationInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresDB;
@@ -43,8 +43,10 @@ import org.junit.experimental.categories.Category;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.net.URL;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -121,7 +123,7 @@ public class CloudantClientTests {
             server.await();
 
             //instantiating the client performs a single post request
-            CloudantClient client = new CloudantClient(server.getUrl(), null, (String) null);
+            CloudantClient client = CloudantClientHelper.newSimpleHttpServerClient(server).build();
             client.executeRequest(createPost(client.getBaseUri(), null, "application/json"));
             //assert that the request had the expected header
             boolean foundUserAgentHeaderOnRequest = false;
@@ -178,11 +180,16 @@ public class CloudantClientTests {
     }
 
     @Test
-    public void testDefaultPorts() {
-        CloudantClient c = new CloudantClient("http://192.0.2.0", null, (String) null);
+    public void testDefaultPorts() throws Exception{
+        CloudantClient c = null;
+
+        c = CloudantClientHelper.newTestAddressClient().build();
+
         assertEquals("The http port should be 80", 80, c.getBaseUri().getPort());
 
-        c = new CloudantClient("https://192.0.2.0", null, (String) null);
+
+        c = CloudantClientHelper.newHttpsTestAddressClient().build();
+
         assertEquals("The http port should be 443", 443, c.getBaseUri().getPort());
     }
 
@@ -214,9 +221,10 @@ public class CloudantClientTests {
 
         //now try to connect, but should timeout because there is no connection available
         try {
-            CloudantClient c = new CloudantClient(server.getUrl(), null, (String) null, new
-                    ConnectOptions().setConnectionTimeout(new TimeoutCustomizationInterceptor
-                    .TimeoutOption(100, TimeUnit.MILLISECONDS)));
+            CloudantClient c = CloudantClientHelper.newSimpleHttpServerClient(server)
+                    .connectionTimeout(new ClientBuilder.TimeoutOption(100,
+                            TimeUnit.MILLISECONDS))
+                    .build();
 
             c.createDB("test");
         } catch (CouchDbException e) {
@@ -261,9 +269,11 @@ public class CloudantClientTests {
             server.await();
 
             try {
-                CloudantClient c = new CloudantClient(server.getUrl(), null, (String) null, new
-                        ConnectOptions().setReadTimeout(new TimeoutCustomizationInterceptor
-                        .TimeoutOption(READ_TIMEOUT, TimeUnit.MILLISECONDS)));
+                CloudantClient c = CloudantClientHelper.newSimpleHttpServerClient(server)
+                        .readTimeout(new ClientBuilder.TimeoutOption(READ_TIMEOUT,
+                                TimeUnit.MILLISECONDS))
+                        .build();
+
                 //do a call that expects a response
                 c.getAllDbs();
             } catch (CouchDbException e) {
@@ -284,8 +294,11 @@ public class CloudantClientTests {
      * supplied.
      */
     @Test(expected = CouchDbException.class)
-    public void nullUser() {
-        new CloudantClient("http://192.0.2.0", null, ":0-myPassword");
+    public void nullUser() throws Exception {
+        CloudantClientHelper.newTestAddressClient()
+                .password(":0-myPassword")
+                .build();
+
     }
 
     /**
@@ -293,7 +306,37 @@ public class CloudantClientTests {
      * null.
      */
     @Test(expected = CouchDbException.class)
-    public void nullPassword() {
-        new CloudantClient("http://192.0.2.0", "user", null);
+    public void nullPassword() throws Exception{
+        CloudantClientHelper.newTestAddressClient()
+                .username("user")
+                .build();
+    }
+
+    /**
+     * Test that user info provided in a url is correctly removed and made into user name and
+     * password fields.
+     */
+    @Test
+    public void testUserInfoInUrl() throws Exception {
+        ClientBuilder b = ClientBuilder.url(new URL("https://user:password@192.0.2.0"));
+
+        //reflectively check (not nice, but better than having a bug)
+        Field user = b.getClass().getDeclaredField("username");
+        user.setAccessible(true);
+        assertEquals("The username should match the one provided in the URL", "user", user.get(b));
+        Field pass = b.getClass().getDeclaredField("password");
+        pass.setAccessible(true);
+        assertEquals("The password should match the one provided in the URL", "password", pass
+                .get(b));
+
+        CloudantClient c = b.build();
+
+        assertFalse("The URL should not contain the username", c.getBaseUri().toString().contains
+                ("user"));
+        assertFalse("The URL should not contain the password", c.getBaseUri().toString().contains
+                ("password"));
+
+        //ensure that building a URL from it does not throw any exceptions
+        new URL(c.getBaseUri().toString());
     }
 }

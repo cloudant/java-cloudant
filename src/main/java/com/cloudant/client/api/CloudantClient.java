@@ -14,21 +14,15 @@
 
 package com.cloudant.client.api;
 
-import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponseList;
 import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
 import com.cloudant.client.api.model.ApiKey;
-import com.cloudant.client.api.model.ConnectOptions;
-import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.Membership;
-import com.cloudant.client.api.model.Permissions;
-import com.cloudant.client.api.model.Shard;
 import com.cloudant.client.api.model.Task;
-import com.cloudant.client.api.views.Key;
 import com.cloudant.client.org.lightcouch.Changes;
 import com.cloudant.client.org.lightcouch.CouchDbClient;
 import com.cloudant.client.org.lightcouch.CouchDbDesign;
@@ -37,24 +31,15 @@ import com.cloudant.client.org.lightcouch.CouchDbProperties;
 import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.Replicator;
 import com.cloudant.client.org.lightcouch.Response;
-import com.cloudant.http.interceptors.CookieInterceptor;
 import com.cloudant.http.HttpConnection;
-import com.cloudant.http.interceptors.ProxyAuthInterceptor;
-import com.cloudant.http.interceptors.SSLCustomizerInterceptor;
-import com.cloudant.http.interceptors.TimeoutCustomizationInterceptor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Exposes the Cloudant client API
@@ -141,85 +126,13 @@ public class CloudantClient {
      * Constructs a new instance of this class and connects to the cloudant server with the
      * specified credentials
      *
-     * @param account       For cloudant.com, the cloudant account to connect to. For Cloudant
-     *                      local, the server URL
-     * @param loginUsername The apiKey (if using an APIKey, else pass in the account for this
-     *                      parameter also)
-     * @param password      The Password credential
+     * @param props     Properties file with account path, credentials, and connection options
      */
-    public CloudantClient(String account, String loginUsername, String password) {
-        super();
-        Map<String, String> h = parseAccount(account);
+    CloudantClient(CouchDbProperties props, GsonBuilder gsonBuilder) {
+        this.couchDbClient = new CouchDbClient(props);
 
-        doInit(h.get("scheme"),
-                h.get("hostname"),
-                new Integer(h.get("port")).intValue(),
-                loginUsername,
-                password,
-                null //connectoptions
-        );
-    }
-
-    /**
-     * Constructs a new instance of this class and connects to the cloudant account with the
-     * specified credentials
-     *
-     * @param account        For cloudant.com, the cloudant account to connect to. For Cloudant
-     *                       local, the server URL
-     * @param loginUsername  The apiKey (if using an APIKey, else pass in the account for this
-     *                       parameter also)
-     * @param password       The Password credential
-     * @param connectOptions optional properties to connect e.g connectionTime,socketTimeout,etc
-     */
-    public CloudantClient(String account, String loginUsername, String password, ConnectOptions
-            connectOptions) {
-        super();
-        Map<String, String> h = parseAccount(account);
-
-        doInit(h.get("scheme"),
-                h.get("hostname"),
-                new Integer(h.get("port")).intValue(),
-                loginUsername,
-                password,
-                connectOptions
-        );
-    }
-
-    /**
-     * Constructs a new instance of this class and connects to the cloudant account with the
-     * specified credentials
-     *
-     * @param account For cloudant.com, the cloudant account to connect to. For Cloudant
-     *                local, the server URL
-     */
-    public CloudantClient(String account) {
-        super();
-        Map<String, String> h = parseAccount(account);
-
-        doInit(h.get("scheme"),
-                h.get("hostname"),
-                new Integer(h.get("port")).intValue(),
-                null, null, null
-        );
-    }
-
-    /**
-     * Constructs a new instance of this class and connects to the cloudant account with the
-     * specified credentials
-     *
-     * @param account        For cloudant.com, the cloudant account to connect to. For Cloudant
-     *                       local, the server URL
-     * @param account        The cloudant account to connect to
-     * @param connectOptions optional properties to connect e.g connectionTime,socketTimeout,etc
-     */
-    public CloudantClient(String account, ConnectOptions connectOptions) {
-        super();
-        Map<String, String> h = parseAccount(account);
-
-        doInit(h.get("scheme"),
-                h.get("hostname"),
-                new Integer(h.get("port")).intValue(),
-                null, null, connectOptions);
+        // set the gsonbuilder that includes additional cloudant deserializers
+        couchDbClient.setGsonBuilder(gsonBuilder);
     }
 
     /**
@@ -396,28 +309,6 @@ public class CloudantClient {
         return couchDbClient.uuids(count);
     }
 
-
-    /**
-     * Sets a {@link GsonBuilder} to create {@link Gson} instance.
-     * <p>Useful for registering custom serializers/deserializers, such as Datetime formats.
-     *
-     * @deprecated this setter will be removed and customizing the GsonBuilder will be a
-     * CloudantClient initialization option in future
-     */
-    public void setGsonBuilder(GsonBuilder gsonBuilder) {
-        //register additional cloudant deserializers and then let lightcouch init too
-        gsonBuilder.registerTypeAdapter(new TypeToken<List<Shard>>() {
-        }.getType(), new ShardDeserializer())
-                .registerTypeAdapter(new TypeToken<List<Index>>() {
-                }.getType(), new IndexDeserializer())
-                .registerTypeAdapter(new TypeToken<Map<String, EnumSet<Permissions>>>() {
-                        }.getType(),
-                        new SecurityDeserializer())
-                .registerTypeAdapter(Key.ComplexKey.class, new Key.ComplexKeyDeserializer());
-        couchDbClient.setGsonBuilder(gsonBuilder);
-    }
-
-
     /**
      * @return The Gson instance.
      */
@@ -449,91 +340,6 @@ public class CloudantClient {
 
     Response put(URI uri, Object object, boolean newEntity, int writeQuorum) {
         return couchDbClient.put(uri, object, newEntity, writeQuorum);
-    }
-
-    private Map<String, String> parseAccount(String account) {
-        assertNotEmpty(account, "accountName");
-        Map<String, String> h = new HashMap<String, String>();
-        if (account.startsWith("http://") || account.startsWith("https://")) {
-            // user is specifying a uri
-            try {
-                URI uri = new URI(account);
-                int port = uri.getPort();
-                if (port < 0) {
-                    port = uri.toURL().getDefaultPort();
-                }
-                h.put("scheme", uri.getScheme());
-                h.put("hostname", uri.getHost());
-                h.put("port", new Integer(port).toString());
-            } catch (URISyntaxException e) {
-                throw new CouchDbException(e);
-            } catch (MalformedURLException e2) {
-                throw new CouchDbException(e2);
-            }
-        } else {
-            h.put("scheme", "https");
-            h.put("hostname", account + ".cloudant.com");
-            h.put("port", "443");
-        }
-        return h;
-    }
-
-    /**
-     * Initializes the internal lightCouch client
-     *
-     * @param scheme
-     * @param hostname
-     * @param port
-     * @param loginUsername
-     * @param password
-     * @param connectOptions
-     */
-    private void doInit(String scheme, String hostname, int port,
-                        String loginUsername, String password, ConnectOptions connectOptions) {
-
-        CouchDbProperties props = new CouchDbProperties(scheme, hostname, port);
-
-        if (loginUsername != null && password != null) {
-            //make interceptor if both username and password are not null
-
-            //Create cookie interceptor and set in HttpConnection interceptors
-            CookieInterceptor cookieInterceptor = new CookieInterceptor(loginUsername, password);
-
-            props.addRequestInterceptors(cookieInterceptor);
-            props.addResponseInterceptors(cookieInterceptor);
-        } else {
-            //If username or password is null, throw an exception
-            if (loginUsername != null || password != null) {
-                //Username and password both have to contain values
-                throw new CouchDbException("Either a username and password must be provided, or " +
-                        "both values must be null. Please check the credentials and try again.");
-            }
-        }
-
-        if (connectOptions != null) {
-            props.addRequestInterceptors(new TimeoutCustomizationInterceptor(connectOptions
-                    .getConnectionTimeout(), connectOptions.getReadTimeout()));
-            props.setMaxConnections(connectOptions.getMaxConnections());
-            props.setProxyURL(connectOptions.getProxyURL());
-            if (connectOptions.getProxyUser() != null) {
-                //if there was proxy auth information create an interceptor for it
-                props.addRequestInterceptors(new ProxyAuthInterceptor(connectOptions.getProxyUser
-                        (), connectOptions.getProxyPassword()));
-            }
-            if (connectOptions.isSSLAuthenticationDisabled()) {
-                props.addRequestInterceptors(SSLCustomizerInterceptor
-                        .SSL_AUTH_DISABLED_INTERCEPTOR);
-            } else {
-                if (connectOptions.getAuthenticatedModeSSLSocketFactory() != null) {
-                    props.addRequestInterceptors(new SSLCustomizerInterceptor(connectOptions
-                            .getAuthenticatedModeSSLSocketFactory()));
-                }
-            }
-        }
-        this.couchDbClient = new CouchDbClient(props);
-
-        // set a custom gsonbuilder that includes additional cloudant deserializers
-        setGsonBuilder(new GsonBuilder());
     }
 }
 

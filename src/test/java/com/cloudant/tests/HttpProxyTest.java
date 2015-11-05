@@ -18,7 +18,6 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.model.ConnectOptions;
 import com.cloudant.http.Http;
 import com.cloudant.http.interceptors.ProxyAuthInterceptor;
 import com.cloudant.tests.util.SimpleHttpServer;
@@ -50,10 +49,11 @@ public class HttpProxyTest {
         //create a client with a bogus address (TEST-NET)
         String mockProxyUser = "alpha";
         String mockProxyPass = "alphaPass";
-        CloudantClient client = new CloudantClient("http://192.0.2.0", new ConnectOptions()
-                .setProxyURL(new URL(server.getUrl()))
-                .setProxyUser(mockProxyUser)
-                .setProxyPassword(mockProxyPass));
+        CloudantClient client = CloudantClientHelper.newTestAddressClient()
+                .proxyURL(new URL(server.getUrl()))
+                .proxyUser(mockProxyUser)
+                .proxyPassword(mockProxyPass)
+                .build();
 
         client.executeRequest(Http.GET(client.getBaseUri()));
         //if it wasn't a 20x then an exception should have been thrown by now
