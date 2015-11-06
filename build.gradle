@@ -152,6 +152,22 @@ javadoc {
             "**/lightcouch/NoDocumentException.java",
             "**/lightcouch/CouchDbException.java",
             "**")
+    //add a logging listener to check for javadoc warnings and fail the build if there are any
+    boolean hasJavaDocWarnings = false;
+    doFirst {
+        getLogging().addStandardErrorListener(new StandardOutputListener() {
+            void onOutput(CharSequence output) {
+                if (output =~ "warning:") {
+                    hasJavaDocWarnings = true
+                }
+            }
+        })
+    }
+    doLast {
+        if (hasJavaDocWarnings) {
+            throw new GradleException("Build failed due to javadoc warnings.");
+        }
+    }
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
