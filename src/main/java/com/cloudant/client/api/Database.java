@@ -160,7 +160,7 @@ public class Database {
      */
     private JsonObject getPermissionsObject() {
         try {
-            return client.get(apiV2DBSecurityURI, JsonObject.class);
+            return client.couchDbClient.get(apiV2DBSecurityURI, JsonObject.class);
         } catch (CouchDbException exception) {
             //currently we can't inspect the HttpResponse code
             //being in this catch block means it was not a 20x code
@@ -206,7 +206,7 @@ public class Database {
     public List<Shard> getShards() {
         InputStream response = null;
         try {
-            response = client.get(buildUri(getDBUri()).path("_shards").build());
+            response = client.couchDbClient.get(buildUri(getDBUri()).path("_shards").build());
             return getResponseList(response, client.getGson(), Shard.class,
                     new TypeToken<List<Shard>>() {
                     }.getType());
@@ -223,7 +223,7 @@ public class Database {
      */
     public Shard getShard(String docId) {
         assertNotEmpty(docId, "docId");
-        return client.get(buildUri(getDBUri()).path("_shards/").path(docId).build(), Shard.class);
+        return client.couchDbClient.get(buildUri(getDBUri()).path("_shards/").path(docId).build(), Shard.class);
     }
 
 
@@ -328,7 +328,7 @@ public class Database {
     public List<Index> listIndices() {
         InputStream response = null;
         try {
-            response = client.get(buildUri(getDBUri()).path("_index/").build());
+            response = client.couchDbClient.get(buildUri(getDBUri()).path("_index/").build());
             return getResponseList(response, client.getGson(), Index.class,
                     new TypeToken<List<Index>>() {
                     }.getType());
@@ -546,7 +546,7 @@ public class Database {
      * @throws DocumentConflictException If a conflict is detected during the save.
      */
     public com.cloudant.client.api.model.Response save(Object object, int writeQuorum) {
-        Response couchDbResponse = client.put(getDBUri(), object, true, writeQuorum);
+        Response couchDbResponse = client.couchDbClient.put(getDBUri(), object, true, writeQuorum);
         com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model
                 .Response(couchDbResponse);
         return response;
@@ -628,7 +628,7 @@ public class Database {
      * @throws DocumentConflictException If a conflict is detected during the update.
      */
     public com.cloudant.client.api.model.Response update(Object object, int writeQuorum) {
-        Response couchDbResponse = client.put(getDBUri(), object, false, writeQuorum);
+        Response couchDbResponse = client.couchDbClient.put(getDBUri(), object, false, writeQuorum);
         com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model
                 .Response(couchDbResponse);
         return response;
@@ -790,7 +790,7 @@ public class Database {
      * @return {@link CouchDbInfo} Containing the DB info.
      */
     public DbInfo info() {
-        return client.get(buildUri(getDBUri()).build(), DbInfo.class);
+        return client.couchDbClient.get(buildUri(getDBUri()).build(), DbInfo.class);
     }
 
 

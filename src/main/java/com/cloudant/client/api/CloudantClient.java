@@ -30,7 +30,6 @@ import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.CouchDbProperties;
 import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.Replicator;
-import com.cloudant.client.org.lightcouch.Response;
 import com.cloudant.http.HttpConnection;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -314,32 +313,6 @@ public class CloudantClient {
      */
     public Gson getGson() {
         return couchDbClient.getGson();
-    }
-
-
-    // Helper methods
-
-    /**
-     * Performs a HTTP GET request.
-     *
-     * @return An object of type T
-     */
-    <T> T get(URI uri, Class<T> classType) {
-        return couchDbClient.get(uri, classType);
-    }
-
-    /**
-     * Performs a HTTP GET request.
-     *
-     * @return InputStream with response
-     */
-    InputStream get(URI uri) {
-        return couchDbClient.get(uri);
-    }
-
-
-    Response put(URI uri, Object object, boolean newEntity, int writeQuorum) {
-        return couchDbClient.put(uri, object, newEntity, writeQuorum);
     }
 }
 
