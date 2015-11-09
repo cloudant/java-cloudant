@@ -108,7 +108,7 @@ public class DbDesign {
      */
     public DesignDocument getFromDb(String id) {
         final URI uri = buildUri(dbUri).path(id).build();
-        return client.get(uri, DesignDocument.class);
+        return client.couchDbClient.get(uri, DesignDocument.class);
     }
 
     /**
@@ -122,7 +122,7 @@ public class DbDesign {
         assertNotEmpty(id, "id");
         assertNotEmpty(id, "rev");
         final URI uri = buildUri(dbc.getDBUri()).path(id).query("rev", rev).build();
-        return client.get(uri, DesignDocument.class);
+        return client.couchDbClient.get(uri, DesignDocument.class);
     }
 
     /**
