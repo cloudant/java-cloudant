@@ -787,7 +787,7 @@ These functions are for working with views and design documents, including query
 call getFromDb(design-doc) to retrieve the server copy .
 ~~~ java
 
-DesignDocument designDoc = db.design().getFromDb("_design/example");
+DesignDocument designDoc = db.getDesignDocumentManager().getFromDb("_design/example");
 ~~~
 
 ### Creating a View (Map-Reduce Index)

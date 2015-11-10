@@ -13,6 +13,12 @@
 - [BREAKING CHANGE] Removed version 1.x view query API.
 - [BREAKING CHANGE] LightCouch classes moved to package com.cloudant.client.org.lightcouch.
   This should only have a visible impact for `CouchDbException` and its subclasses.
+- [BREAKING CHANGE] Removed DbDesign class and replaced with DesignDocumentManager.
+  If you were using the `getFromDesk` method, convert your design document directory to javascript
+  files and use `DesignDocumentManager.fromFile(File)` or
+  `DesignDocumentManager.fromDirectory(File)`.
+  More information is available in the javadoc, including usage for de-serializing design document
+  javascript files to DesignDocument objects.
 
 # 1.2.3 (2015-10-14)
 - [NEW] Added Basic Auth for HTTP proxies. Configure via `ConnectOption#setProxyUser`

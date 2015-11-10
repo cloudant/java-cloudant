@@ -123,7 +123,7 @@ public class CouchDbClient {
     }
 
     /**
-     * Shuts down and releases resources used by this client instance.
+     * Shuts down and releases resources used by this couchDbClient instance.
      * Note: Apache's httpclient was replaced by HttpUrlConnection.
      * Connection manager is no longer used.
      */

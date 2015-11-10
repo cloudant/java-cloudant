@@ -16,12 +16,14 @@ package com.cloudant.tests.util;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
+import com.cloudant.client.api.DesignDocumentManager;
+import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
@@ -30,8 +32,11 @@ import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +47,9 @@ public class Utils {
 
     //wait up to 2 minutes for replications to complete
     private static final long TIMEOUT_MILLISECONDS = TimeUnit.MINUTES.toMillis(2);
+    //Design documents directory
+    private static final File DESIGN_DOC_DIR
+            = new File(System.getProperty("user.dir") + "/src/test/resources/design-files");
 
     public static Properties getProperties(String configFile, TestLog log) {
         Properties properties = new Properties();
@@ -207,5 +215,25 @@ public class Utils {
         assertEquals("There should be " + expectedNumber + " instances of " + splitOn + " in the " +
                 "content", expectedNumber + 1, parts.length);
         return parts;
+    }
+
+    /**
+     * Test utility to put design documents under the testing resource folder in to the database.
+     * @param db database to put the design docs
+     * @param directory location of design docs
+     */
+    public static void putDesignDocs(Database db, File directory) throws FileNotFoundException {
+        //Get design documents from directory
+        List<DesignDocument> designDocuments = DesignDocumentManager.fromDirectory(directory);
+        DesignDocumentManager designDocumentManager = db.getDesignDocumentManager();
+
+        DesignDocument[] designDocArray = designDocuments
+                .toArray(new DesignDocument[designDocuments.size()]);
+        //Put documents into database
+        designDocumentManager.put(designDocArray);
+    }
+
+    public static void putDesignDocs(Database db) throws FileNotFoundException {
+        putDesignDocs(db, DESIGN_DOC_DIR);
     }
 }

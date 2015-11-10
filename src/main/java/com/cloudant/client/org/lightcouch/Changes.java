@@ -75,7 +75,7 @@ public class Changes {
 
     Changes(CouchDatabaseBase dbc) {
         this.dbc = dbc;
-        this.gson = dbc.getGson();
+        this.gson = dbc.couchDbClient.getGson();
         this.uriBuilder = URIBuilder.buildUri(dbc.getDBUri()).path("_changes");
     }
 
@@ -85,7 +85,7 @@ public class Changes {
      */
     public Changes continuousChanges() {
         final URI uri = uriBuilder.query("feed", "continuous").build();
-        final InputStream in = dbc.get(uri);
+        final InputStream in = dbc.couchDbClient.get(uri);
         try {
             final InputStreamReader is = new InputStreamReader(in, "UTF-8");
             setReader(new BufferedReader(is));
@@ -124,7 +124,7 @@ public class Changes {
      */
     public ChangesResult getChanges() {
         final URI uri = uriBuilder.query("feed", "normal").build();
-        return dbc.get(uri, ChangesResult.class);
+        return dbc.couchDbClient.get(uri, ChangesResult.class);
     }
 
     // Query Params

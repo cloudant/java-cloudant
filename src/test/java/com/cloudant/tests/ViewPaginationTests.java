@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.io.FileNotFoundException;
 import java.util.Arrays;
 
 @RunWith(Parameterized.class)
@@ -59,12 +60,12 @@ public class ViewPaginationTests {
     private CloudantClient account;
 
     @Before
-    public void setUp() {
+    public void setUp() throws FileNotFoundException {
         account = CloudantClientHelper.getClient();
         dbName = "view-pagination-test-" + Utils.generateUUID();
         db = account.database(dbName, true);
 
-        db.syncDesignDocsWithDb();
+        Utils.putDesignDocs(db);
     }
 
     @After

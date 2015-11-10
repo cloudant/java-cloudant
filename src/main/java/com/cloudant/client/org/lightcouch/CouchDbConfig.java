@@ -21,7 +21,7 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 /**
- * Provides configuration to client instance.
+ * Provides configuration to couchDbClient instance.
  *
  * @author Ahmed Yehia
  */

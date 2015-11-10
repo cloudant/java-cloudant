@@ -25,7 +25,6 @@ import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
 import com.cloudant.client.org.lightcouch.Changes;
 import com.cloudant.client.org.lightcouch.CouchDbClient;
-import com.cloudant.client.org.lightcouch.CouchDbDesign;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.CouchDbProperties;
 import com.cloudant.client.org.lightcouch.Replication;
@@ -109,7 +108,7 @@ import java.util.List;
  * {@link Changes db.changes()}
  *
  * <h2>Design Documents</h2>
- * {@link CouchDbDesign db.design()}
+ * {@link DesignDocumentManager db.getDesignDocumentManager()}
  *
  * <h2>Replication</h2>
  * Replication {@link Replication account.replication()} and {@link Replicator account.replicator()}
@@ -125,7 +124,7 @@ public class CloudantClient {
      * Constructs a new instance of this class and connects to the cloudant server with the
      * specified credentials
      *
-     * @param props     Properties file with account path, credentials, and connection options
+     * @param props Properties file with account path, credentials, and connection options
      */
     CloudantClient(CouchDbProperties props, GsonBuilder gsonBuilder) {
         this.couchDbClient = new CouchDbClient(props);
@@ -168,11 +167,11 @@ public class CloudantClient {
      * @return cluster nodes and all nodes
      */
     public Membership getMembership() {
-        Membership membership = couchDbClient.get(buildUri(getBaseUri()).path("_membership").build(),
+        Membership membership = couchDbClient.get(buildUri(getBaseUri()).path("_membership")
+                        .build(),
                 Membership.class);
         return membership;
     }
-
 
     /**
      * Get a database
@@ -184,7 +183,6 @@ public class CloudantClient {
     public Database database(String name, boolean create) {
         return new Database(this, couchDbClient.database(name, create));
     }
-
 
     /**
      * Request to  delete a database.
@@ -207,7 +205,6 @@ public class CloudantClient {
         couchDbClient.deleteDB(dbName);
     }
 
-
     /**
      * Request to create a new database; if one doesn't exist.
      *
@@ -217,14 +214,12 @@ public class CloudantClient {
         couchDbClient.createDB(dbName);
     }
 
-
     /**
      * @return The base URI.
      */
     public URI getBaseUri() {
         return couchDbClient.getBaseUri();
     }
-
 
     /**
      * @return All Server databases.
@@ -233,14 +228,12 @@ public class CloudantClient {
         return couchDbClient.getAllDbs();
     }
 
-
     /**
      * @return Cloudant Server version.
      */
     public String serverVersion() {
         return couchDbClient.serverVersion();
     }
-
 
     /**
      * Provides access to Cloudant <tt>replication</tt> APIs.
@@ -254,7 +247,6 @@ public class CloudantClient {
         return replication;
     }
 
-
     /**
      * Provides access to Cloudant <tt>replication</tt> APIs.
      *
@@ -266,7 +258,6 @@ public class CloudantClient {
                 (couchDbReplicator);
         return replicator;
     }
-
 
     /**
      * Executes a HTTP request. This method provides a mechanism to extend the API
@@ -289,7 +280,7 @@ public class CloudantClient {
      * @throws CouchDbException for error HTTP status codes or if there is an {@link IOException}
      */
     public HttpConnection executeRequest(HttpConnection request) {
-            return couchDbClient.execute(request);
+        return couchDbClient.execute(request);
     }
 
     /**

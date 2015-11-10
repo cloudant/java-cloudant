@@ -43,33 +43,21 @@ public abstract class CouchDatabaseBase {
 
     static final Logger log = Logger.getLogger(CouchDatabase.class.getCanonicalName());
 
-    CouchDbClient client;
+    CouchDbClient couchDbClient;
     private URI dbURI;
-
-    private CouchDbDesign design;
     private String dbName;
 
 
     CouchDatabaseBase(CouchDbClient client, String name, boolean create) {
         assertNotEmpty(name, "name");
         this.dbName = name;
-        this.client = client;
+        this.couchDbClient = client;
         this.dbURI = buildUri(client.getBaseUri()).path(name).path("/").build();
         if (create) {
             create();
         }
-        this.design = new CouchDbDesign(this);
     }
 
-
-    /**
-     * Provides access to CouchDB Design Documents.
-     *
-     * @see CouchDbDesign
-     */
-    public CouchDbDesign design() {
-        return design;
-    }
 
     /**
      * Provides access to <tt>Change Notifications</tt> API.
@@ -93,7 +81,7 @@ public abstract class CouchDatabaseBase {
         assertNotEmpty(classType, "Class");
         assertNotEmpty(id, "id");
         final URI uri = buildUri(getDBUri()).pathToEncode(id).buildEncoded();
-        return client.get(uri, classType);
+        return couchDbClient.get(uri, classType);
     }
 
     /**
@@ -110,7 +98,7 @@ public abstract class CouchDatabaseBase {
         assertNotEmpty(classType, "Class");
         assertNotEmpty(id, "id");
         final URI uri = buildUri(getDBUri()).pathToEncode(id).query(params).buildEncoded();
-        return client.get(uri, classType);
+        return couchDbClient.get(uri, classType);
     }
 
     /**
@@ -128,7 +116,7 @@ public abstract class CouchDatabaseBase {
         assertNotEmpty(id, "id");
         assertNotEmpty(id, "rev");
         final URI uri = buildUri(getDBUri()).pathToEncode(id).query("rev", rev).buildEncoded();
-        return client.get(uri, classType);
+        return couchDbClient.get(uri, classType);
     }
 
     /**
@@ -142,7 +130,7 @@ public abstract class CouchDatabaseBase {
     public <T> T findAny(Class<T> classType, String uri) {
         assertNotEmpty(classType, "Class");
         assertNotEmpty(uri, "uri");
-        return client.get(URI.create(uri), classType);
+        return couchDbClient.get(URI.create(uri), classType);
     }
 
     /**
@@ -156,7 +144,7 @@ public abstract class CouchDatabaseBase {
      */
     public InputStream find(String id) {
         assertNotEmpty(id, "id");
-        return client.get(buildUri(getDBUri()).path(id).build());
+        return couchDbClient.get(buildUri(getDBUri()).path(id).build());
     }
 
     /**
@@ -172,7 +160,7 @@ public abstract class CouchDatabaseBase {
         assertNotEmpty(id, "id");
         assertNotEmpty(rev, "rev");
         final URI uri = buildUri(getDBUri()).path(id).query("rev", rev).build();
-        return client.get(uri);
+        return couchDbClient.get(uri);
     }
 
     /**
@@ -185,7 +173,7 @@ public abstract class CouchDatabaseBase {
         assertNotEmpty(id, "id");
         InputStream response = null;
         try {
-            response = client.head(buildUri(getDBUri()).path(id).build());
+            response = couchDbClient.head(buildUri(getDBUri()).path(id).build());
         } catch (NoDocumentException e) {
             return false;
         } finally {
@@ -204,7 +192,7 @@ public abstract class CouchDatabaseBase {
      * @throws DocumentConflictException If a conflict is detected during the save.
      */
     public Response save(Object object) {
-        return client.put(getDBUri(), object, true);
+        return couchDbClient.put(getDBUri(), object, true);
     }
 
     /**
@@ -219,8 +207,8 @@ public abstract class CouchDatabaseBase {
         InputStream response = null;
         try {
             URI uri = buildUri(getDBUri()).build();
-            response = client.post(uri, getGson().toJson(object));
-            return getResponse(response, Response.class, client.getGson());
+            response = couchDbClient.post(uri, getGson().toJson(object));
+            return getResponse(response, Response.class, getGson());
         } finally {
             close(response);
         }
@@ -236,7 +224,7 @@ public abstract class CouchDatabaseBase {
         InputStream response = null;
         try {
             URI uri = buildUri(getDBUri()).query("batch", "ok").build();
-            response = client.post(uri, getGson().toJson(object));
+            response = couchDbClient.post(uri, getGson().toJson(object));
         } finally {
             close(response);
         }
@@ -251,7 +239,7 @@ public abstract class CouchDatabaseBase {
      * @throws DocumentConflictException If a conflict is detected during the update.
      */
     public Response update(Object object) {
-        return client.put(getDBUri(), object, false);
+        return couchDbClient.put(getDBUri(), object, false);
     }
 
     /**
@@ -283,7 +271,7 @@ public abstract class CouchDatabaseBase {
         assertNotEmpty(id, "id");
         assertNotEmpty(rev, "rev");
         final URI uri = buildUri(getDBUri()).pathToEncode(id).query("rev", rev).buildEncoded();
-        return client.delete(uri);
+        return couchDbClient.delete(uri);
     }
 
     /**
@@ -301,8 +289,8 @@ public abstract class CouchDatabaseBase {
             final URI uri = buildUri(getDBUri()).path("_bulk_docs").build();
             final String json = String.format("{%s%s%s}", allOrNothingVal, "\"docs\": ", getGson
                     ().toJson(objects));
-            response = client.post(uri, json);
-            return getResponseList(response, client.getGson(), Response.class,
+            response = couchDbClient.post(uri, json);
+            return getResponseList(response, getGson(), Response.class,
                     new TypeToken<List<Response>>() {
                     }.getType());
         } finally {
@@ -324,7 +312,7 @@ public abstract class CouchDatabaseBase {
         assertNotEmpty(name, "name");
         assertNotEmpty(contentType, "ContentType");
         final URI uri = buildUri(getDBUri()).path(generateUUID()).path("/").path(name).build();
-        return client.put(uri, in, contentType);
+        return couchDbClient.put(uri, in, contentType);
     }
 
     /**
@@ -350,7 +338,7 @@ public abstract class CouchDatabaseBase {
         assertNotEmpty(docId, "docId");
         final URI uri = buildUri(getDBUri()).path(docId).path("/").path(name).query("rev",
                 docRev).build();
-        return client.put(uri, in, contentType);
+        return couchDbClient.put(uri, in, contentType);
     }
 
     /**
@@ -374,7 +362,7 @@ public abstract class CouchDatabaseBase {
         final String[] v = updateHandlerUri.split("/");
         final String path = String.format("_design/%s/_update/%s/", v[0], v[1]);
         final URI uri = buildUri(getDBUri()).path(path).path(docId).query(query).build();
-        final InputStream response = client.put(uri);
+        final InputStream response = couchDbClient.put(uri);
         return streamToString(response);
     }
 
@@ -399,18 +387,9 @@ public abstract class CouchDatabaseBase {
         final String path = String.format("_design/%s/_update/%s/", v[0], v[1]);
         final URI uri = buildUri(getDBUri()).path(path).pathToEncode(docId).query(params)
                 .buildEncoded();
-        final InputStream response = client.put(uri);
+        final InputStream response = couchDbClient.put(uri);
         return streamToString(response);
     }
-
-
-    /**
-     * Synchronize all design documents with the database.
-     */
-    public void syncDesignDocsWithDb() {
-        design().synchronizeAllWithDb();
-    }
-
 
     /**
      * @return The database URI.
@@ -427,7 +406,7 @@ public abstract class CouchDatabaseBase {
      * @return {@link CouchDbInfo} Containing the DB info.
      */
     public CouchDbInfo info() {
-        return client.get(buildUri(getDBUri()).build(), CouchDbInfo.class);
+        return couchDbClient.get(buildUri(getDBUri()).build(), CouchDbInfo.class);
     }
 
     /**
@@ -436,7 +415,7 @@ public abstract class CouchDatabaseBase {
     public void compact() {
         InputStream response = null;
         try {
-            response = client.post(buildUri(getDBUri()).path("_compact").build(), "");
+            response = couchDbClient.post(buildUri(getDBUri()).path("_compact").build(), "");
         } finally {
             close(response);
         }
@@ -448,7 +427,7 @@ public abstract class CouchDatabaseBase {
     public void ensureFullCommit() {
         InputStream response = null;
         try {
-            response = client.post(buildUri(getDBUri()).path("_ensure_full_commit").build(), "");
+            response = couchDbClient.post(buildUri(getDBUri()).path("_ensure_full_commit").build(), "");
         } finally {
             close(response);
         }
@@ -466,7 +445,7 @@ public abstract class CouchDatabaseBase {
     private void create() {
         InputStream putresp = null;
         try {
-            putresp = client.put(dbURI);
+            putresp = couchDbClient.put(dbURI);
             log.info(String.format("Created Database: '%s'", dbName));
         } catch (PreconditionFailedException e) {
             // The PreconditionFailedException is thrown if the database already existed.
@@ -477,21 +456,8 @@ public abstract class CouchDatabaseBase {
         }
     }
 
-    // Helpers
-    Gson getGson() {
-        return client.getGson();
-    }
-
-    <T> T get(URI uri, Class<T> classType) {
-        return client.get(uri, classType);
-    }
-
-
-    InputStream get(URI uri) {
-        return client.get(uri);
-    }
-
-    InputStream post(URI uri, String json) {
-        return client.post(uri, json);
+    // helper
+    private Gson getGson() {
+        return couchDbClient.getGson();
     }
 }

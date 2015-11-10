@@ -22,11 +22,14 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.test.main.RequiresDB;
+import com.cloudant.tests.util.Utils;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.io.FileNotFoundException;
 
 @Category(RequiresDB.class)
 public class UpdateHandlerTest {
@@ -36,10 +39,10 @@ public class UpdateHandlerTest {
 
 
     @Before
-    public void setUp() {
+    public void setUp() throws FileNotFoundException {
         account = CloudantClientHelper.getClient();
         db = account.database("lightcouch-db-test", true);
-        db.syncDesignDocsWithDb();
+        Utils.putDesignDocs(db);
     }
 
     @After

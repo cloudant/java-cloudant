@@ -31,6 +31,7 @@ import com.cloudant.client.api.views.ViewRequestBuilder;
 import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresDB;
+import com.cloudant.tests.util.Utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -41,6 +42,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,12 +59,12 @@ public class ViewsTest {
     private CloudantClient account;
 
     @Before
-    public void setUp() {
+    public void setUp() throws FileNotFoundException {
         account = CloudantClientHelper.getClient();
 
         db = account.database("lightcouch-db-test", true);
 
-        db.syncDesignDocsWithDb();
+        Utils.putDesignDocs(db);
     }
 
     @After
