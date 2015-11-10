@@ -14,12 +14,12 @@
 
 package com.cloudant.http.interceptors;
 
-import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 
 import java.net.HttpURLConnection;
+import java.util.concurrent.TimeUnit;
 
 public class TimeoutCustomizationInterceptor implements HttpConnectionRequestInterceptor {
 
@@ -28,36 +28,27 @@ public class TimeoutCustomizationInterceptor implements HttpConnectionRequestInt
     private final int readTimeout;
 
     /**
-     * Construct a new timeout interceptor with the specified connect and read TimeoutOptions.
+     * Construct a new timeout interceptor with the specified connect and read timeouts.
      * <P>
      * Example to create a timeout interceptor with 10 second connect timeout and 5 minute read
      * timeout.
      * </P>
      * <pre>
      *     {@code
-     *     new TimeoutCustomizationInterceptor(new TimeoutOption(10, TimeUnit.SECONDS),
-     *                                         new TimeoutOption(5, TimeUnit.MINUTES));
+     *     new TimeoutCustomizationInterceptor(10, TimeUnit.SECONDS, 5, TimeUnit.MINUTES);
      *     }
      * </pre>
      *
-     * @param connectTimeout value of the connect timeout
-     * @param readTimeout    value of the read timeout
+     * @param connectTimeoutValue value of the connect timeout
+     * @param connectTimeoutUnit TimeUnit for the duration of the connect timeout
+     * @param readTimeoutValue    value of the read timeout
+     * @param readTimeoutUnit TimeUnit for the duration of the read timeout
      *
      * @throws CouchDbException if connect or read timeout are null
      */
-    public TimeoutCustomizationInterceptor(ClientBuilder.TimeoutOption connectTimeout,
-                                           ClientBuilder.TimeoutOption
-            readTimeout) {
-        if(connectTimeout != null && connectTimeout.asIntMillis() >= 0) {
-            this.connectTimeout = connectTimeout.asIntMillis();
-        } else {
-            throw new CouchDbException("Connection timeout cannot be null.");
-        }
-        if(readTimeout != null && readTimeout.asIntMillis() >= 0) {
-            this.readTimeout = readTimeout.asIntMillis();
-        } else {
-            throw new CouchDbException("Read timeout cannot be null.");
-        }
+    public TimeoutCustomizationInterceptor(long connectTimeoutValue, TimeUnit connectTimeoutUnit, long readTimeoutValue, TimeUnit readTimeoutUnit) {
+        this.connectTimeout = asIntMillis(connectTimeoutValue, connectTimeoutUnit);
+        this.readTimeout = asIntMillis(readTimeoutValue, readTimeoutUnit);
     }
 
     @Override
@@ -67,5 +58,18 @@ public class TimeoutCustomizationInterceptor implements HttpConnectionRequestInt
         connection.setConnectTimeout(connectTimeout);
         connection.setReadTimeout(readTimeout);
         return context;
+    }
+
+    private int asIntMillis(long timeout, TimeUnit timeoutUnit) {
+        int timeoutMillis;
+        Long timeoutLongMillis = timeoutUnit.toMillis(timeout);
+        if (timeoutLongMillis < 0) {
+            timeoutMillis = 0;
+        } else if (timeoutLongMillis > Integer.MAX_VALUE) {
+            timeoutMillis = Integer.MAX_VALUE;
+        } else {
+            timeoutMillis = timeoutLongMillis.intValue();
+        }
+        return timeoutMillis;
     }
 }

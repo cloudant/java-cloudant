@@ -20,6 +20,7 @@ import com.cloudant.tests.util.SimpleHttpServer;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Rhys Short on 21/05/15.
@@ -70,7 +71,7 @@ public abstract class CloudantClientHelper {
             SERVER_URL = new URL(HTTP_PROTOCOL + "://"
                     + COUCH_HOST
                     + ((COUCH_PORT != null) ? ":" + COUCH_PORT : "")); //port if supplied
-            
+
             SERVER_URI_WITH_USER_INFO = HTTP_PROTOCOL + "://"
                     + ((COUCH_USERNAME != null) ? COUCH_USERNAME + ":" + COUCH_PASSWORD + "@" : "")
                     + COUCH_HOST
@@ -79,8 +80,8 @@ public abstract class CloudantClientHelper {
             throw new RuntimeException(t);
         }
         CLIENT_INSTANCE = getClientBuilder()
-                .connectionTimeout(ClientBuilder.TimeoutOption.minutes(1))
-                .readTimeout(ClientBuilder.TimeoutOption.minutes(3))
+                .connectTimeout(1, TimeUnit.MINUTES)
+                .readTimeout(3, TimeUnit.MINUTES)
                 .build();
     }
 
@@ -91,7 +92,7 @@ public abstract class CloudantClientHelper {
     private static ClientBuilder testAddressClient(boolean isHttpsProtocolClient)
             throws MalformedURLException {
         URL url = null;
-        if(isHttpsProtocolClient) {
+        if (isHttpsProtocolClient) {
             url = new URL("https://192.0.2.0");
         } else {
             url = new URL("http://192.0.2.0");
