@@ -23,7 +23,7 @@ import com.cloudant.client.api.DesignDocumentManager;
 import com.cloudant.client.api.Search;
 import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.api.model.SearchResult;
-import com.cloudant.client.api.model.SearchResult.SearchResultRows;
+import com.cloudant.client.api.model.SearchResult.SearchResultRow;
 import com.cloudant.client.org.lightcouch.internal.URIBuilder;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
@@ -94,7 +94,7 @@ public class SearchTests {
         assertNotNull(rslt.getBookmark());
         assertEquals(rslt.getGroups().size(), 0);
         assertEquals(rslt.getRows().size(), 2);
-        for (@SuppressWarnings("rawtypes") SearchResultRows r : rslt.getRows()) {
+        for (@SuppressWarnings("rawtypes") SearchResultRow r : rslt.getRows()) {
             assertNotNull(r.getDoc());
             assertNotNull(r.getFields());
             assertNotNull(r.getId());

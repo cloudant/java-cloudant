@@ -414,12 +414,12 @@ public class Search {
         return map;
     }
 
-    private <T> List<SearchResult<T>.SearchResultRows> getRows(
+    private <T> List<SearchResult<T>.SearchResultRow> getRows(
             JsonArray jsonrows, SearchResult<T> sr, Class<T> classOfT) {
 
-        List<SearchResult<T>.SearchResultRows> ret = new ArrayList<SearchResult<T>.SearchResultRows>();
+        List<SearchResult<T>.SearchResultRow> ret = new ArrayList<SearchResult<T>.SearchResultRow>();
         for (JsonElement e : jsonrows) {
-            SearchResult<T>.SearchResultRows row = sr.new SearchResultRows();
+            SearchResult<T>.SearchResultRow row = sr.new SearchResultRow();
             JsonObject oe = e.getAsJsonObject();
             row.setId(oe.get("id").getAsString());
             row.setOrder(JsonToObject(db.getGson(), e, "order", Object[].class));
@@ -434,7 +434,7 @@ public class Search {
 
     private <T> void setGroups(JsonArray jsongroups, SearchResult<T> sr, Class<T> classOfT) {
         for (JsonElement e : jsongroups) {
-            SearchResult<T>.SearchResultGroups group = sr.new SearchResultGroups();
+            SearchResult<T>.SearchResultGroup group = sr.new SearchResultGroup();
             JsonObject oe = e.getAsJsonObject();
             group.setBy(oe.get("by").getAsString());
             group.setTotalRows(oe.get("total_rows").getAsLong());

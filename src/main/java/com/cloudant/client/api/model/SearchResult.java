@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Holds a search result entries
+ * Encapsulates search result entries
  *
  * @param <T> Object type T, an instance into which the rows[].doc/group[].rows[].doc
  *            attribute of the Search result response should be deserialized into.
@@ -34,8 +34,8 @@ public class SearchResult<T> {
     @SerializedName("total_rows")
     private long totalRows;
     private String bookmark;
-    private List<SearchResultRows> rows = new ArrayList<SearchResultRows>();
-    private List<SearchResultGroups> groups = new ArrayList<SearchResultGroups>();
+    private List<SearchResultRow> rows = new ArrayList<SearchResultRow>();
+    private List<SearchResultGroup> groups = new ArrayList<SearchResultGroup>();
     private Map<String, Map<String, Long>> counts = new HashMap<String, Map<String, Long>>();
     private Map<String, Map<String, Long>> ranges;
 
@@ -102,14 +102,14 @@ public class SearchResult<T> {
     /**
      * @return the rows
      */
-    public List<SearchResultRows> getRows() {
+    public List<SearchResultRow> getRows() {
         return rows;
     }
 
     /**
      * @param rows the rows to set
      */
-    public void setRows(List<SearchResultRows> rows) {
+    public void setRows(List<SearchResultRow> rows) {
         this.rows = rows;
     }
 
@@ -117,15 +117,15 @@ public class SearchResult<T> {
     /**
      * @return the groups
      */
-    public List<SearchResultGroups> getGroups() {
+    public List<SearchResultGroup> getGroups() {
         return groups;
     }
 
 
     /**
-     * Inner class holding the SearchResult rows.
+     * Encapsulates a SearchResult row.
      */
-    public class SearchResultRows {
+    public class SearchResultRow {
         private String id;
         private Object[] order;
         private T fields;
@@ -191,13 +191,13 @@ public class SearchResult<T> {
     }
 
     /**
-     * Inner class holding the SearchResult Groups.
+     * Encapsulates a SearchResult group.
      */
-    public class SearchResultGroups {
+    public class SearchResultGroup {
         private String by;
         @SerializedName("total_rows")
         private Long totalRows;
-        private List<SearchResultRows> rows = new ArrayList<SearchResultRows>();
+        private List<SearchResultRow> rows = new ArrayList<SearchResultRow>();
 
 
         /**
@@ -231,14 +231,14 @@ public class SearchResult<T> {
         /**
          * @param rows the rows to set
          */
-        public void setRows(List<SearchResultRows> rows) {
+        public void setRows(List<SearchResultRow> rows) {
             this.rows = rows;
         }
 
         /**
          * @return the rows
          */
-        public List<SearchResultRows> getRows() {
+        public List<SearchResultRow> getRows() {
             return rows;
         }
 
