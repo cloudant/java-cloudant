@@ -102,7 +102,7 @@ public class Database {
      * Set permissions for a user/apiKey on this database.
      * <p>
      * Note this method is only applicable to databases that support the
-     * <a href="http://docs.cloudant.com/authorization.html">
+     * <a target="_blank" href="http://docs.cloudant.com/authorization.html">
      * Cloudant authorization API
      * </a> such as Cloudant DBaaS. For unsupported databases consider using the /db/_security
      * endpoint.
@@ -126,8 +126,9 @@ public class Database {
      * @throws UnsupportedOperationException if called on a database that does not provide the
      *                                       Cloudant authorization API
      * @see CloudantClient#generateApiKey()
-     * @see <a href="http://docs.cloudant.com/authorization.html#roles">Roles</a>
-     * @see <a href="http://docs.cloudant.com/authorization.html#modifying-permissions">Modifying
+     * @see <a target="_blank" href="http://docs.cloudant.com/authorization.html#roles">Roles</a>
+     * @see <a target="_blank"
+     * href="http://docs.cloudant.com/authorization.html#modifying-permissions">Modifying
      * permissions</a>
      */
     public void setPermissions(String userNameorApikey, EnumSet<Permissions> permissions) {
@@ -191,7 +192,7 @@ public class Database {
      * Returns the Permissions of this database.
      * <p>
      * Note this method is only applicable to databases that support the
-     * <a href="http://docs.cloudant.com/authorization.html">
+     * <a target="_blank" href="http://docs.cloudant.com/authorization.html">
      * Cloudant authorization API
      * </a> such as Cloudant DBaaS. For unsupported databases consider using the /db/_security
      * endpoint.
@@ -200,8 +201,9 @@ public class Database {
      * @return the map of userNames to their Permissions
      * @throws UnsupportedOperationException if called on a database that does not provide the
      *                                       Cloudant authorization API
-     * @see <a href="http://docs.cloudant.com/authorization.html#roles">Roles</a>
-     * @see <a href="http://docs.cloudant.com/authorization.html#viewing-permissions">Viewing
+     * @see <a target="_blank" href="http://docs.cloudant.com/authorization.html#roles">Roles</a>
+     * @see <a target="_blank"
+     * href="http://docs.cloudant.com/authorization.html#viewing-permissions">Viewing
      * permissions</a>
      */
     public Map<String, EnumSet<Permissions>> getPermissions() {
@@ -214,7 +216,8 @@ public class Database {
      * Get info about the shards in the database.
      *
      * @return List of shards
-     * @see <a href="https://docs.cloudant.com/advanced.html#get-/$db/_shards">_shards</a>
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/advanced.html#get-/$db/_shards">_shards</a>
      */
     public List<Shard> getShards() {
         InputStream response = null;
@@ -233,7 +236,8 @@ public class Database {
      *
      * @param docId document ID
      * @return Shard info
-     * @see <a href="https://docs.cloudant.com/advanced.html#get-/$db/_shards">_shards</a>
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/advanced.html#get-/$db/_shards">_shards</a>
      */
     public Shard getShard(String docId) {
         assertNotEmpty(docId, "docId");
@@ -278,7 +282,8 @@ public class Database {
      *
      * @param indexDefinition String representation of the index definition JSON
      * @see #createIndex(String, String, String, IndexField[])
-     * @see <a href="http://docs.cloudant.com/api/cloudant-query.html#creating-a-new-index">
+     * @see <a target="_blank"
+     * href="http://docs.cloudant.com/api/cloudant-query.html#creating-a-new-index">
      * index definition</a>
      */
     public void createIndex(String indexDefinition) {
@@ -308,7 +313,8 @@ public class Database {
      * @param <T>          the type of the Java object to be returned
      * @return List of classOfT objects
      * @see #findByIndex(String, Class, FindByIndexOptions)
-     * @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">
+     * @see <a target="_blank"
+     * href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">
      * selector syntax</a>
      */
     public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT) {
@@ -339,7 +345,8 @@ public class Database {
      * @param classOfT     The class of Java objects to be returned
      * @param <T>          the type of the Java object to be returned
      * @return List of classOfT objects
-     * @see <a href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">
+     * @see <a target="_blank"
+     * href="http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-selectors">
      * selector syntax</a>
      */
     public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT, FindByIndexOptions
@@ -421,7 +428,7 @@ public class Database {
      *
      * @param searchIndexId the name of the index to search
      * @return Search object for searching the index
-     * @see <a href="https://docs.cloudant.com/search.html">Search</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/search.html">Search</a>
      */
     public Search search(String searchIndexId) {
         return new Search(client, this, searchIndexId);
@@ -442,7 +449,8 @@ public class Database {
      * @param viewName  the view name
      * @return a builder to build view requests for the specified design document and view of
      * this database
-     * @see <a href="https://docs.cloudant.com/creating_views.html#using-views">Using views</a>
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/creating_views.html#using-views">Using views</a>
      */
     public ViewRequestBuilder getViewRequestBuilder(String designDoc, String viewName) {
         return new ViewRequestBuilder(client, this, designDoc, viewName);
@@ -479,7 +487,8 @@ public class Database {
      *
      * @return a Changes object for using the changes feed
      * @see com.cloudant.client.api.Changes
-     * @see <a href="https://docs.cloudant.com/database.html#get-changes">Databases - get
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/database.html#get-changes">Databases - get
      * changes</a>
      */
     public com.cloudant.client.api.Changes changes() {
@@ -499,7 +508,8 @@ public class Database {
      * @return an object of type T
      * @throws NoDocumentException if the document is not found in the database
      * @see #find(Class, String, String)
-     * @see <a href="https://docs.cloudant.com/document.html#read">Documents - read</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/document.html#read">Documents -
+     * read</a>
      */
     public <T> T find(Class<T> classType, String id) {
         return db.find(classType, id);
@@ -524,7 +534,8 @@ public class Database {
      * @return An object of type T
      * @throws NoDocumentException if the document is not found in the database.
      * @see Params
-     * @see <a href="https://docs.cloudant.com/document.html#read">Documents - read</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/document.html#read">Documents -
+     * read</a>
      */
     public <T> T find(Class<T> classType, String id, Params params) {
         assertNotEmpty(params, "params");
@@ -547,7 +558,8 @@ public class Database {
      * @param rev       the document _rev field
      * @return an object of type T
      * @throws NoDocumentException if the document is not found in the database.
-     * @see <a href="https://docs.cloudant.com/document.html#read">Documents - read</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/document.html#read">Documents -
+     * read</a>
      */
     public <T> T find(Class<T> classType, String id, String rev) {
         return db.find(classType, id, rev);
@@ -611,7 +623,8 @@ public class Database {
      * @return the result as {@link InputStream}
      * @throws NoDocumentException if the document is not found in the database at the specified
      *                             revision
-     * @see <a href="https://docs.cloudant.com/document.html#read">Documents - read</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/document.html#read">Documents -
+     * read</a>
      */
     public InputStream find(String id, String rev) {
         return db.find(id, rev);
@@ -684,7 +697,8 @@ public class Database {
      * @return {@link Response}
      * @throws DocumentConflictException If a conflict is detected during the save.
      * @see Database#save(Object)
-     * @see <a href="https://docs.cloudant.com/document.html#quorum---writing-and-reading-data">
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/document.html#quorum---writing-and-reading-data">
      * Documents - quorum</a>
      */
     public com.cloudant.client.api.model.Response save(Object object, int writeQuorum) {
@@ -710,7 +724,8 @@ public class Database {
      *
      * @param object The object to save
      * @return {@link Response}
-     * @see <a href="https://docs.cloudant.com/document.html#documentCreate">Documents - create</a>
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/document.html#documentCreate">Documents - create</a>
      */
     public com.cloudant.client.api.model.Response post(Object object) {
         Response couchDbResponse = db.post(object);
@@ -727,7 +742,8 @@ public class Database {
      * @param writeQuorum the write Quorum
      * @return {@link Response}
      * @see Database#post(Object)
-     * @see <a href="https://docs.cloudant.com/document.html#quorum---writing-and-reading-data">
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/document.html#quorum---writing-and-reading-data">
      * Documents - quorum</a>
      */
     public com.cloudant.client.api.model.Response post(Object object, int writeQuorum) {
@@ -765,7 +781,8 @@ public class Database {
      * @param object the object to update
      * @return {@link Response}
      * @throws DocumentConflictException if a conflict is detected during the update.
-     * @see <a href="https://docs.cloudant.com/document.html#update">Documents - update</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/document.html#update">Documents -
+     * update</a>
      */
     public com.cloudant.client.api.model.Response update(Object object) {
         Response couchDbResponse = db.update(object);
@@ -783,7 +800,8 @@ public class Database {
      * @return {@link Response}
      * @throws DocumentConflictException if a conflict is detected during the update.
      * @see Database#update(Object)
-     * @see <a href="https://docs.cloudant.com/document.html#quorum---writing-and-reading-data">
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/document.html#quorum---writing-and-reading-data">
      * Documents - quorum</a>
      */
     public com.cloudant.client.api.model.Response update(Object object, int writeQuorum) {
@@ -809,7 +827,8 @@ public class Database {
      * @param object the document to remove as an object
      * @return {@link Response}
      * @throws NoDocumentException If the document is not found in the database.
-     * @see <a href="https://docs.cloudant.com/document.html#delete">Documents - delete</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/document.html#delete">Documents -
+     * delete</a>
      */
     public com.cloudant.client.api.model.Response remove(Object object) {
         Response couchDbResponse = db.remove(object);
@@ -832,7 +851,8 @@ public class Database {
      * @param rev the document _rev field
      * @return {@link Response}
      * @throws NoDocumentException If the document is not found in the database.
-     * @see <a href="https://docs.cloudant.com/document.html#delete">Documents - delete</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/document.html#delete">Documents -
+     * delete</a>
      */
     public com.cloudant.client.api.model.Response remove(String id, String rev) {
         Response couchDbResponse = db.remove(id, rev);
@@ -859,7 +879,7 @@ public class Database {
      *
      * @param objects the {@link List} of objects
      * @return {@code List<Response>} one per object
-     * @see <a href="https://docs.cloudant.com/document.html#bulk-operations">
+     * @see <a target="_blank" href="https://docs.cloudant.com/document.html#bulk-operations">
      * Documents - bulk operations</a>
      */
     public List<com.cloudant.client.api.model.Response> bulk(List<?> objects) {
@@ -891,7 +911,7 @@ public class Database {
      * @param name        The attachment name.
      * @param contentType The attachment "Content-Type".
      * @return {@link Response}
-     * @see <a href="https://docs.cloudant.com/attachments.html">Attachments</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/attachments.html">Attachments</a>
      */
     public com.cloudant.client.api.model.Response saveAttachment(InputStream in, String name,
                                                                  String contentType) {
@@ -929,7 +949,7 @@ public class Database {
      *                    when saving to a new document.
      * @return {@link Response}
      * @throws DocumentConflictException if the attachment cannot be saved because of a conflict
-     * @see <a href="https://docs.cloudant.com/attachments.html">Attachments</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/attachments.html">Attachments</a>
      */
     public com.cloudant.client.api.model.Response saveAttachment(InputStream in, String name,
                                                                  String contentType, String
@@ -964,7 +984,8 @@ public class Database {
      * @param docId            The document id to update.
      * @param params           The query parameters as {@link Params}.
      * @return The output of the request.
-     * @see <a href="https://docs.cloudant.com/design_documents.html#update-handlers">
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#update-handlers">
      * Design documents - update handlers</a>
      */
     public String invokeUpdateHandler(String updateHandlerUri, String docId,
@@ -984,7 +1005,8 @@ public class Database {
      * Get information about this database.
      *
      * @return DbInfo encapsulating the database info
-     * @see <a href="https://docs.cloudant.com/database.html#read">Databases - read</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/database.html#read">Databases -
+     * read</a>
      */
     public DbInfo info() {
         return client.couchDbClient.get(buildUri(getDBUri()).build(), DbInfo.class);

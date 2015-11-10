@@ -15,7 +15,6 @@
 
 package com.cloudant.client.api.model;
 
-import com.cloudant.client.org.lightcouch.*;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
@@ -26,7 +25,6 @@ import java.util.Map;
  * Encapsulates a design document.
  *
  * @author Ahmed Yehia
- * @see CouchDbDesign
  * @since 0.0.2
  */
 public class DesignDocument extends com.cloudant.client.org.lightcouch.Document {
@@ -251,7 +249,8 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
          * Set the name of a database to copy the reduced view results into.
          * <P>
          * For more information, including an explanation of the potential performance impact of
-         * this option see the <a href="https://docs.cloudant.com/creating_views.html#dbcopy">
+         * this option see the <a target="_blank"
+         * href="https://docs.cloudant.com/creating_views.html#dbcopy">
          * Cloudant dbcopy documentation
          * </a>.
          * </P>
@@ -263,7 +262,6 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
         }
 
         /**
-         *
          * @return the database name where reduced view results will be stored, or null if unset
          */
         public String getDbCopy() {

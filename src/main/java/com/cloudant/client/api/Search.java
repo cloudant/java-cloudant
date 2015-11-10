@@ -275,8 +275,8 @@ public class Search {
      *
      * @param sortJson JSON string specifying the sort order
      * @return this for additional parameter setting or to query
-     * @see <a href="http://docs.cloudant.com/api/search.html">sort query parameter format</a>
-     *
+     * @see <a target="_blank" href="http://docs.cloudant.com/api/search.html">sort query
+     * parameter format</a>
      */
     public Search sort(String sortJson) {
         assertNotEmpty(sortJson, "sort");
@@ -318,7 +318,8 @@ public class Search {
      *
      * @param groupsortJson JSON string specifying the group sort
      * @return this for additional parameter setting or to query
-     * @see <a href="http://docs.cloudant.com/api/search.html">sort query parameter format</a>
+     * @see <a target="_blank" href="http://docs.cloudant.com/api/search.html">sort query
+     * parameter format</a>
      */
     public Search groupSort(String groupsortJson) {
         assertNotEmpty(groupsortJson, "groupsortJson");
@@ -331,7 +332,8 @@ public class Search {
      *
      * @param rangesJson JSON string specifying the ranges
      * @return this for additional parameter setting or to query
-     * @see <a href="http://docs.cloudant.com/api/search.html">ranges query argument format</a>
+     * @see <a target="_blank" href="http://docs.cloudant.com/api/search.html">ranges query
+     * argument format</a>
      */
     public Search ranges(String rangesJson) {
         assertNotEmpty(rangesJson, "rangesJson");
@@ -358,10 +360,11 @@ public class Search {
     }
 
     /**
-     * @param fieldName the name of the field
+     * @param fieldName  the name of the field
      * @param fieldValue the value of the field
      * @return this for additional parameter setting or to query
-     * @see <a href="https://docs.cloudant.com/search.html#faceting">drilldown query parameter</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/search.html#faceting">drilldown
+     * query parameter</a>
      */
     public Search drillDown(String fieldName, String fieldValue) {
         assertNotEmpty(fieldName, "fieldName");
@@ -404,7 +407,8 @@ public class Search {
             String field = fld.getKey();
             Map<String, Long> ovalues = new HashMap<String, Long>();
             if (fld.getValue().isJsonObject()) {
-                Set<Map.Entry<String, JsonElement>> values = fld.getValue().getAsJsonObject().entrySet();
+                Set<Map.Entry<String, JsonElement>> values = fld.getValue().getAsJsonObject()
+                        .entrySet();
                 for (Entry<String, JsonElement> value : values) {
                     ovalues.put(value.getKey(), value.getValue().getAsLong());
                 }
@@ -417,7 +421,8 @@ public class Search {
     private <T> List<SearchResult<T>.SearchResultRow> getRows(
             JsonArray jsonrows, SearchResult<T> sr, Class<T> classOfT) {
 
-        List<SearchResult<T>.SearchResultRow> ret = new ArrayList<SearchResult<T>.SearchResultRow>();
+        List<SearchResult<T>.SearchResultRow> ret = new ArrayList<SearchResult<T>
+                .SearchResultRow>();
         for (JsonElement e : jsonrows) {
             SearchResult<T>.SearchResultRow row = sr.new SearchResultRow();
             JsonObject oe = e.getAsJsonObject();

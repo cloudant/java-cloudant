@@ -78,7 +78,8 @@ public class Key {
         public static final Type<Boolean> BOOLEAN = new Type<Boolean>(Boolean.class);
         /**
          * Type constant for
-         * <a href="https://docs.cloudant.com/creating_views.html#map-function-examples">
+         * <a target="_blank"
+         * href="https://docs.cloudant.com/creating_views.html#map-function-examples">
          * complex keys.</a>
          *
          * @since 2.0.0

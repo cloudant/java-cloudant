@@ -27,7 +27,6 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -63,17 +62,16 @@ import java.util.List;
  * }
  * </pre>
  *
- * @see {@link Database#getDesignDocumentManager()} to access the API.
+ * See {@link Database#getDesignDocumentManager()} to access the API.
+ *
  * @see DesignDocument
  * @since 2.0.0
  */
 public class DesignDocumentManager {
 
-    private URI dbUri;
     private Database db;
 
     DesignDocumentManager(Database db) {
-        this.dbUri = db.getDBUri();
         this.db = db;
     }
 
@@ -86,12 +84,13 @@ public class DesignDocumentManager {
      * using {@code equals()}. If both documents are not equal, then the given document will be
      * saved to the database and updates the existing document.
      *
-     * @param document The design document to synchronize
+     * @param document the design document to synchronize (optionally prefixed with "_design/")
      * @return {@link Response} as a result of a document save or update, or returns {@code null}
-     * if no action was taken and the document in the database is up-to-date with the given document.
+     * if no action was taken and the document in the database is up-to-date with the given
+     * document.
      */
     public Response put(DesignDocument document) {
-        CouchDbUtil.assertNotEmpty(document, "Document");
+        CouchDbUtil.assertNotEmpty(document, "DesignDocument");
         DesignDocument documentFromDb;
         try {
             documentFromDb = get(document.getId());
@@ -106,6 +105,12 @@ public class DesignDocumentManager {
         return null;
     }
 
+    /**
+     * Synchronize multiple design documents with the database.
+     *
+     * @param designDocs DesignDocument objects to put in the database
+     * @see #put(DesignDocument)
+     */
     public void put(DesignDocument... designDocs) {
         for (DesignDocument designDocument : designDocs) {
             put(designDocument);
@@ -115,7 +120,7 @@ public class DesignDocumentManager {
     /**
      * Gets a design document from the database.
      *
-     * @param id The document id
+     * @param id the design document id (optionally prefixed with "_design/")
      * @return {@link DesignDocument}
      */
     public DesignDocument get(String id) {
@@ -125,10 +130,10 @@ public class DesignDocumentManager {
     }
 
     /**
-     * Gets a design document using the id and rev from the database.
+     * Gets a design document using the id and revision from the database.
      *
-     * @param id  The document id
-     * @param rev The document revision
+     * @param id  the document id (optionally prefixed with "_design/")
+     * @param rev the document revision
      * @return {@link DesignDocument}
      */
     public DesignDocument get(String id, String rev) {
@@ -141,7 +146,7 @@ public class DesignDocumentManager {
     /**
      * Removes a design document from the database.
      *
-     * @param id The document id
+     * @param id the document id (optionally prefixed with "_design/")
      * @return {@link DesignDocument}
      */
     public Response remove(String id) {
@@ -154,8 +159,8 @@ public class DesignDocumentManager {
     /**
      * Removes a design document using the id and rev from the database.
      *
-     * @param id  The document id
-     * @param rev The document revision
+     * @param id  the document id
+     * @param rev the document revision
      * @return {@link DesignDocument}
      */
     public Response remove(String id, String rev) {
@@ -178,10 +183,11 @@ public class DesignDocumentManager {
     }
 
     /**
-     * Deserialize a directory of javascript design documents to a DesignDocument object.
+     * Deserialize a directory of javascript design documents to a List of DesignDocument objects.
      *
      * @param directory the directory containing javascript files
      * @return {@link DesignDocument}
+     * @throws FileNotFoundException if the file does not exist or cannot be read
      */
     public static List<DesignDocument> fromDirectory(File directory) throws FileNotFoundException {
         List<DesignDocument> designDocuments = new ArrayList<DesignDocument>();
@@ -197,10 +203,11 @@ public class DesignDocumentManager {
     }
 
     /**
-     * Deserialize a javascript design document to a DesignDocument object.
+     * Deserialize a javascript design document file to a DesignDocument object.
      *
      * @param file the design document javascript file
      * @return {@link DesignDocument}
+     * @throws FileNotFoundException if the file does not exist or cannot be read
      */
     public static DesignDocument fromFile(File file) throws FileNotFoundException {
         assertNotEmpty(file, "Design js file");

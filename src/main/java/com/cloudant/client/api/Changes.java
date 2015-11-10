@@ -61,9 +61,9 @@ import com.cloudant.client.api.model.ChangesResult.Row;
  *
  * @author Ganesh K Choudhary
  * @see ChangesResult
+ * @see <a target="_blank" href="https://docs.cloudant.com/database.html#get-changes">Databases -
+ * get changes</a>
  * @since 0.0.1
- * @see <a href="https://docs.cloudant.com/database.html#get-changes">Databases - get
- * changes</a>
  */
 public class Changes {
     private com.cloudant.client.org.lightcouch.Changes changes;
@@ -75,6 +75,7 @@ public class Changes {
     /**
      * Requests Change notifications of feed type continuous.
      * <p>Feed notifications are accessed in an <i>iterator</i> style.</p>
+     *
      * @return this Changes object configured for continuous feed.
      */
     public Changes continuousChanges() {
@@ -110,10 +111,12 @@ public class Changes {
 
     /**
      * Requests Change notifications of feed type normal.
+     *
      * @return {@link ChangesResult} encapsulating the normal feed changes
      */
     public ChangesResult getChanges() {
-        com.cloudant.client.org.lightcouch.ChangesResult couchDbChangesResult = changes.getChanges();
+        com.cloudant.client.org.lightcouch.ChangesResult couchDbChangesResult = changes
+                .getChanges();
         ChangesResult changeResult = new ChangesResult(couchDbChangesResult);
         return changeResult;
     }

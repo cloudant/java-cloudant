@@ -57,7 +57,8 @@ import java.util.List;
  *
  * }
  * </pre>
- * <a href="https://docs.cloudant.com/creating_views.html#sending-several-queries-to-a-view">
+ * <a target="_blank"
+ * href="https://docs.cloudant.com/creating_views.html#sending-several-queries-to-a-view">
  * Cloudant API reference
  * </a>
  *

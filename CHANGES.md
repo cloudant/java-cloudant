@@ -19,10 +19,9 @@
   This should only have a visible impact for `CouchDbException` and its subclasses.
 - [BREAKING CHANGE] Removed DbDesign class and replaced with DesignDocumentManager.
   If you were using the `getFromDesk` method, convert your design document directory to javascript
-  files and use `DesignDocumentManager.fromFile(File)` or
-  `DesignDocumentManager.fromDirectory(File)`.
+  files and use `DesignDocumentManager.fromFile(File)` or `DesignDocumentManager.fromDirectory(File)`.
   More information is available in the javadoc, including usage for de-serializing design document
-  javascript files to DesignDocument objects.
+  javascript files to `DesignDocument` objects.
 - [FIX] Use the default port for the protocol when a client instance is created from a URL without
   specifying a port.
 

@@ -60,7 +60,8 @@ import java.util.logging.Logger;
  * @author Ahmed Yehia
  * @see ReplicationResult
  * @see com.cloudant.client.api.model.ReplicationResult.ReplicationHistory
- * @see <a href="https://docs.cloudant.com/replication.html#the-/_replicate-endpoint">
+ * @see <a target="_blank"
+ * href="https://docs.cloudant.com/replication.html#the-/_replicate-endpoint">
  * Replication - _replicate
  * </a>
  * @since 0.0.2

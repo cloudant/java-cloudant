@@ -79,10 +79,10 @@ import java.util.Map;
  *
  * @author Ahmed Yehia
  * @see ReplicatorDocument
- * @see <a href="https://docs.cloudant.com/replication.html#the-/_replicator-database">
+ * @see <a target="_blank"
+ * href="https://docs.cloudant.com/replication.html#the-/_replicator-database">
  * Replication - _replicator
  * </a>
- *
  * @since 0.0.2
  */
 public class Replicator {
@@ -147,7 +147,7 @@ public class Replicator {
             for (JsonElement jsonElem : jsonArray) {
                 JsonElement elem = jsonElem.getAsJsonObject().get("doc");
                 if (!getAsString(elem.getAsJsonObject(), "_id").startsWith("_design")) { // skip
-                // design docs
+                    // design docs
                     ReplicatorDocument rd = client.getGson().fromJson(elem, ReplicatorDocument
                             .class);
                     list.add(rd);

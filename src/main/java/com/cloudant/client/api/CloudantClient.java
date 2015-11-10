@@ -37,6 +37,7 @@ import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -171,7 +172,7 @@ public class CloudantClient {
      * Get the list of active tasks from the server.
      *
      * @return List of tasks
-     * @see <a href="https://docs.cloudant.com/active_tasks.html">Active tasks</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/active_tasks.html">Active tasks</a>
      */
     public List<Task> getActiveTasks() {
         InputStream response = null;
@@ -189,7 +190,8 @@ public class CloudantClient {
      * Get the list of all nodes and the list of active nodes in the cluster.
      *
      * @return Membership object encapsulating lists of all nodes and the cluster nodes
-     * @see <a href="https://docs.cloudant.com/advanced.html#get-/_membership">_membership</a>
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/advanced.html#get-/_membership">_membership</a>
      */
     public Membership getMembership() {
         Membership membership = couchDbClient.get(buildUri(getBaseUri()).path("_membership")
@@ -206,7 +208,8 @@ public class CloudantClient {
      * @return Database object
      * @throws com.cloudant.client.org.lightcouch.NoDocumentException if the database does not
      *                                                                exist and create was false
-     * @see <a href="https://docs.cloudant.com/database.html#read">Databases - read</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/database.html#read">Databases -
+     * read</a>
      */
     public Database database(String name, boolean create) {
         return new Database(this, couchDbClient.database(name, create));
@@ -216,7 +219,8 @@ public class CloudantClient {
      * Request to delete the database with the specified name.
      *
      * @param dbName the database name
-     * @see <a href="https://docs.cloudant.com/database.html#deleting-a-database">Databases - delete
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/database.html#deleting-a-database">Databases - delete
      * </a>
      */
     public void deleteDB(String dbName) {
@@ -230,7 +234,8 @@ public class CloudantClient {
      * @throws com.cloudant.client.org.lightcouch.PreconditionFailedException if a database with
      *                                                                        the same name
      *                                                                        already exists
-     * @see <a href="https://docs.cloudant.com/database.html#create">Databases - create</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/database.html#create">Databases -
+     * create</a>
      */
     public void createDB(String dbName) {
         couchDbClient.createDB(dbName);
@@ -247,7 +252,7 @@ public class CloudantClient {
      * List all the databases on the server for the Cloudant account.
      *
      * @return List of the names of all the databases
-     * @see <a href="https://docs.cloudant.com/database.html#get-databases">
+     * @see <a target="_blank" href="https://docs.cloudant.com/database.html#get-databases">
      * Databases - get databases</a>
      */
     public List<String> getAllDbs() {
@@ -258,7 +263,8 @@ public class CloudantClient {
      * Get the reported server version from the welcome message metadata.
      *
      * @return Cloudant server version.
-     * @see <a href="https://docs.cloudant.com/advanced.html#get-/">Welcome message</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/advanced.html#get-/">Welcome
+     * message</a>
      */
     public String serverVersion() {
         return couchDbClient.serverVersion();
@@ -269,7 +275,8 @@ public class CloudantClient {
      *
      * @return Replication object for configuration and triggering
      * @see com.cloudant.client.api.Replication
-     * @see <a href="https://docs.cloudant.com/replication.html#the-/_replicate-endpoint">
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/replication.html#the-/_replicate-endpoint">
      * Replication - _replicate
      * </a>
      */
@@ -285,7 +292,8 @@ public class CloudantClient {
      *
      * @return Replicator object for interacting with the _replicator DB
      * @see com.cloudant.client.api.Replicator
-     * @see <a href="https://docs.cloudant.com/replication.html#the-/_replicator-database">
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/replication.html#the-/_replicator-database">
      * Replication - _replicator
      * </a>
      */
@@ -333,7 +341,7 @@ public class CloudantClient {
      *
      * @param count the number of UUIDs
      * @return a List of UUID Strings
-     * @see <a href="https://docs.cloudant.com/advanced.html#get-/_uuids">_uuids</a>
+     * @see <a target="_blank" href="https://docs.cloudant.com/advanced.html#get-/_uuids">_uuids</a>
      */
     public List<String> uuids(long count) {
         return couchDbClient.uuids(count);
