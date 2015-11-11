@@ -69,7 +69,7 @@ public class SearchTests {
         // sync the design doc for faceted search
         File designDocViews101 =
                 new File(String.format("%s/views101_design_doc.js", new File(System.getProperty(
-                        "user.dir") + "/src/test/resources/design-docs")));
+                        "user.dir") + "/src/test/resources/design-files")));
         DesignDocument designDoc = DesignDocumentManager.fromFile(designDocViews101);
         db.getDesignDocumentManager().put(designDoc);
     }
