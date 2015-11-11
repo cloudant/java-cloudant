@@ -33,6 +33,36 @@ package com.cloudant.client.api.views;
  *   .build();
  * }
  * </pre>
+ * <P>Example to list all the document IDs in a database:</P>
+ * <pre>
+ *  {@code
+ *  List<String> allDocIds = db.getAllDocsRequestBuilder().build().getResponse().getDocIds();
+ *  }
+ *  </pre>
+ * <P>
+ * Example to fetch all the documents in the database:
+ * </P>
+ * <pre>
+ *  {@code
+ *  List<Foo> allFoos = db.getAllDocsRequestBuilder().includeDocs(true).build()
+ *          .getRepsonse().getDocsAs(Foo.class);
+ *  }
+ *  </pre>
+ * <P>
+ * Example to fetch multiple documents, with the specified document IDs from the database:
+ * </P>
+ * <pre>
+ *  {@code
+ *   String[] docIds = new String[]{"doc-id-1", "doc-id-2"};
+ *   List<Foo> foosWithIds = db.getAllDocsRequestBuilder().keys(docIds).includeDocs(true).build()
+ *           .getRepsonse().getDocsAs(Foo.class);
+ *  }
+ *
+ *  </pre>
+ *
+ * @see AllDocsRequest
+ * @see AllDocsResponse
+ * @since 2.0.0
  */
 public interface AllDocsRequestBuilder extends RequestBuilder<AllDocsRequestBuilder>,
         SettableViewParameters.Unpaginated<String, AllDocsRequestBuilder> {

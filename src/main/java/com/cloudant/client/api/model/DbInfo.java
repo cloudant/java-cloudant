@@ -18,7 +18,7 @@ package com.cloudant.client.api.model;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Holds information about a CouchDB database instance.
+ * Encapsulates information about a database instance.
  *
  * @author Ganesh K Choudhary
  */

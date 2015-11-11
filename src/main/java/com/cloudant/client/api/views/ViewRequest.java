@@ -40,7 +40,7 @@ public interface ViewRequest<K, V> {
      * </pre>
      *
      * @return the response object
-     * @throws IOException
+     * @throws IOException if there is an error communicating with the server
      * @since 2.0.0
      */
     ViewResponse<K, V> getResponse() throws IOException;
@@ -64,7 +64,7 @@ public interface ViewRequest<K, V> {
      * </pre>
      *
      * @return value from the first result row or {@code null} if there were no rows
-     * @throws IOException
+     * @throws IOException if there is an error communicating with the server
      * @since 2.0.0
      */
     V getSingleValue() throws IOException;

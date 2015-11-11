@@ -14,7 +14,7 @@
 
 /**
  * This package provides access to the
- * <a href="https://docs.cloudant.com/creating_views.html">view API</a>.
+ * <a target="_blank" href="https://docs.cloudant.com/creating_views.html">view API</a>.
  *
  * <H1>Overview</H1>
  * <P>
@@ -61,17 +61,17 @@
  *
  * //build a new request and specify any parameters required
  * ViewRequest<String, Integer> request = viewBuilder.newRequest(Key.Type.STRING,Integer.class)
- *   .startKey("square") //return docs after "square"
- *   .build();
+ * .startKey("square") //return docs after "square"
+ * .build();
  *
  * //perform the request and get the response
  * ViewResponse<String, Integer> response = request.getResponse();
  *
  * //loop through the rows of the response
  * for (ViewResponse.Row<String, Integer> row : response.getRows()) {
- *   String key = row.getKey();
- *   Integer value = row.getValue();
- *   System.out.println("Shape " + key + " has " + value + " sides.");
+ * String key = row.getKey();
+ * Integer value = row.getValue();
+ * System.out.println("Shape " + key + " has " + value + " sides.");
  * }
  * }
  * </PRE>

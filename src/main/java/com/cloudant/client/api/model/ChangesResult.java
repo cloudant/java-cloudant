@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents Changes feed result of type <i>normal</i>.
+ * Encapsulates a Changes feed result of type <i>normal</i>.
  *
  * @author Ganesh K Choudhary
  * @see Changes
@@ -56,7 +56,7 @@ public class ChangesResult {
 
 
     /**
-     * Represent a row in Changes result.
+     * Encapsulates a Changes feed result row.
      */
     public static class Row {
         private com.cloudant.client.org.lightcouch.ChangesResult.Row row;
@@ -95,7 +95,7 @@ public class ChangesResult {
         }
 
         /**
-         * Represent a Change rev.
+         * Encapsulates the revision of a change result row.
          */
         public static class Rev {
             private com.cloudant.client.org.lightcouch.ChangesResult.Row.Rev rev;

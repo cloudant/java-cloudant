@@ -127,12 +127,14 @@ public interface ViewResponse<K, V> extends Iterable<ViewResponse<K, V>> {
 
     /**
      * @return the next page of results from this view query
+     * @throws IOException if there is an error communicating with the server
      * @since 2.0.0
      */
     ViewResponse<K, V> nextPage() throws IOException;
 
     /**
      * @return the previous page of results from this view query
+     * @throws IOException if there is an error communicating with the server
      * @since 2.0.0
      */
     ViewResponse<K, V> previousPage() throws IOException;

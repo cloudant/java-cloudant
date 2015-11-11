@@ -215,22 +215,6 @@ public abstract class CouchDatabaseBase {
     }
 
     /**
-     * Saves a document with <tt>batch=ok</tt> query param.
-     *
-     * @param object The object to save.
-     */
-    public void batch(Object object) {
-        assertNotEmpty(object, "object");
-        InputStream response = null;
-        try {
-            URI uri = buildUri(getDBUri()).query("batch", "ok").build();
-            response = couchDbClient.post(uri, getGson().toJson(object));
-        } finally {
-            close(response);
-        }
-    }
-
-    /**
      * Updates an object in the database, the object must have the correct <code>_id</code> and
      * <code>_rev</code> values.
      *
@@ -339,31 +323,6 @@ public abstract class CouchDatabaseBase {
         final URI uri = buildUri(getDBUri()).path(docId).path("/").path(name).query("rev",
                 docRev).build();
         return couchDbClient.put(uri, in, contentType);
-    }
-
-    /**
-     * Invokes an Update Handler.
-     * <pre>
-     * String query = "field=foo&value=bar";
-     * String output = dbClient.invokeUpdateHandler("designDoc/update1", "docId", query);
-     * </pre>
-     *
-     * @param updateHandlerUri The Update Handler URI, in the format: <code>designDoc/update1</code>
-     * @param docId            The document id to update.
-     * @param query            The query string parameters, e.g,
-     *                         <code>field=field1&value=value1</code>
-     * @return The output of the request.
-     * @deprecated Use {@link #invokeUpdateHandler(String, String, Params)} instead.
-     */
-    @Deprecated
-    public String invokeUpdateHandler(String updateHandlerUri, String docId, String query) {
-        assertNotEmpty(updateHandlerUri, "uri");
-        assertNotEmpty(docId, "docId");
-        final String[] v = updateHandlerUri.split("/");
-        final String path = String.format("_design/%s/_update/%s/", v[0], v[1]);
-        final URI uri = buildUri(getDBUri()).path(path).path(docId).query(query).build();
-        final InputStream response = couchDbClient.put(uri);
-        return streamToString(response);
     }
 
     /**

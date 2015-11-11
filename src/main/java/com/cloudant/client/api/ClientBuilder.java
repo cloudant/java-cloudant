@@ -81,8 +81,8 @@ import javax.net.ssl.SSLSocketFactory;
  * CloudantClient client = ClientBuilder.account("yourCloudantAccount")
  *                          .username("yourUsername")
  *                          .password("yourPassword")
- *                          .connectionTimeout(ClientBuilder.TimeoutOption.minutes(1))
- *                          .readTimeout(ClientBuilder.TimeoutOption.minutes(1))
+ *                          .connectTimeout(1, TimeUnit.MINUTES)
+ *                          .readTimeout(1, TimeUnit.MINUTES)
  *                          .build();
  * }
  * </pre>
@@ -98,13 +98,11 @@ public class ClientBuilder {
     /**
      * Connection timeout defaults to 5 minutes
      **/
-    public static final TimeoutOption DEFAULT_CONNECTION_TIMEOUT
-            = TimeoutOption.minutes(5);
+    public static final long DEFAULT_CONNECTION_TIMEOUT = 5l;
     /**
      * Read timeout defaults to 5 minutes
      **/
-    public static final TimeoutOption DEFAULT_READ_TIMEOUT
-            = TimeoutOption.minutes(5);
+    public static final long DEFAULT_READ_TIMEOUT = 5l;
 
     private List<HttpConnectionRequestInterceptor> requestInterceptors = new ArrayList
             <HttpConnectionRequestInterceptor>();
@@ -123,8 +121,12 @@ public class ClientBuilder {
     private String proxyPassword;
     private boolean isSSLAuthenticationDisabled;
     private SSLSocketFactory authenticatedModeSSLSocketFactory;
-    private TimeoutOption connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
-    private TimeoutOption readTimeout = DEFAULT_READ_TIMEOUT;
+    private long connectTimeout = DEFAULT_CONNECTION_TIMEOUT;
+    private TimeUnit connectTimeoutUnit = TimeUnit.MINUTES;
+    ;
+    private long readTimeout = DEFAULT_READ_TIMEOUT;
+    private TimeUnit readTimeoutUnit = TimeUnit.MINUTES;
+    ;
 
     /**
      * Constructs a new ClientBuilder for building a CloudantClient instance to connect to the
@@ -216,8 +218,8 @@ public class ClientBuilder {
 
 
         //If setter methods for read and connection timeout are not called, default values are used.
-        props.addRequestInterceptors(new TimeoutCustomizationInterceptor(connectionTimeout,
-                readTimeout));
+        props.addRequestInterceptors(new TimeoutCustomizationInterceptor(connectTimeout,
+                connectTimeoutUnit, readTimeout, readTimeoutUnit));
 
         //Set connect options
         props.setMaxConnections(maxConnections);
@@ -291,7 +293,7 @@ public class ClientBuilder {
     }
 
     /**
-     * Set a custom GsonBuilder to use when serializing and de-serializing requests and
+     * Set a custom GsonBuilder to use when serializing and de-serializing JSON in requests and
      * responses between the CloudantClient and the server.
      * <P>
      * Note: the supplied GsonBuilder will be augmented with some internal TypeAdapters.
@@ -366,11 +368,11 @@ public class ClientBuilder {
      *
      * @return this ClientBuilder object for setting additional options
      * @throws IllegalStateException if {@link #customSSLSocketFactory(SSLSocketFactory)}
-     * has been called on this ClientBuilder
+     *                               has been called on this ClientBuilder
      * @see #customSSLSocketFactory(SSLSocketFactory)
      */
     public ClientBuilder disableSSLAuthentication() {
-        if(authenticatedModeSSLSocketFactory == null) {
+        if (authenticatedModeSSLSocketFactory == null) {
             this.isSSLAuthenticationDisabled = true;
         } else {
             throw new IllegalStateException("Cannot disable SSL authentication when a " +
@@ -378,7 +380,7 @@ public class ClientBuilder {
         }
         return this;
     }
-    
+
 
     /**
      * Specifies the custom SSLSocketFactory to use when connecting to Cloudant over a
@@ -388,11 +390,11 @@ public class ClientBuilder {
      *                default SSLSocketFactory of the JRE.
      * @return this ClientBuilder object for setting additional options
      * @throws IllegalStateException if {@link #disableSSLAuthentication()}
-     * has been called on this ClientBuilder
+     *                               has been called on this ClientBuilder
      * @see #disableSSLAuthentication()
      */
     public ClientBuilder customSSLSocketFactory(SSLSocketFactory factory) {
-        if(!isSSLAuthenticationDisabled) {
+        if (!isSSLAuthenticationDisabled) {
             this.authenticatedModeSSLSocketFactory = factory;
         } else {
             throw new IllegalStateException("Cannot use a custom SSLSocketFactory when " +
@@ -407,8 +409,9 @@ public class ClientBuilder {
      * CloudantClient and the server.
      * <P>
      * An example interceptor use might be to apply a custom authorization mechanism. For
-     * instance to use BasicAuth instead of CookieAuth it is possible to add a
-     * {@link com.cloudant.http.interceptors.BasicAuthInterceptor}:
+     * instance to use BasicAuth instead of CookieAuth it is possible to use a
+     * {@link com.cloudant.http.interceptors.BasicAuthInterceptor} that adds the BasicAuth
+     * {@code Authorization} header to the request:
      * </P>
      * <pre>
      * {@code
@@ -446,19 +449,20 @@ public class ClientBuilder {
      * CloudantClient client = ClientBuilder.account("yourCloudantAccount")
      *      .username("yourUsername")
      *      .password("yourPassword")
-     *      .connectionTimeout(ClientBuilder.TimeoutOption.seconds(2))
+     *      .connectTimeout(2, TimeUnit.SECONDS)
      *      .build();
      * }
      * </pre>
-     * Defaults to {@link #DEFAULT_CONNECTION_TIMEOUT}
+     * Defaults to {@link #DEFAULT_CONNECTION_TIMEOUT} with {@link TimeUnit#MINUTES}.
      *
-     * @param connectionTimeout TimeoutOption of the required duration
+     * @param connectTimeout     duration of the read timeout
+     * @param connectTimeoutUnit unit of measurement of the read timeout parameter
      * @return this ClientBuilder object for setting additional options
-     * @see com.cloudant.client.api.ClientBuilder.TimeoutOption
      * @see java.net.HttpURLConnection#setConnectTimeout(int)
      **/
-    public ClientBuilder connectionTimeout(TimeoutOption connectionTimeout) {
-        this.connectionTimeout = connectionTimeout;
+    public ClientBuilder connectTimeout(long connectTimeout, TimeUnit connectTimeoutUnit) {
+        this.connectTimeout = connectTimeout;
+        this.connectTimeoutUnit = connectTimeoutUnit;
         return this;
     }
 
@@ -474,78 +478,21 @@ public class ClientBuilder {
      * CloudantClient client = ClientBuilder.account("yourCloudantAccount")
      *      .username("yourUsername")
      *      .password("yourPassword")
-     *      .readTimeout(ClientBuilder.TimeoutOption.seconds(2))
+     *      .readTimeout(2, TimeUnit.SECONDS)
      *      .build();
      * }
      * </pre>
-     * Defaults to {@link #DEFAULT_READ_TIMEOUT}
+     * Defaults to {@link #DEFAULT_READ_TIMEOUT} with {@link TimeUnit#MINUTES}.
      *
-     * @param readTimeout TimeoutOption of the required duration
+     * @param readTimeout     duration of the read timeout
+     * @param readTimeoutUnit unit of measurement of the read timeout parameter
      * @return this ClientBuilder object for setting additional options
-     * @see com.cloudant.client.api.ClientBuilder.TimeoutOption
      * @see java.net.HttpURLConnection#setReadTimeout(int)
      **/
-    public ClientBuilder readTimeout(TimeoutOption readTimeout) {
+    public ClientBuilder readTimeout(long readTimeout, TimeUnit readTimeoutUnit) {
         this.readTimeout = readTimeout;
+        this.readTimeoutUnit = readTimeoutUnit;
         return this;
     }
 
-    /**
-     * Class that holds the value of a timeout, bound by the range 0 to {@link Integer#MAX_VALUE}
-     * milliseconds. If the specified timeout exceeds the range maximum it will be set to the
-     * maximum value and likewise if the value is less than 0 then it will be set at 0.
-     * <P>
-     * Conveniently creates timeout values in minutes, seconds or using another {@link TimeUnit}.
-     * </P>
-     *
-     * @see ClientBuilder#readTimeout(TimeoutOption)
-     * @see ClientBuilder#connectionTimeout(TimeoutOption)
-     */
-    public final static class TimeoutOption {
-
-        private int timeoutMillis;
-
-        /**
-         * Constructs a new TimeoutOption instance with the specified timeout duration.
-         *
-         * @param timeout     value of the duration of the timeout in the specified unit
-         * @param timeoutUnit the {@link TimeUnit} of the timeout duration value
-         */
-        public TimeoutOption(long timeout, TimeUnit timeoutUnit) {
-            Long to = timeoutUnit.toMillis(timeout);
-            if (timeout < 0) {
-                timeoutMillis = 0;
-            } else if (timeout > Integer.MAX_VALUE) {
-                timeoutMillis = Integer.MAX_VALUE;
-            } else {
-                timeoutMillis = to.intValue();
-            }
-        }
-
-        /**
-         * Constructs a new TimeoutOption instance with the specified duration in minutes.
-         *
-         * @param minutes duration of the timeout in minutes
-         * @return a new TimeoutOption for the duration specified in minutes
-         */
-        public static TimeoutOption minutes(int minutes) {
-            return new TimeoutOption(minutes, TimeUnit.MINUTES);
-        }
-
-        /**
-         * Constructs a new TimeoutOption instance with the specified duration in seconds.
-         * @param seconds duration of the timeout in seconds
-         * @return a new TimeoutOption for the duration specified in seconds
-         */
-        public static TimeoutOption seconds(int seconds) {
-            return new TimeoutOption(seconds, TimeUnit.SECONDS);
-        }
-
-        /**
-         * @return the value of the timeout in milliseconds
-         */
-        public int asIntMillis() {
-            return timeoutMillis;
-        }
-    }
 }

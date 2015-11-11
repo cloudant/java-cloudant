@@ -22,6 +22,7 @@ import java.net.URL;
  * Factory methods for obtaining <code>HttpConnection</code>s.
  *
  * @see com.cloudant.http.HttpConnection
+ * @since 2.0.0
  */
 public class Http {
 

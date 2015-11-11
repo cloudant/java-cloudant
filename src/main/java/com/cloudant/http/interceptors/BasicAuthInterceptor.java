@@ -14,7 +14,7 @@
 
 package com.cloudant.http.interceptors;
 
-import com.cloudant.http.Base64OutputStreamFactory;
+import com.cloudant.http.internal.Base64OutputStreamFactory;
 import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 

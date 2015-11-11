@@ -57,7 +57,8 @@ import java.util.List;
  *
  * }
  * </pre>
- * <a href="https://docs.cloudant.com/creating_views.html#sending-several-queries-to-a-view">
+ * <a target="_blank"
+ * href="https://docs.cloudant.com/creating_views.html#sending-several-queries-to-a-view">
  * Cloudant API reference
  * </a>
  *
@@ -74,7 +75,7 @@ public interface ViewMultipleRequest<K, V> {
      * Perform a single POST request to get the responses for the queries built into this request.
      *
      * @return a list of the responses, one for each query
-     * @throws IOException
+     * @throws IOException if there is an error communicating with the server
      * @since 2.0.0
      */
     List<ViewResponse<K, V>> getViewResponses() throws IOException;

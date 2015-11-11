@@ -22,8 +22,17 @@ package com.cloudant.client.api.model;
  */
 public class IndexField {
 
+    /**
+     * Ascending or descending sort order
+     */
     public enum SortOrder {
+        /**
+         * ascending
+         */
         asc,
+        /**
+         * descending
+         */
         desc
     }
 
@@ -47,7 +56,7 @@ public class IndexField {
 
 
     /**
-     * Represents a Cloudant Sort Syntax for a json field. Used to specify
+     * Encapsulates a Cloudant Sort Syntax for a json field. Used to specify
      * an element of the 'index.fields' array (POST db/_index) and 'sort' array (db/_find) @see <a
      * href = "http://docs.cloudant.com/api/cloudant-query.html#cloudant-query-sort-syntax"> sort
      * Syntax</a>

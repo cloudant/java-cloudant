@@ -22,26 +22,25 @@ import com.cloudant.http.interceptors.CookieInterceptor;
 import java.net.HttpURLConnection;
 
 /**
-
- A Request Interceptor is run before the request is made to the server. It can use headers to add support
- for other authentication methods, for example cookie authentication. See
- {@link CookieInterceptor#interceptRequest(HttpConnectionInterceptorContext)} for an example.
-
-
- Interceptors are executed in a pipeline and modify the context in a serial fashion.
+ * A Request Interceptor is run before the request is made to the server. It can use headers to
+ * add support for other authentication methods, for example cookie authentication. See
+ * {@link CookieInterceptor#interceptRequest(HttpConnectionInterceptorContext)} for an example.
+ *
+ * Interceptors are executed in a pipeline and modify the context in a serial fashion.
+ *
+ * @since 2.0.0
  */
-
-
 public interface HttpConnectionRequestInterceptor extends HttpConnectionInterceptor {
 
     /**
      * Intercept the request.
      * This method <strong>must not</strong> do any of the following:
      * <ul>
-     *     <li>Return null</li>
-     *     <li>Call methods on the underlying {@link java.net.HttpURLConnection} which
-     *     initiate a request such as {@link HttpURLConnection#getResponseCode()}</li>
+     * <li>Return null</li>
+     * <li>Call methods on the underlying {@link java.net.HttpURLConnection} which
+     * initiate a request such as {@link HttpURLConnection#getResponseCode()}</li>
      * </ul>
+     *
      * @param context Input context
      * @return Output context
      */

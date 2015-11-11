@@ -15,7 +15,7 @@
 package com.cloudant.client.api.model;
 
 /**
- * Encapsulates a ApiKey response from Cloudant
+ * Encapsulates an ApiKey response from Cloudant
  *
  * @author Mario Briggs
  * @since 0.0.1

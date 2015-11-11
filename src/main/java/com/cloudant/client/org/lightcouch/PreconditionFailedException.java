@@ -20,7 +20,7 @@ package com.cloudant.client.org.lightcouch;
  * </P>
  * <P>
  * An example of when CouchDB will return a 412 status code is for a
- * <a href="http://docs.couchdb.org/en/1.6.1/api/database/common.html#put--db">
+ * <a target="_blank" href="http://docs.couchdb.org/en/1.6.1/api/database/common.html#put--db">
  * <code>PUT /{db}</code></a> when the DB already exists.
  * </P>
  */

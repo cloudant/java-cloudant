@@ -45,7 +45,7 @@ import java.util.logging.Logger;
 
 /**
  * This class provides access to the Cloudant <tt>Search</tt> APIs.
- * <h3>Usage Example:</h3>
+ * <p>Usage Example:</p>
  * <pre>
  * {@code
  *  List<Bird> birds = db.search("views101/animals")
@@ -247,6 +247,7 @@ public class Search {
 
     /**
      * @param limit limit the number of documents in the result
+     * @return this for additional parameter setting or to query
      */
     public Search limit(Integer limit) {
         this.limit = limit;
@@ -261,7 +262,7 @@ public class Search {
      * in the response
      *
      * @param bookmark see the next page of results after this bookmark result
-     * @return
+     * @return this for additional parameter setting or to query
      */
     public Search bookmark(String bookmark) {
         this.bookmark = bookmark;
@@ -272,9 +273,10 @@ public class Search {
     /**
      * Specify the sort order for the result.
      *
-     * @param sortJson @see <a href="http://docs.cloudant.com/api/search.html"> sort</a>
-     *                 query argument for format
-     * @return
+     * @param sortJson JSON string specifying the sort order
+     * @return this for additional parameter setting or to query
+     * @see <a target="_blank" href="http://docs.cloudant.com/api/search.html">sort query
+     * parameter format</a>
      */
     public Search sort(String sortJson) {
         assertNotEmpty(sortJson, "sort");
@@ -284,11 +286,11 @@ public class Search {
 
 
     /**
-     * field by which to group results.
+     * Group results by the specified field.
      *
-     * @param fieldName
+     * @param fieldName by which to group results
      * @param isNumber  whether field isNumeric.
-     * @return
+     * @return this for additional parameter setting or to query
      */
     public Search groupField(String fieldName, boolean isNumber) {
         assertNotEmpty(fieldName, "fieldName");
@@ -303,8 +305,8 @@ public class Search {
     /**
      * Maximum group count when groupField is set
      *
-     * @param limit
-     * @return
+     * @param limit the maximum group count
+     * @return this for additional parameter setting or to query
      */
     public Search groupLimit(int limit) {
         uriBuilder.query("group_limit", limit);
@@ -314,9 +316,10 @@ public class Search {
     /**
      * the sort order of the groups when groupField is set
      *
-     * @param groupsortJson @see <a href="http://docs.cloudant.com/api/search.html"> sort</a>
-     *                      query argument here for format
-     * @return
+     * @param groupsortJson JSON string specifying the group sort
+     * @return this for additional parameter setting or to query
+     * @see <a target="_blank" href="http://docs.cloudant.com/api/search.html">sort query
+     * parameter format</a>
      */
     public Search groupSort(String groupsortJson) {
         assertNotEmpty(groupsortJson, "groupsortJson");
@@ -325,12 +328,12 @@ public class Search {
     }
 
     /**
-     * Ranges for faceted searches.  @see <a href="http://docs.cloudant.com/api/search.html">
-     *     ranges</a>
-     * query argument here for format
+     * Ranges for faceted searches
      *
-     * @param rangesJson
-     * @return
+     * @param rangesJson JSON string specifying the ranges
+     * @return this for additional parameter setting or to query
+     * @see <a target="_blank" href="http://docs.cloudant.com/api/search.html">ranges query
+     * argument format</a>
      */
     public Search ranges(String rangesJson) {
         assertNotEmpty(rangesJson, "rangesJson");
@@ -341,8 +344,8 @@ public class Search {
     /**
      * Array of fieldNames for which counts should be produced
      *
-     * @param countsfields
-     * @return
+     * @param countsfields array of the field names
+     * @return this for additional parameter setting or to query
      */
     public Search counts(String[] countsfields) {
         assert (countsfields.length > 0);
@@ -357,11 +360,11 @@ public class Search {
     }
 
     /**
-     * @param fieldName
-     * @param fieldValue
-     * @return
-     * @see <a href="http://docs.cloudant.com/api/search.html"> drilldown</a>
-     * query argument
+     * @param fieldName  the name of the field
+     * @param fieldValue the value of the field
+     * @return this for additional parameter setting or to query
+     * @see <a target="_blank" href="https://docs.cloudant.com/search.html#faceting">drilldown
+     * query parameter</a>
      */
     public Search drillDown(String fieldName, String fieldValue) {
         assertNotEmpty(fieldName, "fieldName");
@@ -373,6 +376,7 @@ public class Search {
 
     /**
      * @param stale Accept values: ok
+     * @return this for additional parameter setting or to query
      */
     public Search stale(boolean stale) {
         if (stale) {
@@ -383,6 +387,7 @@ public class Search {
 
     /**
      * @param includeDocs whether to include the document in the result
+     * @return this for additional parameter setting or to query
      */
     public Search includeDocs(Boolean includeDocs) {
         this.includeDocs = includeDocs;
@@ -402,7 +407,8 @@ public class Search {
             String field = fld.getKey();
             Map<String, Long> ovalues = new HashMap<String, Long>();
             if (fld.getValue().isJsonObject()) {
-                Set<Map.Entry<String, JsonElement>> values = fld.getValue().getAsJsonObject().entrySet();
+                Set<Map.Entry<String, JsonElement>> values = fld.getValue().getAsJsonObject()
+                        .entrySet();
                 for (Entry<String, JsonElement> value : values) {
                     ovalues.put(value.getKey(), value.getValue().getAsLong());
                 }
@@ -412,12 +418,13 @@ public class Search {
         return map;
     }
 
-    private <T> List<SearchResult<T>.SearchResultRows> getRows(
+    private <T> List<SearchResult<T>.SearchResultRow> getRows(
             JsonArray jsonrows, SearchResult<T> sr, Class<T> classOfT) {
 
-        List<SearchResult<T>.SearchResultRows> ret = new ArrayList<SearchResult<T>.SearchResultRows>();
+        List<SearchResult<T>.SearchResultRow> ret = new ArrayList<SearchResult<T>
+                .SearchResultRow>();
         for (JsonElement e : jsonrows) {
-            SearchResult<T>.SearchResultRows row = sr.new SearchResultRows();
+            SearchResult<T>.SearchResultRow row = sr.new SearchResultRow();
             JsonObject oe = e.getAsJsonObject();
             row.setId(oe.get("id").getAsString());
             row.setOrder(JsonToObject(db.getGson(), e, "order", Object[].class));
@@ -432,7 +439,7 @@ public class Search {
 
     private <T> void setGroups(JsonArray jsongroups, SearchResult<T> sr, Class<T> classOfT) {
         for (JsonElement e : jsongroups) {
-            SearchResult<T>.SearchResultGroups group = sr.new SearchResultGroups();
+            SearchResult<T>.SearchResultGroup group = sr.new SearchResultGroup();
             JsonObject oe = e.getAsJsonObject();
             group.setBy(oe.get("by").getAsString());
             group.setTotalRows(oe.get("total_rows").getAsLong());

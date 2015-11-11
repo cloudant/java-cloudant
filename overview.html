@@ -1,0 +1,473 @@
+<html>
+<!--
+This overview.html provides Javadoc overview for the application.
+The content from the body section is added to the Javadoc overview page.
+There is no need to add a head/title as that is provided by Javadoc.
+-->
+<body>
+
+<P>
+    This is the <a href="https://github.com/cloudant/java-cloudant" target="_blank">official
+    Cloudant library for java.</a>
+</P>
+
+<h1>Contents</h1>
+<OL>
+    <LI><a href="#Compatibility">Compatibility</a></LI>
+    <LI><a href="#Initialization">Initialization</a>
+        <OL>
+            <LI><a href="#Cloudant service example">Cloudant service example</a></LI>
+            <LI><a href="#Cloudant Local example">Cloudant Local example</a></LI>
+        </OL>
+    </LI>
+    <LI><a href="#Authentication">Authentication</a>
+        <OL>
+            <LI><a href="#Cookie authentication">Cookie authentication</a></LI>
+            <LI><a href="#Custom authentication">Custom authentication</a></LI>
+        </OL>
+    </LI>
+    <LI><a href="#Capabilities">Capabilities</a>
+        <OL>
+            <LI><a href="#Server Operations">Server Operations</a></LI>
+            <LI><a href="#Database Operations">Database Operations</a></LI>
+            <LI><a href="#Document Operations">Document Operations</a>
+                <OL>
+                    <LI><a href="#Single document CRUD">Single document CRUD</a></LI>
+                    <LI><a href="#Bulk document CRU">Bulk document CRU</a></LI>
+                </OL>
+            </LI>
+            <LI><a href="#Attachments">Attachments</a>
+                <OL>
+                    <LI><a href="#Standalone Attachments">Standalone Attachments</a></LI>
+                    <LI><a href="#Inline Attachments">Inline Attachments</a></LI>
+                </OL>
+            </LI>
+            <LI><a href="#Design Documents">Design Documents</a></LI>
+            <LI><a href="#Using Views">Using Views</a></LI>
+            <LI><a href="#Cloudant Query">Cloudant Query</a></LI>
+            <LI><a href="#Cloudant Search">Cloudant Search</a></LI>
+        </OL>
+    </LI>
+    <LI><a href="#Advanced Configuration">Advanced Configuration</a>
+        <OL>
+            <LI><a href="#Connection options">Connection options</a></LI>
+            <LI><a href="#Resource sharing">Resource sharing</a>
+                <OL>
+                    <LI><a href="#Thread safety">Thread safety</a></LI>
+                    <LI><a href="#Connection pooling">Connection pooling</a>
+                        <OL>
+                            <LI><a href="#Default pooling">Default pooling</a></LI>
+                            <LI><a href="#With OkHttp">With OkHttp</a></LI>
+                        </OL>
+                    </LI>
+                </OL>
+            </LI>
+            <LI><a href="#J2EE">J2EE</a></LI>
+        </OL>
+    <LI><a href="#Project">Project</a></LI>
+</OL>
+
+<h1 id="Compatibility">Compatibility</h1>
+
+<P>
+    This library can be used with the following databases
+</P>
+<UL>
+    <LI><a href="https://cloudant.com" target="_blank">IBM&reg; Cloudant&reg;
+        Database-as-a-Service</a></LI>
+    <LI><a href="http://www.ibm.com/software/products/cloudant-data-layer-local-edition"
+           target="_blank">IBM&reg; Cloudant&reg; Data Layer Local Edition</a> (Cloudant Local)
+    </LI>
+    <LI><a href="http://couchdb.apache.org/" target="_blank">Apache CouchDB&trade;</a></LI>
+</UL>
+<P>
+    Note that some features are Cloudant specific.
+</P>
+
+<P>
+    The library is compiled with Java 1.6 compatibility, but it is recommended to run with the
+    latest available Java version.
+</P>
+
+<h1 id="Initialization">Initialization</h1>
+
+<P>
+    Use the {@link com.cloudant.client.api.ClientBuilder} class to build a CloudantClient
+    instance.
+    The {@link com.cloudant.client.api.CloudantClient} class is the starting point for
+    interacting
+    with Cloudant from Java.
+</P>
+
+<h2 id="Cloudant service example">Cloudant service example</h2>
+
+<P>
+    When using the managed service at cloudant.com, initialize your Cloudant connection by using
+    {@link com.cloudant.client.api.ClientBuilder#account(String)} supplying the account to
+    connect
+    to. Set additional options for the API key or username and passphrase.
+</P>
+
+<pre>
+    {@code
+    CloudantClient client = ClientBuilder.account("yourCloudantAccount")
+            .setUsername("yourAPIKey")
+            .setPassword("yourAPIKeyPassphrase")
+            .build();
+    }
+</pre>
+
+<h2 id="Cloudant Local example">Cloudant Local example</h2>
+
+<P>
+    When using Cloudant Local, initialize your Cloudant connection by using
+    {@link com.cloudant.client.api.ClientBuilder#url(URL)} supplying the URL of the Cloudant
+    Local.
+    Again set additional options for the user name or API key and passphase.
+</P>
+
+
+<pre>
+    {@code
+    CloudantClient client = ClientBuilder.url(new URL("https://192.0.2.0"))
+            .username("yourAPIKey")
+            .password("yourAPIKeyPassphrase")
+            .build();
+    }
+</pre>
+
+<h1 id="Authentication">Authentication</h1>
+
+<h2 id="Cookie authentication">Cookie authentication</h2>
+
+<P>
+    Using the {@link com.cloudant.client.api.ClientBuilder#username(String)} and
+    {@link com.cloudant.client.api.ClientBuilder#password(String)}
+    options uses
+    <a href="https://docs.cloudant.com/authentication.html#cookie-authentication" target="_blank">
+        cookie authentication</a> for the CloudantClient connection. The supplied credentials are
+    used to request a session with the server and the session is renewed automatically if the cookie
+    expires. If the credentials become invalid then a new instance of a CloudantClient needs to be
+    created.
+</P>
+
+<h2 id="Custom authentication">Custom authentication</h2>
+
+<P>
+    If cookie authentication is not desired then it is possible to build the CloudantClient
+    without
+    credentials and use a {@link HttpConnectionInterceptor} to customize the HTTP request with
+    the
+    desired authentication mechanism.
+</P>
+
+<P>
+    An example using Basic Authentication is shown in the javadoc for
+    {@link com.cloudant.client.api.ClientBuilder#interceptors(HttpConnectionInterceptor[])}.
+</P>
+
+<h1 id="Capabilities">Capabilities</h1>
+
+<h2 id="Server Operations">Server Operations</h2>
+
+<P>
+    {@link com.cloudant.client.api.CloudantClient} encapsulates the connection to the server and
+    provides access to server operations.
+</P>
+
+<h2 id="Database Operations">Database Operations</h2>
+
+<P>
+    {@link com.cloudant.client.api.CloudantClient#database(String, boolean)} returns a
+    {@link com.cloudant.client.api.Database} object that provides access to database operations.
+</P>
+
+<h2 id="Document Operations">Document Operations</h2>
+
+<h3 id="Single document CRUD">Single document CRUD</h3>
+
+<P>
+    CRUD operations for documents in a database are achieved via the
+    {@link com.cloudant.client.api.Database} object.
+</P>
+<UL>
+    <LI>Create - {@link com.cloudant.client.api.Database#save(Object)} or {@link
+        com.cloudant.client.api.Database#post(Object)}
+    </LI>
+    <LI>Read - {@link com.cloudant.client.api.Database#find(Class, String)}</LI>
+    <LI>Update - {@link com.cloudant.client.api.Database#save(Object)} or {@link
+        com.cloudant.client.api.Database#update(Object)}
+    </LI>
+    <LI>Delete - {@link com.cloudant.client.api.Database#remove(Object)}</LI>
+</UL>
+
+<h3 id="Bulk document CRU">Bulk document CRU</h3>
+
+<P>
+    {@link com.cloudant.client.api.Database} also provides a bulk documents API for fetching or
+    modifying multiple documents in a single request.
+</P>
+<UL>
+    <LI>Create/Update - {@link com.cloudant.client.api.Database#bulk(List)}</LI>
+    <LI>Read - {@link com.cloudant.client.api.views.AllDocsRequestBuilder} via {@link
+        com.cloudant.client.api.Database#getAllDocsRequestBuilder()}
+    </LI>
+</UL>
+
+<h2 id="Attachments">Attachments</h2>
+
+See the <a href="https://docs.cloudant.com/attachments.html" target="_blank">Cloudant documentation
+</a> for more information about attachments.
+
+<h3 id="Standalone Attachments">Standalone Attachments</h3>
+
+<P>
+    Standalone attachment data is provided as an {@link java.io.InputStream}. The attachment can
+    be
+    created and either referenced from an existing document or a new document.
+</P>
+<UL>
+    <LI>Add or update an attachment on an existing document -
+        {@link com.cloudant.client.api.Database#saveAttachment(java.io.InputStream,
+        java.lang.String, java.lang.String, java.lang.String, java.lang.String)}
+    </LI>
+    <LI>Create a new document with an attachment -
+        {@link com.cloudant.client.api.Database#saveAttachment(java.io.InputStream,
+        java.lang.String, java.lang.String)}
+    </LI>
+</UL>
+
+<h3 id="Inline Attachments">Inline Attachments</h3>
+
+<P>
+    <a href="https://docs.cloudant.com/attachments.html#inline" target="_blank">Inline attachments
+    </a> enclose the attachment data, Base64 encoded, within the document body. The
+    {@link com.cloudant.client.api.model.Attachment} class represents an inline attachment.
+    Classes that extend {@link com.cloudant.client.api.model.Document} automatically inherit
+    support for inline attachments.
+</P>
+
+<P>Example usage of inline attachment, using Apache Commons Codec for Base64 encoding:</P>
+<pre>
+    {@code
+        Attachment attachment = new Attachment();
+        attachment.setData(Base64.encodeBase64String("attachment test string".getBytes()));
+        attachment.setContentType("text/plain");
+        Foo foo = new Foo(); // Foo extends Document
+        foo.addAttachment("attachment.txt", attachment);
+        db.save(foo);
+    }
+</pre>
+<P>Note that attachment data is <strong>not</strong> included by default when reading documents.
+    To retrieve inline attachment data use
+    {@link com.cloudant.client.api.model.Params#attachments()}.
+    See {@link com.cloudant.client.api.Database#find(java.lang.Class, java.lang.String,
+    com.cloudant.client.api.model.Params)} for an example.
+</P>
+
+<h2 id="Design Documents">Design Documents</h2>
+
+<P>
+    Design documents are used to define server side operations, including querying the database
+    using map-reduce views, <a href="#Cloudant Search">Cloudant Search</a>, and
+    <a href="#Cloudant Query">Cloudant Query</a>. The results can be retrieved by the client. It is
+    recommend to read the <a href="https://docs.cloudant.com/design_documents.html" target="_blank">
+    Cloudant design document documentation</a> before working with design documents to gain an
+    understanding of the available parameters and functions.
+</P>
+
+<P>
+    The {@link com.cloudant.client.api.model.DesignDocument} class encapsulates a design document in
+    a Java object.
+</P>
+
+<P>See {@link com.cloudant.client.api.DesignDocumentManager#get(java.lang.String, java.lang.String)} for an example of
+    retrieving a design document from the sever.</P>
+
+<P>Example of creating a view (map-reduce index) using {@link java.util.Map} to generate
+    the JSON for the design document </P>
+<pre>
+    {@code
+    // Uploads the design document with view index:
+    // {
+    //   "_id": "_design/name",
+    //   "views": {
+    //     "view1": {
+    //       "map":"function(doc){emit(doc.field, 1)}",
+    //       "reduce": "function(key, value, rereduce){return sum(values)}"
+    //     }
+    //   }
+    // }
+
+    Map<String, Object> view1 = new HashMap<>();
+    view1.put("map", "function(doc){emit(doc.field, 1)}");
+    view1.put("reduce", "function(key, value, rereduce){return sum(values)}");
+
+    Map<String, Object> views = new HashMap<>();
+    views.put("view1", view1);
+
+    Map<String, Object> view_ddoc = new HashMap<>();
+    view_ddoc.put("_id", "_design/name");
+    view_ddoc.put("views", views);
+
+    db.save(view_ddoc);
+    }
+</pre>
+
+<h2 id="Using Views">Using Views</h2>
+
+For background information about views please refer to the
+<a href="https://docs.cloudant.com/creating_views.html" target="_blank">Cloudant views documentation
+</a>. Refer to the <a href="{@docroot}com/cloudant/client/api/views/package-summary.html">
+    com.cloudant.client.api.views package</a> for information about and examples of using this
+library to query a view.
+
+<h2 id="Cloudant Query">Cloudant Query</h2>
+
+<P>
+    This feature interfaces with Cloudant's query functionality. See the
+    <a href="https://docs.cloudant.com/cloudant_query.html" target="_blank">Cloudant Query
+        documentation</a> for details.
+</P>
+<UL>
+    <LI>To see all the indexes in a database use: {@link
+        com.cloudant.client.api.Database#listIndices}
+    </LI>
+    <LI>To create an index use: {@link
+        com.cloudant.client.api.Database#createIndex(java.lang.String)} or {@link
+        com.cloudant.client.api.Database#createIndex(java.lang.String, java.lang.String,
+        java.lang.String, com.cloudant.client.api.model.IndexField[])}
+    </LI>
+    <LI>To query an index use: {@link com.cloudant.client.api.Database#findByIndex(java.lang.String,
+        java.lang.Class)} or {@link com.cloudant.client.api.Database#findByIndex(java.lang.String,
+        java.lang.Class, com.cloudant.client.api.model.FindByIndexOptions)}
+    </LI>
+</UL>
+
+<h2 id="Cloudant Search">Cloudant Search</h2>
+
+<P>
+    This feature interfaces with Cloudant's full text search functionality. See the
+    <a href="https://docs.cloudant.com/search.html" target="_blank">Cloudant Search documentation
+    </a> for details. Searches are based on index functions in design documents.
+</P>
+
+<P>
+    To create a search index, upload a design document containing the index:
+</P>
+<pre>
+    {@code
+    // Uploads the search index:
+    // {
+    //   "_id": "_design/views101",
+    //   "indexes": {
+    //     "animals": {
+    //       "index": "function(doc){ index(\"default\", doc._id); }"
+    //     }
+    //   }
+    // }
+
+    Map<String, Object> animals = new HashMap<>();
+    animals.put("index", "function(doc){ index(\"default\", doc._id); }");
+
+    Map<String, Object> indexes = new HashMap<>();
+    indexes.put("animals", animals);
+
+    Map<String, Object> ddoc = new HashMap<>();
+    ddoc.put("_id", "_design/searchindex");
+    ddoc.put("indexes", indexes);
+
+    db.save(ddoc);
+    }
+</pre>
+<P>
+    To query this index, use an instance of {@link com.cloudant.client.api.Search} by calling {@link
+    com.cloudant.client.api.Database#search}.
+</P>
+
+<h1 id="Advanced Configuration">Advanced Configuration</h1>
+
+<h2 id="Connection options">Connection options</h2>
+
+<P>
+    The {@link ClientBuilder} provide access to additional advanced configuration options for the
+    server connection. For example customized SSL, proxies and timeouts.
+</P>
+
+<h2 id="Custom GSON serialization">Custom GSON serialization</h2>
+
+<P>
+    Internally the Gson library is used to serialize/deserialize JSON to/from Java objects. You can
+    supply your own GsonBuilder instance to customize configuration, for example registering custom
+    de-serializers.
+</P>
+
+<P>Example setting the date/time format Gson uses:</P>
+<pre>
+    {@code
+    GsonBuilder builder = new GsonBuilder();
+    builder.setDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
+    CloudantClient client = ClientBuilder.account("example").username("user").password("password)
+            .gsonBuilder(builder).build();
+    }
+</pre>
+
+<h2 id="Resource sharing">Resource sharing</h2>
+
+<h3 id="Thread safety">Thread safety</h3>
+
+<P>
+    CloudantClient objects are thread-safe. All methods can be called from any thread, meaning
+    CloudantClient objects can <em>and should</em> be shared across threads. The Database object is
+    thread-safe and a single Database object may be shared across threads.
+</P>
+
+<h3 id="Connection pooling">Connection pooling</h3>
+
+<P>
+    Connection pooling behaviour differs depending on whether the optional OkHttp dependency is
+    included. Note that idle connections within the pool may be terminated by the server, so will
+    not remain open indefinitely meaning that this will not completely remove the overhead of
+    creating new connections.
+</P>
+
+<h4 id="Default pooling">Default pooling</h4>
+
+<P>
+    By default the underlying {@link HttpUrlConnection} will use the JVM wide connection pool
+    configuration (via the {@code http.maxConnections} property). Under these circumstances the pool
+    is shared between all applications in the VM and between all CloudantClient instances.
+</P>
+
+<h4 id="With OkHttp">With OkHttp</h4>
+
+<P>
+    When the OkHttp dependency is included then connection pools are managed per CloudantClient
+    instance. The default size of the connection pool is 6. Use {@link
+    ClientBuilder#maxConnections(int)} to configure the maximum connections in the pool.
+</P>
+
+<h2 id="J2EE">J2EE</h2>
+
+<P>
+    This library can be used in J2EE environments, but currently does not implement any J2EE
+    standards or provide wrappers for them. As such there is no built-in support for JCA connection
+    management or JNDI lookups of CloudantClient instances.
+</P>
+
+<P>
+    To get JNDI support would require a {@link javax.naming.spi.ObjectFactory} implementation and
+    configuration of your JNDI provider to register this factory and reference this library.
+</P>
+
+
+<h1 id="Project">Project</h1>
+
+<P>
+    Please visit the <a href="https://github.com/cloudant/java-cloudant" target="_blank">
+    java-cloudant project page</a> for more information.
+</P>
+
+</body>
+</html>

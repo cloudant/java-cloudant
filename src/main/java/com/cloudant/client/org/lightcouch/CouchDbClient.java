@@ -23,11 +23,12 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getRespons
 import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
 import com.cloudant.client.org.lightcouch.internal.GsonHelper;
+import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
-import com.cloudant.http.ok.OkHttpClientHttpUrlConnectionFactory;
+import com.cloudant.http.internal.ok.OkHttpClientHttpUrlConnectionFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -71,7 +72,7 @@ public class CouchDbClient {
     private HttpConnection.HttpUrlConnectionFactory factory =
             (OkHttpClientHttpUrlConnectionFactory.isOkUsable())
                     ? new OkHttpClientHttpUrlConnectionFactory()
-                    : new HttpConnection.DefaultHttpUrlConnectionFactory();
+                    : new DefaultHttpUrlConnectionFactory();
 
     CouchDbClient(CouchDbConfig config) {
         final CouchDbProperties props = config.getProperties();
@@ -92,7 +93,7 @@ public class CouchDbClient {
             factory.getOkHttpClient().setConnectionPool(pool);
             this.factory = factory;
         } else {
-            factory = new HttpConnection.DefaultHttpUrlConnectionFactory();
+            factory = new DefaultHttpUrlConnectionFactory();
         }
 
         //set the proxy if it has been configured

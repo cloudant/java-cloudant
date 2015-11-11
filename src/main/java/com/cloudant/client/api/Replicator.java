@@ -92,6 +92,8 @@ public class Replicator {
 
     /**
      * Finds all documents in the replicator database.
+     *
+     * @return the list of ReplicatorDocuments
      */
     public List<com.cloudant.client.api.model.ReplicatorDocument> findAll() {
         List<ReplicatorDocument> couchDbReplicatorDocList = replicator.findAll();
@@ -117,181 +119,101 @@ public class Replicator {
         return response;
     }
 
-    /**
-     * @param source
-     * @return
-     */
     public Replicator source(String source) {
         this.replicator = replicator.source(source);
         return this;
     }
 
-    /**
-     * @param target
-     * @return
-     */
     public Replicator target(String target) {
         this.replicator = replicator.target(target);
         return this;
     }
 
-    /**
-     * @param continuous
-     * @return
-     */
     public Replicator continuous(boolean continuous) {
         this.replicator = replicator.continuous(continuous);
         return this;
     }
 
-    /**
-     * @param filter
-     * @return
-     */
     public Replicator filter(String filter) {
         this.replicator = replicator.filter(filter);
         return this;
     }
 
-    /**
-     * @param queryParams
-     * @return
-     */
     public Replicator queryParams(String queryParams) {
         this.replicator = replicator.queryParams(queryParams);
         return this;
     }
 
-    /**
-     * @param queryParams
-     * @return
-     */
     public Replicator queryParams(Map<String, Object> queryParams) {
         this.replicator = replicator.queryParams(queryParams);
         return this;
     }
 
-    /**
-     * @param docIds
-     * @return
-     */
     public Replicator docIds(String... docIds) {
         this.replicator = replicator.docIds(docIds);
         return this;
     }
 
-    /**
-     * @param proxy
-     * @return
-     */
     public Replicator proxy(String proxy) {
         this.replicator = replicator.proxy(proxy);
         return this;
     }
 
-    /**
-     * @param createTarget
-     * @return
-     */
     public Replicator createTarget(Boolean createTarget) {
         this.replicator = replicator.createTarget(createTarget);
         return this;
     }
 
-    /**
-     * @param workerProcesses
-     * @return
-     */
     public Replicator workerProcesses(int workerProcesses) {
         this.replicator = replicator.workerProcesses(workerProcesses);
         return this;
     }
 
-    /**
-     * @param connectionTimeout
-     * @return
-     */
     public Replicator connectionTimeout(long connectionTimeout) {
         this.replicator = replicator.connectionTimeout(connectionTimeout);
         return this;
     }
 
-    /**
-     * @param replicatorDB
-     * @return
-     */
     public Replicator replicatorDB(String replicatorDB) {
         this.replicator = replicator.replicatorDB(replicatorDB);
         return this;
     }
 
-    /**
-     * @param replicatorDocId
-     * @return
-     */
     public Replicator replicatorDocId(String replicatorDocId) {
         this.replicator = replicator.replicatorDocId(replicatorDocId);
         return this;
     }
 
-    /**
-     * @param replicatorDocRev
-     * @return
-     */
     public Replicator replicatorDocRev(String replicatorDocRev) {
         this.replicator = replicator.replicatorDocRev(replicatorDocRev);
         return this;
     }
 
-    /**
-     * @param workerBatchSize
-     * @return
-     */
     public Replicator workerBatchSize(int workerBatchSize) {
         this.replicator = replicator.workerBatchSize(workerBatchSize);
         return this;
     }
 
-    /**
-     * @param httpConnections
-     * @return
-     */
     public Replicator httpConnections(int httpConnections) {
         this.replicator = replicator.httpConnections(httpConnections);
         return this;
     }
 
-    /**
-     * @param retriesPerRequest
-     * @return
-     */
     public Replicator retriesPerRequest(int retriesPerRequest) {
         this.replicator = replicator.retriesPerRequest(retriesPerRequest);
         return this;
     }
 
-    /**
-     * @param userCtxRoles
-     * @return
-     */
     public Replicator userCtxRoles(String... userCtxRoles) {
         this.replicator = replicator.userCtxRoles(userCtxRoles);
         return this;
     }
 
-    /**
-     * @param sinceSeq
-     * @return
-     */
     public Replicator sinceSeq(Integer sinceSeq) {
         this.replicator = replicator.sinceSeq(sinceSeq);
         return this;
     }
 
-    /**
-     * @param userCtxName
-     * @return
-     */
     public Replicator userCtxName(String userCtxName) {
         this.replicator = replicator.userCtxName(userCtxName);
         return this;

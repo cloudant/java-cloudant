@@ -28,7 +28,7 @@ import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
-import com.cloudant.http.AgentHelper;
+import com.cloudant.http.internal.AgentHelper;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresDB;
@@ -180,7 +180,7 @@ public class CloudantClientTests {
     }
 
     @Test
-    public void testDefaultPorts() throws Exception{
+    public void testDefaultPorts() throws Exception {
         CloudantClient c = null;
 
         c = CloudantClientHelper.newTestAddressClient().build();
@@ -222,9 +222,7 @@ public class CloudantClientTests {
         //now try to connect, but should timeout because there is no connection available
         try {
             CloudantClient c = CloudantClientHelper.newSimpleHttpServerClient(server)
-                    .connectionTimeout(new ClientBuilder.TimeoutOption(100,
-                            TimeUnit.MILLISECONDS))
-                    .build();
+                    .connectTimeout(100, TimeUnit.MILLISECONDS).build();
 
             c.createDB("test");
         } catch (CouchDbException e) {
@@ -270,9 +268,7 @@ public class CloudantClientTests {
 
             try {
                 CloudantClient c = CloudantClientHelper.newSimpleHttpServerClient(server)
-                        .readTimeout(new ClientBuilder.TimeoutOption(READ_TIMEOUT,
-                                TimeUnit.MILLISECONDS))
-                        .build();
+                        .readTimeout(READ_TIMEOUT, TimeUnit.MILLISECONDS).build();
 
                 //do a call that expects a response
                 c.getAllDbs();
@@ -306,7 +302,7 @@ public class CloudantClientTests {
      * null.
      */
     @Test(expected = CouchDbException.class)
-    public void nullPassword() throws Exception{
+    public void nullPassword() throws Exception {
         CloudantClientHelper.newTestAddressClient()
                 .username("user")
                 .build();

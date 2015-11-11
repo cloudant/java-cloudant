@@ -12,7 +12,7 @@
  * and limitations under the License.
  */
 
-package com.cloudant.http;
+package com.cloudant.http.internal;
 
 import com.cloudant.client.org.lightcouch.CouchDbClient;
 

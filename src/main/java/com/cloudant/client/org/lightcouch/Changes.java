@@ -82,6 +82,7 @@ public class Changes {
     /**
      * Requests Change notifications of feed type continuous.
      * <p>Feed notifications are accessed in an <i>iterator</i> style.
+     *
      */
     public Changes continuousChanges() {
         final URI uri = uriBuilder.query("feed", "continuous").build();

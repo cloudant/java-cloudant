@@ -18,7 +18,7 @@ package com.cloudant.client.api.views;
  * Describes the parameters that can be set when building view requests.
  *
  * <P>
- * <a href="https://docs.cloudant.com/creating_views.html#using-views">
+ * <a target="_blank" href="https://docs.cloudant.com/creating_views.html#using-views">
  * Cloudant API reference
  * </a>
  * </P>
@@ -87,7 +87,8 @@ public interface SettableViewParameters {
          * Include the full content of the documents in the response.
          * <P>
          * Note that using include_docs=true might have
-         * <a href="https://docs.cloudant.com/creating_views.html#multi-document-fetching">
+         * <a target="_blank"
+         * href="https://docs.cloudant.com/creating_views.html#multi-document-fetching">
          * performance implications.</a>
          * </P>
          *
