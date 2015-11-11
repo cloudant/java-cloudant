@@ -622,6 +622,18 @@ public class ViewsTest {
         }
     }
 
+    @Test
+    public void allDocsWithKeys() throws Exception {
+        init();
+        String id1 = db.save(new Foo()).getId();
+        String id2 = db.save(new Foo()).getId();
+        //create 3 and 4, but we don't care about the IDs
+        db.save(new Foo()).getId();
+        db.save(new Foo()).getId();
+
+        List<String> allDocIds = db.getAllDocsRequestBuilder().keys(id1, id2).build().getResponse().getDocIds();
+        assertThat(allDocIds.size(), is(2));
+    }
 
     /**
      * @param index the index to encode.
