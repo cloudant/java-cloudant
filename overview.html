@@ -390,8 +390,9 @@ library to query a view.
 <h2 id="Connection options">Connection options</h2>
 
 <P>
-    The {@link ClientBuilder} provide access to additional advanced configuration options for the
-    server connection. For example customized SSL, proxies and timeouts.
+    The {@link com.cloudant.client.api.ClientBuilder} provides access to additional advanced
+    configuration options for the server connection. For example customized SSL, proxies and
+    timeouts.
 </P>
 
 <h2 id="Custom GSON serialization">Custom GSON serialization</h2>
@@ -445,7 +446,7 @@ library to query a view.
 <P>
     When the OkHttp dependency is included then connection pools are managed per CloudantClient
     instance. The default size of the connection pool is 6. Use {@link
-    ClientBuilder#maxConnections(int)} to configure the maximum connections in the pool.
+    com.cloudant.client.api.ClientBuilder#maxConnections(int)} to configure the maximum connections in the pool.
 </P>
 
 <h2 id="J2EE">J2EE</h2>

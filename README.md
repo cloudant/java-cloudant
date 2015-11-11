@@ -26,7 +26,7 @@ dependencies {
 }
 ```
 
-Gradle with optional `okhttp-urlconnection` dependency:
+Gradle with [optional `okhttp-urlconnection` dependency](#optional-okhttp-dependency):
 ```groovy
 dependencies {
     compile group: 'com.cloudant', name: 'cloudant-client', version: '2.0.0'
@@ -43,7 +43,7 @@ Maven:
 </dependency>
 ~~~
 
-Maven with optional `okhttp-urlconnection` dependency:
+Maven with [optional `okhttp-urlconnection` dependency](#optional-okhttp-dependency):
 
 ~~~ xml
 <dependency>
@@ -64,7 +64,16 @@ Although Gradle or Maven dependency management is preferred it is also possible 
 * [Commons Codec 1.6](http://commons.apache.org/codec/download_codec.cgi)
 * [Commons IO 2.4](http://commons.apache.org/io/download_io.cgi)
 * [Gson 2.2.4](http://code.google.com/p/google-gson/downloads/list)
-* [OkHttp 2.5.0](http://square.github.io/okhttp/#download) (OPTIONAL - note: to use this dependency requires Java 1.7 minimum)
+* [OkHttp 2.5.0](http://square.github.io/okhttp/#download) (OPTIONAL) - [more info](#optional-okhttp-dependency)
+
+##### Optional OkHttp dependency
+
+HTTP requests to the database are made using `java.net.HttpURLConnection`. Adding the optional dependency for the `okhttp-urlconnection` changes the
+`HttpURLConnection` from the default JVM implementation to the OkHttp implementation. Note that to use OkHttp requires a minimum of Java 1.7.
+
+The main use case that is supported by this optional dependency is configuration of connection pools on a per `CloudantClient` basis
+([see the javadoc](http://www.javadoc.io/doc/com.cloudant/cloudant-client/) for ClientBuilder.maxConnections). If the OkHttp dependency is
+available at runtime it will be used automatically. Not using OkHttp will result in a smaller application size.
 
 ## Getting Started
 
@@ -76,14 +85,14 @@ The source code for the tests in this github project also contains many examples
 ~~~ java
 // Create a new CloudantClient instance for account endpoint example.cloudant.com
 CloudantClient client = ClientBuilder.account("example")
-                                     .username()
-                                     .password()
+                                     .username("exampleUser")
+                                     .password("examplePassword")
                                      .build();
 
-// Note: for Cloudant Local use:
+// Note: for Cloudant Local or Apache CouchDB use:
 // ClientBuilder.url(new URL("yourCloudantLocalAddress.example"))
-//              .username()
-//              .password()
+//              .username("exampleUser")
+//              .password("examplePassword")
 //              .build();
 
 // Show the server version
@@ -143,6 +152,7 @@ You have inserted the document.
 ```
 
 ## Related documentation
+* [API reference (javadoc)](http://www.javadoc.io/doc/com.cloudant/cloudant-client/)
 * [Cloudant docs](http://docs.cloudant.com/)
 * [Cloudant for developers](https://cloudant.com/for-developers/)
 
@@ -168,4 +178,4 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 If you are a Cloudant customer please contact Cloudant support for help with any issues.
 
-It is also possible to open issues [here in github](../../issues)
+It is also possible to open issues [here in github](../../issues).

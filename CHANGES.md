@@ -8,12 +8,16 @@
   For example, if you were using the `InputStream` directly for streaming API parsing with an alternative
   JSON library we might be able to make this easier by handling the streams and providing a callback.
 - [NEW] Optional OkHttp dependency for per CloudantClient instance connection pooling.
-- [BREAKING CHANGE] Removed `Database.batch(Object)` method.
+- [BREAKING CHANGE] Removed `Database.batch(Object)` method. Using `batch=ok` is not recommended.
 - [BREAKING CHANGE] JVM `http.maxConnections` configured pool is used by default for connection pooling.
 - [BREAKING CHANGE] Removed Apache HttpClient dependency. API methods that used HttpClient classes
   (e.g. `executeRequest`) now use `HttpConnection` instead.
 - [BREAKING CHANGE] `CloudantClient` public constructors and `ConnectionOptions` have been removed.
-  `'CloudantClient` instances are now created and have options configured using `ClientBuilder`.
+  `CloudantClient` instances are now created and have options configured using `ClientBuilder`.
+- [BREAKING CHANGE] Removed these deprecated methods:
+  `CloudantClient.deleteDB(String, String)` use `CloudantClient.deleteDb(String)`,
+  `Database.invokeUpdateHandler(String, String, String)` use `Database.invokeUpdateHandler(String, String, Params)`,
+  `CloudantClient.setGsonBuilder(GsonBuilder)` use `ClientBuilder.gsonBuilder(GsonBuilder)`.
 - [BREAKING CHANGE] Removed version 1.x view query API.
 - [BREAKING CHANGE] LightCouch classes moved to package com.cloudant.client.org.lightcouch.
   This should only have a visible impact for `CouchDbException` and its subclasses.
