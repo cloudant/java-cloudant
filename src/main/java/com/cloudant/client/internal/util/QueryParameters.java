@@ -32,7 +32,7 @@ public class QueryParameters {
         //if a null Gson was passed in, then use a default gson instance
         gson = (gson == null) ? new GsonBuilder().create() : gson;
         Map<String, Object> parameters = new HashMap<String, Object>();
-        for (Field field : this.getClass().getDeclaredFields()) {
+        for (Field field : this.getClass().getFields()) {
             QueryParameter parameter = field.getAnnotation(QueryParameter.class);
             if (parameter != null) {
                 //use the field name as the parameter name unless one was specified
