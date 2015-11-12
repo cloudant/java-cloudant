@@ -14,10 +14,10 @@
 
 package com.cloudant.tests;
 
-import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;

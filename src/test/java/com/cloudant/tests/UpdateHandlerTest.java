@@ -17,38 +17,34 @@ package com.cloudant.tests;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.test.main.RequiresDB;
+import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.util.DatabaseResource;
 import com.cloudant.tests.util.Utils;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.io.FileNotFoundException;
+import org.junit.rules.RuleChain;
 
 @Category(RequiresDB.class)
 public class UpdateHandlerTest {
 
+    public static CloudantClientResource clientResource = new CloudantClientResource();
+    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
+    @ClassRule
+    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
+
     private static Database db;
-    private CloudantClient account;
 
-
-    @Before
-    public void setUp() throws FileNotFoundException {
-        account = CloudantClientHelper.getClient();
-        db = account.database("lightcouch-db-test", true);
+    @BeforeClass
+    public static void setUp() throws Exception {
+        db = dbResource.get();
         Utils.putDesignDocs(db);
-    }
-
-    @After
-    public void tearDown() {
-        account.deleteDB("lightcouch-db-test");
-        account.shutdown();
     }
 
     @Test

@@ -22,6 +22,8 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DatabaseResource extends ExternalResource {
 
@@ -68,6 +70,17 @@ public class DatabaseResource extends ExternalResource {
      * @return sanitized name
      */
     private static String sanitizeDbName(String name) {
+        //database name is limited to 128 characters on the Cloudant service
+        //forego the package name in favour of test details and UUID
+        int excess;
+        if ((excess = name.length() - 128) > 0) {
+            name = name.substring(excess, name.length());
+            //if the new name doesn't start with a letter use the bit from the first letter
+            Matcher m = Pattern.compile("[^a-z](.*)").matcher(name);
+            if (m.matches()) {
+                name = m.group(1);
+            }
+        }
         //lowercase to remove any caps that will not be permitted
         name = name.toLowerCase(Locale.ENGLISH);
         //replace any characters that are not permitted with underscores

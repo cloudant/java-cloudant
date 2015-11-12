@@ -14,8 +14,8 @@
 
 package com.cloudant.tests;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.http.Http;

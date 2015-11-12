@@ -16,20 +16,21 @@ package com.cloudant.tests;
 
 import static org.junit.Assert.assertEquals;
 
-import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.views.Key;
 import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.tests.util.CheckPagination;
+import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.util.DatabaseResource;
 import com.cloudant.tests.util.Utils;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.io.FileNotFoundException;
 import java.util.Arrays;
 
 @RunWith(Parameterized.class)
@@ -55,23 +56,18 @@ public class ViewPaginationTests {
     @Parameterized.Parameter(value = 1)
     public boolean descending;
 
+
+    @ClassRule
+    public static CloudantClientResource clientResource = new CloudantClientResource();
+    @Rule
+    public DatabaseResource dbResource = new DatabaseResource(clientResource);
+
     private Database db;
-    private String dbName;
-    private CloudantClient account;
 
     @Before
-    public void setUp() throws FileNotFoundException {
-        account = CloudantClientHelper.getClient();
-        dbName = "view-pagination-test-" + Utils.generateUUID();
-        db = account.database(dbName, true);
-
+    public void setUp() throws Exception {
+        db = dbResource.get();
         Utils.putDesignDocs(db);
-    }
-
-    @After
-    public void tearDown() {
-        account.deleteDB(dbName);
-        account.shutdown();
     }
 
     /**

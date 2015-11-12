@@ -16,48 +16,50 @@ package com.cloudant.tests;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
+import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.util.DatabaseResource;
 import com.cloudant.tests.util.TestLog;
-import com.cloudant.tests.util.Utils;
 
 import org.junit.After;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.rules.RuleChain;
 
-import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Ignore
 public class ClientLoadTest {
 
-    @ClassRule
-    TestLog log = new TestLog();
-
-    private static CloudantClient dbClient;
-    private static Properties props;
-    private static Database db;
-
-
-    private static final int NUM_THREADS = 500;
-    private static final int DOCS_PER_THREAD = 10;
-
     /**
      * client max connections
      */
     private static final int MAX_CONNECTIONS = 20;
 
-    @Before
-    public void setUp() {
-        props = Utils.getProperties("cloudant.properties", log);
+    @ClassRule
+    public static final TestLog log = new TestLog();
 
-        dbClient = CloudantClientHelper.getClientBuilder()
-                .maxConnections(MAX_CONNECTIONS)
-                .build();
+    public static CloudantClientResource clientResource = new CloudantClientResource
+            (CloudantClientHelper.getClientBuilder()
+            .maxConnections(MAX_CONNECTIONS));
+    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
+    @ClassRule
+    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
 
-        db = dbClient.database("lightcouch-db-load", true);
+    private static CloudantClient dbClient;
+    private static Database db;
+
+    @BeforeClass
+    public static void setUp() {
+        dbClient = clientResource.get();
+        db = dbResource.get();
     }
+
+    private static final int NUM_THREADS = 500;
+    private static final int DOCS_PER_THREAD = 10;
+
 
     @After
     public void tearDown() {
