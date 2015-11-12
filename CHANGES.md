@@ -1,4 +1,4 @@
-# Unreleased
+# 2.0.0 (2015-11-12)
 - [NEW] `DesignDocument.MapReduce` now has a setter for the `dbcopy` field.
 - [NEW] Requests for the `_all_docs` endpoint are made via `Database#getAllDocsRequestBuilder()`
   instead of using a view.
