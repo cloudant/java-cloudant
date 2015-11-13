@@ -15,9 +15,9 @@
 - [BREAKING CHANGE] `CloudantClient` public constructors and `ConnectionOptions` have been removed.
   `CloudantClient` instances are now created and have options configured using `ClientBuilder`.
 - [BREAKING CHANGE] Removed these deprecated methods:
-  `CloudantClient.deleteDB(String, String)` use `CloudantClient.deleteDb(String)`,
-  `Database.invokeUpdateHandler(String, String, String)` use `Database.invokeUpdateHandler(String, String, Params)`,
-  `CloudantClient.setGsonBuilder(GsonBuilder)` use `ClientBuilder.gsonBuilder(GsonBuilder)`.
+    * `CloudantClient.deleteDB(String, String)` use `CloudantClient.deleteDb(String)`,
+    * `Database.invokeUpdateHandler(String, String, String)` use `Database.invokeUpdateHandler(String, String, Params)`,
+    * `CloudantClient.setGsonBuilder(GsonBuilder)` use `ClientBuilder.gsonBuilder(GsonBuilder)`.
 - [BREAKING CHANGE] Removed version 1.x view query API.
 - [BREAKING CHANGE] LightCouch classes moved to package com.cloudant.client.org.lightcouch.
   This should only have a visible impact for `CouchDbException` and its subclasses.

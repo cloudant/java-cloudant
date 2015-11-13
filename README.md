@@ -3,9 +3,6 @@
 
 This is the official Cloudant library for Java.
 
-This README applies to the **master** branch.
-[**See the version 1.x README**](https://github.com/cloudant/java-cloudant/tree/maintenance-1.2).
-
 * [Installation and Usage](#installation-and-usage)
 * [Getting Started](#getting-started)
 * [API Reference (javadoc)](http://www.javadoc.io/doc/com.cloudant/cloudant-client/)
