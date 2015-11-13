@@ -188,10 +188,9 @@ final public class CouchDbUtil {
 
     /**
      * @param response The response from {@link com.cloudant.http.HttpConnection}
-     * @param klazz
      * @return {@link Response}
      */
-    public static <T> List<T> getResponseList(InputStream response, Gson gson, Class<T> klazz,
+    public static <T> List<T> getResponseList(InputStream response, Gson gson,
                                               Type typeofT) throws CouchDbException {
         try {
             Reader reader = new InputStreamReader(response, "UTF-8");

@@ -178,7 +178,7 @@ public class CloudantClient {
         InputStream response = null;
         try {
             response = couchDbClient.get(buildUri(getBaseUri()).path("_active_tasks").build());
-            return getResponseList(response, couchDbClient.getGson(), Task.class,
+            return getResponseList(response, couchDbClient.getGson(),
                     new TypeToken<List<Task>>() {
                     }.getType());
         } finally {

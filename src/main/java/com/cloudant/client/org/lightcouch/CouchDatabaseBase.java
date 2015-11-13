@@ -24,10 +24,13 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getRespons
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.streamToString;
 import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
+import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
@@ -267,18 +270,32 @@ public abstract class CouchDatabaseBase {
      */
     public List<Response> bulk(List<?> objects, boolean allOrNothing) {
         assertNotEmpty(objects, "objects");
-        InputStream response = null;
+        InputStream responseStream = null;
+        HttpConnection connection;
         try {
             final String allOrNothingVal = allOrNothing ? "\"all_or_nothing\": true, " : "";
             final URI uri = buildUri(getDBUri()).path("_bulk_docs").build();
             final String json = String.format("{%s%s%s}", allOrNothingVal, "\"docs\": ", getGson
                     ().toJson(objects));
-            response = couchDbClient.post(uri, json);
-            return getResponseList(response, getGson(), Response.class,
+            connection = Http.POST(uri, "application/json");
+            if (json != null && !json.isEmpty()) {
+                connection.setRequestBody(json);
+            }
+            couchDbClient.execute(connection);
+            responseStream = connection.responseAsInputStream();
+            List<Response> bulkResponses = getResponseList(responseStream, getGson(),
                     new TypeToken<List<Response>>() {
                     }.getType());
+            for(Response response : bulkResponses) {
+                response.setStatusCode(connection.getConnection().getResponseCode());
+                response.setReason(connection.getConnection().getResponseMessage());
+            }
+            return bulkResponses;
+        }
+        catch (IOException e) {
+            throw new CouchDbException("Error retrieving response input stream.", e);
         } finally {
-            close(response);
+            close(responseStream);
         }
     }
 

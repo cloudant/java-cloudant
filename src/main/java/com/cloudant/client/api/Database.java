@@ -223,7 +223,7 @@ public class Database {
         InputStream response = null;
         try {
             response = client.couchDbClient.get(buildUri(getDBUri()).path("_shards").build());
-            return getResponseList(response, client.getGson(), Shard.class,
+            return getResponseList(response, client.getGson(),
                     new TypeToken<List<Shard>>() {
                     }.getType());
         } finally {
@@ -394,7 +394,7 @@ public class Database {
         InputStream response = null;
         try {
             response = client.couchDbClient.get(buildUri(getDBUri()).path("_index/").build());
-            return getResponseList(response, client.getGson(), Index.class,
+            return getResponseList(response, client.getGson(),
                     new TypeToken<List<Index>>() {
                     }.getType());
         } finally {

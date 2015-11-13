@@ -32,6 +32,8 @@ public class Response {
     private String error;
     private String reason;
 
+    private int code;
+
     /**
      * @return the <tt>id</tt> of the response
      */
@@ -54,11 +56,23 @@ public class Response {
         return reason;
     }
 
+    void setReason(String reason) {
+        this.reason =  reason;
+    }
+
     /**
      * @return <tt>id</tt> and <tt>rev</tt> concatenated.
      */
     @Override
     public String toString() {
         return "Response [id=" + id + ", rev=" + rev + "]";
+    }
+
+    public int getStatusCode() {
+        return code;
+    }
+
+    void setStatusCode(int code) {
+        this.code = code;
     }
 }
