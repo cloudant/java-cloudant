@@ -34,10 +34,8 @@ import com.cloudant.http.HttpConnectionResponseInterceptor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
-import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -50,32 +48,6 @@ public class Utils {
     //Design documents directory
     private static final File DESIGN_DOC_DIR
             = new File(System.getProperty("user.dir") + "/src/test/resources/design-files");
-
-    public static Properties getProperties(String configFile, TestLog log) {
-        Properties properties = new Properties();
-        try {
-            InputStream instream = CloudantClient.class.getClassLoader().getResourceAsStream
-                    (configFile);
-            properties.load(instream);
-        } catch (Exception e) {
-            String msg = "Could not read configuration file from the classpath: " + configFile;
-            log.logger.severe(msg);
-            throw new IllegalStateException(msg, e);
-        }
-        return properties;
-
-    }
-
-    public static String getHostName(String account) {
-        if (account.startsWith("http://")) {
-            return account.substring(7);
-        } else if (account.startsWith("https://")) {
-            return account.substring(8);
-        } else {
-            return account + ".cloudant.com";
-        }
-
-    }
 
     public static void removeReplicatorTestDoc(CloudantClient account, String replicatorDocId)
             throws Exception {

@@ -14,17 +14,27 @@
 
 package com.cloudant.tests.util;
 
+import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.tests.CloudantClientHelper;
 
 import org.junit.rules.ExternalResource;
 
 public class CloudantClientResource extends ExternalResource {
+    private ClientBuilder clientBuilder;
     private CloudantClient client;
+
+    public CloudantClientResource() {
+        this.clientBuilder = CloudantClientHelper.getClientBuilder();
+    }
+
+    public CloudantClientResource(ClientBuilder clientBuilder) {
+        this.clientBuilder = clientBuilder;
+    }
 
     @Override
     public void before() {
-        client = CloudantClientHelper.getClient();
+        client = clientBuilder.build();
     }
 
     @Override

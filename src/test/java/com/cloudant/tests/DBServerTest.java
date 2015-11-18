@@ -23,31 +23,32 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.DbInfo;
 import com.cloudant.test.main.RequiresDB;
+import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.util.DatabaseResource;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.RuleChain;
 
 import java.util.List;
 
 @Category(RequiresDB.class)
 public class DBServerTest {
 
+    public static CloudantClientResource clientResource = new CloudantClientResource();
+    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
+    @ClassRule
+    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
+
+    private static CloudantClient account;
     private static Database db;
-    private CloudantClient account;
 
-
-    @Before
-    public void setUp() {
-        account = CloudantClientHelper.getClient();
-        db = account.database("lightcouch-db-test", true);
-    }
-
-    @After
-    public void tearDown() {
-        account.deleteDB("lightcouch-db-test");
-        account.shutdown();
+    @BeforeClass
+    public static void setUp() {
+        account = clientResource.get();
+        db = dbResource.get();
     }
 
 

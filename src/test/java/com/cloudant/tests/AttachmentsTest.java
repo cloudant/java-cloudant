@@ -17,18 +17,20 @@ package com.cloudant.tests;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Attachment;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.test.main.RequiresDB;
+import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.util.DatabaseResource;
 
 import org.apache.commons.codec.binary.Base64;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.RuleChain;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -38,21 +40,19 @@ import java.io.InputStream;
 @Category(RequiresDB.class)
 public class AttachmentsTest {
 
+    public static CloudantClientResource clientResource = new CloudantClientResource();
+    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
+    @ClassRule
+    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
+
 
     private static Database db;
-    private CloudantClient account;
 
-    @Before
-    public void setUp() {
-        account = CloudantClientHelper.getClient();
-        db = account.database("lightcouch-db-test", true);
+    @BeforeClass
+    public static void setUp() {
+        db = dbResource.get();
     }
 
-    @After
-    public void tearDown() {
-        account.deleteDB("lightcouch-db-test");
-        account.shutdown();
-    }
 
     @Test
     public void attachmentInline() {

@@ -16,9 +16,9 @@ import com.google.gson.JsonObject;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.RuleChain;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -44,12 +44,11 @@ public class HttpTest {
 
     private String data = "{\"hello\":\"world\"}";
 
-    @ClassRule
     public static CloudantClientResource clientResource = new CloudantClientResource();
-    @Rule
-    public final DatabaseResource dbResource = new DatabaseResource(clientResource);
+    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
+    @ClassRule
+    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
 
-    private final CloudantClient account = clientResource.get();
 
     /*
      * Test "Expect: 100-Continue" header works as expected

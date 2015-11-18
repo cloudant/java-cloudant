@@ -15,7 +15,7 @@
 package com.cloudant.tests;
 
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost;
-import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -35,6 +35,7 @@ import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.SimpleHttpServer;
 import com.cloudant.tests.util.TestLog;
+import com.cloudant.tests.util.Utils;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.ClassRule;
@@ -167,15 +168,17 @@ public class CloudantClientTests {
     @Test
     @Category(RequiresDB.class)
     public void existingDatabaseCreateException() {
+        String id = Utils.generateUUID();
+        String dbName = "existing" + id;
         try {
             //create a DB for this test
-            account.createDB("existing");
+            account.createDB(dbName);
 
             //do a get with create true for the already existing DB
-            account.database("existing", true);
+            account.database(dbName, true);
         } finally {
             //clean up the DB created by this test
-            account.deleteDB("existing");
+            account.deleteDB(dbName);
         }
     }
 
@@ -224,7 +227,8 @@ public class CloudantClientTests {
             CloudantClient c = CloudantClientHelper.newSimpleHttpServerClient(server)
                     .connectTimeout(100, TimeUnit.MILLISECONDS).build();
 
-            c.createDB("test");
+            //the database doesn't really need a unique name, but have one for failure cases
+            c.createDB("test" + Utils.generateUUID());
         } catch (CouchDbException e) {
             //unwrap the CouchDbException
             if (e.getCause() != null) {

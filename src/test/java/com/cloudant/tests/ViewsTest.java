@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
-import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.views.Key;
 import com.cloudant.client.api.views.ViewMultipleRequest;
@@ -31,18 +30,20 @@ import com.cloudant.client.api.views.ViewRequestBuilder;
 import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresDB;
+import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.util.DatabaseResource;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,23 +55,17 @@ import java.util.Map;
 @Category(RequiresDB.class)
 public class ViewsTest {
 
+    @ClassRule
+    public static CloudantClientResource clientResource = new CloudantClientResource();
+    @Rule
+    public DatabaseResource dbResource = new DatabaseResource(clientResource);
 
-    private static Database db;
-    private CloudantClient account;
+    private Database db;
 
     @Before
-    public void setUp() throws FileNotFoundException {
-        account = CloudantClientHelper.getClient();
-
-        db = account.database("lightcouch-db-test", true);
-
+    public void setUp() throws Exception {
+        db = dbResource.get();
         Utils.putDesignDocs(db);
-    }
-
-    @After
-    public void tearDown() {
-        account.deleteDB("lightcouch-db-test");
-        account.shutdown();
     }
 
     @Test
@@ -643,7 +638,7 @@ public class ViewsTest {
         return String.format("%03d", index);
     }
 
-    private static void init() {
+    private void init() {
         Foo foo = null;
 
         foo = new Foo("id-1", "key-1");
