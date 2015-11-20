@@ -9,3 +9,4 @@ services:
 
 before_install:
   - export TERM=dumb
+  - curl -v http://localhost:5984/
