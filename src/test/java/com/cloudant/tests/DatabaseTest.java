@@ -62,7 +62,7 @@ public class DatabaseTest {
 
         //replicate animaldb for tests
         com.cloudant.client.api.Replication r = account.replication();
-        r.source("https://clientlibs-test.cloudant.com/animaldb");
+        r.source("http://clientlibs-test.cloudant.com/animaldb");
         r.createTarget(true);
         r.target(dbResource.getDbURIWithUserInfo());
         r.trigger();
