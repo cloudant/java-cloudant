@@ -31,12 +31,16 @@ import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 import com.cloudant.http.internal.ok.OkHttpClientHttpUrlConnectionFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.InstanceCreator;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.squareup.okhttp.ConnectionPool;
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -475,7 +479,7 @@ public class CouchDbClient {
             if (code / 100 == 2) { // success [200,299]
                 return connection;
             } else {
-                CouchDbException ex = new CouchDbException(response, code);
+                final CouchDbException ex;
                 switch (code) {
                     case HttpURLConnection.HTTP_NOT_FOUND: //404
                         ex = new NoDocumentException(response);
@@ -486,20 +490,38 @@ public class CouchDbClient {
                     case HttpURLConnection.HTTP_PRECON_FAILED: //412
                         ex = new PreconditionFailedException(response);
                         break;
+                    default:
+                        ex = new CouchDbException(response, code);
+                        break;
                 }
                 es = connection.getConnection().getErrorStream();
                 //if there is an error stream try to deserialize into the typed exception
                 if (es != null) {
+                    //read the error stream into memory
+                    byte[] errorResponse = IOUtils.toByteArray(es);
+
                     Class<? extends CouchDbException> exceptionClass = ex.getClass();
+                    //treat the error as JSON and try to deserialize
                     try {
-                        ex = getGson().fromJson(new InputStreamReader(es, "UTF-8"),
-                                exceptionClass);
+                        //Register an InstanceCreator that returns the existing exception so we can
+                        //just populate the fields, but not ignore the constructor.
+                        //Uses a new Gson so we don't accidentally recycle an exception.
+                        Gson g = new GsonBuilder().registerTypeAdapter(exceptionClass, new
+                                InstanceCreator<CouchDbException>() {
+                                    @Override
+                                    public CouchDbException createInstance(Type type) {
+                                        return ex;
+                                    }
+                                }).create();
+                        //now populate the exception with the error/reason other info from JSON
+                        g.fromJson(new InputStreamReader(new ByteArrayInputStream(errorResponse),
+                                "UTF-8"), exceptionClass);
                     } catch (JsonParseException e) {
-                        //suppress and just throw ex momentarily
+                        //the error stream was not JSON so just set the string content as the error
+                        // field on ex before we throw it
+                        ex.error = new String(errorResponse, "UTF-8");
                     }
                 }
-                //set the status code for the cases where we may not have already
-                ex.setStatusCode(code);
                 throw ex;
             }
         } catch (IOException ioe) {
@@ -511,6 +533,7 @@ public class CouchDbClient {
 
     /**
      * Execute the HttpConnection request and return the InputStream if there were no errors.
+     *
      * @param connection the request HttpConnection
      * @return InputStream from the HttpConnection response
      * @throws CouchDbException for HTTP error codes or if there was an IOException

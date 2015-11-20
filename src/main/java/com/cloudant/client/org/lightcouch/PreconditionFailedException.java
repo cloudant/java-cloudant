@@ -14,6 +14,8 @@
  */
 package com.cloudant.client.org.lightcouch;
 
+import java.net.HttpURLConnection;
+
 /**
  * <P>
  * CouchDbException class for HTTP 412 precondition failed status codes
@@ -26,14 +28,6 @@ package com.cloudant.client.org.lightcouch;
  */
 public class PreconditionFailedException extends CouchDbException {
     public PreconditionFailedException(String message) {
-        super(message);
-    }
-
-    public PreconditionFailedException(Throwable cause) {
-        super(cause);
-    }
-
-    public PreconditionFailedException(String message, Throwable cause) {
-        super(message, cause);
+        super(message, HttpURLConnection.HTTP_PRECON_FAILED);
     }
 }

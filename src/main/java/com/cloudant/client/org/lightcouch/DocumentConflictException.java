@@ -15,6 +15,8 @@
 
 package com.cloudant.client.org.lightcouch;
 
+import java.net.HttpURLConnection;
+
 /**
  * Thrown when a conflict is detected during save or update.
  *
@@ -26,14 +28,6 @@ public class DocumentConflictException extends CouchDbException {
     private static final long serialVersionUID = 1L;
 
     public DocumentConflictException(String message) {
-        super(message);
-    }
-
-    public DocumentConflictException(Throwable cause) {
-        super(cause);
-    }
-
-    public DocumentConflictException(String message, Throwable cause) {
-        super(message, cause);
+        super(message, HttpURLConnection.HTTP_CONFLICT);
     }
 }

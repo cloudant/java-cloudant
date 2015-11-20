@@ -1,4 +1,5 @@
 # Unreleased
+- [IMPROVED] Included error and reason information in message from `CouchDbException` classes.
 - [IMPROVED] Add HTTP status code to `Response` objects.
 - [FIX] Inconsistent encoding between UTF-8 and the JVM default was being used in some places.
   UTF-8 is now used throughout.

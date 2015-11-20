@@ -15,6 +15,8 @@
 
 package com.cloudant.client.org.lightcouch;
 
+import java.net.HttpURLConnection;
+
 /**
  * Thrown when a requested document is not found.
  *
@@ -26,14 +28,6 @@ public class NoDocumentException extends CouchDbException {
     private static final long serialVersionUID = 1L;
 
     public NoDocumentException(String message) {
-        super(message);
-    }
-
-    public NoDocumentException(Throwable cause) {
-        super(cause);
-    }
-
-    public NoDocumentException(String message, Throwable cause) {
-        super(message, cause);
+        super(message, HttpURLConnection.HTTP_NOT_FOUND);
     }
 }
