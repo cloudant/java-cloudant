@@ -23,11 +23,11 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getRespons
 import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
 import com.cloudant.client.org.lightcouch.internal.GsonHelper;
-import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
+import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 import com.cloudant.http.internal.ok.OkHttpClientHttpUrlConnectionFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -284,7 +284,12 @@ public class CouchDbClient {
         InputStream is = null;
         try {
             is = this.executeToInputStream(connection);
-            return getResponse(is, Response.class, getGson());
+            Response response = getResponse(is, Response.class, getGson());
+            response.setStatusCode(connection.getConnection().getResponseCode());
+            response.setReason(connection.getConnection().getResponseMessage());
+            return response;
+        } catch (IOException e) {
+            throw new CouchDbException("Error retrieving response code or message.", e);
         } finally {
             close(is);
         }

@@ -64,6 +64,12 @@ public class Response {
         return response.getReason();
     }
 
+    /**
+     * @return the HTTP status code returned by the server or 0 if no code was available
+     */
+    public int getStatusCode() {
+        return response.getStatusCode();
+    }
 
     /**
      * @return <tt>id</tt> and <tt>rev</tt> concatenated.
