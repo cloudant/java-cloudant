@@ -161,17 +161,22 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
     }
 
     private boolean sessionHasStarted(InputStream responseStream) {
-        //check the response body
-        Gson gson = new Gson();
-        JsonObject jsonResponse = gson.fromJson(new InputStreamReader(responseStream), JsonObject
-                .class);
+        try {
+            //check the response body
+            Gson gson = new Gson();
+            JsonObject jsonResponse = gson.fromJson(new InputStreamReader(responseStream,
+                    "UTF-8"), JsonObject.class);
 
-        // only check for ok:true, https://issues.apache.org/jira/browse/COUCHDB-1356
-        // means we cannot check that the name returned is the one we sent.
-        return jsonResponse != null
-                && jsonResponse.has("ok")
-                && jsonResponse.get("ok").isJsonPrimitive()
-                && jsonResponse.getAsJsonPrimitive("ok").isBoolean()
-                && jsonResponse.getAsJsonPrimitive("ok").getAsBoolean();
+            // only check for ok:true, https://issues.apache.org/jira/browse/COUCHDB-1356
+            // means we cannot check that the name returned is the one we sent.
+            return jsonResponse != null
+                    && jsonResponse.has("ok")
+                    && jsonResponse.get("ok").isJsonPrimitive()
+                    && jsonResponse.getAsJsonPrimitive("ok").isBoolean()
+                    && jsonResponse.getAsJsonPrimitive("ok").getAsBoolean();
+        } catch (UnsupportedEncodingException e) {
+            //UTF-8 should be supported on all JVMs
+            throw new RuntimeException(e);
+        }
     }
 }

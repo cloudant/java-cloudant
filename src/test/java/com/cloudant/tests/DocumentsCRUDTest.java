@@ -248,6 +248,13 @@ public class DocumentsCRUDTest {
         assertEquals(idWithSlash, responseRemove.getId());
     }
 
+    @Test
+    public void testCedilla() {
+        Foo f = new Foo();
+        f.setTitle("François");
+        db.save(f);
+    }
+
     // Helper
 
     private static String generateUUID() {

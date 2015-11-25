@@ -117,7 +117,7 @@ final public class CouchDbUtil {
     }
 
     public static String streamToString(InputStream in) {
-        Scanner s = new Scanner(in);
+        Scanner s = new Scanner(in, "UTF-8");
         s.useDelimiter("\\A");
         String str = s.hasNext() ? s.next() : null;
         close(in);
