@@ -140,18 +140,9 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 javadoc {
     options.setMemberLevel JavadocMemberLevel.PUBLIC
     options.overview = "overview.html"
-    exclude("**/com/cloudant/tests/**",
-            "**/com/cloudant/test/**",
-            "**/resources/**",
-            "**/internal/**",
-            "**/lightcouch/**",
-            "**internal/**",
-            "**/http/interceptors/**")
-    include("**/lightcouch/PreconditionFailedException.java",
-            "**/lightcouch/DocumentConflictException.java",
-            "**/lightcouch/NoDocumentException.java",
-            "**/lightcouch/CouchDbException.java",
-            "**")
+    include("**/lightcouch/*Exception.java",
+            "**/client/api/**",
+            "**/http/*")
     //add a logging listener to check for javadoc warnings and fail the build if there are any
     boolean hasJavaDocWarnings = false;
     doFirst {
