@@ -17,9 +17,10 @@ package com.cloudant.client.org.lightcouch;
 
 /**
  * Base runtime exception class.
+ *
+ * @author Ahmed Yehia
  * @see NoDocumentException
  * @see DocumentConflictException
- * @author Ahmed Yehia
  */
 public class CouchDbException extends RuntimeException {
 
@@ -38,10 +39,8 @@ public class CouchDbException extends RuntimeException {
     }
 
     private int statusCode;
-    private String error = "Unknown error";
-    private String reason = "Unkown reason";
-
-    public CouchDbException() {};
+    protected String error = null;
+    protected String reason = null;
 
     public CouchDbException(String message, int statusCode) {
         super(message);
@@ -57,23 +56,27 @@ public class CouchDbException extends RuntimeException {
         return this.statusCode;
     }
 
-    public void setStatusCode(int statusCode) {
-        this.statusCode = statusCode;
-    }
-
+    /**
+     *
+     * @return the error string returned by the server or {@code null} if there was not one.
+     */
     public String getError() {
         return error;
     }
 
-    public void setError(String error) {
-        this.error = error;
-    }
-
+    /**
+     *
+     * @return the reason string returned by the server or {@code null} if there was not one.
+     */
     public String getReason() {
         return reason;
     }
 
-    public void setReason(String reason) {
-        this.reason = reason;
+    @Override
+    public String getMessage() {
+        //improve the message with status code, error and reason if we have them
+        return ((getStatusCode() > 0) ? getStatusCode() + " " : "") + super.getMessage()
+                + ((error != null) ? ": " + getError() : "")
+                + ((reason != null) ? ": " + getReason() : "");
     }
 }
