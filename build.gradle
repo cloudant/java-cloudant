@@ -255,3 +255,18 @@ def deployer = uploadArchives.repositories.mavenDeployer
     }.each { dep -> dep.optional = true }
 }
 
+
+apply plugin: 'findbugs'
+//findbugs
+findbugs {
+    toolVersion = "3.0.1"
+    reportLevel = "high"
+    effort = "max"
+}
+
+tasks.withType(FindBugs) {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
