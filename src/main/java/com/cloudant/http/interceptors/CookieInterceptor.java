@@ -85,7 +85,7 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
 
         if (shouldAttemptCookieRequest) {
             if (cookie == null) {
-                cookie = getCookie(connection.getURL());
+                cookie = getCookie(connection.getURL(), context);
             }
             connection.setRequestProperty("Cookie", cookie);
         }
@@ -134,7 +134,7 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
                     break;
             }
             if (renewCookie) {
-                cookie = getCookie(connection.getURL());
+                cookie = getCookie(connection.getURL(), context);
                 // Don't resend request, failed to get cookie
                 if (cookie != null) {
                     context.replayRequest = true;
@@ -149,7 +149,7 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
 
     }
 
-    private String getCookie(URL url) {
+    private String getCookie(URL url, HttpConnectionInterceptorContext context) {
         try {
             URL sessionURL = new URL(String.format("%s://%s:%d/_session",
                     url.getProtocol(),
@@ -158,6 +158,15 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
 
             HttpConnection conn = Http.POST(sessionURL, "application/x-www-form-urlencoded");
             conn.setRequestBody(sessionRequestBody);
+
+            //when we request the session we need all interceptors except this one
+
+            conn.requestInterceptors.addAll(context.connection.requestInterceptors);
+            conn.requestInterceptors.remove(this);
+            conn.responseInterceptors.addAll(context.connection.responseInterceptors);
+            conn.responseInterceptors.remove(this);
+
+
             HttpURLConnection connection = conn.execute().getConnection();
             String cookieHeader = connection.getHeaderField("Set-Cookie");
             int responseCode = connection.getResponseCode();

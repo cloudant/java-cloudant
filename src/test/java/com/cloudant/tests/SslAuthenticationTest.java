@@ -169,5 +169,48 @@ public class SslAuthenticationTest {
 
     }
 
+    /**
+     * Repeat the localSSLAuthenticationDisabled, but with the cookie auth enabled.
+     * This test validates that the SSL settings also get applied to the cookie interceptor.
+     */
+    @Test
+    public void localSSLAuthenticationDisabledWithCookieAuth() throws Exception {
+
+        // Mock up an OK cookie response then an OK response for the getAllDbs()
+        server.enqueue(MockWebServerResource.OK_COOKIE);
+        server.enqueue(new MockResponse()); //OK 200
+
+        // Use a username and password to enable the cookie auth interceptor
+        dbClient = CloudantClientHelper.newMockWebServerClientBuilder(server).username("user")
+                .password("password")
+                .disableSSLAuthentication()
+                .build();
+
+        dbClient.getAllDbs();
+    }
+
+    /**
+     * Repeat the localSSLAuthenticationEnabled, but with the cookie auth enabled.
+     * This test validates that the SSL settings also get applied to the cookie interceptor.
+     */
+    @Test
+    public void localSSLAuthenticationEnabledWithCookieAuth() throws Exception {
+
+        // Mock up an OK cookie response then an OK response for the getAllDbs()
+        server.enqueue(MockWebServerResource.OK_COOKIE);
+        server.enqueue(new MockResponse()); //OK 200
+
+        // Use a username and password to enable the cookie auth interceptor
+        dbClient = CloudantClientHelper.newMockWebServerClientBuilder(server).username("user")
+                .password("password")
+                .build();
+
+        try {
+            dbClient.getAllDbs();
+            fail("The SSL authentication failure should result in a CouchDbException");
+        } catch(CouchDbException e) {
+            validateClientAuthenticationException(e);
+        }
+    }
 }
 
