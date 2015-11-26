@@ -21,6 +21,9 @@ import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
+import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,7 +79,7 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
 
     @Override
     public HttpConnectionInterceptorContext interceptRequest(HttpConnectionInterceptorContext
-                                                                         context) {
+                                                                     context) {
 
         HttpURLConnection connection = context.connection.getConnection();
 
@@ -92,13 +95,47 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
 
     @Override
     public HttpConnectionInterceptorContext interceptResponse(HttpConnectionInterceptorContext
-                                                                          context) {
+                                                                      context) {
         HttpURLConnection connection = context.connection.getConnection();
         try {
-            if (context.connection.getConnection().getResponseCode() == 401) {
-                //we need to get a new cookie
+            boolean renewCookie = false;
+            int statusCode = connection.getResponseCode();
+            switch (statusCode) {
+                case HttpURLConnection.HTTP_FORBIDDEN: //403
+                    //check if it was an expiry case
+                    InputStream errorStream = connection.getErrorStream();
+                    String errorString = new String(IOUtils.toString(errorStream, "UTF-8"));
+                    try {
+                        JsonObject errorResponse = new Gson().fromJson(errorString, JsonObject
+                                .class);
+                        String error = errorResponse.getAsJsonPrimitive
+                                ("error").getAsString();
+                        String reason = errorResponse.getAsJsonPrimitive
+                                ("reason").getAsString();
+                        if (!"credentials_expired".equals(error)) {
+                            //wasn't a credentials expired, throw exception
+                            throw new HttpConnectionInterceptorException(error, reason);
+                        } else {
+                            // Was expired - set boolean to renew cookie
+                            renewCookie = true;
+                        }
+                    } catch (JsonParseException e) {
+                        //wasn't JSON throw an exception
+                        throw new HttpConnectionInterceptorException(errorString);
+                    } finally {
+                        errorStream.close();
+                    }
+                    break;
+                case HttpURLConnection.HTTP_UNAUTHORIZED: //401
+                    // We need to get a new cookie
+                    renewCookie = true;
+                    break;
+                default:
+                    break;
+            }
+            if (renewCookie) {
                 cookie = getCookie(connection.getURL());
-                //don't resend request, failed to get cookie
+                // Don't resend request, failed to get cookie
                 if (cookie != null) {
                     context.replayRequest = true;
                 } else {

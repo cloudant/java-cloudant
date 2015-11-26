@@ -27,6 +27,7 @@ import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
+import com.cloudant.http.interceptors.HttpConnectionInterceptorException;
 import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 import com.cloudant.http.internal.ok.OkHttpClientHttpUrlConnectionFactory;
 import com.google.gson.Gson;
@@ -472,7 +473,15 @@ public class CouchDbClient {
         // responses (eg 404 throws a FileNotFoundException) but we need to map to our own
         // specific exceptions
         try {
-            connection = connection.execute();
+            try {
+                connection = connection.execute();
+            } catch (HttpConnectionInterceptorException e) {
+                CouchDbException exception = new CouchDbException(connection.getConnection()
+                        .getResponseMessage(), connection.getConnection().getResponseCode());
+                exception.error = e.error;
+                exception.reason = e.reason;
+                throw exception;
+            }
             int code = connection.getConnection().getResponseCode();
             String response = connection.getConnection().getResponseMessage();
             // everything ok? return the stream
