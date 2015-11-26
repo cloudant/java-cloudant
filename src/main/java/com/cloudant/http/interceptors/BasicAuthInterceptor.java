@@ -50,10 +50,10 @@ public class BasicAuthInterceptor implements HttpConnectionRequestInterceptor {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             OutputStream bos = Base64OutputStreamFactory.get(baos);
-            bos.write(userInfo.getBytes());
+            bos.write(userInfo.getBytes("UTF-8"));
             bos.flush();
             bos.close();
-            return baos.toString();
+            return baos.toString("UTF-8");
         } catch (IOException e) {
             Logger.getLogger(BasicAuthInterceptor.class.getName()).log(Level.SEVERE, "IOException" +
                     "during credential encoding", e);

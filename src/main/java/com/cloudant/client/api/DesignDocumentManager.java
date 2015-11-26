@@ -25,8 +25,10 @@ import com.google.gson.Gson;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -205,7 +207,7 @@ public class DesignDocumentManager {
     /**
      * Deserialize a javascript design document file to a DesignDocument object.
      *
-     * @param file the design document javascript file
+     * @param file the design document javascript file (UTF-8 encoded)
      * @return {@link DesignDocument}
      * @throws FileNotFoundException if the file does not exist or cannot be read
      */
@@ -213,10 +215,16 @@ public class DesignDocumentManager {
         assertNotEmpty(file, "Design js file");
         DesignDocument designDocument;
         Gson gson = new Gson();
-        //Deserialize JS file contents into DesignDocument object
-        designDocument = gson.fromJson(new FileReader(file), DesignDocument.class);
+        try {
+            //Deserialize JS file contents into DesignDocument object
+            designDocument = gson.fromJson(new InputStreamReader(new FileInputStream(file),
+                    "UTF-8"), DesignDocument.class);
 
-        return designDocument;
+            return designDocument;
+        } catch (UnsupportedEncodingException e) {
+            //UTF-8 should be supported on all JVMs
+            throw new RuntimeException(e);
+        }
     }
 
 }

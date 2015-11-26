@@ -1,5 +1,8 @@
 # Unreleased
 - [IMPROVED] Add HTTP status code to `Response` objects.
+- [FIX] Inconsistent encoding between UTF-8 and the JVM default was being used in some places.
+  UTF-8 is now used throughout.
+
 # 2.0.0 (2015-11-12)
 - [NEW] `DesignDocument.MapReduce` now has a setter for the `dbcopy` field.
 - [NEW] Requests for the `_all_docs` endpoint are made via `Database#getAllDocsRequestBuilder()`

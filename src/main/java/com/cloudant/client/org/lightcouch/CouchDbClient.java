@@ -492,7 +492,7 @@ public class CouchDbClient {
                 if (es != null) {
                     Class<? extends CouchDbException> exceptionClass = ex.getClass();
                     try {
-                        ex = getGson().fromJson(new InputStreamReader(es),
+                        ex = getGson().fromJson(new InputStreamReader(es, "UTF-8"),
                                 exceptionClass);
                     } catch (JsonParseException e) {
                         //suppress and just throw ex momentarily

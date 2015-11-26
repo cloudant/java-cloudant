@@ -114,14 +114,16 @@ public class HttpConnection  {
 
     /**
      * Set the String of request body data to be sent to the server.
+     *
      * @param input String of request body data to be sent to the server
-     * @return an {@link HttpConnection} for method chaining 
+     * @return an {@link HttpConnection} for method chaining
      */
     public HttpConnection setRequestBody(final String input) {
         try {
-            this.input = new ByteArrayInputStream(input.getBytes("UTF-8"));
+            byte[] inputBytes = input.getBytes("UTF-8");
+            this.input = new ByteArrayInputStream(inputBytes);
             // input is in bytes, not characters
-            this.inputLength = input.getBytes().length;
+            this.inputLength = inputBytes.length;
         } catch (UnsupportedEncodingException e) {
             // This should never happen as every implementation of the java platform is required
             // to support UTF-8.
