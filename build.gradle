@@ -271,8 +271,10 @@ findbugs {
 }
 
 tasks.withType(FindBugs) {
+    //currently only one report type can be used toggle which with a property
+    boolean generateXML = Boolean.getBoolean("findbugs.xml.report")
     reports {
-        xml.enabled = false
-        html.enabled = true
+        xml.enabled = generateXML
+        html.enabled = !generateXML
     }
 }
