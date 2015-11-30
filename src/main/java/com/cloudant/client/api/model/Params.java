@@ -59,16 +59,28 @@ public class Params {
         return this;
     }
 
-    public boolean equals(Object obj) {
-        return params.equals(obj);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Params params1 = (Params) o;
+
+        return params.equals(params1.params);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return params.hashCode();
     }
 
     public List<String> getParams() {
         return params.getParams();
-    }
-
-    public int hashCode() {
-        return params.hashCode();
     }
 
     public Params revsInfo() {
