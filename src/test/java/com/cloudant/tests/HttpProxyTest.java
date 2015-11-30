@@ -15,24 +15,36 @@
 package com.cloudant.tests;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.http.Http;
 import com.cloudant.http.interceptors.ProxyAuthInterceptor;
-import com.cloudant.tests.util.SimpleHttpServer;
+import com.cloudant.tests.util.MockWebServerResource;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
-import org.junit.ClassRule;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
-import java.net.URL;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class HttpProxyTest {
 
-    @ClassRule
-    public static SimpleHttpServer server = new SimpleHttpServer();
+    @Rule
+    public MockWebServerResource serverResource = new MockWebServerResource();
+    public MockWebServer server;
+
+    @Before
+    public void setup() {
+        server = serverResource.getServer();
+    }
+
 
     /**
      * This test validates that proxy configuration is correctly used.
@@ -42,15 +54,15 @@ public class HttpProxyTest {
     @Test
     public void proxyConfiguration() throws Exception {
 
-        //wait for the server to be ready
-        server.await();
+        //mock a 200 OK
+        server.enqueue(new MockResponse());
 
         //instantiating the client performs a single post request
         //create a client with a bogus address (TEST-NET)
         String mockProxyUser = "alpha";
         String mockProxyPass = "alphaPass";
         CloudantClient client = CloudantClientHelper.newTestAddressClient()
-                .proxyURL(new URL(server.getUrl()))
+                .proxyURL(server.url("/").url())
                 .proxyUser(mockProxyUser)
                 .proxyPassword(mockProxyPass)
                 .build();
@@ -58,27 +70,23 @@ public class HttpProxyTest {
         client.executeRequest(Http.GET(client.getBaseUri()));
         //if it wasn't a 20x then an exception should have been thrown by now
 
-        //assert that the request had the expected proxy auth header
-        boolean foundProxyAuthHeader = false;
-        for (String line : server.getLastInputRequestLines()) {
-            if (line.contains("Proxy-Authorization")) {
-                foundProxyAuthHeader = true;
-                Matcher m = Pattern.compile("Proxy-Authorization: Basic (.*)", Pattern
-                        .CASE_INSENSITIVE).matcher(line);
-                assertTrue("The Proxy-Authorization header should match the pattern", m.matches());
-                assertEquals("There should be 1 group for the value", 1, m.groupCount());
-                //create an interceptor with the same creds so we can easily get the expected value
-                final String encodedCreds = new ProxyAuthInterceptor(mockProxyUser, mockProxyPass) {
-                    String getEncodedCreds() {
-                        return encodedAuth;
-                    }
-                }.getEncodedCreds();
+        RecordedRequest request = server.takeRequest(10, TimeUnit.SECONDS);
+        String proxyAuthHeader = request.getHeader("Proxy-Authorization");
+        assertNotNull("The Proxy-Authorization header should be present", proxyAuthHeader);
 
-                assertEquals("The encoded credentials should match the expected value",
-                        encodedCreds, m.group(1));
+        Matcher m = Pattern.compile("Basic (.*)", Pattern
+                .CASE_INSENSITIVE).matcher(proxyAuthHeader);
+        assertTrue("The Proxy-Authorization header should match the pattern", m.matches());
+        assertEquals("There should be 1 group for the value", 1, m.groupCount());
 
+        //create an interceptor with the same creds so we can easily get the expected value
+        final String encodedCreds = new ProxyAuthInterceptor(mockProxyUser, mockProxyPass) {
+            String getEncodedCreds() {
+                return encodedAuth;
             }
-        }
-        assertTrue(foundProxyAuthHeader);
+        }.getEncodedCreds();
+
+        assertEquals("The encoded credentials should match the expected value",
+                encodedCreds, m.group(1));
     }
 }

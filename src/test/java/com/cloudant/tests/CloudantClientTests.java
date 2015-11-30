@@ -33,23 +33,27 @@ import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.SimpleHttpServer;
 import com.cloudant.tests.util.TestLog;
 import com.cloudant.tests.util.Utils;
+import com.squareup.okhttp.mockwebserver.Dispatcher;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ServerSocketFactory;
 
 public class CloudantClientTests {
 
@@ -117,36 +121,29 @@ public class CloudantClientTests {
     @Test
     public void testUserAgentHeaderIsAddedToRequest() throws Exception {
 
-        SimpleHttpServer server = new SimpleHttpServer();
+        MockWebServer server = new MockWebServer();
+        server.start();
+        //send back an OK 200
+        server.enqueue(new MockResponse());
         try {
-            server.start();
-            //wait for the server to be ready
-            server.await();
 
             //instantiating the client performs a single post request
-            CloudantClient client = CloudantClientHelper.newSimpleHttpServerClient(server).build();
+            CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(server)
+                    .build();
             client.executeRequest(createPost(client.getBaseUri(), null, "application/json"));
+
             //assert that the request had the expected header
-            boolean foundUserAgentHeaderOnRequest = false;
-            boolean userAgentHeaderMatchedExpectedForm = false;
-            for (String line : server.getLastInputRequestLines()) {
-                if (line.contains("User-Agent")) {
-                    foundUserAgentHeaderOnRequest = true;
-                    if (line.matches(".*" + userAgentRegex)) {
-                        userAgentHeaderMatchedExpectedForm = true;
-                    }
-                }
-            }
-            assertTrue("The User-Agent header should be present on the request",
-                    foundUserAgentHeaderOnRequest);
+            String userAgentHeader = server.takeRequest(10, TimeUnit.SECONDS)
+                    .getHeader("User-Agent");
+            assertNotNull("The User-Agent header should be present on the request",
+                    userAgentHeader);
             assertTrue("The value of the User-Agent header value on the request should match the " +
-                            "format " +
-                            "\"java-cloudant/version [Java (os.arch; os.name; os.version) jvm" +
-                            ".vendor; jvm" +
-                            ".version; jvm.runtime.version]\"",
-                    userAgentHeaderMatchedExpectedForm);
+                    "format " +
+                    "\"java-cloudant/version [Java (os.arch; os.name; os.version) jvm" +
+                    ".vendor; jvm" +
+                    ".version; jvm.runtime.version]\"", userAgentHeader.matches(userAgentRegex));
         } finally {
-            server.stop();
+            server.shutdown();
         }
     }
 
@@ -203,32 +200,20 @@ public class CloudantClientTests {
     @Test(expected = SocketTimeoutException.class)
     public void connectionTimeout() throws Throwable {
 
-        //start a simple http server
-        SimpleHttpServer server = new SimpleHttpServer() {
-
-            @Override
-            public void start() throws Exception {
-                //we don't actually want this server to loop, just create a socket
-                //so set finished to true
-                finished.set(true);
-                super.start();
-            }
-
-        };
-        server.start();
-        server.await();
+        ServerSocket serverSocket = ServerSocketFactory.getDefault().createServerSocket(0, 1);
 
         //block the single connection to our server
         Socket socket = new Socket();
-        socket.connect(server.getSocketAddress());
+        socket.connect(serverSocket.getLocalSocketAddress());
 
         //now try to connect, but should timeout because there is no connection available
         try {
-            CloudantClient c = CloudantClientHelper.newSimpleHttpServerClient(server)
+            CloudantClient c = ClientBuilder.url(new URL("http://127.0.0.1:" + serverSocket
+                    .getLocalPort()))
                     .connectTimeout(100, TimeUnit.MILLISECONDS).build();
 
-            //the database doesn't really need a unique name, but have one for failure cases
-            c.createDB("test" + Utils.generateUUID());
+            // Make a request
+            c.getAllDbs();
         } catch (CouchDbException e) {
             //unwrap the CouchDbException
             if (e.getCause() != null) {
@@ -242,8 +227,8 @@ public class CloudantClientTests {
             }
         } finally {
             //make sure we close the sockets
+            IOUtils.closeQuietly(serverSocket);
             IOUtils.closeQuietly(socket);
-            server.stop();
         }
     }
 
@@ -258,20 +243,20 @@ public class CloudantClientTests {
         final Long READ_TIMEOUT = 250l;
 
         //start a simple http server
-        SimpleHttpServer server = new SimpleHttpServer() {
+        MockWebServer server = new MockWebServer();
+        server.setDispatcher(new Dispatcher() {
             @Override
-            protected void serverAction(InputStream is, OutputStream os) throws Exception {
-                //sleep for longer than the read timeout
+            public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
                 Thread.sleep(READ_TIMEOUT * 2);
+                return new MockResponse();
             }
-        };
+        });
 
         try {
             server.start();
-            server.await();
 
             try {
-                CloudantClient c = CloudantClientHelper.newSimpleHttpServerClient(server)
+                CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server)
                         .readTimeout(READ_TIMEOUT, TimeUnit.MILLISECONDS).build();
 
                 //do a call that expects a response
@@ -285,7 +270,7 @@ public class CloudantClientTests {
                 }
             }
         } finally {
-            server.stop();
+            server.shutdown();
         }
     }
 
