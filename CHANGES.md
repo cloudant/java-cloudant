@@ -1,8 +1,8 @@
 # Unreleased
 - [IMPROVED] Included error and reason information in message from `CouchDbException` classes.
-- [IMPROVED] Add HTTP status code to `Response` objects.
-- [FIX] Inconsistent encoding between UTF-8 and the JVM default was being used in some places.
-  UTF-8 is now used throughout.
+- [IMPROVED] Added HTTP status code to `Response` objects.
+- [FIX] Too many bytes written exception caused by inconsistent encoding between UTF-8 and the
+  JVM default. UTF-8 is now correctly used for the request body content length and throughout.
 
 # 2.0.0 (2015-11-12)
 - [NEW] `DesignDocument.MapReduce` now has a setter for the `dbcopy` field.
