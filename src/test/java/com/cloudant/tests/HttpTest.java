@@ -13,10 +13,14 @@ import com.cloudant.http.interceptors.CookieInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.util.MockWebServerResource;
 import com.cloudant.tests.util.SimpleHttpServer;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -25,7 +29,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.RuleChain;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -34,16 +37,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.StringWriter;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.charset.Charset;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class HttpTest {
@@ -329,71 +328,24 @@ public class HttpTest {
         final String mockUser = "myStrangeUsername=&?";
         String mockPass = "?&=NotAsStrangeInAPassword";
 
-        final AtomicReference<String> readBody = new AtomicReference<String>();
-
-        final List<List<String>> requests = new ArrayList<List<String>>();
-        SimpleHttpServer server = new SimpleHttpServer() {
-            int count = 0;
-
-            @Override
-            protected void serverAction(InputStream is, OutputStream os) throws Exception {
-                count++;
-                if (count == 1) {
-                    //read the headers
-                    super.readInputLines(is);
-                    //work out how long the body is
-                    int contentLength = 0;
-                    for (String header : getLastInputRequestLines()) {
-                        Matcher m = Pattern.compile("Content-Length\\s*:\\s*(\\d+)", Pattern
-                                .CASE_INSENSITIVE).matcher(header);
-                        if (m.matches() && m.groupCount() == 1) {
-                            contentLength = Integer.valueOf(m.group(1));
-                        }
-                    }
-                    //write the continue to allow the body to be sent faster
-                    OutputStreamWriter osw = new OutputStreamWriter(new BufferedOutputStream(os),
-                            "UTF-8");
-                    osw.write("HTTP/1.1 100 Continue\r\n\r\n");
-                    osw.flush();
-                    //now read the body
-                    BufferedReader r = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-                    //wait for the client to be ready with the body
-                    while (!r.ready()) {
-                        Thread.sleep(100);
-                    }
-                    StringWriter w = new StringWriter();
-                    int nRead = 0;
-                    while (nRead < contentLength) {
-                        w.write(r.read());
-                        nRead++;
-                    }
-                    readBody.set(w.toString());
-                    //send back a mock cookie
-                    osw.write("HTTP/1.1 200 OK\r\n");
-                    osw.write("Set-Cookie: " +
-                            "AuthSession=\"a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz" +
-                            "\";\r\n\r\n");
-                    osw.write(("{\"ok\":true,\"name\":\"" + mockUser + "\",\"roles\":[]}\r\n"));
-                    osw.flush();
-                } else {
-                    super.serverAction(is, os);
-                }
-            }
-        };
+        MockWebServer server = new MockWebServer();
+        //expect a cookie request then a GET
+        server.enqueue(MockWebServerResource.OK_COOKIE);
+        server.enqueue(new MockResponse());
 
         server.start();
-        server.await();
 
         try {
-            CloudantClient c = CloudantClientHelper.newSimpleHttpServerClient(server)
+            CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server)
                     .username(mockUser)
                     .password(mockPass)
                     .build();
             //the GET request will try to get a session, then perform the GET
             c.executeRequest(Http.GET(c.getBaseUri()));
 
-            String sessionRequestContent = readBody.get();
-            Assert.assertNotNull("The _session request should have non-null content",
+            RecordedRequest r = server.takeRequest(10, TimeUnit.SECONDS);
+            String sessionRequestContent = r.getBody().readString(Charset.forName("UTF-8"));
+            assertNotNull("The _session request should have non-null content",
                     sessionRequestContent);
             //expecting name=...&password=...
             String[] parts = Utils.splitAndAssert(sessionRequestContent, "&", 1);
@@ -404,81 +356,7 @@ public class HttpTest {
             Assert.assertEquals("The username URL decoded password should match", mockPass,
                     password);
         } finally {
-            server.stop();
-        }
-    }
-
-    private final class Server403 extends SimpleHttpServer {
-        private final String mockUser;
-        private final AtomicInteger counter;
-        private final boolean expired;
-
-        Server403(String mockUser, AtomicInteger counter, boolean expired) {
-            this.mockUser = mockUser;
-            this.counter = counter;
-            this.expired = expired;
-        }
-
-        @Override
-        protected void serverAction(InputStream is, OutputStream os) throws Exception {
-            int count = counter.incrementAndGet();
-            //count 1 = _session request, count 2 = GET request -> 403
-            // count 3 = _session for new cookie in the expired case
-            if (count == 1 || (count == 3 && expired)) {
-                //read the headers
-                super.readInputLines(is);
-                //work out how long the body is
-                int contentLength = 0;
-                for (String header : getLastInputRequestLines()) {
-                    Matcher m = Pattern.compile("Content-Length\\s*:\\s*(\\d+)", Pattern
-                            .CASE_INSENSITIVE).matcher(header);
-                    if (m.matches() && m.groupCount() == 1) {
-                        contentLength = Integer.valueOf(m.group(1));
-                    }
-                }
-
-                //write the continue to allow the body to be sent faster
-                OutputStreamWriter osw = new OutputStreamWriter(new BufferedOutputStream(os),
-                        "UTF-8");
-                osw.write("HTTP/1.1 100 Continue\r\n\r\n");
-                osw.flush();
-                //now read the body
-                BufferedReader r = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-                //wait for the client to be ready with the body
-                while (!r.ready()) {
-                    Thread.sleep(100);
-                }
-                StringWriter w = new StringWriter();
-                int nRead = 0;
-                while (nRead < contentLength) {
-                    w.write(r.read());
-                    nRead++;
-                }
-                //send back a mock cookie
-                osw.write("HTTP/1.1 200 OK\r\n");
-                osw.write("Set-Cookie: " +
-                        "AuthSession=\"a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz" +
-                        "\";\r\n\r\n");
-                osw.write(("{\"ok\":true,\"name\":\"" + mockUser + "\",\"roles\":[]}\r\n"));
-                osw.flush();
-            } else if (count == 2) {
-                //GET request
-                super.readInputLines(is);
-                //write the continue to allow the body to be sent faster
-                OutputStreamWriter osw = new OutputStreamWriter(new BufferedOutputStream(os),
-                        "UTF-8");
-                osw.write("HTTP/1.1 403 Forbidden\r\n\r\n");
-                if (expired) {
-                    osw.write("{\"error\":\"credentials_expired\", \"reason\":\"Session " +
-                            "expired\"}\r\n");
-                } else {
-                    osw.write("{\"error\":\"403_not_expired_test\", \"reason\":\"example reason\"}\r\n");
-                }
-                osw.flush();
-            } else {
-                //read the lines and write a 200
-                super.serverAction(is, os);
-            }
+            server.shutdown();
         }
     }
 
@@ -490,18 +368,25 @@ public class HttpTest {
      */
     @Test
     public void cookie403Renewal() throws Exception {
-        final String mockUser = "myStrangeUsername=&?";
-        String mockPass = "?&=NotAsStrangeInAPassword";
 
-        final AtomicInteger counter = new AtomicInteger();
-        SimpleHttpServer server = new Server403(mockUser, counter, true);
+        MockWebServer server = new MockWebServer();
+        // Request sequence
+        // _session request to get Cookie
+        // GET request -> 403
+        // _session for new cookie
+        // GET replay -> 200
+        server.enqueue(MockWebServerResource.OK_COOKIE);
+        server.enqueue(new MockResponse().setResponseCode(403).setBody
+                ("{\"error\":\"credentials_expired\", \"reason\":\"Session expired\"}\r\n"));
+        server.enqueue(MockWebServerResource.OK_COOKIE);
+        server.enqueue(new MockResponse());
+
         server.start();
-        server.await();
 
         try {
-            CloudantClient c = CloudantClientHelper.newSimpleHttpServerClient(server)
-                    .username(mockUser)
-                    .password(mockPass)
+            CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server)
+                    .username("a")
+                    .password("b")
                     .build();
             //the GET request will try to get a session, then perform the GET
             //the GET will result in a 403, which should mean another request to _session
@@ -509,10 +394,11 @@ public class HttpTest {
             c.executeRequest(Http.GET(c.getBaseUri()));
 
             //if we don't handle the 403 correctly an exception will be thrown
+
             // also assert that there were 4 calls
-            assertEquals("The server should have received 4 requests", 4, counter.get());
+            assertEquals("The server should have received 4 requests", 4, server.getRequestCount());
         } finally {
-            server.stop();
+            server.shutdown();
         }
     }
 
@@ -525,18 +411,21 @@ public class HttpTest {
      */
     @Test
     public void handleNonExpiry403() throws Exception {
-        final String mockUser = "myStrangeUsername=&?";
-        String mockPass = "?&=NotAsStrangeInAPassword";
 
-        final AtomicInteger counter = new AtomicInteger();
-        SimpleHttpServer server = new Server403(mockUser, counter, false);
+        MockWebServer server = new MockWebServer();
+        // Request sequence
+        // _session request to get Cookie
+        // GET request -> 403 (CouchDbException)
+        server.enqueue(MockWebServerResource.OK_COOKIE);
+        server.enqueue(new MockResponse().setResponseCode(403).setBody
+                ("{\"error\":\"403_not_expired_test\", \"reason\":\"example reason\"}\r\n"));
+
         server.start();
-        server.await();
 
         try {
-            CloudantClient c = CloudantClientHelper.newSimpleHttpServerClient(server)
-                    .username(mockUser)
-                    .password(mockPass)
+            CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server)
+                    .username("a")
+                    .password("b")
                     .build();
             //the GET request will try to get a session, then perform the GET
             //the GET will result in a 403, which should result in a CouchDbException
@@ -548,7 +437,7 @@ public class HttpTest {
             assertEquals("The error message should be the expected one", "403_not_expired_test", e
                     .getError());
         } finally {
-            server.stop();
+            server.shutdown();
         }
     }
 }

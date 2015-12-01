@@ -16,20 +16,21 @@ package com.cloudant.tests;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.SimpleHttpsServer;
+import com.cloudant.tests.util.MockWebServerResource;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
+import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSocketFactory;
@@ -40,20 +41,15 @@ public class SslAuthenticationTest {
     public static CloudantClientResource dbClientResource = new CloudantClientResource();
     private static CloudantClient dbClient = dbClientResource.get();
 
-    @ClassRule
-    public static SimpleHttpsServer server = new SimpleHttpsServer(){
+    @Rule
+    public MockWebServerResource mockServerResource = new MockWebServerResource(true);
 
-        //for these tests we only want a 200
-        @Override
-        protected void serverAction(InputStream is, OutputStream os) throws IOException {
-            try {
-                super.writeOK(os);
-            } catch(SSLHandshakeException e) {
-                //we don't have a valid cert chain here, so we suppress this exception
-                //we only need proof that we attempted to connect with the right options
-            }
-        }
-    };
+    private MockWebServer server;
+
+    @Before
+    public void getMockWebServer() {
+        server = mockServerResource.getServer();
+    }
 
     /**
      * Check the exception chain is as expected when the SSL host name authentication fails
@@ -75,12 +71,13 @@ public class SslAuthenticationTest {
     @Test
     public void localSslAuthenticationDisabled() throws Exception {
 
-        server.await();
-
-        dbClient = CloudantClientHelper.newSimpleHttpServerClient(server)
+        // Build a client that connects to the mock server with SSL authentication disabled
+        dbClient = CloudantClientHelper.newMockWebServerClientBuilder(server)
                 .disableSSLAuthentication()
                 .build();
 
+        // Queue a 200 OK response
+        server.enqueue(new MockResponse());
 
         // Make an arbitrary connection to the DB.
         dbClient.getAllDbs();
@@ -95,34 +92,13 @@ public class SslAuthenticationTest {
     @Test
     public void localSslAuthenticationEnabled() throws Exception {
 
-        server.await();
-
         CouchDbException thrownException = null;
         try {
-            dbClient = CloudantClientHelper.newSimpleHttpServerClient(server)
+            dbClient = CloudantClientHelper.newMockWebServerClientBuilder(server)
                     .build();
 
-            // Make an arbitrary connection to the DB.
-            dbClient.getAllDbs();
-        } catch (CouchDbException e) {
-            thrownException = e;
-        }
-        validateClientAuthenticationException(thrownException);
-    }
-
-    /**
-     * Connect to the local simple https server with SSL authentication enabled implicitly.
-     * This should throw an exception because the SSL authentication fails.
-     */
-    @Test
-    public void localSslAuthenticationEnabledDefault() throws Exception {
-
-        server.await();
-
-        CouchDbException thrownException = null;
-        try {
-            dbClient = CloudantClientHelper.newSimpleHttpServerClient(server)
-                    .build();
+            // Queue a 200 OK response
+            server.enqueue(new MockResponse());
 
             // Make an arbitrary connection to the DB.
             dbClient.getAllDbs();
@@ -141,9 +117,7 @@ public class SslAuthenticationTest {
     @Category(RequiresCloudantService.class)
     public void remoteSslAuthenticationEnabledTest() {
 
-        dbClient = CloudantClientHelper.getClientBuilder()
-                .disableSSLAuthentication()
-                .build();
+        dbClient = CloudantClientHelper.getClientBuilder().build();
 
         // Make an arbitrary connection to the DB.
         dbClient.getAllDbs();
@@ -195,5 +169,48 @@ public class SslAuthenticationTest {
 
     }
 
+    /**
+     * Repeat the localSSLAuthenticationDisabled, but with the cookie auth enabled.
+     * This test validates that the SSL settings also get applied to the cookie interceptor.
+     */
+    @Test
+    public void localSSLAuthenticationDisabledWithCookieAuth() throws Exception {
+
+        // Mock up an OK cookie response then an OK response for the getAllDbs()
+        server.enqueue(MockWebServerResource.OK_COOKIE);
+        server.enqueue(new MockResponse()); //OK 200
+
+        // Use a username and password to enable the cookie auth interceptor
+        dbClient = CloudantClientHelper.newMockWebServerClientBuilder(server).username("user")
+                .password("password")
+                .disableSSLAuthentication()
+                .build();
+
+        dbClient.getAllDbs();
+    }
+
+    /**
+     * Repeat the localSSLAuthenticationEnabled, but with the cookie auth enabled.
+     * This test validates that the SSL settings also get applied to the cookie interceptor.
+     */
+    @Test
+    public void localSSLAuthenticationEnabledWithCookieAuth() throws Exception {
+
+        // Mock up an OK cookie response then an OK response for the getAllDbs()
+        server.enqueue(MockWebServerResource.OK_COOKIE);
+        server.enqueue(new MockResponse()); //OK 200
+
+        // Use a username and password to enable the cookie auth interceptor
+        dbClient = CloudantClientHelper.newMockWebServerClientBuilder(server).username("user")
+                .password("password")
+                .build();
+
+        try {
+            dbClient.getAllDbs();
+            fail("The SSL authentication failure should result in a CouchDbException");
+        } catch(CouchDbException e) {
+            validateClientAuthenticationException(e);
+        }
+    }
 }
 

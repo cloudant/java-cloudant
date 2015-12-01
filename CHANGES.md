@@ -6,6 +6,8 @@
 - [FIX] Fixed deserialization of `ReplicatorDocument` where the source or target url is a JSON
   object not a string.
 - [FIX] Renew cookies when the server returns a 403 status code with `{"error":"credentials_expired"}`.
+- [FIX] Cookie authentication now honours custom SSL configurations when making the `_session`
+  request.
 
 # 2.0.0 (2015-11-12)
 - [NEW] `DesignDocument.MapReduce` now has a setter for the `dbcopy` field.
