@@ -15,7 +15,9 @@
 
 package com.cloudant.client.org.lightcouch;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -28,9 +30,9 @@ import com.google.gson.annotations.SerializedName;
 public class ReplicatorDocument extends Document {
 
     @SerializedName("source")
-    private String source;
+    private JsonElement source;
     @SerializedName("target")
-    private String target;
+    private JsonElement target;
     @SerializedName("continuous")
     private Boolean continuous;
     @SerializedName("filter")
@@ -65,11 +67,22 @@ public class ReplicatorDocument extends Document {
     private Integer sinceSeq;
 
     public String getSource() {
-        return source;
+        return getEndpointUrl(source);
     }
 
     public String getTarget() {
-        return target;
+        return getEndpointUrl(target);
+    }
+
+    private String getEndpointUrl(JsonElement element) {
+        JsonPrimitive urlString = null;
+        if (element.isJsonPrimitive()) {
+            urlString = element.getAsJsonPrimitive();
+        } else {
+            JsonObject replicatorEndpointObject = element.getAsJsonObject();
+            urlString = replicatorEndpointObject.getAsJsonPrimitive("url");
+        }
+        return urlString.getAsString();
     }
 
     public Boolean getContinuous() {
@@ -133,11 +146,11 @@ public class ReplicatorDocument extends Document {
     }
 
     public void setSource(String source) {
-        this.source = source;
+        this.source = new JsonPrimitive(source);
     }
 
     public void setTarget(String target) {
-        this.target = target;
+        this.target = new JsonPrimitive(target);
     }
 
     public void setContinuous(Boolean continuous) {
