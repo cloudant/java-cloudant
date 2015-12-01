@@ -1,6 +1,11 @@
 package com.cloudant.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 import com.cloudant.client.api.CloudantClient;
+import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
@@ -36,6 +41,7 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -122,7 +128,7 @@ public class HttpTest {
         conn.setRequestBody(bis);
         try {
             conn.responseAsString();
-            Assert.fail("IOException not thrown as expected");
+            fail("IOException not thrown as expected");
         } catch (IOException ioe) {
             ; // "Attempted to read response from server before calling execute()"
         }
@@ -345,7 +351,8 @@ public class HttpTest {
                         }
                     }
                     //write the continue to allow the body to be sent faster
-                    OutputStreamWriter osw = new OutputStreamWriter(new BufferedOutputStream(os));
+                    OutputStreamWriter osw = new OutputStreamWriter(new BufferedOutputStream(os),
+                            "UTF-8");
                     osw.write("HTTP/1.1 100 Continue\r\n\r\n");
                     osw.flush();
                     //now read the body
@@ -396,6 +403,150 @@ public class HttpTest {
             String password = URLDecoder.decode(Utils.splitAndAssert(parts[1], "=", 1)[1], "UTF-8");
             Assert.assertEquals("The username URL decoded password should match", mockPass,
                     password);
+        } finally {
+            server.stop();
+        }
+    }
+
+    private final class Server403 extends SimpleHttpServer {
+        private final String mockUser;
+        private final AtomicInteger counter;
+        private final boolean expired;
+
+        Server403(String mockUser, AtomicInteger counter, boolean expired) {
+            this.mockUser = mockUser;
+            this.counter = counter;
+            this.expired = expired;
+        }
+
+        @Override
+        protected void serverAction(InputStream is, OutputStream os) throws Exception {
+            int count = counter.incrementAndGet();
+            //count 1 = _session request, count 2 = GET request -> 403
+            // count 3 = _session for new cookie in the expired case
+            if (count == 1 || (count == 3 && expired)) {
+                //read the headers
+                super.readInputLines(is);
+                //work out how long the body is
+                int contentLength = 0;
+                for (String header : getLastInputRequestLines()) {
+                    Matcher m = Pattern.compile("Content-Length\\s*:\\s*(\\d+)", Pattern
+                            .CASE_INSENSITIVE).matcher(header);
+                    if (m.matches() && m.groupCount() == 1) {
+                        contentLength = Integer.valueOf(m.group(1));
+                    }
+                }
+
+                //write the continue to allow the body to be sent faster
+                OutputStreamWriter osw = new OutputStreamWriter(new BufferedOutputStream(os),
+                        "UTF-8");
+                osw.write("HTTP/1.1 100 Continue\r\n\r\n");
+                osw.flush();
+                //now read the body
+                BufferedReader r = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+                //wait for the client to be ready with the body
+                while (!r.ready()) {
+                    Thread.sleep(100);
+                }
+                StringWriter w = new StringWriter();
+                int nRead = 0;
+                while (nRead < contentLength) {
+                    w.write(r.read());
+                    nRead++;
+                }
+                //send back a mock cookie
+                osw.write("HTTP/1.1 200 OK\r\n");
+                osw.write("Set-Cookie: " +
+                        "AuthSession=\"a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz" +
+                        "\";\r\n\r\n");
+                osw.write(("{\"ok\":true,\"name\":\"" + mockUser + "\",\"roles\":[]}\r\n"));
+                osw.flush();
+            } else if (count == 2) {
+                //GET request
+                super.readInputLines(is);
+                //write the continue to allow the body to be sent faster
+                OutputStreamWriter osw = new OutputStreamWriter(new BufferedOutputStream(os),
+                        "UTF-8");
+                osw.write("HTTP/1.1 403 Forbidden\r\n\r\n");
+                if (expired) {
+                    osw.write("{\"error\":\"credentials_expired\", \"reason\":\"Session " +
+                            "expired\"}\r\n");
+                } else {
+                    osw.write("{\"error\":\"403_not_expired_test\", \"reason\":\"example reason\"}\r\n");
+                }
+                osw.flush();
+            } else {
+                //read the lines and write a 200
+                super.serverAction(is, os);
+            }
+        }
+    }
+
+    /**
+     * This test checks that the cookie is successfully renewed if a 403 with an error of
+     * "credentials_expired" is returned.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void cookie403Renewal() throws Exception {
+        final String mockUser = "myStrangeUsername=&?";
+        String mockPass = "?&=NotAsStrangeInAPassword";
+
+        final AtomicInteger counter = new AtomicInteger();
+        SimpleHttpServer server = new Server403(mockUser, counter, true);
+        server.start();
+        server.await();
+
+        try {
+            CloudantClient c = CloudantClientHelper.newSimpleHttpServerClient(server)
+                    .username(mockUser)
+                    .password(mockPass)
+                    .build();
+            //the GET request will try to get a session, then perform the GET
+            //the GET will result in a 403, which should mean another request to _session
+            //followed by a replay of GET
+            c.executeRequest(Http.GET(c.getBaseUri()));
+
+            //if we don't handle the 403 correctly an exception will be thrown
+            // also assert that there were 4 calls
+            assertEquals("The server should have received 4 requests", 4, counter.get());
+        } finally {
+            server.stop();
+        }
+    }
+
+    /**
+     * This test checks that if we get a 403 that is not an error of "credentials_expired" then
+     * the exception is correctly thrown and the error stream is deserialized. This is important
+     * because the CookieInterceptor will have consumed 403 error streams to check for the expiry.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void handleNonExpiry403() throws Exception {
+        final String mockUser = "myStrangeUsername=&?";
+        String mockPass = "?&=NotAsStrangeInAPassword";
+
+        final AtomicInteger counter = new AtomicInteger();
+        SimpleHttpServer server = new Server403(mockUser, counter, false);
+        server.start();
+        server.await();
+
+        try {
+            CloudantClient c = CloudantClientHelper.newSimpleHttpServerClient(server)
+                    .username(mockUser)
+                    .password(mockPass)
+                    .build();
+            //the GET request will try to get a session, then perform the GET
+            //the GET will result in a 403, which should result in a CouchDbException
+            c.executeRequest(Http.GET(c.getBaseUri()));
+            fail("A 403 not due to cookie expiry should result in a CouchDbException");
+        } catch (CouchDbException e) {
+            e.printStackTrace();
+            assertNotNull("The error should not be null", e.getError());
+            assertEquals("The error message should be the expected one", "403_not_expired_test", e
+                    .getError());
         } finally {
             server.stop();
         }
