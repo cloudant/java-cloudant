@@ -150,15 +150,20 @@ There is no need to add a head/title as that is provided by Javadoc.
     expires. If the credentials become invalid then a new instance of a CloudantClient needs to be
     created.
 </P>
+<P>
+    Note that if your database is configured with {@code require_valid_user=true} the _session
+    request to obtain a cookie will fail unless it is itself authenticated. This authentication can
+    be added through the use of an additional interceptor such as a
+    com.cloudant.http.interceptors.BasicAuthInterceptor. See also
+    <a href="#Custom authentication">custom authentication</a>.
+</P>
 
 <h2 id="Custom authentication">Custom authentication</h2>
 
 <P>
     If cookie authentication is not desired then it is possible to build the CloudantClient
-    without
-    credentials and use a {@link HttpConnectionInterceptor} to customize the HTTP request with
-    the
-    desired authentication mechanism.
+    without credentials and use a {@link HttpConnectionInterceptor} to customize the HTTP request
+    with the desired authentication mechanism.
 </P>
 
 <P>
