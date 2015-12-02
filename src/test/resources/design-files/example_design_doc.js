@@ -6,12 +6,8 @@
            "map": "function(doc){\n  if(doc.title && doc.tags){\n    for(var idx in doc.tags){\n      emit(doc.tags[idx], 1);\n    }\n  }\n}\n",
            "reduce": "function(keys, values){\n  return sum(values);\n}\n"
        },
-       "creator_letters": {
-       },
        "boolean_creator_created": {
            "map": "function(doc) {\n  emit([doc.contentArray[0].boolean, doc.contentArray[0].creator,\n  doc.contentArray[0].created], doc);\n}\n"
-       },
-       "doc_letters": {
        },
        "foo": {
            "map": "function(doc){\n  if(doc.Type == 'Foo' && doc.title){\n    emit(doc.title, doc.position);\n  }\n}\n"
