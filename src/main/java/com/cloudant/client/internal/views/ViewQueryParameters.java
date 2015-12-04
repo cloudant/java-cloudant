@@ -97,7 +97,7 @@ public class ViewQueryParameters<K, V> extends QueryParameters {
      *
      * @param parameters to copy information from
      */
-    public ViewQueryParameters(ViewQueryParameters<K, V> parameters) {
+    ViewQueryParameters(ViewQueryParameters<K, V> parameters) {
         this(parameters.client, parameters.db, parameters.designDoc, parameters.viewName,
                 parameters.keyType, parameters.valueType);
     }
@@ -264,7 +264,7 @@ public class ViewQueryParameters<K, V> extends QueryParameters {
 
     /* Parameter output methods */
 
-    public HttpConnection asGetRequest() {
+    HttpConnection asGetRequest() {
         URIBuilder builder = getViewURIBuilder();
         for (Map.Entry<String, Object> queryParameter : processParameters(gson).entrySet()) {
             builder.query(queryParameter.getKey(), queryParameter.getValue());
@@ -277,7 +277,7 @@ public class ViewQueryParameters<K, V> extends QueryParameters {
                 "/_view/" + viewName);
     }
 
-    public JsonElement asJson() {
+    JsonElement asJson() {
         Map<String, Object> parameters = processParameters(gson);
         return gson.toJsonTree(parameters);
     }

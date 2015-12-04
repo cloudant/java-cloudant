@@ -44,12 +44,12 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
     private List<V> values = null;
     private List<Document> docs = null;
 
-    public ViewResponseImpl(ViewQueryParameters<K, V> viewQueryParameters, JsonObject response) {
+    ViewResponseImpl(ViewQueryParameters<K, V> viewQueryParameters, JsonObject response) {
         this(viewQueryParameters, response, null);
     }
 
-    public ViewResponseImpl(ViewQueryParameters<K, V> initialQueryParameters, JsonObject response,
-                            PageMetadata<K, V> pageMetadata) {
+    ViewResponseImpl(ViewQueryParameters<K, V> initialQueryParameters, JsonObject response,
+                     PageMetadata<K, V> pageMetadata) {
         this.initialQueryParameters = initialQueryParameters;
 
         if (pageMetadata == null) {

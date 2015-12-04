@@ -25,7 +25,7 @@ class ViewRequestImpl<K, V> implements ViewRequest<K, V> {
 
     private final ViewQueryParameters<K, V> viewQueryParameters;
 
-    public ViewRequestImpl(ViewQueryParameters<K, V> viewQueryParameters) {
+    ViewRequestImpl(ViewQueryParameters<K, V> viewQueryParameters) {
         this.viewQueryParameters = viewQueryParameters;
     }
 
