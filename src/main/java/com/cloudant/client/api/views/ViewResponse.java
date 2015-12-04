@@ -140,6 +140,29 @@ public interface ViewResponse<K, V> extends Iterable<ViewResponse<K, V>> {
     ViewResponse<K, V> previousPage() throws IOException;
 
     /**
+     * Returns an opaque pagination token for the next page of results, which can be used with
+     * {@link ViewRequest#getResponse(String)} to retrieve the next page without keeping
+     * ViewResponse state.
+     *
+     * @return opaque pagination token for the next page, or {@code null} if there is no next page
+     * @see ViewRequest#getResponse(String)
+     * @since 2.1.0
+     */
+    String getNextPageToken();
+
+    /**
+     * Returns an opaque pagination token for the previous page of results, which can be used with
+     * {@link ViewRequest#getResponse(String)} to retrieve the previous page without keeping
+     * ViewResponse state.
+     *
+     * @return opaque pagination token for the previous page, or {@code null} if there is no
+     * previous page
+     * @see ViewRequest#getResponse(String)
+     * @since 2.1.0
+     */
+    String getPreviousPageToken();
+
+    /**
      * <P>
      * Get the page number of this response.
      * </P>

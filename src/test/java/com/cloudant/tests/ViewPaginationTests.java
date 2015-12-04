@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.views.Key;
+import com.cloudant.client.api.views.ViewRequest;
 import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.tests.util.CheckPagination;
 import com.cloudant.tests.util.CloudantClientResource;
@@ -31,7 +32,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 @RunWith(Parameterized.class)
 public class ViewPaginationTests {
@@ -40,14 +42,19 @@ public class ViewPaginationTests {
      * Parameters for these tests so we run each test multiple times.
      * We run with a single key or a complex key and both ascending and descending.
      */
-    @Parameterized.Parameters(name = "Key:{0},Descending:{1}")
+    @Parameterized.Parameters(name = "Key:{0},Descending:{1},Stateless:{2}")
     public static Iterable<Object[]> data() {
-        return Arrays.asList(new Object[][]{
-                {CheckPagination.Type.SINGLE, true},
-                {CheckPagination.Type.SINGLE, false},
-                {CheckPagination.Type.COMPLEX, false},
-                {CheckPagination.Type.COMPLEX, true},
-        });
+
+        boolean[] tf = new boolean[]{true, false};
+        List<Object[]> parameters = new ArrayList<Object[]>();
+        for (CheckPagination.Type type : CheckPagination.Type.values()) {
+            for (boolean descending : tf) {
+                for (boolean stateless : tf) {
+                    parameters.add(new Object[]{type, descending, stateless});
+                }
+            }
+        }
+        return parameters;
     }
 
     @Parameterized.Parameter
@@ -56,6 +63,8 @@ public class ViewPaginationTests {
     @Parameterized.Parameter(value = 1)
     public boolean descending;
 
+    @Parameterized.Parameter(value = 2)
+    public boolean stateless;
 
     @ClassRule
     public static CloudantClientResource clientResource = new CloudantClientResource();
@@ -85,6 +94,7 @@ public class ViewPaginationTests {
                 .docCount(6)
                 .docsPerPage(2)
                 .pageToPages(3, 1, 3, 1)
+                .stateless(stateless)
                 .runTest(db);
     }
 
@@ -103,6 +113,7 @@ public class ViewPaginationTests {
                 .docCount(5)
                 .docsPerPage(2)
                 .pageToPages(3, 1, 3, 1)
+                .stateless(stateless)
                 .runTest(db);
     }
 
@@ -120,6 +131,7 @@ public class ViewPaginationTests {
                 .docCount(30)
                 .docsPerPage(5)
                 .pageToPages(4, 2, 5, 3, 4, 2, 6)
+                .stateless(stateless)
                 .runTest(db);
     }
 
@@ -137,6 +149,7 @@ public class ViewPaginationTests {
                 .docCount(28)
                 .docsPerPage(5)
                 .pageToPages(4, 2, 5, 3, 4, 2, 6)
+                .stateless(stateless)
                 .runTest(db);
     }
 
@@ -146,61 +159,92 @@ public class ViewPaginationTests {
      */
     @Test
     public void startAndEndKeyLimits() throws Exception {
+        startAndEndKeyLimits(true);
+    }
 
+    /**
+     * Check that we can page through a view where we use start and end keys.
+     * Assert that we don't exceed the limits of those keys.
+     */
+    @Test
+    public void startAndEndKeyLimitsExclusiveEnd() throws Exception {
+        startAndEndKeyLimits(false);
+    }
+
+    private void startAndEndKeyLimits(boolean inclusiveEnd) throws Exception {
         //use the CheckPagination to set-up for this test, but we need to do running differently
         //since this page is not just simple paging
-        CheckPagination.newTest(type)
+        CheckPagination cp = CheckPagination.newTest(type)
                 .descending(descending)
                 .docCount(20)
                 .docsPerPage(4)
-                .initTest(db);
+                .stateless(stateless);
+        cp.initTest(db);
 
         // set up the start and end keys based on the test type
         // if we are descending then the start and end keys need to be reversed
+        // if we are exclusive end then we need to change the expected end key
         // then run the test with the correct request and limits
         if (CheckPagination.Type.SINGLE.equals(type)) {
             String startKey = (descending) ? "011" : "003";
             String endKey = (descending) ? "003" : "011";
-            ViewResponse<String, String> page = db.getViewRequestBuilder("example", "foo")
+            String expectedEndKey = (inclusiveEnd) ? endKey : ((descending) ? "004" : "010");
+            ViewRequest<String, String> request = db.getViewRequestBuilder("example", "foo")
                     .newPaginatedRequest(Key.Type.STRING, String.class).reduce(false).descending
-                            (descending).rowsPerPage(4).startKey(startKey).endKey(endKey).build()
-                    .getResponse();
-            runStartAndEndKeyLimits(page, startKey, endKey);
+                            (descending).inclusiveEnd(inclusiveEnd).rowsPerPage(4).startKey
+                            (startKey).endKey(endKey).build();
+            runStartAndEndKeyLimits(request, startKey, expectedEndKey);
         } else {
             //for multi we will use the creator_created view
             Key.ComplexKey startKey = (descending) ? Key.complex("uuid").add(1011) : Key.complex
                     ("uuid").add(1003);
             Key.ComplexKey endKey = (descending) ? Key.complex("uuid").add(1003) : Key.complex
                     ("uuid").add(1011);
-            ViewResponse<Key.ComplexKey, String> page = db.getViewRequestBuilder("example",
+            Key.ComplexKey expectedEndKey = (inclusiveEnd) ? endKey : ((descending) ? Key.complex
+                    ("uuid").add(1004) : Key.complex("uuid").add(1010));
+            ViewRequest<Key.ComplexKey, String> request = db.getViewRequestBuilder("example",
                     "creator_created")
                     .newPaginatedRequest(Key.Type.COMPLEX, String.class).reduce(false).descending
-                            (descending).rowsPerPage(4).startKey(startKey).endKey(endKey).build()
-                    .getResponse();
-            runStartAndEndKeyLimits(page, startKey, endKey);
+                            (descending).inclusiveEnd(inclusiveEnd).rowsPerPage(4).startKey
+                            (startKey).endKey(endKey).build();
+            runStartAndEndKeyLimits(request, startKey, expectedEndKey);
         }
     }
 
-    private <T> void runStartAndEndKeyLimits(ViewResponse<T, String> page, T startKey, T endKey)
+    private <T> void runStartAndEndKeyLimits(ViewRequest<T, String> request, T expectedStartKey,
+                                             T expectedEndKey)
             throws Exception {
 
+        ViewResponse<T, String> page = request.getResponse();
+
         //check the start key is as expected
-        assertEquals("The start key should be " + startKey, startKey, page.getKeys().get(0));
+        assertEquals("The start key should be " + expectedStartKey, expectedStartKey, page
+                .getKeys().get(0));
 
         //get the last page
         while (page.hasNextPage()) {
-            page = page.nextPage();
+            if (stateless) {
+                page = request.getResponse(page.getNextPageToken());
+            } else {
+                page = page.nextPage();
+            }
         }
         //check the end key is as expected
-        assertEquals("The end key should be " + endKey, endKey, page.getKeys().get(page.getKeys()
-                .size()
-                - 1));
+        assertEquals("The end key should be " + expectedEndKey, expectedEndKey, page.getKeys()
+                .get(page.getKeys()
+                        .size()
+                        - 1));
 
         //now page backwards and ensure the last key we get is the start key
         while (page.hasPreviousPage()) {
-            page = page.previousPage();
+            if (stateless) {
+                page = request.getResponse(page.getPreviousPageToken());
+            } else {
+                page = page.previousPage();
+            }
         }
         //check the start key is as expected
-        assertEquals("The start key should be " + startKey, startKey, page.getKeys().get(0));
+        assertEquals("The start key should be " + expectedStartKey, expectedStartKey, page
+                .getKeys().get(0));
     }
 }

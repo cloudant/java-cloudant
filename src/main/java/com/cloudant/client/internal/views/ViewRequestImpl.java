@@ -36,6 +36,19 @@ class ViewRequestImpl<K, V> implements ViewRequest<K, V> {
     }
 
     @Override
+    public ViewResponse<K, V> getResponse(String paginationToken) throws IOException {
+        if (paginationToken == null) {
+            return getResponse();
+        } else {
+            //decode the PageMetadata
+            PageMetadata<K, V> pageMetadata = PaginationToken.mergeTokenAndQueryParameters
+                    (paginationToken, viewQueryParameters);
+            return new ViewResponseImpl<K, V>(viewQueryParameters, ViewRequester
+                    .getResponseAsJson(pageMetadata.pageRequestParameters), pageMetadata);
+        }
+    }
+
+    @Override
     public V getSingleValue() throws IOException {
         List<V> values = getResponse().getValues();
         if (values.size() > 0) {
