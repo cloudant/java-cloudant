@@ -49,8 +49,6 @@ import java.util.UUID;
  */
 final public class CouchDbUtil {
 
-    private static final String DESIGN_PREFIX = "_design/";
-
     private CouchDbUtil() {
         // Utility class
     }
@@ -230,16 +228,5 @@ final public class CouchDbUtil {
             // This should never happen as every implementation of the java platform is required to support UTF-8.
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * Certify that the id in the design document contains the necessary `_design` prefix.
-     * If it does, return the id untouched. Else, add the prefix to the id.
-     * @param id The design document's id
-     * @return String in the form of `_design/id`
-     */
-    public static String ensureDesignPrefix(String id)
-    {
-        return id.startsWith(CouchDbUtil.DESIGN_PREFIX) ? id : CouchDbUtil.DESIGN_PREFIX + id;
     }
 }

@@ -18,14 +18,14 @@ package com.cloudant.client.org.lightcouch;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
-import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
+import com.cloudant.client.internal.DatabaseURIHelper;
+import com.cloudant.client.internal.URIBase;
+import com.cloudant.client.org.lightcouch.ReplicatorDocument.UserCtx;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
-import com.cloudant.client.org.lightcouch.ReplicatorDocument.UserCtx;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -100,7 +100,7 @@ public class Replicator {
         replicatorDoc = new ReplicatorDocument();
         replicatorDB = "_replicator"; // default replicator db
         userCtxRoles = new String[0]; // default roles
-        dbURI = buildUri(client.getBaseUri()).path(replicatorDB).path("/").build();
+        dbURI = new URIBase(client.getBaseUri()).path(replicatorDB).build();
     }
 
 
@@ -128,8 +128,8 @@ public class Replicator {
      */
     public ReplicatorDocument find() {
         assertNotEmpty(replicatorDoc.getId(), "Doc id");
-        final URI uri = buildUri(dbURI).path(replicatorDoc.getId()).query("rev", replicatorDoc
-                .getRevision()).build();
+        final URI uri = new DatabaseURIHelper(dbURI).documentUri(replicatorDoc.getId(),
+                replicatorDoc.getRevision());
         return client.get(uri, ReplicatorDocument.class);
     }
 
@@ -139,7 +139,8 @@ public class Replicator {
     public List<ReplicatorDocument> findAll() {
         InputStream instream = null;
         try {
-            final URI uri = buildUri(dbURI).path("_all_docs").query("include_docs", "true").build();
+            final URI uri = new DatabaseURIHelper(dbURI).path("_all_docs")
+                    .query("include_docs", "true").build();
             final Reader reader = new InputStreamReader(instream = client.get(uri), "UTF-8");
             final JsonArray jsonArray = new JsonParser().parse(reader)
                     .getAsJsonObject().getAsJsonArray("rows");
@@ -171,8 +172,8 @@ public class Replicator {
     public Response remove() {
         assertNotEmpty(replicatorDoc.getId(), "Doc id");
         assertNotEmpty(replicatorDoc.getRevision(), "Doc rev");
-        final URI uri = buildUri(dbURI).path(replicatorDoc.getId()).query("rev", replicatorDoc
-                .getRevision()).build();
+        final URI uri = new DatabaseURIHelper(dbURI).path(replicatorDoc.getId())
+                .query("rev", replicatorDoc.getRevision()).build();
         return client.delete(uri);
     }
 
@@ -225,7 +226,7 @@ public class Replicator {
 
     public Replicator replicatorDB(String replicatorDB) {
         this.replicatorDB = replicatorDB;
-        dbURI = buildUri(client.getBaseUri()).path(replicatorDB).path("/").build();
+        dbURI = new URIBase(client.getBaseUri()).path(replicatorDB).build();
         return this;
     }
 

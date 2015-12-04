@@ -15,8 +15,10 @@
 
 package com.cloudant.client.org.lightcouch;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import com.cloudant.client.internal.HierarchicalUriComponents;
+import com.cloudant.client.internal.HierarchicalUriComponents.Type;
+
+import java.io.UnsupportedEncodingException;
 
 public class Param {
 
@@ -45,30 +47,14 @@ public class Param {
     }
 
     public String toURLEncodedString() {
-        return String.format("%s=%s", encodeQueryParameter(getKey()), encodeQueryParameter
-                (getValue().toString()));
-    }
-
-    private static String encodeQueryParameter(String in) {
-        // As this is to escape individual parameters, we need to
-        // escape &, = and +.
         try {
-            URI uri = new URI(
-                    null, // scheme
-                    null, // authority
-                    null, // path
-                    in,   // query
-                    null  // fragment
-            );
-            return uri.toASCIIString()
-                    .substring(1) // remove leading ?
-                    .replace("&", "%26") // encode qs separators
-                    .replace("=", "%3D")
-                    .replace("+", "%2B");
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(
-                    "Couldn't encode query parameter " + in,
-                    e);
+            return String.format("%s=%s",
+                    HierarchicalUriComponents.encodeUriComponent(getKey(), "UTF-8",
+                            Type.QUERY_PARAM),
+                    HierarchicalUriComponents.encodeUriComponent(getValue().toString(), "UTF-8",
+                            Type.QUERY_PARAM));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("Couldn't encode query parameter ", e);
         }
     }
 }

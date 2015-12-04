@@ -15,11 +15,10 @@
 
 package com.cloudant.client.org.lightcouch;
 
-import com.google.gson.Gson;
-
+import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.client.org.lightcouch.ChangesResult.Row;
 import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
-import com.cloudant.client.org.lightcouch.internal.URIBuilder;
+import com.google.gson.Gson;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -71,12 +70,12 @@ public class Changes {
 
     private CouchDatabaseBase dbc;
     private Gson gson;
-    private URIBuilder uriBuilder;
+    private DatabaseURIHelper databaseHelper;
 
     Changes(CouchDatabaseBase dbc) {
         this.dbc = dbc;
         this.gson = dbc.couchDbClient.getGson();
-        this.uriBuilder = URIBuilder.buildUri(dbc.getDBUri()).path("_changes");
+        this.databaseHelper = new DatabaseURIHelper(dbc.getDBUri());
     }
 
     /**
@@ -85,7 +84,7 @@ public class Changes {
      *
      */
     public Changes continuousChanges() {
-        final URI uri = uriBuilder.query("feed", "continuous").build();
+        final URI uri = this.databaseHelper.changesUri("feed", "continuous");
         final InputStream in = dbc.couchDbClient.get(uri);
         try {
             final InputStreamReader is = new InputStreamReader(in, "UTF-8");
@@ -124,44 +123,44 @@ public class Changes {
      * Requests Change notifications of feed type normal.
      */
     public ChangesResult getChanges() {
-        final URI uri = uriBuilder.query("feed", "normal").build();
+        final URI uri = this.databaseHelper.changesUri("feed", "normal");
         return dbc.couchDbClient.get(uri, ChangesResult.class);
     }
 
     // Query Params
 
     public Changes since(String since) {
-        uriBuilder.query("since", since);
+        this.databaseHelper.query("since", since);
         return this;
     }
 
     public Changes limit(int limit) {
-        uriBuilder.query("limit", limit);
+        this.databaseHelper.query("limit", limit);
         return this;
     }
 
     public Changes heartBeat(long heartBeat) {
-        uriBuilder.query("heartbeat", heartBeat);
+        this.databaseHelper.query("heartbeat", heartBeat);
         return this;
     }
 
     public Changes timeout(long timeout) {
-        uriBuilder.query("timeout", timeout);
+        this.databaseHelper.query("timeout", timeout);
         return this;
     }
 
     public Changes filter(String filter) {
-        uriBuilder.query("filter", filter);
+        this.databaseHelper.query("filter", filter);
         return this;
     }
 
     public Changes includeDocs(boolean includeDocs) {
-        uriBuilder.query("include_docs", includeDocs);
+        this.databaseHelper.query("include_docs", includeDocs);
         return this;
     }
 
     public Changes style(String style) {
-        uriBuilder.query("style", style);
+        this.databaseHelper.query("style", style);
         return this;
     }
 

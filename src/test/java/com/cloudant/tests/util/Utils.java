@@ -26,6 +26,7 @@ import com.cloudant.client.api.DesignDocumentManager;
 import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
+import com.cloudant.client.internal.URIBase;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
@@ -54,8 +55,8 @@ public class Utils {
 
         //Grab replicator doc revision using HTTP HEAD command
         String replicatorDb = "_replicator";
-        URI uri = URI.create(account.getBaseUri() + replicatorDb + "/"
-                + replicatorDocId);
+        URI uri = new URIBase(account.getBaseUri()).path(replicatorDb).path(replicatorDocId)
+                .build();
         HttpConnection head = Http.HEAD(uri);
 
         //add a response interceptor to allow us to retrieve the ETag revision header

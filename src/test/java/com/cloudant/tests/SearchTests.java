@@ -24,7 +24,7 @@ import com.cloudant.client.api.Search;
 import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.api.model.SearchResult;
 import com.cloudant.client.api.model.SearchResult.SearchResultRow;
-import com.cloudant.client.org.lightcouch.internal.URIBuilder;
+import com.cloudant.client.internal.URIBase;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
@@ -216,18 +216,15 @@ public class SearchTests {
     }
 
     private void escapingTest(String expectedResult, String query) {
-        URIBuilder uriBuilder = new URIBuilder();
-        uriBuilder.scheme("https");
-        uriBuilder.host(CloudantClientHelper.COUCH_USERNAME + ".cloudant.com");
-        uriBuilder.port(443);
-        uriBuilder.path("/animaldb/_design/views101/_search/animals");
-        uriBuilder.query("include_docs", true);
-        uriBuilder.query("q", query);
-        URI uri = uriBuilder.build();
+        URI uri = new URIBase(account.getBaseUri())
+                .path("animaldb").path("_design").path("views101").path("_search").path("animals")
+                .query("include_docs", true)
+                .query("q", query).build();
 
         String uriBaseString = account.getBaseUri().toASCIIString();
 
-        String expectedUriString = uriBaseString + "animaldb/_design/views101/_search/animals?include_docs=true&q=" + expectedResult;
+        String expectedUriString = uriBaseString
+                + "/animaldb/_design/views101/_search/animals?include_docs=true&q=" + expectedResult;
 
         String uriString = uri.toASCIIString();
         assertEquals(expectedUriString, uriString);

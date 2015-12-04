@@ -16,11 +16,16 @@ package com.cloudant.tests;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Attachment;
+import com.cloudant.client.api.model.Document;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
+import com.cloudant.client.internal.DatabaseURIHelper;
+import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
@@ -36,6 +41,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 
 @Category(RequiresDB.class)
 public class AttachmentsTest {
@@ -44,7 +50,6 @@ public class AttachmentsTest {
     public static DatabaseResource dbResource = new DatabaseResource(clientResource);
     @ClassRule
     public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
-
 
     private static Database db;
 
@@ -85,12 +90,18 @@ public class AttachmentsTest {
     }
 
     @Test
-    public void attachmentStandalone() throws IOException {
+    public void attachmentStandalone() throws IOException, URISyntaxException {
         byte[] bytesToDB = "binary data".getBytes();
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
         Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain");
 
-        InputStream in = db.find(response.getId() + "/foo.txt");
+        Document doc = db.find(Document.class, response.getId());
+        assertTrue(doc.getAttachments().containsKey("foo.txt"));
+
+        HttpConnection conn = Http.GET(new DatabaseURIHelper(db.getDBUri())
+                .attachmentUri(response.getId(), "foo.txt"));
+        InputStream in = clientResource.get().executeRequest(conn).responseAsInputStream();
+
         ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
         int n;
         while ((n = in.read()) != -1) {

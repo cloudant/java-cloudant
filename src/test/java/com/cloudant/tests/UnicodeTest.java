@@ -20,6 +20,7 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.views.Key;
+import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.test.main.RequiresCloudant;
@@ -260,7 +261,7 @@ public class UnicodeTest {
      */
     @Test
     public void testLiteralUnicode() throws Exception {
-        URI uri = URI.create(db.getDBUri() + "literal");
+        URI uri = new DatabaseURIHelper(db.getDBUri()).path("literal").build();
         {
             HttpConnection conn = Http.PUT(uri, "application/json");
             conn.requestProperties.put("Accept", "application/json");
@@ -295,7 +296,7 @@ public class UnicodeTest {
      */
     @Test
     public void testEscapedUnicode() throws Exception {
-        URI uri = URI.create(db.getDBUri() + "escaped");
+        URI uri = new DatabaseURIHelper(db.getDBUri()).path("escaped").build();
         {
             HttpConnection conn = Http.PUT(uri, "application/json");
             conn.requestProperties.put("Accept", "application/json");

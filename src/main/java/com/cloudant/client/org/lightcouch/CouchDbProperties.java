@@ -32,9 +32,7 @@ import java.util.List;
 public class CouchDbProperties {
 
     // required
-    private String protocol;
-    private String host;
-    private int port;
+    private URL url;
 
     //default to 6 connections
     private int maxConnections = 6;
@@ -45,24 +43,9 @@ public class CouchDbProperties {
     private List<HttpConnectionResponseInterceptor> responseInterceptors = new ArrayList
             <HttpConnectionResponseInterceptor>();
 
-    public CouchDbProperties(String protocol, String host, int port) {
-        this.protocol = protocol;
-        this.host = host;
-        this.port = port;
+    public CouchDbProperties(URL url) {
+        this.url = url;
     }
-
-    public String getProtocol() {
-        return protocol;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
 
     public int getMaxConnections() {
         return maxConnections;
@@ -70,6 +53,10 @@ public class CouchDbProperties {
 
     public URL getProxyURL() {
         return proxyURL;
+    }
+
+    public URL getCouchDbURL() {
+        return url;
     }
 
     public CouchDbProperties setMaxConnections(int maxConnections) {

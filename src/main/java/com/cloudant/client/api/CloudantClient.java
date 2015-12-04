@@ -17,12 +17,12 @@ package com.cloudant.client.api;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponseList;
-import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
 import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
+import com.cloudant.client.internal.URIBase;
 import com.cloudant.client.org.lightcouch.Changes;
 import com.cloudant.client.org.lightcouch.CouchDbClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
@@ -163,7 +163,7 @@ public class CloudantClient {
      * @see Database#setPermissions(String, EnumSet)
      */
     public ApiKey generateApiKey() {
-        URI uri = buildUri(getBaseUri()).path("_api/v2/api_keys").build();
+        URI uri = new URIBase(getBaseUri()).path("_api").path("v2").path("api_keys").build();
         InputStream response = couchDbClient.post(uri, null);
         return getResponse(response, ApiKey.class, getGson());
     }
@@ -176,8 +176,9 @@ public class CloudantClient {
      */
     public List<Task> getActiveTasks() {
         InputStream response = null;
+        URI uri = new URIBase(getBaseUri()).path("_active_tasks").build();
         try {
-            response = couchDbClient.get(buildUri(getBaseUri()).path("_active_tasks").build());
+            response = couchDbClient.get(uri);
             return getResponseList(response, couchDbClient.getGson(),
                     new TypeToken<List<Task>>() {
                     }.getType());
@@ -194,8 +195,8 @@ public class CloudantClient {
      * href="https://docs.cloudant.com/advanced.html#get-/_membership">_membership</a>
      */
     public Membership getMembership() {
-        Membership membership = couchDbClient.get(buildUri(getBaseUri()).path("_membership")
-                        .build(),
+        URI uri = new URIBase(getBaseUri()).path("_membership").build();
+        Membership membership = couchDbClient.get(uri,
                 Membership.class);
         return membership;
     }
