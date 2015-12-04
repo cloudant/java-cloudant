@@ -46,6 +46,40 @@ public interface ViewRequest<K, V> {
     ViewResponse<K, V> getResponse() throws IOException;
 
     /**
+     * Performs view request for the page represented by a pagination token obtained from a
+     * previous request.
+     * <P>
+     * Example usage for stateless pagination:
+     * </P>
+     * <pre>
+     * {@code
+     * ViewResponse<String, String> responsePage1 = db.getViewRequestBuilder("designDoc","viewName")
+     *                   .newRequest(Key.Type.STRING, String.class)
+     *                   .build()
+     *                   .getResponse();
+     * String tokenForPage2 = responsePage1.getNextPageToken();
+     *
+     * // To request the next page:
+     * // 1. Recreate the view request by supplying the same parameters to the builder.
+     * // 2. Execute the request using the pagination token retrieved above.
+     * ViewResponse<String, String> responsePage2 = db.getViewRequestBuilder("designDoc","viewName")
+     *                   .newRequest(Key.Type.STRING, String.class)
+     *                   .build()
+     *                   .getResponse(tokenForPage2);
+     * }
+     * </pre>
+     *
+     * @param paginationToken obtained from a previous ViewResponse, {@code null} is equivalent to
+     *                        {@link #getResponse()}
+     * @return the response object
+     * @throws IOException if there is an error communicating with the server
+     * @see ViewResponse#getNextPageToken()
+     * @see ViewResponse#getPreviousPageToken()
+     * @since 2.1.0
+     */
+    ViewResponse<K, V> getResponse(String paginationToken) throws IOException;
+
+    /**
      * Performs the request and returns a single value.
      * <P>
      * This is primarily intended for retrieving a single result (e.g. count) from a reduced view.

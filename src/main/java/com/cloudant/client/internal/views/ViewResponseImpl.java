@@ -44,21 +44,23 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
     private List<V> values = null;
     private List<Document> docs = null;
 
-    public ViewResponseImpl(ViewQueryParameters<K, V> viewQueryParameters, JsonObject response) {
+    ViewResponseImpl(ViewQueryParameters<K, V> viewQueryParameters, JsonObject response) {
         this(viewQueryParameters, response, null);
     }
 
-    public ViewResponseImpl(ViewQueryParameters<K, V> initialQueryParameters, JsonObject response,
-                            PageMetadata<K, V> pageMetadata) {
+    ViewResponseImpl(ViewQueryParameters<K, V> initialQueryParameters, JsonObject response,
+                     PageMetadata<K, V> pageMetadata) {
         this.initialQueryParameters = initialQueryParameters;
 
+        PageMetadata.PagingDirection thisPageDirection;
         if (pageMetadata == null) {
             previousPageMetadata = null;
             pageNumber = 1l;
             //from a first page we can only page FORWARD
-            pageMetadata = new PageMetadata<K, V>(PageMetadata.PagingDirection.FORWARD);
+            thisPageDirection = PageMetadata.PagingDirection.FORWARD;
         } else {
             this.pageNumber = pageMetadata.pageNumber;
+            thisPageDirection = pageMetadata.direction;
         }
 
         //build the rows from the response
@@ -85,7 +87,7 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
         // last page
         hasNext = resultRows > rowsPerPage;
 
-        if (PageMetadata.PagingDirection.BACKWARD == pageMetadata.direction) {
+        if (PageMetadata.PagingDirection.BACKWARD == thisPageDirection) {
             //Result needs reversing because to implement backward paging the view reading
             // order is reversed
             Collections.reverse(rows);
@@ -94,16 +96,13 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
         //set previous page links if not the first page
         if (this.pageNumber > 1) {
             hasPrevious = true;
-            //set up previous page data, i.e. paging backward
+            // Construct the previous page metadata (i.e. paging backward)
+            // Decrement the page number by 1
+            // The startKey of this page is also the start key of the previous page, but using a
+            // descending lookup indicated by the paging direction.
             previousPageMetadata = new PageMetadata<K, V>(PageMetadata.PagingDirection
-                    .BACKWARD);
-            //decrement the page number for the previous page
-            previousPageMetadata.pageNumber = this.pageNumber - 1l;
-            //this page's startKey will also be the startKey for the previous page, but with a
-            // descending lookup indicated by the paging direction
-            previousPageMetadata.pageRequestParameters = initialQueryParameters
-                    .reversePaginationQueryParameters(rows.get(0).getKey(), rows
-                            .get(0).getId());
+                    .BACKWARD, this.pageNumber - 1l, PageMetadata.reversePaginationQueryParameters
+                    (initialQueryParameters, rows.get(0).getKey(), rows.get(0).getId()));
         } else {
             hasPrevious = false;
         }
@@ -115,16 +114,17 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
         // to the user.
         int lastIndex = resultRows - 1;
         if (hasNext) {
-            //Construct the next page metadata (i.e. paging forward)
+            // Construct the next page metadata (i.e. paging forward)
+            // Increment the page number by 1
+            // The last element is the start of the next page so use the key and ID from that
+            // element for creating the next page query parameters.
             nextPageMetadata = new PageMetadata<K, V>(PageMetadata.PagingDirection
-                    .FORWARD);
-            //the last element is the start of the next page
-            nextPageMetadata.pageRequestParameters = initialQueryParameters
-                    .forwardPaginationQueryParameters(rows.get(lastIndex).getKey
-                            (), rows.get(lastIndex).getId());
-            //increment the page number for the next page
-            nextPageMetadata.pageNumber = this.pageNumber + 1l;
-            //the final element is the first element of the next page, so remove from the list
+                    .FORWARD, this.pageNumber + 1l, PageMetadata.forwardPaginationQueryParameters
+                    (initialQueryParameters, rows.get(lastIndex).getKey(), rows.get(lastIndex)
+                            .getId()));
+
+            // The final element is the first element of the next page, so remove from the list that
+            // will be returned.
             rows.remove(lastIndex);
         } else {
             nextPageMetadata = null;
@@ -216,6 +216,22 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public String getNextPageToken() {
+        if (hasNext) {
+            return PaginationToken.tokenize(nextPageMetadata);
+        }
+        return null;
+    }
+
+    @Override
+    public String getPreviousPageToken() {
+        if (hasPrevious) {
+            return PaginationToken.tokenize(previousPageMetadata);
+        }
+        return null;
     }
 
     @Override

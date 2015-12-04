@@ -25,7 +25,7 @@ class ViewRequestImpl<K, V> implements ViewRequest<K, V> {
 
     private final ViewQueryParameters<K, V> viewQueryParameters;
 
-    public ViewRequestImpl(ViewQueryParameters<K, V> viewQueryParameters) {
+    ViewRequestImpl(ViewQueryParameters<K, V> viewQueryParameters) {
         this.viewQueryParameters = viewQueryParameters;
     }
 
@@ -33,6 +33,19 @@ class ViewRequestImpl<K, V> implements ViewRequest<K, V> {
     public ViewResponse<K, V> getResponse() throws IOException {
         JsonObject response = ViewRequester.getResponseAsJson(viewQueryParameters);
         return new ViewResponseImpl<K, V>(viewQueryParameters, response);
+    }
+
+    @Override
+    public ViewResponse<K, V> getResponse(String paginationToken) throws IOException {
+        if (paginationToken == null) {
+            return getResponse();
+        } else {
+            //decode the PageMetadata
+            PageMetadata<K, V> pageMetadata = PaginationToken.mergeTokenAndQueryParameters
+                    (paginationToken, viewQueryParameters);
+            return new ViewResponseImpl<K, V>(viewQueryParameters, ViewRequester
+                    .getResponseAsJson(pageMetadata.pageRequestParameters), pageMetadata);
+        }
     }
 
     @Override

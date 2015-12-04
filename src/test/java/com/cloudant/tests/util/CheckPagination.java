@@ -78,6 +78,8 @@ public class CheckPagination {
      */
     private int[] pageToPages;
 
+    private boolean stateless;
+
     public CheckPagination descending(boolean descending) {
         this.descending = descending;
         return this;
@@ -98,54 +100,48 @@ public class CheckPagination {
         return this;
     }
 
+    public CheckPagination stateless(boolean stateless) {
+        this.stateless = stateless;
+        return this;
+    }
+
     /**
      * Check all the pages going forwards until we reach the last page. This assumes the given
      * {@code page} is the first page of results.
      *
      * @param currentPage   the page number of the {@code page}.
      * @param numberOfPages the number of pages to page forwards.
-     * @param page          the page from which to start paging forwards.
-     * @param descending    true if the view is in descending order, and false otherwise.
      * @param docCount      the total number of documents in the view.
      * @param docsPerPage   the maximum number of documents per page.
      * @return the last page in the view.
      */
-    private ViewResponse checkPagesForward(int currentPage,
+    private void checkPagesForward(int currentPage,
                                            int numberOfPages,
-                                           ViewResponse page,
-                                           boolean descending,
                                            int docCount,
                                            int docsPerPage) throws IOException {
         for (int i = 0; i < numberOfPages; ++i) {
-            page = page.nextPage();
+            nextPage();
             checkPage(page, docCount, docsPerPage, currentPage + i + 1, descending);
         }
-        return page;
     }
 
     /**
-     * Check all the pages going backwards until we reach the first page. This assumes the
-     * given {@code page} is the last page of results.
+     * Check each page going backwards for the specified number of pages.
      *
      * @param currentPage   the page number of the {@code page}.
      * @param numberOfPages the number of pages to page backwards.
-     * @param page          the page from which to start paging backwards.
-     * @param descending    true if the view is in descending order, and false otherwise.
      * @param docCount      the total number of documents in the view.
      * @param docsPerPage   the maximum number of documents per page.
      * @return the first page in the view
      */
-    private ViewResponse checkPagesBackward(int currentPage,
+    private void checkPagesBackward(int currentPage,
                                             int numberOfPages,
-                                            ViewResponse page,
-                                            boolean descending,
                                             int docCount,
                                             int docsPerPage) throws IOException {
         for (int i = 0; i < numberOfPages; ++i) {
-            page = page.previousPage();
+            previousPage();
             checkPage(page, docCount, docsPerPage, currentPage - i - 1, descending);
         }
-        return page;
     }
 
     /**
@@ -219,6 +215,9 @@ public class CheckPagination {
         }
     }
 
+    private ViewRequest view;
+    private ViewResponse page;
+
     public void runTest(Database db) throws Exception {
 
         //initTest
@@ -226,28 +225,42 @@ public class CheckPagination {
 
         // Run all views
         for (int viewCount = 0; viewCount < testViews.length; viewCount++) {
-            ViewRequest view = db.getViewRequestBuilder(testViews[viewCount].split("/")[0],
+            view = db.getViewRequestBuilder(testViews[viewCount].split("/")[0],
                     testViews[viewCount].split("/")[1]).newPaginatedRequest(viewKeyType,
                     Object.class).rowsPerPage(docsPerPage).reduce(false).descending
                     (descending).includeDocs(true).build();
 
             // Get the first page of results.
-            ViewResponse page = view.getResponse();
+            page = view.getResponse();
             checkPage(page, docCount, docsPerPage, 1, descending);
 
             int currentPage = 1;
             for (int i = 0; i < pageToPages.length; ++i) {
                 if (pageToPages[i] > currentPage) {
-                    page = checkPagesForward(currentPage, pageToPages[i] -
-                                    currentPage, page,
-                            descending, docCount, docsPerPage);
+                    checkPagesForward(currentPage, pageToPages[i] - currentPage, docCount,
+                            docsPerPage);
                 } else {
-                    page = checkPagesBackward(currentPage, currentPage -
-                                    pageToPages[i], page,
-                            descending, docCount, docsPerPage);
+                    checkPagesBackward(currentPage, currentPage - pageToPages[i],
+                            docCount, docsPerPage);
                 }
                 currentPage = pageToPages[i];
             }
+        }
+    }
+
+    private void nextPage() throws IOException {
+        if (stateless) {
+            page = view.getResponse(page.getNextPageToken());
+        } else {
+            page = page.nextPage();
+        }
+    }
+
+    private void previousPage() throws IOException {
+        if (stateless) {
+            page = view.getResponse(page.getPreviousPageToken());
+        } else {
+            page = page.previousPage();
         }
     }
 

@@ -1,6 +1,7 @@
 # Unreleased
 - [IMPROVED] Included error and reason information in message from `CouchDbException` classes.
 - [IMPROVED] Added HTTP status code to `Response` objects.
+- [IMPROVED] Added parameter pagination option for views. See `ViewRequest.getResponse(String)`.
 - [FIX] Too many bytes written exception caused by inconsistent encoding between UTF-8 and the
   JVM default. UTF-8 is now correctly used for the request body content length and throughout.
 - [FIX] Fixed deserialization of `ReplicatorDocument` where the source or target url is a JSON

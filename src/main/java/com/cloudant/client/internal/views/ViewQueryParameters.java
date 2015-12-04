@@ -28,7 +28,7 @@ import com.google.gson.JsonElement;
 import java.util.Arrays;
 import java.util.Map;
 
-public class ViewQueryParameters<K, V> extends QueryParameters {
+public class ViewQueryParameters<K, V> extends QueryParameters implements Cloneable {
 
     private final CloudantClient client;
     private final Database db;
@@ -97,7 +97,7 @@ public class ViewQueryParameters<K, V> extends QueryParameters {
      *
      * @param parameters to copy information from
      */
-    public ViewQueryParameters(ViewQueryParameters<K, V> parameters) {
+    ViewQueryParameters(ViewQueryParameters<K, V> parameters) {
         this(parameters.client, parameters.db, parameters.designDoc, parameters.viewName,
                 parameters.keyType, parameters.valueType);
     }
@@ -264,7 +264,7 @@ public class ViewQueryParameters<K, V> extends QueryParameters {
 
     /* Parameter output methods */
 
-    public HttpConnection asGetRequest() {
+    HttpConnection asGetRequest() {
         URIBuilder builder = getViewURIBuilder();
         for (Map.Entry<String, Object> queryParameter : processParameters(gson).entrySet()) {
             builder.query(queryParameter.getKey(), queryParameter.getValue());
@@ -277,66 +277,9 @@ public class ViewQueryParameters<K, V> extends QueryParameters {
                 "/_view/" + viewName);
     }
 
-    public JsonElement asJson() {
+    JsonElement asJson() {
         Map<String, Object> parameters = processParameters(gson);
         return gson.toJsonTree(parameters);
-    }
-
-    public ViewQueryParameters<K, V> forwardPaginationQueryParameters(K startkey, String
-            startkey_docid) {
-        ViewQueryParameters<K, V> pageParameters = new ViewQueryParameters<K, V>(this);
-        //set the start parameters
-        pageParameters.setStartKey(startkey);
-        pageParameters.setStartKeyDocId(startkey_docid);
-
-        //stay the same for forward
-        pageParameters.inclusive_end = inclusive_end;
-        pageParameters.descending = descending;
-        if (endkey != null) {
-            pageParameters.setEndKey(endkey);
-        }
-        pageParameters.setEndKeyDocId(endkey_docid);
-
-        //all other parameters stay the same
-        //note we set directly rather than using the setter so that unset parameters retain their
-        //unset state
-        pageParameters.limit = limit;
-        pageParameters.group_level = group_level;
-        pageParameters.group = group;
-        pageParameters.include_docs = include_docs;
-        pageParameters.reduce = reduce;
-        pageParameters.stale = stale;
-        //use the setter for keys because of the array handling
-        pageParameters.setKeys(getKeys());
-        return pageParameters;
-    }
-
-    //pages only have a reference to the start key, when paging backwards this is the
-    // startkey of the following page (i.e. the last element of the previous page) so to
-    // correctly present page results when paging backwards requires some parameters to
-    // be reversed for the previous page request
-    public ViewQueryParameters<K, V> reversePaginationQueryParameters(K startkey, String
-            startkey_docid) {
-        //get a copy of the parameters, using the forward pagination method
-        ViewQueryParameters<K, V> reversedParameters = forwardPaginationQueryParameters(startkey,
-                startkey_docid);
-
-        //now reverse some of the parameters to page backwards
-        //paging backward is descending from the original direction
-        reversedParameters.setDescending(!getDescending());
-
-        //we must always include our start key if paging backwards so inclusive end is true
-        reversedParameters.setInclusiveEnd(true);
-
-        //any initial startkey is now the end key because we are reversed from original direction
-        if (startkey != null) {
-            reversedParameters.setEndKey(this.startkey);
-        }
-        if (startkey_docid != null) {
-            reversedParameters.setEndKeyDocId(this.startkey_docid);
-        }
-
-        return reversedParameters;
     }
 
     public Class<K> getKeyType() {
@@ -345,6 +288,22 @@ public class ViewQueryParameters<K, V> extends QueryParameters {
 
     public Class<V> getValueType() {
         return this.valueType;
+    }
+
+    /**
+     * Used instead of calling clone() directly to isolate CloneNotSupportedException handling in
+     * this class.
+     *
+     * @return a shallow copy of this ViewQueryParameters
+     */
+    @SuppressWarnings("unchecked")
+    ViewQueryParameters<K, V> copy() {
+        try {
+            return (ViewQueryParameters<K, V>) this.clone();
+        } catch (CloneNotSupportedException e) {
+            //should not reach this code as this class implements Cloneable
+            throw new RuntimeException(e);
+        }
     }
 
 }
