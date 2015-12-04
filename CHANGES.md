@@ -1,4 +1,4 @@
-# Unreleased
+# 2.1.0 (2015-12-04)
 - [IMPROVED] Included error and reason information in message from `CouchDbException` classes.
 - [IMPROVED] Added HTTP status code to `Response` objects.
 - [IMPROVED] Added parameter pagination option for views. See `ViewRequest.getResponse(String)`.

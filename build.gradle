@@ -3,7 +3,7 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 
 group = 'com.cloudant'
-version = '2.0.1-SNAPSHOT'
+version = '2.1.0'
 description = """java-cloudant"""
 //note the gradle project name (cloudant-client) is the maven artifactId
 //the maven pom name entry and User-Agent name in client.properties are defined by clientName
