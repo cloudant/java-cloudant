@@ -134,6 +134,11 @@ public class CouchDbClient {
      * Connection manager is no longer used.
      */
     public void shutdown() {
+        // Delete the cookie _session if there is one
+        HttpConnection conn = execute(Http.DELETE(buildUri(getBaseUri()).path("_session")
+                .build()));
+
+        // The execute method handles non-2xx response codes by throwing a CouchDbException.
     }
 
     /**

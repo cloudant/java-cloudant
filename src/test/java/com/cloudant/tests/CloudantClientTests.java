@@ -324,4 +324,18 @@ public class CloudantClientTests {
         //ensure that building a URL from it does not throw any exceptions
         new URL(c.getBaseUri().toString());
     }
+
+    @Test
+    public void sessionDeleteOnShutdown() throws Exception {
+        MockWebServer server = new MockWebServer();
+        // Mock a 200 OK for the _session DELETE request
+        server.enqueue(new MockResponse().setResponseCode(200).setBody("{\"ok\":\"true\"}"));
+
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server).build();
+        c.shutdown();
+
+        RecordedRequest request = server.takeRequest(10, TimeUnit.SECONDS);
+        assertEquals("The request method should be DELETE", "DELETE", request.getMethod());
+        assertEquals("The request should be to the _session path", "/_session", request.getPath());
+    }
 }
