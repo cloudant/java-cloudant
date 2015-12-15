@@ -27,6 +27,7 @@ import org.junit.rules.RuleChain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Test cases to verify status code from Response object.
@@ -125,20 +126,28 @@ public class ResponseTest {
     @Category(RequiresCloudant.class)
     @Test
     public void testNonJsonErrorStream() {
+        final AtomicBoolean badHeaderEnabled = new AtomicBoolean(false);
         CloudantClient c = CloudantClientHelper.getClientBuilder().interceptors(
                 new HttpConnectionRequestInterceptor() {
                     @Override
                     public HttpConnectionInterceptorContext interceptRequest
                             (HttpConnectionInterceptorContext context) {
-                        String badHeaderCharacters = "() <> @ , ; \\ / [] ? =";
-                        //set a header using characters that are not permitted
-                        context.connection.requestProperties.put(badHeaderCharacters,
-                                badHeaderCharacters);
+                        if (badHeaderEnabled.get()) {
+                            String badHeaderCharacters = "() <> @ , ; \\ / [] ? =";
+                            //set a header using characters that are not permitted
+                            context.connection.requestProperties.put(badHeaderCharacters,
+                                    badHeaderCharacters);
+                        }
                         return context;
                     }
                 }).build();
 
         try {
+            // Make a good request, which will set up the session etc
+            c.executeRequest(Http.GET(c.getBaseUri()));
+
+            // Enable the bad headers and expect the exception on the next request
+            badHeaderEnabled.set(true);
             c.executeRequest(Http.GET(c.getBaseUri()));
             fail("A CouchDbException should be thrown");
         } catch (CouchDbException e) {
@@ -146,6 +155,8 @@ public class ResponseTest {
             assertNotNull("The exception should have an error set", e.getError());
             assertTrue("The exception error should contain html", e.getError().contains("<html>"));
         } finally {
+            // Disable the bad header to allow a clean shutdown
+            badHeaderEnabled.set(false);
             c.shutdown();
         }
     }
