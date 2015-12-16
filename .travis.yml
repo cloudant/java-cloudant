@@ -3,6 +3,7 @@ sudo: false
 
 jdk:
   - openjdk7
+  - oraclejdk8
 
 services:
   - couchdb
