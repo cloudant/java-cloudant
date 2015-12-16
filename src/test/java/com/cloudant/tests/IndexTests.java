@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+@Category(RequiresCloudant.class)
 public class IndexTests {
 
     private static CloudantClientResource clientResource = new CloudantClientResource();
@@ -47,6 +48,7 @@ public class IndexTests {
 
     private static Database db;
     private static CloudantClient account;
+    private static Map<String, Object> selector;
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -59,12 +61,8 @@ public class IndexTests {
         r.createTarget(true);
         r.target(dbResource.getDbURIWithUserInfo());
         r.trigger();
-    }
 
-    @Test
-    @Category(RequiresCloudant.class)
-    public void indexTestAll() {
-
+        //Create indexes
         db.createIndex("Person_name", "Person_name", null,
                 new IndexField[]{
                         new IndexField("Person_name", SortOrder.asc),
@@ -72,6 +70,16 @@ public class IndexTests {
         db.createIndex("Movie_year", "Movie_year", null,
                 new IndexField[]{new IndexField("Movie_year", SortOrder.asc)});
 
+        //Create selector object: {"Movie_year": { "$gt": 1960}, "Person_name": "Alec Guinness"}
+        Map<String, Object> year = new HashMap<String, Object>();
+        year.put("$gt", new Integer(1960));
+        selector = new HashMap<String, Object>();
+        selector.put("Movie_year", year);
+        selector.put("Person_name", "Alec Guinness");
+    }
+
+    @Test
+    public void testNotNullIndexNamesAndFields() {
         List<Index> indices = db.listIndices();
         assertNotNull(indices);
         assert (indices.size() > 0);
@@ -87,7 +95,10 @@ public class IndexTests {
             }
 
         }
+    }
 
+    @Test
+    public void testNotNullIndexMovieNameAndYear() {
         List<Movie> movies = db.findByIndex("\"selector\": { \"Movie_year\": {\"$gt\": 1960}, " +
                         "\"Person_name\": \"Alec Guinness\" }",
                 Movie.class,
@@ -100,8 +111,11 @@ public class IndexTests {
             assertNotNull(m.getMovie_name());
             assertNotNull(m.getMovie_year());
         }
+    }
 
-        movies = db.findByIndex("\"selector\": { \"Movie_year\": {\"$gt\": 1960}, " +
+    @Test
+    public void testIndexMovieNameAndYearWithLimitSkipOptions() {
+        List<Movie> movies = db.findByIndex("\"selector\": { \"Movie_year\": {\"$gt\": 1960}, " +
                         "\"Person_name\": \"Alec Guinness\" }",
                 Movie.class,
                 new FindByIndexOptions()
@@ -116,14 +130,11 @@ public class IndexTests {
             assertNotNull(m.getMovie_name());
             assertNotNull(m.getMovie_year());
         }
+    }
 
-        // selectorJson as a proper json object
-        Map<String, Object> year = new HashMap<String, Object>();
-        year.put("$gt", new Integer(1960));
-        Map<String, Object> selector = new HashMap<String, Object>();
-        selector.put("Movie_year", year);
-        selector.put("Person_name", "Alec Guinness");
-        movies = db.findByIndex(new GsonBuilder().create().toJson(selector),
+    @Test
+    public void testIndexMovieNameAndYearWithJsonMapObject() {
+        List<Movie> movies = db.findByIndex(new GsonBuilder().create().toJson(selector),
                 Movie.class,
                 new FindByIndexOptions()
                         .sort(new IndexField("Movie_year", SortOrder.desc))
@@ -137,10 +148,19 @@ public class IndexTests {
             assertNotNull(m.getMovie_name());
             assertNotNull(m.getMovie_year());
         }
+    }
 
+    @Test
+    public void testIndexMovieFindByIndexDesignDoc() {
+        Map<String, Object> year = new HashMap<String, Object>();
+        year.put("$gt", new Integer(1960));
+        Map<String, Object> selector = new HashMap<String, Object>();
+        selector.put("Movie_year", year);
+        selector.put("Person_name", "Alec Guinness");
         //check find by using index design doc
-        db.findByIndex(new GsonBuilder().create().toJson(selector), Movie.class, new
-                FindByIndexOptions().sort(new IndexField("Movie_year", SortOrder.desc))
+        List<Movie> movies = db.findByIndex(new GsonBuilder().create().toJson(selector), Movie.class,
+                new FindByIndexOptions()
+                        .sort(new IndexField("Movie_year", SortOrder.desc))
                 .fields("Movie_name").fields("Movie_year")
                 .limit(1)
                 .skip(1)
@@ -151,9 +171,17 @@ public class IndexTests {
             assertNotNull(m.getMovie_name());
             assertNotNull(m.getMovie_year());
         }
+    }
 
+    @Test
+    public void testIndexMovieFindByIndexDesignDocAndName() {
+        Map<String, Object> year = new HashMap<String, Object>();
+        year.put("$gt", new Integer(1960));
+        Map<String, Object> selector = new HashMap<String, Object>();
+        selector.put("Movie_year", year);
+        selector.put("Person_name", "Alec Guinness");
         //check find by using index design doc and index name
-        db.findByIndex(new GsonBuilder().create().toJson(selector), Movie.class, new
+        List<Movie> movies = db.findByIndex(new GsonBuilder().create().toJson(selector), Movie.class, new
                 FindByIndexOptions().sort(new IndexField("Movie_year", SortOrder.desc))
                 .fields("Movie_name").fields("Movie_year")
                 .limit(1)
@@ -166,10 +194,5 @@ public class IndexTests {
             assertNotNull(m.getMovie_year());
         }
 
-
-        db.deleteIndex("Person_name", "Person_name");
-        db.deleteIndex("Movie_year", "Movie_year");
     }
-
-
 }
