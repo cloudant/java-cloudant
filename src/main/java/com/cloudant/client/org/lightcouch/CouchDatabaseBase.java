@@ -273,13 +273,15 @@ public abstract class CouchDatabaseBase {
         InputStream responseStream = null;
         HttpConnection connection;
         try {
-            final String allOrNothingVal = allOrNothing ? "\"all_or_nothing\": true, " : "";
+            final JsonObject jsonObject = new JsonObject();
+            if(allOrNothing) {
+                jsonObject.addProperty("all_or_nothing", true);
+            }
             final URI uri = new DatabaseURIHelper(dbUri).bulkDocsUri();
-            final String json = String.format("{%s%s%s}", allOrNothingVal, "\"docs\": ", getGson
-                    ().toJson(objects));
+            jsonObject.add("docs", getGson().toJsonTree(objects));
             connection = Http.POST(uri, "application/json");
-            if (json != null && !json.isEmpty()) {
-                connection.setRequestBody(json);
+            if (jsonObject.toString().length() != 0) {
+                connection.setRequestBody(jsonObject.toString());
             }
             couchDbClient.execute(connection);
             responseStream = connection.responseAsInputStream();

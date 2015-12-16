@@ -275,8 +275,8 @@ public class Database {
      */
     public void createIndex(String indexName, String designDocName, String indexType,
                             IndexField[] fields) {
-        String indexDefn = getIndexDefinition(indexName, designDocName, indexType, fields);
-        createIndex(indexDefn);
+        JsonObject indexDefn = getIndexDefinition(indexName, designDocName, indexType, fields);
+        createIndex(indexDefn.toString());
     }
 
     /**
@@ -357,10 +357,10 @@ public class Database {
         assertNotEmpty(options, "options");
 
         URI uri = new DatabaseURIHelper(db.getDBUri()).path("_find").build();
-        String body = getFindByIndexBody(selectorJson, options);
+        JsonObject body = getFindByIndexBody(selectorJson, options);
         InputStream stream = null;
         try {
-            stream = client.couchDbClient.executeToInputStream(createPost(uri, body,
+            stream = client.couchDbClient.executeToInputStream(createPost(uri, body.toString(),
                     "application/json"));
             Reader reader = new InputStreamReader(stream, "UTF-8");
             JsonArray jsonArray = new JsonParser().parse(reader)
@@ -1033,135 +1033,105 @@ public class Database {
     /**
      * Form a create index json from parameters
      */
-    private String getIndexDefinition(String indexName, String designDocName,
+    private JsonObject getIndexDefinition(String indexName, String designDocName,
                                       String indexType, IndexField[] fields) {
         assertNotEmpty(fields, "index fields");
-        boolean addComma = false;
-        String json = "{";
+        JsonObject indexObject = new JsonObject();
         if (!(indexName == null || indexName.isEmpty())) {
-            json += "\"name\": \"" + indexName + "\"";
-            addComma = true;
+            indexObject.addProperty("name", indexName);
         }
         if (!(designDocName == null || designDocName.isEmpty())) {
-            if (addComma) {
-                json += ",";
-            }
-            json += "\"ddoc\": \"" + designDocName + "\"";
-            addComma = true;
+            indexObject.addProperty("ddoc", designDocName);
         }
         if (!(indexType == null || indexType.isEmpty())) {
-            if (addComma) {
-                json += ",";
-            }
-            json += "\"type\": \"" + indexType + "\"";
-            addComma = true;
+
+            indexObject.addProperty("type", indexType);
         }
 
-        if (addComma) {
-            json += ",";
-        }
-        json += "\"index\": { \"fields\": [";
+        JsonArray fieldsArray = new JsonArray();
         for (int i = 0; i < fields.length; i++) {
-            json += "{\"" + fields[i].getName() + "\": " + "\"" + fields[i].getOrder() + "\"}";
-            if (i + 1 < fields.length) {
-                json += ",";
-            }
+            JsonObject fieldObject = new JsonObject();
+            fieldObject.addProperty(fields[i].getName(), fields[i].getOrder().toString());
+            fieldsArray.add(fieldObject);
         }
+        JsonObject arrayOfFields = new JsonObject();
+        arrayOfFields.add("fields", fieldsArray);
+        indexObject.add("index", arrayOfFields);
 
-        return json + "] }}";
+        return indexObject;
     }
 
-    private String getFindByIndexBody(String selectorJson,
+    private JsonObject getFindByIndexBody(String selectorJson,
                                       FindByIndexOptions options) {
 
-        StringBuilder rf = null;
+        JsonArray fieldsArray = new JsonArray();
         if (options.getFields().size() > 0) {
-            rf = new StringBuilder("\"fields\": [");
-            int i = 0;
-            for (String s : options.getFields()) {
-                if (i > 0) {
-                    rf.append(",");
-                }
-                rf.append("\"").append(s).append("\"");
-                i++;
+            for(String field : options.getFields()) {
+                JsonPrimitive jsonField = client.getGson().fromJson(field,
+                        JsonPrimitive.class);
+                fieldsArray.add(jsonField);
             }
-            rf.append("]");
         }
 
-        StringBuilder so = null;
+        JsonArray sortArray = new JsonArray();
         if (options.getSort().size() > 0) {
-            so = new StringBuilder("\"sort\": [");
-            int i = 0;
-            for (IndexField idxfld : options.getSort()) {
-                if (i > 0) {
-                    so.append(",");
-                }
-                so.append("{\"")
-                        .append(idxfld.getName())
-                        .append("\": \"")
-                        .append(idxfld.getOrder())
-                        .append("\"}");
-                i++;
+
+            for(IndexField sort : options.getSort()) {
+                JsonObject sortObject = new JsonObject();
+                sortObject.addProperty(sort.getName(), sort.getOrder().toString());
+                sortArray.add(sortObject);
             }
-            so.append("]");
         }
+
+        JsonObject indexObject = new JsonObject();
 
         //parse and find if valid json issue #28
+        JsonObject selectorObject = null;
         boolean isObject = true;
         try {
-            client.getGson().fromJson(selectorJson, JsonObject.class);
+            selectorObject = getGson().fromJson(selectorJson, JsonObject.class);
         } catch (JsonParseException e) {
             isObject = false;
         }
 
-        if (!isObject) {
-            // needs to start with selector
-            if (!(selectorJson.trim().startsWith("\"selector\""))) {
+        if(!isObject) {
+            if(selectorJson.startsWith("\"selector\"")) {
+                selectorJson = selectorJson.substring(selectorJson.indexOf(":") + 1,
+                        selectorJson.length()).trim();
+                selectorObject = getGson().fromJson(selectorJson, JsonObject.class);
+            } else {
                 throw new JsonParseException("selectorJson should be valid json or like " +
                         "\"selector\": {...} ");
             }
         }
 
-        StringBuilder finalbody = new StringBuilder();
-        if (isObject) {
-            finalbody.append("{\"selector\": ")
-                    .append(selectorJson);
+        if(selectorObject.has("selector")) {
+            indexObject.add("selector", selectorObject.get("selector"));
         } else {
-            //old support
-            finalbody.append("{" + selectorJson);
+            indexObject.add("selector", selectorObject);
         }
 
-        if (rf != null) {
-            finalbody.append(",")
-                    .append(rf.toString());
+        if(fieldsArray.size() > 0) {
+            indexObject.add("fields", fieldsArray);
         }
-        if (so != null) {
-            finalbody.append(",")
-                    .append(so.toString());
+        if(sortArray.size() > 0) {
+            indexObject.add("sort", sortArray);
         }
         if (options.getLimit() != null) {
-            finalbody.append(",")
-                    .append("\"limit\": ")
-                    .append(options.getLimit());
+            indexObject.addProperty("limit", options.getLimit());
         }
         if (options.getSkip() != null) {
-            finalbody.append(",")
-                    .append("\"skip\": ")
-                    .append(options.getSkip());
+            indexObject.addProperty("skip", options.getSkip());
         }
         if (options.getReadQuorum() != null) {
-            finalbody.append(",")
-                    .append("\"r\": ")
-                    .append(options.getReadQuorum());
+            indexObject.addProperty("r", options.getReadQuorum());
         }
         if (options.getUseIndex() != null) {
-            finalbody.append(",")
-                    .append("\"use_index\": ")
-                    .append(options.getUseIndex());
+            indexObject.add("use_index", getGson().fromJson(options.getUseIndex(),
+                    JsonArray.class));
         }
-        finalbody.append("}");
 
-        return finalbody.toString();
+        return indexObject;
     }
 
     Gson getGson() {

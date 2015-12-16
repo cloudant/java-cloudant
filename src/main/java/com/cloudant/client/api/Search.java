@@ -28,6 +28,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -351,13 +352,12 @@ public class Search {
      */
     public Search counts(String[] countsfields) {
         assert (countsfields.length > 0);
-        int i = 0;
-        String counts = "[";
-        for (; i < countsfields.length - 1; i++) {
-            counts += "\"" + countsfields[i] + "\",";
+        JsonArray countsJsonArray = new JsonArray();
+        for(String countsfield : countsfields) {
+            JsonPrimitive element = new JsonPrimitive(countsfield);
+            countsJsonArray.add(element);
         }
-        counts += "\"" + countsfields[i] + "\"]";
-        databaseHelper.query("counts", counts);
+        databaseHelper.query("counts", countsJsonArray);
         return this;
     }
 
@@ -371,7 +371,12 @@ public class Search {
     public Search drillDown(String fieldName, String fieldValue) {
         assertNotEmpty(fieldName, "fieldName");
         assertNotEmpty(fieldValue, "fieldValue");
-        databaseHelper.query("drilldown", "[\"" + fieldName + "\",\"" + fieldValue + "\"]");
+        JsonArray drillDownArray = new JsonArray();
+        JsonPrimitive fieldNamePrimitive = new JsonPrimitive(fieldName);
+        drillDownArray.add(fieldNamePrimitive);
+        JsonPrimitive fieldValuePrimitive = new JsonPrimitive(fieldValue);
+        drillDownArray.add(fieldValuePrimitive);
+        databaseHelper.query("drilldown", drillDownArray);
         return this;
     }
 

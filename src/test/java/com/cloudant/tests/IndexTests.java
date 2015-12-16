@@ -26,6 +26,7 @@ import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
 
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -158,13 +159,14 @@ public class IndexTests {
         selector.put("Movie_year", year);
         selector.put("Person_name", "Alec Guinness");
         //check find by using index design doc
-        List<Movie> movies = db.findByIndex(new GsonBuilder().create().toJson(selector), Movie.class,
+        List<Movie> movies = db.findByIndex(new GsonBuilder().create().toJson(selector),
+                Movie.class,
                 new FindByIndexOptions()
                         .sort(new IndexField("Movie_year", SortOrder.desc))
-                .fields("Movie_name").fields("Movie_year")
-                .limit(1)
-                .skip(1)
-                .readQuorum(2).useIndex("Movie_year"));
+                        .fields("Movie_name").fields("Movie_year")
+                        .limit(1)
+                        .skip(1)
+                        .readQuorum(2).useIndex("Movie_year"));
         assertNotNull(movies);
         assert (movies.size() == 1);
         for (Movie m : movies) {
@@ -181,8 +183,9 @@ public class IndexTests {
         selector.put("Movie_year", year);
         selector.put("Person_name", "Alec Guinness");
         //check find by using index design doc and index name
-        List<Movie> movies = db.findByIndex(new GsonBuilder().create().toJson(selector), Movie.class, new
-                FindByIndexOptions().sort(new IndexField("Movie_year", SortOrder.desc))
+        List<Movie> movies = db.findByIndex(new GsonBuilder().create().toJson(selector),
+                Movie.class,
+                new FindByIndexOptions().sort(new IndexField("Movie_year", SortOrder.desc))
                 .fields("Movie_name").fields("Movie_year")
                 .limit(1)
                 .skip(1)
@@ -194,5 +197,17 @@ public class IndexTests {
             assertNotNull(m.getMovie_year());
         }
 
+    }
+
+    @Test(expected = JsonParseException.class)
+    public void invalidSelectorObjectThrowsJsonParseException() {
+        db.findByIndex("\"selector\"invalid", Movie.class);
+    }
+
+    @Test(expected = JsonParseException.class)
+    public void invalidFieldThrowsJsonParseException() {
+        FindByIndexOptions findByIndexOptions = new FindByIndexOptions();
+        findByIndexOptions.fields("\"");
+        db.findByIndex("{\"type\":\"subscription\"}", Movie.class, findByIndexOptions);
     }
 }
