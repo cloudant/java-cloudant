@@ -16,8 +16,8 @@ package com.cloudant.client.internal.views;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.reflect.TypeToken;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -26,16 +26,14 @@ import java.nio.charset.Charset;
 
 /**
  * This class is purely for serializing the fields necessary to generate an opaque pagination token.
- *
- * @param <K> the key type
  */
-class PaginationToken<K> {
+class PaginationToken {
 
     @SerializedName("d")
     public Boolean descending = null;
 
     @SerializedName("e")
-    public K endkey = null;
+    public JsonElement endkey = null;
 
     @SerializedName("ei")
     public String endkey_docid = null;
@@ -44,7 +42,7 @@ class PaginationToken<K> {
     public Boolean inclusive_end = null;
 
     @SerializedName("s")
-    public K startkey = null;
+    public JsonElement startkey = null;
 
     @SerializedName("si")
     public String startkey_docid = null;
@@ -56,7 +54,7 @@ class PaginationToken<K> {
     PageMetadata.PagingDirection direction;
 
     // Construct a pagination token using the appropriate metadata
-    private PaginationToken(PageMetadata<K, ?> pageMetadata) {
+    private PaginationToken(PageMetadata pageMetadata) {
         this.pageNumber = pageMetadata.pageNumber;
         this.direction = pageMetadata.direction;
         this.descending = pageMetadata.pageRequestParameters.descending;
@@ -86,9 +84,7 @@ class PaginationToken<K> {
         Gson paginationTokenGson = getGsonWithKeyAdapter(initialParameters);
 
         // Deserialize the pagination token JSON, using the appropriate K, V types
-        PaginationToken<K> token = paginationTokenGson.fromJson(json, new
-                TypeToken<PaginationToken<K>>() {
-                }.getType());
+        PaginationToken token = paginationTokenGson.fromJson(json, PaginationToken.class);
 
         // Create new query parameters using the initial ViewQueryParameters as a starting point.
         ViewQueryParameters<K, V> tokenPageParameters = initialParameters.copy();
@@ -109,13 +105,12 @@ class PaginationToken<K> {
      * Generate an opaque pagination token from the supplied PageMetadata.
      *
      * @param pageMetadata page metadata of the page for which the token should be generated
-     * @param <K>          the view key type
      * @return opaque pagination token
      */
-    static <K> String tokenize(PageMetadata<K, ?> pageMetadata) {
+    static String tokenize(PageMetadata<?, ?> pageMetadata) {
         try {
             Gson g = getGsonWithKeyAdapter(pageMetadata.pageRequestParameters);
-            return new String(Base64.encodeBase64URLSafe(g.toJson(new PaginationToken<K>
+            return new String(Base64.encodeBase64URLSafe(g.toJson(new PaginationToken
                     (pageMetadata)).getBytes("UTF-8")),
                     Charset.forName("UTF-8"));
         } catch (UnsupportedEncodingException e) {

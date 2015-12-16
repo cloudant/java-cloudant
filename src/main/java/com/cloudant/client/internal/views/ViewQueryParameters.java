@@ -22,9 +22,9 @@ import com.cloudant.client.internal.util.QueryParameters;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
-import java.util.Arrays;
 import java.util.Map;
 
 public class ViewQueryParameters<K, V> extends QueryParameters implements Cloneable {
@@ -46,8 +46,8 @@ public class ViewQueryParameters<K, V> extends QueryParameters implements Clonea
     @QueryParameter
     public Boolean descending = null;
 
-    @QueryParameter(json = true)
-    public K endkey = null;
+    @QueryParameter
+    public JsonElement endkey = null;
 
     @QueryParameter
     public String endkey_docid = null;
@@ -64,11 +64,11 @@ public class ViewQueryParameters<K, V> extends QueryParameters implements Clonea
     @QueryParameter
     public Boolean inclusive_end = null;
 
-    @QueryParameter(json = true)
-    public K key = null;
+    @QueryParameter
+    public JsonElement key = null;
 
-    @QueryParameter(json = true)
-    public K[] keys = null;
+    @QueryParameter
+    public JsonArray keys = null;
 
     @QueryParameter
     public Integer limit = null;
@@ -82,8 +82,8 @@ public class ViewQueryParameters<K, V> extends QueryParameters implements Clonea
     @QueryParameter
     public String stale = null;
 
-    @QueryParameter(json = true)
-    public K startkey = null;
+    @QueryParameter
+    public JsonElement startkey = null;
 
     @QueryParameter
     public String startkey_docid = null;
@@ -130,11 +130,11 @@ public class ViewQueryParameters<K, V> extends QueryParameters implements Clonea
     }
 
     public K getEndkey() {
-        return endkey;
+        return jsonToKey(endkey);
     }
 
     public void setEndKey(K endkey) {
-        this.endkey = endkey;
+        this.endkey = keyToJson(endkey);
     }
 
     public String getEndKeyDocId() {
@@ -179,19 +179,33 @@ public class ViewQueryParameters<K, V> extends QueryParameters implements Clonea
 
     @SuppressWarnings("unchecked")
     public K[] getKeys() {
-        if (keys != null) {
-            return Arrays.copyOf(keys, keys.length);
+        if (key != null) {
+            return (K[]) new Object[]{jsonToKey(key)};
         } else {
-            return (K[]) new Object[]{key}; //suppress warning we know key is a K
+            if (keys != null) {
+                K[] keysToReturn = (K[]) new Object[keys.size()];
+                int i = 0;
+                for (JsonElement key : keys) {
+                    keysToReturn[i] = jsonToKey(key);
+                    i++;
+                }
+                return keysToReturn;
+            } else {
+                return null;
+            }
         }
     }
 
     public void setKeys(K[] keys) {
         if (keys != null) {
             if (keys.length == 1) {
-                this.key = keys[0];
+                this.key = keyToJson(keys[0]);
             } else {
-                this.keys = Arrays.copyOf(keys, keys.length);
+                JsonArray jsonKeys = new JsonArray();
+                for (K key : keys) {
+                    jsonKeys.add(keyToJson(key));
+                }
+                this.keys = jsonKeys;
             }
         }
     }
@@ -229,11 +243,11 @@ public class ViewQueryParameters<K, V> extends QueryParameters implements Clonea
     }
 
     public K getStartKey() {
-        return startkey;
+        return jsonToKey(startkey);
     }
 
     public void setStartKey(K startkey) {
-        this.startkey = startkey;
+        this.startkey = keyToJson(startkey);
     }
 
     public String getStartKeyDocId() {
@@ -265,7 +279,7 @@ public class ViewQueryParameters<K, V> extends QueryParameters implements Clonea
 
     HttpConnection asGetRequest() {
         DatabaseURIHelper builder = getViewURIBuilder();
-        for (Map.Entry<String, Object> queryParameter : processParameters(gson).entrySet()) {
+        for (Map.Entry<String, Object> queryParameter : processParameters().entrySet()) {
             builder.query(queryParameter.getKey(), queryParameter.getValue());
         }
         return Http.GET(builder.build());
@@ -277,7 +291,7 @@ public class ViewQueryParameters<K, V> extends QueryParameters implements Clonea
     }
 
     JsonElement asJson() {
-        Map<String, Object> parameters = processParameters(gson);
+        Map<String, Object> parameters = processParameters();
         return gson.toJsonTree(parameters);
     }
 
@@ -305,4 +319,11 @@ public class ViewQueryParameters<K, V> extends QueryParameters implements Clonea
         }
     }
 
+    private JsonElement keyToJson(K key) {
+        return gson.toJsonTree(key, keyType);
+    }
+
+    private K jsonToKey(JsonElement jsonKey) {
+        return gson.fromJson(jsonKey, keyType);
+    }
 }

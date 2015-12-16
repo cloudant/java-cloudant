@@ -120,7 +120,7 @@ final class PageMetadata<K, V> {
 
         // Any initial startkey is now the end key because we are reversed from original direction
         if (startkey != null) {
-            reversedParameters.setEndKey(initialQueryParameters.startkey);
+            reversedParameters.endkey = initialQueryParameters.startkey;
         }
         if (startkey_docid != null) {
             reversedParameters.setEndKeyDocId(initialQueryParameters.startkey_docid);
