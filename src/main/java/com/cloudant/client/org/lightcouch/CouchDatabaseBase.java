@@ -355,15 +355,26 @@ public abstract class CouchDatabaseBase {
      * @param updateHandlerUri The Update Handler URI, in the format: <code>designDoc/update1</code>
      * @param docId            The document id to update.
      * @param params           The query parameters as {@link Params}.
+     * @param postBodyRequest  The POST body to create a document if needed.
      * @return The output of the request.
      */
-    public String invokeUpdateHandler(String updateHandlerUri, String docId, Params params) {
+    public String invokeUpdateHandler(String updateHandlerUri, String docId, Params params,
+                                      String postBodyRequest) {
         assertNotEmpty(updateHandlerUri, "uri");
-        assertNotEmpty(docId, "docId");
         final String[] v = updateHandlerUri.split("/");
-        final URI uri = new DatabaseURIHelper(dbUri).path("_design").path(v[0]).path("_update")
-            .path(v[1]).path(docId).query(params).build();
-        final InputStream response = couchDbClient.put(uri);
+        final InputStream response;
+        final URI uri;
+        DatabaseURIHelper uriHelper = new DatabaseURIHelper(dbUri).path("_design").path(v[0])
+                .path("_update").path(v[1]).query(params);
+        if (docId != null && !docId.isEmpty()) {
+            //Create PUT request using doc Id
+            uri = uriHelper.path(docId).build();
+            response = couchDbClient.put(uri);
+        } else {
+            //If no doc Id, create POST request
+            uri = uriHelper.build();
+            response = couchDbClient.post(uri, postBodyRequest);
+        }
         return streamToString(response);
     }
 

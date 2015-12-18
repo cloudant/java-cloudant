@@ -985,6 +985,7 @@ public class Database {
      *
      * @param updateHandlerUri The Update Handler URI, in the format: <code>designDoc/update1</code>
      * @param docId            The document id to update.
+     *                         If no id is provided, then a document will be created.
      * @param params           The query parameters as {@link Params}.
      * @return The output of the request.
      * @see <a target="_blank"
@@ -994,7 +995,7 @@ public class Database {
     public String invokeUpdateHandler(String updateHandlerUri, String docId,
                                       Params params) {
         assertNotEmpty(params, "params");
-        return db.invokeUpdateHandler(updateHandlerUri, docId, params.getInternalParams());
+        return db.invokeUpdateHandler(updateHandlerUri, docId, params.getInternalParams(), null);
     }
 
     /**
