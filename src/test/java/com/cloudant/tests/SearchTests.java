@@ -182,7 +182,6 @@ public class SearchTests {
         assertEquals("herbivore", it.next());
     }
 
-
     @Test
     public void drillDownTest() {
         // do a faceted search for drilldown
@@ -202,6 +201,31 @@ public class SearchTests {
         assertEquals(rslt.getRanges().get("min_length").get("large"), new Long(0));
     }
 
+    @Test
+    /**
+     * Request a search with two drilldown queries against the views101
+     * design document. The design document only contains one animal
+     * that satisfies the drilldown requirements.
+     * Assert that the result is one animal in the class bird, and
+     * that the only existing min_length value of this animal is small.
+     */
+    public void multipleDrillDownTest() {
+        Search srch = db.search("views101/animals");
+        SearchResult<Animal> rslt = srch.includeDocs(true)
+                .counts(new String[]{"class", "diet"})
+                .ranges("{ \"min_length\": {\"small\": \"[0 TO 1.0]\","
+                        + "\"medium\": \"[1.1 TO 3.0]\", \"large\": \"[3.1 TO 9999999]\"} }")
+                .drillDown("class", "bird")
+                .drillDown("diet", "omnivore")
+                .querySearchResult("class:bird", Animal.class);
+        assertNotNull(rslt);
+        assertNotNull(rslt.getRanges());
+        assertEquals(1, rslt.getRanges().entrySet().size());
+        assertEquals(3, rslt.getRanges().get("min_length").entrySet().size());
+        assertEquals(new Long(1), rslt.getRanges().get("min_length").get("small"));
+        assertEquals(new Long(0), rslt.getRanges().get("min_length").get("medium"));
+        assertEquals(new Long(0), rslt.getRanges().get("min_length").get("large"));
+    }
 
     @Test
     public void bookmarkTest() {

@@ -376,7 +376,7 @@ public class Search {
         drillDownArray.add(fieldNamePrimitive);
         JsonPrimitive fieldValuePrimitive = new JsonPrimitive(fieldValue);
         drillDownArray.add(fieldValuePrimitive);
-        databaseHelper.query("drilldown", drillDownArray);
+        databaseHelper.query("drilldown", drillDownArray, false);
         return this;
     }
 

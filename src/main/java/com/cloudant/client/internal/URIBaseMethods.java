@@ -43,16 +43,35 @@ abstract class URIBaseMethods<T extends URIBaseMethods> {
     }
 
     /**
-     * Add the given {@code name} and {@code value} to the query parameters or replace
-     * the existing query parameter matching {@code name} with one with the new {@code value}.
+     * Add the given {@code name} and {@code value} to the query parameters.
      *
      * @param name    The name of the parameter to add/replace.
      * @param value   The value of the parameter.
      * @return The updated {@link T} object.
      */
     public T query(String name, Object value) {
+        this.query(name, value, true);
+        return returnThis();
+    }
+
+    /**
+     * Add the given {@code name} and {@code value} to the query parameters or replace
+     * the existing query parameter matching {@code name} with one with the new {@code value}.
+     *
+     * @param name    The name of the parameter to add/replace.
+     * @param value   The value of the parameter.
+     * @param replace set to true to replace the value of an existing query parameter matching
+     *                {@code name}, or false to add a new one. Note that if this is true and there
+     *                is no parameter matching {@code name}, the parameter will be added.
+     * @return The updated {@link T} object.
+     */
+    public T query(String name, Object value, boolean replace) {
         if (name != null && value != null) {
-            this.qParams.replaceOrAdd(name, value.toString());
+            if (replace) {
+                this.qParams.replaceOrAdd(name, value.toString());
+            } else {
+                this.qParams.addParam(name, value.toString());
+            }
         }
         return returnThis();
     }
