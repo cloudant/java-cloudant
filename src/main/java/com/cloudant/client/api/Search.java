@@ -21,7 +21,7 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsLong;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
 
 import com.cloudant.client.api.model.SearchResult;
-import com.cloudant.client.org.lightcouch.internal.URIBuilder;
+import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.google.gson.JsonArray;
@@ -91,7 +91,7 @@ public class Search {
     private String bookmark;
     private CloudantClient client;
     private Database db;
-    private URIBuilder uriBuilder;
+    private DatabaseURIHelper databaseHelper;
 
 
     Search(CloudantClient client, Database db, String searchIndexId) {
@@ -101,9 +101,11 @@ public class Search {
         String search = searchIndexId;
         if (searchIndexId.contains("/")) {
             String[] v = searchIndexId.split("/");
-            search = String.format("_design/%s/_search/%s", v[0], v[1]);
+            this.databaseHelper = new DatabaseURIHelper(db.getDBUri()).path("_design")
+                .path(v[0]).path("_search").path(v[1]);
+        } else {
+            this.databaseHelper = new DatabaseURIHelper(db.getDBUri()).path(search);
         }
-        this.uriBuilder = URIBuilder.buildUri(db.getDBUri()).path(search);
     }
 
     // Query options
@@ -118,7 +120,7 @@ public class Search {
      */
     public InputStream queryForStream(String query) {
         key(query);
-        URI uri = uriBuilder.build();
+        URI uri = databaseHelper.build();
         HttpConnection get = Http.GET(uri);
         get.requestProperties.put("Accept", "application/json");
         return client.couchDbClient.executeToInputStream(get);
@@ -251,7 +253,7 @@ public class Search {
      */
     public Search limit(Integer limit) {
         this.limit = limit;
-        uriBuilder.query("limit", this.limit);
+        databaseHelper.query("limit", this.limit);
         return this;
     }
 
@@ -266,7 +268,7 @@ public class Search {
      */
     public Search bookmark(String bookmark) {
         this.bookmark = bookmark;
-        uriBuilder.query("bookmark", this.bookmark);
+        databaseHelper.query("bookmark", this.bookmark);
         return this;
     }
 
@@ -280,7 +282,7 @@ public class Search {
      */
     public Search sort(String sortJson) {
         assertNotEmpty(sortJson, "sort");
-        uriBuilder.query("sort", sortJson);
+        databaseHelper.query("sort", sortJson);
         return this;
     }
 
@@ -295,9 +297,9 @@ public class Search {
     public Search groupField(String fieldName, boolean isNumber) {
         assertNotEmpty(fieldName, "fieldName");
         if (isNumber) {
-            uriBuilder.query("group_field", fieldName + "<number>");
+            databaseHelper.query("group_field", fieldName + "<number>");
         } else {
-            uriBuilder.query("group_field", fieldName);
+            databaseHelper.query("group_field", fieldName);
         }
         return this;
     }
@@ -309,7 +311,7 @@ public class Search {
      * @return this for additional parameter setting or to query
      */
     public Search groupLimit(int limit) {
-        uriBuilder.query("group_limit", limit);
+        databaseHelper.query("group_limit", limit);
         return this;
     }
 
@@ -323,7 +325,7 @@ public class Search {
      */
     public Search groupSort(String groupsortJson) {
         assertNotEmpty(groupsortJson, "groupsortJson");
-        uriBuilder.query("group_sort", groupsortJson);
+        databaseHelper.query("group_sort", groupsortJson);
         return this;
     }
 
@@ -337,7 +339,7 @@ public class Search {
      */
     public Search ranges(String rangesJson) {
         assertNotEmpty(rangesJson, "rangesJson");
-        uriBuilder.query("ranges", rangesJson);
+        databaseHelper.query("ranges", rangesJson);
         return this;
     }
 
@@ -355,7 +357,7 @@ public class Search {
             counts += "\"" + countsfields[i] + "\",";
         }
         counts += "\"" + countsfields[i] + "\"]";
-        uriBuilder.query("counts", counts);
+        databaseHelper.query("counts", counts);
         return this;
     }
 
@@ -369,7 +371,7 @@ public class Search {
     public Search drillDown(String fieldName, String fieldValue) {
         assertNotEmpty(fieldName, "fieldName");
         assertNotEmpty(fieldValue, "fieldValue");
-        uriBuilder.query("drilldown", "[\"" + fieldName + "\",\"" + fieldValue + "\"]");
+        databaseHelper.query("drilldown", "[\"" + fieldName + "\",\"" + fieldValue + "\"]");
         return this;
     }
 
@@ -380,7 +382,7 @@ public class Search {
      */
     public Search stale(boolean stale) {
         if (stale) {
-            uriBuilder.query("stale", "ok");
+            databaseHelper.query("stale", "ok");
         }
         return this;
     }
@@ -391,13 +393,13 @@ public class Search {
      */
     public Search includeDocs(Boolean includeDocs) {
         this.includeDocs = includeDocs;
-        uriBuilder.query("include_docs", this.includeDocs);
+        databaseHelper.query("include_docs", this.includeDocs);
         return this;
     }
 
 
     private void key(String query) {
-        uriBuilder.query("q", query);
+        databaseHelper.query("q", query);
     }
 
     private Map<String, Map<String, Long>> getFieldsCounts(Set<Map.Entry<String, JsonElement>>

@@ -17,7 +17,6 @@ package com.cloudant.client.org.lightcouch;
 
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 
-import java.util.Properties;
 import java.util.logging.Logger;
 
 /**
@@ -28,29 +27,14 @@ import java.util.logging.Logger;
 class CouchDbConfig {
     private static final Logger log = Logger.getLogger(CouchDbConfig.class.getCanonicalName());
 
-    private Properties properties = new Properties();
     private CouchDbProperties dbProperties;
 
     public CouchDbConfig(CouchDbProperties dbProperties) {
         assertNotEmpty(dbProperties, "Properties");
-        assertNotEmpty(dbProperties.getProtocol(), "Protocol");
-        assertNotEmpty(dbProperties.getHost(), "Host");
-        assertNotEmpty(dbProperties.getPort(), "Port");
         this.dbProperties = dbProperties;
     }
 
     public CouchDbProperties getProperties() {
         return dbProperties;
-    }
-
-    private String getProperty(String key, boolean isRequired) {
-        String property = properties.getProperty(key);
-        if (property == null && isRequired) {
-            String msg = String.format("A required property is missing. Key: %s", key);
-            log.severe(msg);
-            throw new IllegalStateException(msg);
-        } else {
-            return (property != null && property.length() != 0) ? property.trim() : null;
-        }
     }
 }

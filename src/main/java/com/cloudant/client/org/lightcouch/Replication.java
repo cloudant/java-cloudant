@@ -17,8 +17,8 @@ package com.cloudant.client.org.lightcouch;
 
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
-import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
+import com.cloudant.client.internal.DatabaseURIHelper;
 import com.google.gson.JsonObject;
 
 import java.io.InputStream;
@@ -106,7 +106,8 @@ public class Replication {
             if (log.isLoggable(Level.FINE)) {
                 log.fine(json.toString());
             }
-            final URI uri = buildUri(client.getBaseUri()).path("_replicate").build();
+
+            final URI uri = new DatabaseURIHelper(client.getBaseUri()).path("_replicate").build();
             response = client.post(uri, json.toString());
             final InputStreamReader reader = new InputStreamReader(response, "UTF-8");
             return client.getGson().fromJson(reader, ReplicationResult.class);

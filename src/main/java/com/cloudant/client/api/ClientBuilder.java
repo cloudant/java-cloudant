@@ -6,7 +6,6 @@ import com.cloudant.client.api.model.Shard;
 import com.cloudant.client.api.views.Key;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.CouchDbProperties;
-import com.cloudant.client.org.lightcouch.internal.URIBuilder;
 import com.cloudant.http.HttpConnectionInterceptor;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
@@ -123,10 +122,8 @@ public class ClientBuilder {
     private SSLSocketFactory authenticatedModeSSLSocketFactory;
     private long connectTimeout = DEFAULT_CONNECTION_TIMEOUT;
     private TimeUnit connectTimeoutUnit = TimeUnit.MINUTES;
-    ;
     private long readTimeout = DEFAULT_READ_TIMEOUT;
     private TimeUnit readTimeoutUnit = TimeUnit.MINUTES;
-    ;
 
     /**
      * Constructs a new ClientBuilder for building a CloudantClient instance to connect to the
@@ -159,10 +156,13 @@ public class ClientBuilder {
 
 
     private ClientBuilder(URL url) {
+        String urlProtocol = url.getProtocol();
+        String urlHost = url.getHost();
+
         //Check if port exists
-        int port = url.getPort();
-        if (port < 0) {
-            port = url.getDefaultPort();
+        int urlPort = url.getPort();
+        if (urlPort < 0) {
+            urlPort = url.getDefaultPort();
         }
         if (url.getUserInfo() != null) {
             //Get username and password and replace credential variables
@@ -176,11 +176,11 @@ public class ClientBuilder {
 
         try {
             //Remove user credentials from url
-            this.url = URIBuilder.buildUri()
-                    .scheme(url.getProtocol())
-                    .host(url.getHost())
-                    .port(port)
-                    .build().toURL();
+            this.url = new URL(urlProtocol
+                    + "://"
+                    + urlHost
+                    + ":"
+                    + urlPort);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
@@ -195,8 +195,7 @@ public class ClientBuilder {
     public CloudantClient build() {
 
         //Build properties and couchdb client
-        CouchDbProperties props = new CouchDbProperties(url.getProtocol(),
-                url.getHost(), url.getPort());
+        CouchDbProperties props = new CouchDbProperties(url);
 
         //Create cookie interceptor
         if (this.username != null && this.password != null) {

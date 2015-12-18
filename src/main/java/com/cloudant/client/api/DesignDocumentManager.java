@@ -127,7 +127,6 @@ public class DesignDocumentManager {
      */
     public DesignDocument get(String id) {
         assertNotEmpty(id, "id");
-        id = CouchDbUtil.ensureDesignPrefix(id);
         return db.find(DesignDocument.class, id);
     }
 
@@ -141,7 +140,6 @@ public class DesignDocumentManager {
     public DesignDocument get(String id, String rev) {
         assertNotEmpty(id, "id");
         assertNotEmpty(id, "rev");
-        id = CouchDbUtil.ensureDesignPrefix(id);
         return db.find(DesignDocument.class, id, rev);
     }
 
@@ -153,7 +151,6 @@ public class DesignDocumentManager {
      */
     public Response remove(String id) {
         assertNotEmpty(id, "id");
-        id = CouchDbUtil.ensureDesignPrefix(id);
         DesignDocument find = db.find(DesignDocument.class, id);
         return db.remove(find.getId(), find.getRevision());
     }
@@ -168,7 +165,6 @@ public class DesignDocumentManager {
     public Response remove(String id, String rev) {
         assertNotEmpty(id, "id");
         assertNotEmpty(id, "rev");
-        id = CouchDbUtil.ensureDesignPrefix(id);
         return db.remove(id, rev);
 
     }

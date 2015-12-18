@@ -20,7 +20,6 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponseList;
-import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
 import com.cloudant.client.api.model.DbInfo;
 import com.cloudant.client.api.model.FindByIndexOptions;
@@ -32,6 +31,8 @@ import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.model.Shard;
 import com.cloudant.client.api.views.AllDocsRequestBuilder;
 import com.cloudant.client.api.views.ViewRequestBuilder;
+import com.cloudant.client.internal.DatabaseURIHelper;
+import com.cloudant.client.internal.URIBase;
 import com.cloudant.client.internal.views.AllDocsRequestBuilderImpl;
 import com.cloudant.client.internal.views.AllDocsRequestResponse;
 import com.cloudant.client.internal.views.ViewQueryParameters;
@@ -41,7 +42,6 @@ import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.client.org.lightcouch.Response;
-import com.cloudant.client.org.lightcouch.internal.URIBuilder;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.google.gson.Gson;
@@ -70,7 +70,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 
-
 /**
  * Contains a Database Public API implementation.
  *
@@ -94,8 +93,8 @@ public class Database {
         super();
         this.client = client;
         this.db = db;
-        apiV2DBSecurityURI = buildUri(client.getBaseUri()).path("_api/v2/db/").path(db.getDbName
-                ()).path("/_security").build();
+        apiV2DBSecurityURI = new URIBase(client.getBaseUri()).path("_api").path("v2").path("db")
+                .path(db.getDbName()).path("_security").build();
     }
 
     /**
@@ -222,7 +221,8 @@ public class Database {
     public List<Shard> getShards() {
         InputStream response = null;
         try {
-            response = client.couchDbClient.get(buildUri(getDBUri()).path("_shards").build());
+            response = client.couchDbClient.get(new DatabaseURIHelper(db.getDBUri()).path("_shards")
+                    .build());
             return getResponseList(response, client.getGson(),
                     new TypeToken<List<Shard>>() {
                     }.getType());
@@ -241,7 +241,9 @@ public class Database {
      */
     public Shard getShard(String docId) {
         assertNotEmpty(docId, "docId");
-        return client.couchDbClient.get(buildUri(getDBUri()).path("_shards/").path(docId).build(), Shard.class);
+        return client.couchDbClient.get(new DatabaseURIHelper(db.getDBUri()).path("_shards")
+                        .path(docId).build(),
+                Shard.class);
     }
 
     /**
@@ -289,7 +291,7 @@ public class Database {
     public void createIndex(String indexDefinition) {
         assertNotEmpty(indexDefinition, "indexDefinition");
         InputStream putresp = null;
-        URI uri = buildUri(getDBUri()).path("_index").build();
+        URI uri = new DatabaseURIHelper(db.getDBUri()).path("_index").build();
         try {
             putresp = client.couchDbClient.executeToInputStream(createPost(uri, indexDefinition,
                     "application/json"));
@@ -354,7 +356,7 @@ public class Database {
         assertNotEmpty(selectorJson, "selectorJson");
         assertNotEmpty(options, "options");
 
-        URI uri = buildUri(getDBUri()).path("_find").build();
+        URI uri = new DatabaseURIHelper(db.getDBUri()).path("_find").build();
         String body = getFindByIndexBody(selectorJson, options);
         InputStream stream = null;
         try {
@@ -393,7 +395,8 @@ public class Database {
     public List<Index> listIndices() {
         InputStream response = null;
         try {
-            response = client.couchDbClient.get(buildUri(getDBUri()).path("_index/").build());
+            URI uri = new DatabaseURIHelper(db.getDBUri()).path("_index").build();
+            response = client.couchDbClient.get(uri);
             return getResponseList(response, client.getGson(),
                     new TypeToken<List<Index>>() {
                     }.getType());
@@ -411,8 +414,8 @@ public class Database {
     public void deleteIndex(String indexName, String designDocId) {
         assertNotEmpty(indexName, "indexName");
         assertNotEmpty(designDocId, "designDocId");
-        URI uri = buildUri(getDBUri()).path("_index/").path(designDocId).path("/json/").path
-                (indexName).build();
+        URI uri = new DatabaseURIHelper(db.getDBUri()).path("_index").path(designDocId)
+                .path("json").path(indexName).build();
         InputStream response = null;
         try {
             HttpConnection connection = Http.DELETE(uri);
@@ -473,8 +476,8 @@ public class Database {
         return new AllDocsRequestBuilderImpl(new ViewQueryParameters<String,
                 AllDocsRequestResponse.Revision>(client, this, "", "", String.class,
                 AllDocsRequestResponse.Revision.class) {
-            protected URIBuilder getViewURIBuilder() {
-                return URIBuilder.buildUri(db.getDBUri()).path("_all_docs");
+            protected DatabaseURIHelper getViewURIBuilder() {
+                return new DatabaseURIHelper(db.getDBUri()).path("_all_docs");
             }
         });
     }
@@ -750,7 +753,7 @@ public class Database {
         assertNotEmpty(object, "object");
         InputStream response = null;
         try {
-            URI uri = buildUri(getDBUri()).query("w", writeQuorum).build();
+            URI uri = new DatabaseURIHelper(db.getDBUri()).query("w", writeQuorum).build();
             response = client.couchDbClient.executeToInputStream(createPost(uri, client.getGson()
                             .toJson(object),
                     "application/json"));
@@ -1009,7 +1012,8 @@ public class Database {
      * read</a>
      */
     public DbInfo info() {
-        return client.couchDbClient.get(buildUri(getDBUri()).build(), DbInfo.class);
+        return client.couchDbClient.get(new DatabaseURIHelper(db.getDBUri()).getDatabaseUri(),
+                DbInfo.class);
     }
 
     /**

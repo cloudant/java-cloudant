@@ -16,10 +16,9 @@ package com.cloudant.client.internal.views;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
+import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.client.internal.util.QueryParameter;
 import com.cloudant.client.internal.util.QueryParameters;
-import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
-import com.cloudant.client.org.lightcouch.internal.URIBuilder;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.google.gson.Gson;
@@ -106,8 +105,8 @@ public class ViewQueryParameters<K, V> extends QueryParameters implements Clonea
             viewName, Class<K> keyType, Class<V> valueType) {
         this.client = client;
         this.db = db;
-        //ensure design doc name starts with _design
-        this.designDoc = CouchDbUtil.ensureDesignPrefix(designDoc);
+        //remove _design from design doc name if it exists
+        this.designDoc = designDoc;
         this.viewName = viewName;
         this.keyType = keyType;
         this.valueType = valueType;
@@ -265,16 +264,16 @@ public class ViewQueryParameters<K, V> extends QueryParameters implements Clonea
     /* Parameter output methods */
 
     HttpConnection asGetRequest() {
-        URIBuilder builder = getViewURIBuilder();
+        DatabaseURIHelper builder = getViewURIBuilder();
         for (Map.Entry<String, Object> queryParameter : processParameters(gson).entrySet()) {
             builder.query(queryParameter.getKey(), queryParameter.getValue());
         }
-        return Http.GET(builder.buildEncoded());
+        return Http.GET(builder.build());
     }
 
-    protected URIBuilder getViewURIBuilder() {
-        return URIBuilder.buildUri(db.getDBUri()).path(designDoc +
-                "/_view/" + viewName);
+    protected DatabaseURIHelper getViewURIBuilder() {
+        return new DatabaseURIHelper(db.getDBUri()).path("_design").path(designDoc).path("_view")
+                .path(viewName);
     }
 
     JsonElement asJson() {

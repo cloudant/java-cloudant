@@ -44,7 +44,7 @@ public class ViewMultipleRequester<K, V> implements ViewMultipleRequest<K, V> {
         JsonObject queryJson = new JsonObject();
         queryJson.add("queries", queries);
         //construct and execute the POST request
-        HttpConnection post = Http.POST(viewQueryParameters.getViewURIBuilder().buildEncoded(),
+        HttpConnection post = Http.POST(viewQueryParameters.getViewURIBuilder().build(),
                 "application/json");
         post.setRequestBody(queryJson.toString());
         JsonObject jsonResponse = ViewRequester.executeRequestWithResponseAsJson

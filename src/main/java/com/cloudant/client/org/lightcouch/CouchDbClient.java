@@ -20,8 +20,9 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.generateUUID;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
-import static com.cloudant.client.org.lightcouch.internal.URIBuilder.buildUri;
 
+import com.cloudant.client.internal.DatabaseURIHelper;
+import com.cloudant.client.internal.URIBase;
 import com.cloudant.client.org.lightcouch.internal.GsonHelper;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
@@ -50,6 +51,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -67,9 +69,9 @@ public class CouchDbClient {
 
     static final Logger log = Logger.getLogger(CouchDbClient.class.getCanonicalName());
 
-    private URI baseURI;
-
     private Gson gson;
+
+    private URI clientUri;
 
     private List<HttpConnectionRequestInterceptor> requestInterceptors;
     private List<HttpConnectionResponseInterceptor> responseInterceptors;
@@ -82,9 +84,13 @@ public class CouchDbClient {
     CouchDbClient(CouchDbConfig config) {
         final CouchDbProperties props = config.getProperties();
 
+        try {
+            this.clientUri = props.getCouchDbURL().toURI();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Error converting account URL to URI.", e);
+        }
+
         this.gson = GsonHelper.initGson(new GsonBuilder()).create();
-        this.baseURI = buildUri().scheme(props.getProtocol()).host(props.getHost()).port(props
-                .getPort()).path("/").build();
 
         //if OkHttp is available then use it for connection pooling, otherwise default to the
         //JVM built-in pooling for HttpUrlConnection
@@ -135,7 +141,7 @@ public class CouchDbClient {
      */
     public void shutdown() {
         // Delete the cookie _session if there is one
-        HttpConnection conn = execute(Http.DELETE(buildUri(getBaseUri()).path("_session")
+        HttpConnection conn = execute(Http.DELETE(new URIBase(clientUri).path("_session")
                 .build()));
 
         // The execute method handles non-2xx response codes by throwing a CouchDbException.
@@ -145,18 +151,8 @@ public class CouchDbClient {
      * @return The base URI.
      */
     public URI getBaseUri() {
-        return baseURI;
+        return new URIBase(clientUri).getUri();
     }
-
-
-    /**
-     * Get an instance of Database class to perform DB operations
-     *
-     * @param name   The name of the database
-     * @param create Should the database be created if it doesn't exist
-     * @throws Exception If the database doesn't exist and create is false, an exception is raised
-     */
-    //abstract CouchDatabaseBase database(String name, boolean create);
 
     /**
      * Get an instance of Database class to perform DB operations
@@ -191,7 +187,8 @@ public class CouchDbClient {
      */
     public void deleteDB(String dbName) {
         assertNotEmpty(dbName, "dbName");
-        delete(buildUri(getBaseUri()).path(dbName).build());
+        delete(new DatabaseURIHelper(getBaseUri(), dbName).getDatabaseUri());
+
     }
 
     /**
@@ -202,7 +199,7 @@ public class CouchDbClient {
     public void createDB(String dbName) {
         assertNotEmpty(dbName, "dbName");
         InputStream is = null;
-        final URI uri = buildUri(getBaseUri()).path(dbName).build();
+        final URI uri = new DatabaseURIHelper(getBaseUri(), dbName).getDatabaseUri();
         try {
             is = get(uri);
         } catch (NoDocumentException e) { // db doesn't exist
@@ -221,7 +218,7 @@ public class CouchDbClient {
         try {
             Type typeOfList = new TypeToken<List<String>>() {
             }.getType();
-            instream = get(buildUri(getBaseUri()).path("_all_dbs").build());
+            instream = get(new URIBase(clientUri).path("_all_dbs").build());
             Reader reader = new InputStreamReader(instream, "UTF-8");
             return getGson().fromJson(reader, typeOfList);
         } catch (UnsupportedEncodingException e) {
@@ -239,7 +236,7 @@ public class CouchDbClient {
     public String serverVersion() {
         InputStream instream = null;
         try {
-            instream = get(buildUri(getBaseUri()).build());
+            instream = get(getBaseUri());
             Reader reader = new InputStreamReader(instream, "UTF-8");
             return getAsString(new JsonParser().parse(reader).getAsJsonObject(), "version");
         } catch (UnsupportedEncodingException e) {
@@ -269,19 +266,17 @@ public class CouchDbClient {
         return new Replicator(this);
     }
 
-
     /**
      * Request a database sends a list of UUIDs.
      *
      * @param count The count of UUIDs.
      */
     public List<String> uuids(long count) {
-        final String uri = String.format("%s_uuids?count=%d", getBaseUri(), count);
-        final JsonObject json = get(URI.create(uri), JsonObject.class);
+        final URI uri = new URIBase(clientUri).path("_uuids").query("count", count).build();
+        final JsonObject json = get(uri, JsonObject.class);
         return getGson().fromJson(json.get("uuids").toString(), new TypeToken<List<String>>() {
         }.getType());
     }
-
 
     /**
      * Executes a HTTP request.
@@ -304,7 +299,6 @@ public class CouchDbClient {
             close(is);
         }
     }
-
 
     /**
      * Performs a HTTP DELETE request.
@@ -412,10 +406,9 @@ public class CouchDbClient {
         }
         URI httpUri = null;
         if (writeQuorum > -1) {
-            httpUri = buildUri(uri).pathToEncode(id).query("w",
-                    writeQuorum).buildEncoded();
+            httpUri = new DatabaseURIHelper(uri).documentUri(id, "w", writeQuorum);
         } else {
-            httpUri = buildUri(uri).pathToEncode(id).buildEncoded();
+            httpUri = new DatabaseURIHelper(uri).documentUri(id);
         }
         HttpConnection connection = Http.PUT(httpUri, "application/json");
         connection.setRequestBody(json.toString());
