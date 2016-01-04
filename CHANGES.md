@@ -1,3 +1,7 @@
+# Unreleased
+- [IMPROVED] Request a session delete on client shutdown.
+- [IMPROVED] Consistently encode all parts of request URLs and handle additional special characters.
+
 # 2.1.0 (2015-12-04)
 - [IMPROVED] Included error and reason information in message from `CouchDbException` classes.
 - [IMPROVED] Added HTTP status code to `Response` objects.
