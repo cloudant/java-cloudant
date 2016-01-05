@@ -2,6 +2,7 @@
 - [IMPROVED] Request a session delete on client shutdown.
 - [IMPROVED] Consistently encode all parts of request URLs and handle additional special characters.
 - [FIX] Stopped integers in complex key arrays turning into floats when using view pagination with tokens.
+- [FIX] Replaced string operations with GSON objects when parsing JSON.
 
 # 2.1.0 (2015-12-04)
 - [IMPROVED] Included error and reason information in message from `CouchDbException` classes.

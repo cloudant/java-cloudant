@@ -15,6 +15,8 @@
 package com.cloudant.client.api.model;
 
 import com.cloudant.client.api.Database;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonPrimitive;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +48,7 @@ public class FindByIndexOptions {
     private List<IndexField> sort = new ArrayList<IndexField>();
     private List<String> fields = new ArrayList<String>();
     private Integer readQuorum;
-    private String useIndex = null;
+    private JsonArray useIndex = new JsonArray();
 
     /**
      * @param limit limit the number of results return
@@ -105,7 +107,8 @@ public class FindByIndexOptions {
      * @return this to set additional options
      */
     public FindByIndexOptions useIndex(String designDocument) {
-        this.useIndex = "\"" + designDocument + "\"";
+        JsonPrimitive jsonDesign = new JsonPrimitive(designDocument);
+        this.useIndex.add(jsonDesign);
         return this;
     }
 
@@ -117,7 +120,10 @@ public class FindByIndexOptions {
      * @return this to set additional options
      */
     public FindByIndexOptions useIndex(String designDocument, String indexName) {
-        this.useIndex = "[\"" + designDocument + "\",\"" + indexName + "\"]";
+        JsonPrimitive jsonDesign = new JsonPrimitive(designDocument);
+        JsonPrimitive jsonIndex = new JsonPrimitive(indexName);
+        this.useIndex.add(jsonDesign);
+        this.useIndex.add(jsonIndex);
         return this;
     }
 
@@ -142,7 +148,6 @@ public class FindByIndexOptions {
     }
 
     public String getUseIndex() {
-        return useIndex;
+        return useIndex.toString();
     }
-
 }
