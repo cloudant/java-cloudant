@@ -29,6 +29,4 @@ public @interface QueryParameter {
     String USE_FIELD_NAME = "QueryParameter.USE_FIELD_NAME";
 
     String value() default USE_FIELD_NAME;
-
-    boolean json() default false;
 }

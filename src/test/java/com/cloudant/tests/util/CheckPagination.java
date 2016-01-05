@@ -269,7 +269,6 @@ public class CheckPagination {
         CheckPaginationWithMultiValueKey() {
             testViews = new String[]{"example/doc_title", "example/creator_created",
                     "example/creator_boolean_total", "example/created_boolean_creator"};
-            testViews = new String[]{"example/creator_created"};
             viewKeyType = Key.Type.COMPLEX;
         }
 

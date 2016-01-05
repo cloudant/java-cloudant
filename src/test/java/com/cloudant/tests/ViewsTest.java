@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.views.Key;
@@ -28,9 +29,11 @@ import com.cloudant.client.api.views.ViewMultipleRequest;
 import com.cloudant.client.api.views.ViewRequest;
 import com.cloudant.client.api.views.ViewRequestBuilder;
 import com.cloudant.client.api.views.ViewResponse;
+import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.util.ContextCollectingInterceptor;
 import com.cloudant.tests.util.DatabaseResource;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.Gson;
@@ -43,6 +46,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.RuleChain;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -57,9 +61,16 @@ public class ViewsTest {
 
     @ClassRule
     public static CloudantClientResource clientResource = new CloudantClientResource();
+
     @Rule
     public DatabaseResource dbResource = new DatabaseResource(clientResource);
 
+
+    private static ContextCollectingInterceptor cci = new ContextCollectingInterceptor();
+    public static CloudantClientResource interceptedClient = new CloudantClientResource(CloudantClientHelper.getClientBuilder().interceptors(cci));
+    public static DatabaseResource interceptedDB = new DatabaseResource(interceptedClient);
+    @ClassRule
+    public static RuleChain intercepted = RuleChain.outerRule(interceptedClient).around(interceptedDB);
     private Database db;
 
     @Before
@@ -669,6 +680,7 @@ public class ViewsTest {
         jsonObject.addProperty("quotes", "\"quotes\" " + String.valueOf(i));
         jsonObject.addProperty("spaces", " spaces " + String.valueOf(i));
         jsonObject.addProperty("letters", (char) ('a' + i) + "bc");
+        jsonObject.addProperty("one", 1);
 
         JsonArray jsonArray = new JsonArray();
         jsonArray.add(jsonObject);
@@ -925,5 +937,54 @@ public class ViewsTest {
         ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
                 .newRequest(Key.Type.STRING,
                         Object.class).reduce(false).group(true).build();
+    }
+
+    /**
+     * Test written for https://github.com/cloudant/java-cloudant/issues/172 where complex key
+     * integers were being changed to floats when using pagination tokens. For example ["uuid", 1]
+     * would become ["uuid", 1.0] when trying to request the second page. 1.0 sorts before 1, so the
+     * wrong documents would be returned on the second page.
+     *
+     * The test creates 10 documents that emit complex keys of e.g. ["uuid", 1000]
+     *
+     * We use 5 documents per page and use a start key of ["uuid", 1].
+     *
+     * The test gets the first page and then retrieves the second page using a token.
+     * It captures the request URL and then asserts that the startkey was of the correct integer
+     * form.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testComplexKeyContainingIntTokenPagination() throws Exception {
+
+        // Use the intercepted client as we want to check the query string in the connection
+        db = interceptedDB.get();
+        Utils.putDesignDocs(db);
+
+        // Create 10 documents in the database
+        int nDocs = 10;
+        for (int i = 0; i < nDocs; i++) {
+            Foo f = new Foo("" + i);
+            f.setPosition(i);
+            multiValueKeyInit(f, i);
+            db.save(f);
+        }
+
+        // Use the creator_created view (complex keys [String, int])
+        ViewRequest<Key.ComplexKey, Object> request = db.getViewRequestBuilder("example",
+                "creator_created").newPaginatedRequest(Key.Type.COMPLEX, Object.class).startKey(Key
+                .complex("uuid").add(1)).rowsPerPage(5).build();
+
+        // Get the second page response by token
+        ViewResponse<Key.ComplexKey, Object> response = request.getResponse();
+        String token = response.getNextPageToken();
+        request.getResponse(token);
+
+        // We want the last context
+        HttpConnectionInterceptorContext context = cci.contexts.get(cci.contexts.size() - 1);
+        String query = context.connection.url.getQuery();
+        assertTrue("The query startkey should match.", query.contains("startkey=%5B%22uuid%22," +
+                "1005%5D"));
     }
 }

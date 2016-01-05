@@ -14,9 +14,6 @@
 
 package com.cloudant.client.internal.util;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,9 +25,7 @@ import java.util.Map;
  */
 public class QueryParameters {
 
-    protected Map<String, Object> processParameters(Gson gson) {
-        //if a null Gson was passed in, then use a default gson instance
-        gson = (gson == null) ? new GsonBuilder().create() : gson;
+    protected Map<String, Object> processParameters() {
         Map<String, Object> parameters = new HashMap<String, Object>();
         for (Field field : this.getClass().getFields()) {
             QueryParameter parameter = field.getAnnotation(QueryParameter.class);
@@ -46,9 +41,6 @@ public class QueryParameters {
                             "have the public modifier and as such was not accessible", e);
                 }
                 if (parameterName != null && parameterValue != null) {
-                    if (parameter.json()) {
-                        parameterValue = gson.toJsonTree(parameterValue);
-                    }
                     parameters.put(parameterName, parameterValue);
                 }
             }
