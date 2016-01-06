@@ -16,6 +16,7 @@ package com.cloudant.tests;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Params;
@@ -65,6 +66,15 @@ public class UpdateHandlerTest {
 
         assertNotNull(output);
         assertEquals(foo.getTitle(), newValue);
+    }
+
+    @Test
+    public void updateHandler_postUuid() {
+        String output =
+                db.invokeUpdateHandler("example/get-uuid", null, new Params());
+
+        assertNotNull(output);
+        assertTrue(output.length() > 0);
     }
 
     @Test

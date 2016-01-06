@@ -59,7 +59,8 @@
        "example_list": "function(head, req) {}\n"
    },
    "updates": {
-       "example_update": "function(doc, req) {\n\tvar field = req.query.field;\n\tvar value = req.query.value;\n\tvar message = 'set '+field+' to '+value;\n\tdoc[field] = value;\n\treturn [doc, message];\n}\n"
+       "example_update": "function(doc, req) {\n\tvar field = req.query.field;\n\tvar value = req.query.value;\n\tvar message = 'set '+field+' to '+value;\n\tdoc[field] = value;\n\treturn [doc, message];\n}\n",
+       "get-uuid" : "function(doc, req) {\n\t return [null, req.uuid];\n}\n"
    },
    "rewrites": [
        {
