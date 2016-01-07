@@ -85,15 +85,15 @@ public class SearchTests {
                 .querySearchResult("l*", Animal.class);
         assertNotNull(rslt);
         assertNotNull(rslt.getCounts());
-        assert (rslt.getCounts().keySet().size() == 2);
-        assertEquals(rslt.getCounts().get("class").keySet().size(), 1);
-        assertEquals(rslt.getCounts().get("class").get("mammal"), new Long(2));
-        assertEquals(rslt.getCounts().get("diet").keySet().size(), 2);
-        assertEquals(rslt.getCounts().get("diet").get("herbivore"), new Long(1));
-        assertEquals(rslt.getCounts().get("diet").get("omnivore"), new Long(1));
+        assertEquals(2, rslt.getCounts().keySet().size());
+        assertEquals(1, rslt.getCounts().get("class").keySet().size());
+        assertEquals(new Long(2), rslt.getCounts().get("class").get("mammal"));
+        assertEquals(2, rslt.getCounts().get("diet").keySet().size());
+        assertEquals(new Long(1), rslt.getCounts().get("diet").get("herbivore"));
+        assertEquals(new Long(1), rslt.getCounts().get("diet").get("omnivore"));
         assertNotNull(rslt.getBookmark());
-        assertEquals(rslt.getGroups().size(), 0);
-        assertEquals(rslt.getRows().size(), 2);
+        assertEquals(0, rslt.getGroups().size());
+        assertEquals(2, rslt.getRows().size());
         for (@SuppressWarnings("rawtypes") SearchResultRow r : rslt.getRows()) {
             assertNotNull(r.getDoc());
             assertNotNull(r.getFields());
@@ -111,7 +111,7 @@ public class SearchTests {
                 .counts(new String[]{"class", "diet"})
                 .query("l*", Animal.class);
         assertNotNull(animals);
-        assertEquals(animals.size(), 2);
+        assertEquals(2, animals.size());
         for (Animal a : animals) {
             assertNotNull(a);
         }
@@ -126,10 +126,10 @@ public class SearchTests {
                 .groupField("class", false)
                 .queryGroups("l*", Animal.class);
         assertNotNull(groups);
-        assertEquals(groups.size(), 1);
+        assertEquals(1, groups.size());
         for (Entry<String, List<Animal>> g : groups.entrySet()) {
             assertNotNull(g.getKey());
-            assertEquals(g.getValue().size(), 2);
+            assertEquals(2, g.getValue().size());
             for (Animal a : g.getValue()) {
                 assertNotNull(a);
             }
@@ -147,11 +147,11 @@ public class SearchTests {
                 .querySearchResult("class:mammal", Animal.class);
         assertNotNull(rslt);
         assertNotNull(rslt.getRanges());
-        assertEquals(rslt.getRanges().entrySet().size(), 1);
-        assertEquals(rslt.getRanges().get("min_length").entrySet().size(), 3);
-        assertEquals(rslt.getRanges().get("min_length").get("small"), new Long(3));
-        assertEquals(rslt.getRanges().get("min_length").get("medium"), new Long(3));
-        assertEquals(rslt.getRanges().get("min_length").get("large"), new Long(2));
+        assertEquals(1, rslt.getRanges().entrySet().size());
+        assertEquals(3, rslt.getRanges().get("min_length").entrySet().size());
+        assertEquals(new Long(3), rslt.getRanges().get("min_length").get("small"));
+        assertEquals(new Long(3), rslt.getRanges().get("min_length").get("medium"));
+        assertEquals(new Long(2), rslt.getRanges().get("min_length").get("large"));
 
     }
 
@@ -163,9 +163,9 @@ public class SearchTests {
                 .sort("[\"diet<string>\"]")
                 .querySearchResult("class:mammal", Animal.class);
         assertNotNull(rslt);
-        assertEquals(rslt.getRows().get(0).getOrder()[0].toString(), ("carnivore"));
-        assertEquals(rslt.getRows().get(1).getOrder()[0].toString(), ("herbivore"));
-        assertEquals(rslt.getRows().get(5).getOrder()[0].toString(), ("omnivore"));
+        assertEquals("carnivore", rslt.getRows().get(0).getOrder()[0].toString());
+        assertEquals("herbivore", rslt.getRows().get(1).getOrder()[0].toString());
+        assertEquals("omnivore", rslt.getRows().get(5).getOrder()[0].toString());
     }
 
     @Test
@@ -176,7 +176,7 @@ public class SearchTests {
                 .groupSort("[\"-diet<string>\"]")
                 .queryGroups("l*", Animal.class);
         assertNotNull(groups);
-        assertEquals(groups.size(), 2);
+        assertEquals(2, groups.size());
         Iterator<String> it = groups.keySet().iterator();
         assertEquals("omnivore", it.next()); // diet in reverse order
         assertEquals("herbivore", it.next());
@@ -194,11 +194,11 @@ public class SearchTests {
                 .querySearchResult("class:mammal", Animal.class);
         assertNotNull(rslt);
         assertNotNull(rslt.getRanges());
-        assertEquals(rslt.getRanges().entrySet().size(), 1);
-        assertEquals(rslt.getRanges().get("min_length").entrySet().size(), 3);
-        assertEquals(rslt.getRanges().get("min_length").get("small"), new Long(0));
-        assertEquals(rslt.getRanges().get("min_length").get("medium"), new Long(0));
-        assertEquals(rslt.getRanges().get("min_length").get("large"), new Long(0));
+        assertEquals(1, rslt.getRanges().entrySet().size());
+        assertEquals(3, rslt.getRanges().get("min_length").entrySet().size());
+        assertEquals(new Long(0), rslt.getRanges().get("min_length").get("small"));
+        assertEquals(new Long(0), rslt.getRanges().get("min_length").get("medium"));
+        assertEquals(new Long(0), rslt.getRanges().get("min_length").get("large"));
     }
 
     @Test
