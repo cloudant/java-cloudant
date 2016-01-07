@@ -78,15 +78,15 @@ public class DatabaseTest {
         db.setPermissions(key.getKey(), p);
         userPerms = db.getPermissions();
         assertNotNull(userPerms);
-        assertEquals(userPerms.size(), 1);
-        assertEquals(userPerms.get(key.getKey()), p);
+        assertEquals(1, userPerms.size());
+        assertEquals(p, userPerms.get(key.getKey()));
 
         p = EnumSet.noneOf(Permissions.class);
         db.setPermissions(key.getKey(), p);
         userPerms = db.getPermissions();
         assertNotNull(userPerms);
-        assertEquals(userPerms.size(), 1);
-        assertEquals(userPerms.get(key.getKey()), p);
+        assertEquals(1, userPerms.size());
+        assertEquals(p, userPerms.get(key.getKey()));
 
 
     }

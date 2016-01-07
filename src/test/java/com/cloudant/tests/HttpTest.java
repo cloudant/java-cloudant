@@ -75,7 +75,7 @@ public class HttpTest {
         ByteArrayInputStream bis = new ByteArrayInputStream(data.getBytes());
 
         // nothing read from stream
-        Assert.assertEquals(bis.available(), data.getBytes().length);
+        Assert.assertEquals(data.getBytes().length, bis.available());
 
         conn.setRequestBody(bis);
         boolean thrown = false;
@@ -88,7 +88,7 @@ public class HttpTest {
 
         if (thrown) {
             // still nothing read from stream
-            Assert.assertEquals(bis.available(), data.getBytes().length);
+            Assert.assertEquals(data.getBytes().length, bis.available());
         }
     }
 
@@ -102,13 +102,13 @@ public class HttpTest {
         ByteArrayInputStream bis = new ByteArrayInputStream(data.getBytes());
 
         // nothing read from stream
-        Assert.assertEquals(bis.available(), data.getBytes().length);
+        Assert.assertEquals(data.getBytes().length, bis.available());
 
         conn.setRequestBody(bis);
         conn.execute();
 
         // stream was read to end
-        Assert.assertEquals(bis.available(), 0);
+        Assert.assertEquals(0, bis.available());
     }
 
     /*
@@ -122,7 +122,7 @@ public class HttpTest {
         ByteArrayInputStream bis = new ByteArrayInputStream(data.getBytes());
 
         // nothing read from stream
-        Assert.assertEquals(bis.available(), data.getBytes().length);
+        Assert.assertEquals(data.getBytes().length, bis.available());
 
         conn.setRequestBody(bis);
         try {
@@ -133,7 +133,7 @@ public class HttpTest {
         }
 
         // stream was not read because execute() was not called
-        Assert.assertEquals(bis.available(), data.getBytes().length);
+        Assert.assertEquals(data.getBytes().length, bis.available());
     }
 
 
@@ -157,13 +157,13 @@ public class HttpTest {
         ByteArrayInputStream bis = new ByteArrayInputStream(data.getBytes());
 
         // nothing read from stream
-        Assert.assertEquals(bis.available(), data.getBytes().length);
+        Assert.assertEquals(data.getBytes().length, bis.available());
 
         conn.setRequestBody(bis);
         conn.execute();
 
         // stream was read to end
-        Assert.assertEquals(bis.available(), 0);
+        Assert.assertEquals(0, bis.available());
         Assert.assertEquals(2, conn.getConnection().getResponseCode() / 100);
 
         //check the json
@@ -195,13 +195,13 @@ public class HttpTest {
         ByteArrayInputStream bis = new ByteArrayInputStream(data.getBytes());
 
         // nothing read from stream
-        Assert.assertEquals(bis.available(), data.getBytes().length);
+        Assert.assertEquals(data.getBytes().length, bis.available());
 
         conn.setRequestBody(bis);
         conn.execute();
 
         // stream was read to end
-        Assert.assertEquals(bis.available(), 0);
+        Assert.assertEquals(0, bis.available());
         Assert.assertEquals(2, conn.getConnection().getResponseCode() / 100);
 
         //check the json
