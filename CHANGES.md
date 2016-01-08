@@ -1,4 +1,4 @@
-# Unreleased
+# 2.2.0 (2016-01-08)
 - [IMPROVED] Request a session delete on client shutdown.
 - [IMPROVED] Consistently encode all parts of request URLs and handle additional special characters.
 - [FIX] Stopped integers in complex key arrays turning into floats when using view pagination with tokens.
