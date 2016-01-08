@@ -27,6 +27,9 @@ import java.util.regex.Pattern;
 
 public class DatabaseResource extends ExternalResource {
 
+    // Get the maximum length for a database name, defaults to 128 chars
+    private static final int DB_NAME_SIZE = Integer.parseInt(System.getProperty("test.db.name" +
+            ".length", "128"));
     private final CloudantClientResource clientResource;
     private CloudantClient client;
     private String databaseName = Utils.generateUUID();
@@ -73,7 +76,7 @@ public class DatabaseResource extends ExternalResource {
         //database name is limited to 128 characters on the Cloudant service
         //forego the package name in favour of test details and UUID
         int excess;
-        if ((excess = name.length() - 128) > 0) {
+        if ((excess = name.length() - DB_NAME_SIZE) > 0) {
             name = name.substring(excess, name.length());
             //if the new name doesn't start with a letter use the bit from the first letter
             Matcher m = Pattern.compile("[^a-z](.*)").matcher(name);
