@@ -50,7 +50,7 @@ public abstract class CloudantClientHelper {
                 URL couch = new URL(URL);
                 HTTP_PROTOCOL = couch.getProtocol();
                 COUCH_HOST = couch.getHost();
-                COUCH_PORT = (couch.getPort() < 0) ? Integer.toString(couch.getPort()) : null;
+                COUCH_PORT = (couch.getPort() < 0) ? null : Integer.toString(couch.getPort());
                 String userInfo = couch.getUserInfo();
                 if (userInfo != null) {
                     COUCH_USERNAME = userInfo.substring(0, userInfo.indexOf(":"));
