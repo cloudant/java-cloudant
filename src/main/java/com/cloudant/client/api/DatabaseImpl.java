@@ -448,7 +448,7 @@ class DatabaseImpl implements Database {
     public String invokeUpdateHandler(String updateHandlerUri, String docId,
                                       Params params) {
         assertNotEmpty(params, "params");
-        return db.invokeUpdateHandler(updateHandlerUri, docId, params.getInternalParams(), null);
+        return db.invokeUpdateHandler(updateHandlerUri, docId, params.getInternalParams());
     }
 
     @Override
