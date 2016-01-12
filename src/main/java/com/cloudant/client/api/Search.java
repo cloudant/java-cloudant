@@ -91,14 +91,12 @@ public class Search {
     private boolean includeDocs = false;
     private String bookmark;
     private CloudantClient client;
-    private Database db;
     private DatabaseURIHelper databaseHelper;
 
 
     Search(CloudantClient client, Database db, String searchIndexId) {
         assertNotEmpty(searchIndexId, "searchIndexId");
         this.client = client;
-        this.db = db;
         String search = searchIndexId;
         if (searchIndexId.contains("/")) {
             String[] v = searchIndexId.split("/");
@@ -148,7 +146,7 @@ public class Search {
                             "null object will be returned");
                 }
                 for (JsonElement e : json.getAsJsonArray("rows")) {
-                    result.add(JsonToObject(db.getGson(), e, "doc", classOfT));
+                    result.add(JsonToObject(client.getGson(), e, "doc", classOfT));
                 }
             } else {
                 log.warning("No ungrouped result available. Use queryGroups() if grouping set");
@@ -188,7 +186,7 @@ public class Search {
                                 "null object will be returned");
                     }
                     for (JsonElement rows : e.getAsJsonObject().getAsJsonArray("rows")) {
-                        orows.add(JsonToObject(db.getGson(), rows, "doc", classOfT));
+                        orows.add(JsonToObject(client.getGson(), rows, "doc", classOfT));
                     }
                     result.put(groupName, orows);
                 }// end for(groups)
@@ -434,10 +432,10 @@ public class Search {
             SearchResult<T>.SearchResultRow row = sr.new SearchResultRow();
             JsonObject oe = e.getAsJsonObject();
             row.setId(oe.get("id").getAsString());
-            row.setOrder(JsonToObject(db.getGson(), e, "order", Object[].class));
-            row.setFields(JsonToObject(db.getGson(), e, "fields", classOfT));
+            row.setOrder(JsonToObject(client.getGson(), e, "order", Object[].class));
+            row.setFields(JsonToObject(client.getGson(), e, "fields", classOfT));
             if (includeDocs) {
-                row.setDoc(JsonToObject(db.getGson(), e, "doc", classOfT));
+                row.setDoc(JsonToObject(client.getGson(), e, "doc", classOfT));
             }
             ret.add(row);
         }
