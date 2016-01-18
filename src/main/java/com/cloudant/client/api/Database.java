@@ -152,7 +152,8 @@ public interface Database {
      * Find documents using an index
      *
      * @param selectorJson String representation of a JSON object describing criteria used to
-     *                     select documents. For example {@code "\"selector\": {<your data here>}"}.
+     *                     select documents. For example:
+     *                     {@code "{ \"selector\": {<your data here>} }"}.
      * @param classOfT     The class of Java objects to be returned
      * @param <T>          the type of the Java object to be returned
      * @return List of classOfT objects
@@ -182,7 +183,8 @@ public interface Database {
      * </pre>
      *
      * @param selectorJson String representation of a JSON object describing criteria used to
-     *                     select documents. For example {@code "\"selector\": {<your data here>}"}.
+     *                     select documents. For example:
+     *                     {@code "{ \"selector\": {<your data here>} }"}.
      * @param options      {@link FindByIndexOptions query Index options}
      * @param classOfT     The class of Java objects to be returned
      * @param <T>          the type of the Java object to be returned
