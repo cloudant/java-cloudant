@@ -25,7 +25,9 @@ import com.cloudant.client.api.model.IndexField.SortOrder;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 import org.junit.BeforeClass;
@@ -102,6 +104,57 @@ public class IndexTests {
     public void testNotNullIndexMovieNameAndYear() {
         List<Movie> movies = db.findByIndex("\"selector\": { \"Movie_year\": {\"$gt\": 1960}, " +
                         "\"Person_name\": \"Alec Guinness\" }",
+                Movie.class,
+                new FindByIndexOptions()
+                        .sort(new IndexField("Movie_year", SortOrder.desc))
+                        .fields("Movie_name").fields("Movie_year"));
+        assertNotNull(movies);
+        assert (movies.size() > 0);
+        for (Movie m : movies) {
+            assertNotNull(m.getMovie_name());
+            assertNotNull(m.getMovie_year());
+        }
+    }
+
+    /**
+     * Tests that a complete JSON object in String form e.g.
+     * <pre>
+     *     {@code
+     *          {"selector" : {"Movie_year" : { "$gt" : 1960}, "Person_name" : "Alec Guiness"}}
+     *     }
+     * </pre>
+     * can be passed to the findByIndex method. Note other tests do not use the surrounding { }.
+     *
+     * @see <a href="https://github.com/cloudant/java-cloudant/issues/137">Issue 137</a>
+     */
+    @Test
+    public void testNotNullIndexMovieNameAndYearWithCompleteJsonObjectStringSelector() {
+        List<Movie> movies = db.findByIndex("{\"selector\": { \"Movie_year\": {\"$gt\": 1960}, " +
+                        "\"Person_name\": \"Alec Guinness\" } }",
+                Movie.class,
+                new FindByIndexOptions()
+                        .sort(new IndexField("Movie_year", SortOrder.desc))
+                        .fields("Movie_name").fields("Movie_year"));
+        assertNotNull(movies);
+        assert (movies.size() > 0);
+        for (Movie m : movies) {
+            assertNotNull(m.getMovie_name());
+            assertNotNull(m.getMovie_year());
+        }
+    }
+
+    /**
+     * Tests that a complete JSON object selector, when converted to a String works for findByIndex.
+     *
+     * @see #testNotNullIndexMovieNameAndYearWithCompleteJsonObjectStringSelector()
+     * @see <a href="https://github.com/cloudant/java-cloudant/issues/137">Issue 137</a>
+     */
+    @Test
+    public void testNotNullIndexMovieNameAndYearWithCompleteJsonObjectSelectorAsString() {
+        Map<String, Object> selectorObject = new HashMap<String, Object>();
+        selectorObject.put("selector", selector);
+        JsonObject selectorObj = new Gson().toJsonTree(selectorObject).getAsJsonObject();
+        List<Movie> movies = db.findByIndex(selectorObj.toString(),
                 Movie.class,
                 new FindByIndexOptions()
                         .sort(new IndexField("Movie_year", SortOrder.desc))
