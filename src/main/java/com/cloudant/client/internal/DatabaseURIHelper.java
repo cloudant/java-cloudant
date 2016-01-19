@@ -176,7 +176,7 @@ public class DatabaseURIHelper extends URIBaseMethods<DatabaseURIHelper> {
     }
 
     private DatabaseURIHelper revId(String revId) {
-        this.path(revId);
+        this.query("rev", revId);
         return returnThis();
     }
 
