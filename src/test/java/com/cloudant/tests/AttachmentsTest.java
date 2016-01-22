@@ -114,4 +114,35 @@ public class AttachmentsTest {
 
         assertArrayEquals(bytesToDB, bytesFromDB);
     }
+
+    @Test
+    public void attachmentStandaloneUpdate() throws Exception {
+        byte[] bytesToDB = "binary data".getBytes("UTF-8");
+        ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+        Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain");
+
+        bytesToDB = "updated binary data".getBytes("UTF-8");
+        bytesIn = new ByteArrayInputStream(bytesToDB);
+        response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", response.getId(), response
+                .getRev());
+
+        Document doc = db.find(Document.class, response.getId(), response.getRev());
+        assertTrue(doc.getAttachments().containsKey("foo.txt"));
+
+        HttpConnection conn = Http.GET(new DatabaseURIHelper(db.getDBUri())
+                .attachmentUri(response.getId(), "foo.txt"));
+        InputStream in = clientResource.get().executeRequest(conn).responseAsInputStream();
+
+        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+        int n;
+        while ((n = in.read()) != -1) {
+            bytesOut.write(n);
+        }
+        bytesOut.flush();
+        in.close();
+
+        byte[] bytesFromDB = bytesOut.toByteArray();
+
+        assertArrayEquals(bytesToDB, bytesFromDB);
+    }
 }
