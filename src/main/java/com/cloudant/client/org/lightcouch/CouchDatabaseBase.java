@@ -16,6 +16,7 @@
 package com.cloudant.client.org.lightcouch;
 
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNull;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.generateUUID;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
@@ -311,11 +312,7 @@ public abstract class CouchDatabaseBase {
      * @return {@link Response}
      */
     public Response saveAttachment(InputStream in, String name, String contentType) {
-        assertNotEmpty(in, "in");
-        assertNotEmpty(name, "name");
-        assertNotEmpty(contentType, "ContentType");
-        final URI uri = new DatabaseURIHelper(dbUri).attachmentUri(generateUUID(), name);
-        return couchDbClient.put(uri, in, contentType);
+        return saveAttachment(in, name, contentType, null, null);
     }
 
     /**
@@ -338,7 +335,18 @@ public abstract class CouchDatabaseBase {
         assertNotEmpty(in, "in");
         assertNotEmpty(name, "name");
         assertNotEmpty(contentType, "ContentType");
-        assertNotEmpty(docId, "docId");
+        if (docId == null) {
+            docId = generateUUID();
+            // A new doc is being created; there should be no revision specified.
+            assertNull(docRev, "docRev");
+        } else {
+            // The id has been specified, ensure it is not empty
+            assertNotEmpty(docId, "docId");
+            if (docRev != null) {
+                // Existing doc with the specified ID, ensure rev is not empty
+                assertNotEmpty(docRev, "docRev");
+            }
+        }
         final URI uri = new DatabaseURIHelper(dbUri).attachmentUri(docId, docRev, name);
         return couchDbClient.put(uri, in, contentType);
     }

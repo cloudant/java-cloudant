@@ -946,35 +946,35 @@ public class Database {
     }
 
     /**
-         * Creates or updates an attachment on the given document ID and revision.
-         * <P>
-         * If {@code docId} and {@code docRev} are {@code null} a new document will be created.
-         * </P>
-         * <P>
-         * Example usage:
-         * </P>
-         * <pre>
-         * {@code
-         * byte[] bytesToDB = "binary data".getBytes();
-         * ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
-         * Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain","exampleId","3-rev");
-         * }
-         * </pre>
-         * Saves an attachment to an existing document given both a document id
-         * and revision, or save to a new document given only the id, and rev as {@code null}.
-         * <p>To retrieve an attachment, see {@link #find(Class, String, Params)}</p>
-         *
-         * @param in          The {@link InputStream} providing the binary data.
-         * @param name        The attachment name.
-         * @param contentType The attachment "Content-Type".
-         * @param docId       The document id to save the attachment under, or {@code null} to save
-         *                    under a new document.
-         * @param docRev      The document revision to save the attachment under, or {@code null}
-         *                    when saving to a new document.
-         * @return {@link com.cloudant.client.api.model.Response}
-         * @throws DocumentConflictException if the attachment cannot be saved because of a conflict
-         * @see <a target="_blank" href="https://docs.cloudant.com/attachments.html">Attachments</a>
-         */
+     * Creates or updates an attachment on the given document ID and revision.
+     * <P>
+     * If {@code docId} and {@code docRev} are {@code null} a new document will be created.
+     * </P>
+     * <P>
+     * Example usage:
+     * </P>
+     * <pre>
+     * {@code
+     * byte[] bytesToDB = "binary data".getBytes();
+     * ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+     * Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain","exampleId","3-rev");
+     * }
+     * </pre>
+     * Saves an attachment to an existing document given both a document id
+     * and revision, or save to a new document given only the id, and rev as {@code null}.
+     * <p>To retrieve an attachment, see {@link #find(Class, String, Params)}</p>
+     *
+     * @param in          The {@link InputStream} providing the binary data.
+     * @param name        The attachment name.
+     * @param contentType The attachment "Content-Type".
+     * @param docId       The document ID to save the attachment under, or {@code null} to save
+     *                    under a new document with a generated ID.
+     * @param docRev      The document revision to save the attachment under, or {@code null}
+     *                    when saving to a new document.
+     * @return {@link Response}
+     * @throws DocumentConflictException if the attachment cannot be saved because of a conflict
+     * @see <a target="_blank" href="https://docs.cloudant.com/attachments.html">Attachments</a>
+     */
     public com.cloudant.client.api.model.Response saveAttachment(InputStream in, String name,
                                                                  String contentType, String
                                                                          docId, String docRev) {
