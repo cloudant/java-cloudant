@@ -15,7 +15,9 @@
 package com.cloudant.tests;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.Database;
@@ -144,5 +146,44 @@ public class AttachmentsTest {
         byte[] bytesFromDB = bytesOut.toByteArray();
 
         assertArrayEquals(bytesToDB, bytesFromDB);
+    }
+
+    @Test
+    public void addNewAttachmentToExistingDocument() throws Exception {
+
+        // Save a new document
+        Bar bar = new Bar();
+        Response response = db.save(bar);
+
+        // Create an attachment and save it to the existing document
+        byte[] bytesToDB = "binary data".getBytes("UTF-8");
+        ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+        Response attResponse = db.saveAttachment(bytesIn, "foo.txt", "text/plain", response.getId
+                (), response.getRev());
+
+        assertEquals("The document ID should be the same", response.getId(), attResponse.getId());
+        assertTrue("The response code should be a 20x", attResponse.getStatusCode() / 100 == 2);
+        assertNull("There should be no error saving the attachment", attResponse.getError());
+
+        // Assert the attachment is correct
+        Document doc = db.find(Document.class, response.getId(), attResponse.getRev());
+        assertTrue(doc.getAttachments().containsKey("foo.txt"));
+
+        HttpConnection conn = Http.GET(new DatabaseURIHelper(db.getDBUri())
+                .attachmentUri(response.getId(), attResponse.getRev(), "foo.txt"));
+        InputStream in = clientResource.get().executeRequest(conn).responseAsInputStream();
+
+        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+        int n;
+        while ((n = in.read()) != -1) {
+            bytesOut.write(n);
+        }
+        bytesOut.flush();
+        in.close();
+
+        byte[] bytesFromDB = bytesOut.toByteArray();
+
+        assertArrayEquals(bytesToDB, bytesFromDB);
+
     }
 }
