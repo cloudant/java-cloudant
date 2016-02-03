@@ -79,8 +79,10 @@ public class Database {
     private final URI apiV2DBSecurityURI;
 
     /**
-     * @param client
-     * @param db
+     * Internal constructor for creating a new Database instance.
+     *
+     * @param client the CloudantClient instance to connect with
+     * @param db     the CouchDatabase for executing operations
      */
     Database(CloudantClient client, CouchDatabase db) {
         super();
@@ -88,6 +90,30 @@ public class Database {
         this.db = db;
         apiV2DBSecurityURI = new URIBase(client.getBaseUri()).path("_api").path("v2").path("db")
                 .path(db.getDbName()).path("_security").build();
+    }
+
+    /**
+     * Constructor for subclasses that want to override Database methods. The supplied Database
+     * instance is used to instantiate the super class. As such for non-overridden methods the
+     * implementation of the extending class will be identical to the original Database instance.
+     *
+     * Usage example:
+     * <pre>
+     *     {@code
+     *      public class ExtendedDatabase extends Database {
+     *          public ExtendedDatabase(Database database) {
+     *              super(database);
+     *          }
+     *      }
+     *     }
+     * </pre>
+     *
+     * @param db existing Database instance
+     *
+     * @since 2.3.0
+     */
+    protected Database(Database db) {
+        this(db.client, db.db);
     }
 
     /**
