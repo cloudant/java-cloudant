@@ -213,7 +213,7 @@ public class CloudantClient {
      * read</a>
      */
     public Database database(String name, boolean create) {
-        return new DatabaseImpl(this, couchDbClient.database(name, create));
+        return new Database(this, couchDbClient.database(name, create));
     }
 
     /**

@@ -139,7 +139,7 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 }
 
 javadoc {
-    options.setMemberLevel JavadocMemberLevel.PUBLIC
+    options.setMemberLevel JavadocMemberLevel.PROTECTED
     options.overview = "overview.html"
     include("**/lightcouch/*Exception.java",
             "**/client/api/**",
