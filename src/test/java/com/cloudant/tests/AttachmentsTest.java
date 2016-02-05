@@ -31,6 +31,7 @@ import com.cloudant.http.HttpConnection;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.util.Utils;
 
 import org.apache.commons.codec.binary.Base64;
 import org.junit.BeforeClass;
@@ -185,5 +186,84 @@ public class AttachmentsTest {
 
         assertArrayEquals(bytesToDB, bytesFromDB);
 
+    }
+
+    @Test
+    public void attachmentStandaloneNullIdNullRev() throws IOException, URISyntaxException {
+        byte[] bytesToDB = "binary data".getBytes();
+        ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+        // Save the attachment to a doc with the given ID
+        Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", null, null);
+
+        Document doc = db.find(Document.class, response.getId());
+        assertTrue(doc.getAttachments().containsKey("foo.txt"));
+
+        HttpConnection conn = Http.GET(new DatabaseURIHelper(db.getDBUri())
+                .attachmentUri(response.getId(), "foo.txt"));
+        InputStream in = clientResource.get().executeRequest(conn).responseAsInputStream();
+
+        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+        int n;
+        while ((n = in.read()) != -1) {
+            bytesOut.write(n);
+        }
+        bytesOut.flush();
+        in.close();
+
+        byte[] bytesFromDB = bytesOut.toByteArray();
+
+        assertArrayEquals(bytesToDB, bytesFromDB);
+    }
+
+    @Test
+    public void attachmentStandaloneGivenId() throws IOException, URISyntaxException {
+        String docId = Utils.generateUUID();
+        byte[] bytesToDB = "binary data".getBytes();
+        ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+        // Save the attachment to a doc with the given ID
+        Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", docId, null);
+
+        assertEquals("The saved document ID should match", docId, response.getId());
+
+        Document doc = db.find(Document.class, response.getId());
+        assertTrue(doc.getAttachments().containsKey("foo.txt"));
+
+        HttpConnection conn = Http.GET(new DatabaseURIHelper(db.getDBUri())
+                .attachmentUri(response.getId(), "foo.txt"));
+        InputStream in = clientResource.get().executeRequest(conn).responseAsInputStream();
+
+        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+        int n;
+        while ((n = in.read()) != -1) {
+            bytesOut.write(n);
+        }
+        bytesOut.flush();
+        in.close();
+
+        byte[] bytesFromDB = bytesOut.toByteArray();
+
+        assertArrayEquals(bytesToDB, bytesFromDB);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void attachmentStandaloneNullDocNonNullRev() {
+        byte[] bytesToDB = "binary data".getBytes();
+        ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+        Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", null, "1-abcdef");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void attachmentStandaloneEmptyDocId() {
+        byte[] bytesToDB = "binary data".getBytes();
+        ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+        Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", "", "1-abcdef");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void attachmentStandaloneDocIdEmptyRev() {
+        String docId = Utils.generateUUID();
+        byte[] bytesToDB = "binary data".getBytes();
+        ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+        Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", docId, "");
     }
 }
