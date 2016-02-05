@@ -12,3 +12,4 @@ src/test/resources/cloudant-2.properties
 build/
 .gradle/
 local.properties
+bin/

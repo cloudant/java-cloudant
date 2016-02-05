@@ -23,18 +23,18 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getRespons
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponseList;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.streamToString;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.List;
+import java.util.logging.Logger;
+
 import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * Contains a Database Public API implementation.
@@ -320,14 +320,13 @@ public abstract class CouchDatabaseBase {
 
     /**
      * Saves an attachment to an existing document given both a document id
-     * and revision, or save to a new document given only the id, and rev as {@code null}.
+     * and revision, or save to a new document given only the id and rev as {@code null}.
      * <p>To retrieve an attachment, see {@link #find(String)}.
      *
      * @param in          The {@link InputStream} holding the binary data.
      * @param name        The attachment name.
      * @param contentType The attachment "Content-Type".
-     * @param docId       The document id to save the attachment under, or {@code null} to save
-     *                    under a new document.
+     * @param docId       The document id to save the attachment under.
      * @param docRev      The document revision to save the attachment under, or {@code null}
      *                    when saving to a new document.
      * @return {@link Response}
@@ -339,7 +338,11 @@ public abstract class CouchDatabaseBase {
         assertNotEmpty(name, "name");
         assertNotEmpty(contentType, "ContentType");
         assertNotEmpty(docId, "docId");
-        final URI uri = new DatabaseURIHelper(dbUri).attachmentUri(docId, docRev, name);
+        
+        final URI uri = docRev == null || docRev.isEmpty() ? 
+        	new DatabaseURIHelper(dbUri).attachmentUri(docId, name) :
+        	new DatabaseURIHelper(dbUri).attachmentUri(docId, docRev, name);
+        	
         return couchDbClient.put(uri, in, contentType);
     }
 
