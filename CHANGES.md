@@ -1,3 +1,11 @@
+# Unreleased
+- [NEW] Constructor for `Database` subclasses.
+- [IMPROVED] Documentation for `Database.findByIndex` to show complete selector.
+- [FIX] `NullPointerException` when using `Database.saveAttachment` with a `null`
+  revision to attach to a new document with the specified ID.
+- [FIX] `CouchDbException` when using `Database.saveAttachment` to update
+  attachments.
+
 # 2.2.0 (2016-01-08)
 - [IMPROVED] Request a session delete on client shutdown.
 - [IMPROVED] Consistently encode all parts of request URLs and handle additional special characters.
