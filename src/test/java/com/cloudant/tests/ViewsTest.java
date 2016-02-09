@@ -67,10 +67,12 @@ public class ViewsTest {
 
 
     private static ContextCollectingInterceptor cci = new ContextCollectingInterceptor();
-    public static CloudantClientResource interceptedClient = new CloudantClientResource(CloudantClientHelper.getClientBuilder().interceptors(cci));
+    public static CloudantClientResource interceptedClient = new CloudantClientResource
+            (CloudantClientHelper.getClientBuilder().interceptors(cci));
     public static DatabaseResource interceptedDB = new DatabaseResource(interceptedClient);
     @ClassRule
-    public static RuleChain intercepted = RuleChain.outerRule(interceptedClient).around(interceptedDB);
+    public static RuleChain intercepted = RuleChain.outerRule(interceptedClient).around
+            (interceptedDB);
     private Database db;
 
     @Before
@@ -637,7 +639,8 @@ public class ViewsTest {
         db.save(new Foo()).getId();
         db.save(new Foo()).getId();
 
-        List<String> allDocIds = db.getAllDocsRequestBuilder().keys(id1, id2).build().getResponse().getDocIds();
+        List<String> allDocIds = db.getAllDocsRequestBuilder().keys(id1, id2).build().getResponse()
+                .getDocIds();
         assertThat(allDocIds.size(), is(2));
     }
 
