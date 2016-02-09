@@ -1,6 +1,8 @@
 # Unreleased
 - [NEW] Constructor for `Database` subclasses.
 - [IMPROVED] Documentation for `Database.findByIndex` to show complete selector.
+- [FIX] `CouchDbException: 400 Bad Request: bad_request: invalid_json` when a
+  query parameter contains a semicolon.
 - [FIX] `NullPointerException` when using `Database.saveAttachment` with a `null`
   revision to attach to a new document with the specified ID.
 - [FIX] `CouchDbException` when using `Database.saveAttachment` to update

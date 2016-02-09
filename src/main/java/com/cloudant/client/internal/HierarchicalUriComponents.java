@@ -136,10 +136,23 @@ public class HierarchicalUriComponents {
         QUERY_PARAM {
             @Override
             public boolean isAllowed(int c) {
-                if ('=' == c || '+' == c || '&' == c) {
+                // The query component defined in RFC 3986 does not specify the structure of data
+                // within a query or query parameter, which is deferred to the URI's scheme.
+                // The HTTP scheme in turn does not specify any restrictions on the structure of
+                // data within the query component, only that it must conform to RFC 3986.
+                // As a result the valid characters are determined by the server processing the
+                // request, so in this case we defer to the HTML application/x-www-form-urlencoded
+                // specification https://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.1
+                // and appendix B.2.2 https://www.w3.org/TR/html401/appendix/notes.html#h-B.2.2
+                // to force encoding of the following:
+                //   '+' as otherwise it would interpreted as a space
+                //   '=' as the key value separator
+                //   '&' and ';' as query parameter delimiters
+                // before deferring to RFC 3986.
+                if ('=' == c || '+' == c || '&' == c || ';' == c) {
                     return false;
-                }
-                else {
+                } else {
+                    // These are the RFC 3986 allowed characters for a query
                     return isPchar(c) || '/' == c || '?' == c;
                 }
             }
