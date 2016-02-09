@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.views.Key;
@@ -67,10 +68,12 @@ public class ViewsTest {
 
 
     private static ContextCollectingInterceptor cci = new ContextCollectingInterceptor();
-    public static CloudantClientResource interceptedClient = new CloudantClientResource(CloudantClientHelper.getClientBuilder().interceptors(cci));
+    public static CloudantClientResource interceptedClient = new CloudantClientResource
+            (CloudantClientHelper.getClientBuilder().interceptors(cci));
     public static DatabaseResource interceptedDB = new DatabaseResource(interceptedClient);
     @ClassRule
-    public static RuleChain intercepted = RuleChain.outerRule(interceptedClient).around(interceptedDB);
+    public static RuleChain intercepted = RuleChain.outerRule(interceptedClient).around
+            (interceptedDB);
     private Database db;
 
     @Before
@@ -637,7 +640,8 @@ public class ViewsTest {
         db.save(new Foo()).getId();
         db.save(new Foo()).getId();
 
-        List<String> allDocIds = db.getAllDocsRequestBuilder().keys(id1, id2).build().getResponse().getDocIds();
+        List<String> allDocIds = db.getAllDocsRequestBuilder().keys(id1, id2).build().getResponse()
+                .getDocIds();
         assertThat(allDocIds.size(), is(2));
     }
 
@@ -986,5 +990,38 @@ public class ViewsTest {
         String query = context.connection.url.getQuery();
         assertTrue("The query startkey should match.", query.contains("startkey=%5B%22uuid%22," +
                 "1005%5D"));
+    }
+
+    /**
+     * Tests that reserved characters in a view parameter are encoded.
+     * https://github.com/cloudant/java-cloudant/issues/202
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testUriReservedCharsInStartKey() throws Exception {
+        char[] reservedChars = new char[]{
+                // 3986 general delimeters
+                ':', '/', '?', '#', '[', ']', '@',
+                // 3986 sub delimeters
+                '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '='};
+        for (char c : reservedChars) {
+            testUriReservedCharInStartKey(c);
+        }
+    }
+
+    private void testUriReservedCharInStartKey(char c) throws Exception {
+        try {
+            ViewRequest<String, Object> request = db.getViewRequestBuilder("example",
+                    "foo").newPaginatedRequest(Key.Type.STRING, Object.class)
+                    .startKey("a" + c + "b")
+                    .rowsPerPage(5)
+                    .build();
+            request.getResponse();
+            // We don't actually need to do anything with the response, just ensure the request does
+            // not cause an exception.
+        } catch (Exception e) {
+            fail("The character " + c + " caused an exception to be thrown.");
+        }
     }
 }
