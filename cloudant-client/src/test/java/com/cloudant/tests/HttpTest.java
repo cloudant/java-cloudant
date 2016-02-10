@@ -34,11 +34,11 @@ import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
 import com.cloudant.http.interceptors.CookieInterceptor;
 import com.cloudant.http.interceptors.Replay429Interceptor;
-import com.cloudant.http.internal.ok.OkHelper;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
 import com.cloudant.tests.util.MockWebServerResources;
+import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 import com.cloudant.tests.util.TestTimer;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.Gson;
@@ -46,22 +46,18 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.squareup.okhttp.mockwebserver.Dispatcher;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
-import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.RuleChain;
-import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import mockit.Mock;
-import mockit.MockUp;
+import okhttp3.mockwebserver.Dispatcher;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -78,8 +74,7 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-@RunWith(Parameterized.class)
-public class HttpTest {
+public class HttpTest extends HttpFactoryParameterizedTest {
 
     private String data = "{\"hello\":\"world\"}";
 
@@ -93,31 +88,6 @@ public class HttpTest {
     @Parameterized.Parameters(name = "Using okhttp: {0}")
     public static Object[] okUsable() {
         return new Object[]{true, false};
-    }
-
-    /**
-     * A parameter governing whether to allow okhttp or not. This lets us exercise both
-     * HttpURLConnection types in these tests.
-     */
-    @Parameterized.Parameter
-    public boolean okUsable;
-
-    static class OkHelperMock extends MockUp<OkHelper> {
-        @Mock
-        public static boolean isOkUsable() {
-            return false;
-        }
-    }
-
-    @Before
-    public void changeHttpConnectionFactory() throws Exception {
-        if (!okUsable) {
-            // New up the mock that will stop okhttp's factory being used
-            new OkHelperMock();
-        }
-        // Verify that we are getting the behaviour we expect.
-        assertEquals("The OK usable value was not what was expected for the test parameter.",
-                okUsable, OkHelper.isOkUsable());
     }
 
     /*

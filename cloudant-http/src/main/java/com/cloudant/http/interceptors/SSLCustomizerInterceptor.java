@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2016 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -41,6 +41,8 @@ public class SSLCustomizerInterceptor implements HttpConnectionRequestIntercepto
             AllowAllHostnameVerifier());
 
     private static final Logger LOGGER = Logger.getLogger(SSLCustomizerInterceptor.class.getName());
+    private static final X509Certificate[] EMPTY_ISSUERS = new X509Certificate[0];
+
     private final SSLSocketFactory sslSocketFactory;
     private final HostnameVerifier hostnameVerifier;
 
@@ -102,7 +104,7 @@ public class SSLCustomizerInterceptor implements HttpConnectionRequestIntercepto
                 @Override
                 public X509Certificate[] getAcceptedIssuers() {
                     //trust all issuers
-                    return null;
+                    return EMPTY_ISSUERS;
                 }
             }}, new SecureRandom());
 

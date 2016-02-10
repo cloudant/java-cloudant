@@ -30,7 +30,7 @@ Gradle with [optional `okhttp-urlconnection` dependency](#optional-okhttp-depend
 ```groovy
 dependencies {
     compile group: 'com.cloudant', name: 'cloudant-client', version: '2.6.2'
-    compile group: 'com.squareup.okhttp', name: 'okhttp-urlconnection', version: '2.7.5'
+    compile group: 'com.squareup.okhttp3', name: 'okhttp-urlconnection', version: '3.4.2'
 }
 ```
 
@@ -53,9 +53,9 @@ Maven with [optional `okhttp-urlconnection` dependency](#optional-okhttp-depende
 </dependency>
 
 <dependency>
-  <groupId>com.squareup.okhttp</groupId>
+  <groupId>com.squareup.okhttp3</groupId>
   <artifactId>okhttp-urlconnection</artifactId>
-  <version>2.7.5</version>
+  <version>3.4.2</version>
 </dependency>
 ~~~
 
