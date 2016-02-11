@@ -12,6 +12,7 @@
 - [DEPRECATED] The `InputStream` setters `HttpConnection.setRequestBody(InputStream)` and
   `HttpConnection.setRequestBody(InputStream, long)`. Use of the new `InputStreamGenerator` is
   preferred because it allows for request replays.
+- [CHANGE] Moved HTTP and interceptor code into a separate jar.
 
 # 2.3.0 (2016-02-12)
 - [NEW] Constructor for `Database` subclasses.

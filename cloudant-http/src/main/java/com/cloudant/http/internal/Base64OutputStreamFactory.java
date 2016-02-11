@@ -21,31 +21,30 @@ import java.lang.reflect.Constructor;
  * Created by tomblench on 07/07/2014.
  */
 public class Base64OutputStreamFactory {
-    public static OutputStream get(OutputStream os) {
-        try {
-            Class androidBase64 = null;
-            if ((androidBase64 = getAndroidBase64Class()) != null) {
-                Constructor ctor = androidBase64.getDeclaredConstructor(OutputStream.class, int.class);
-                // 2 = android.util.BASE64.NO_WRAP http://developer.android.com/reference/android/util/Base64.html#NO_WRAP
-                return (OutputStream)ctor.newInstance(os, 2);
-            } else {
-                Class c = Class.forName("org.apache.commons.codec.binary.Base64OutputStream");
-                Constructor ctor = c.getDeclaredConstructor(OutputStream.class, boolean.class, int.class, byte[].class);
-                return (OutputStream)ctor.newInstance(os, true, 0, null);
-            }
-        } catch (Exception e) {
-            // TODO log
-            throw new RuntimeException(e);
-        }
+
+    private static final boolean runningOnAndroid;
+
+    static {
+        String javaRuntime = System.getProperty("java.runtime.name", "");
+        runningOnAndroid = javaRuntime.toLowerCase().contains("android runtime");
     }
 
-    //If the Android Base64OutputStream class exists, return the class.  Else, return null.
-    private static Class getAndroidBase64Class() {
-        try  {
-            Class androidBase64 = Class.forName("android.util.Base64OutputStream");
-            return androidBase64;
-        }  catch (final ClassNotFoundException e) {
-            return null;
+    public static OutputStream get(OutputStream os) {
+        try {
+            if (runningOnAndroid) {
+                Class c = Class.forName("android.util.Base64OutputStream");
+                Constructor ctor = c.getDeclaredConstructor(OutputStream.class, int.class);
+                // 2 = android.util.BASE64.NO_WRAP http://developer.android
+                // .com/reference/android/util/Base64.html#NO_WRAP
+                return (OutputStream) ctor.newInstance(os, 2);
+            } else {
+                Class c = Class.forName("org.apache.commons.codec.binary.Base64OutputStream");
+                Constructor ctor = c.getDeclaredConstructor(OutputStream.class, boolean.class,
+                        int.class, byte[].class);
+                return (OutputStream) ctor.newInstance(os, true, 0, null);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }

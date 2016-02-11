@@ -321,7 +321,11 @@ public class CloudantClient {
      * }
      * }
      * </pre>
-     *
+     * <P>
+     * Note that whilst the request can be constructed for any URL the connection information (e.g.
+     * Cookie, BasicAuth etc) specified by this client will be added to the request before it is
+     * executed.
+     * </P>
      * @param request The HTTP request to execute, obtained from {@link com.cloudant.http.Http}.
      * @return {@link HttpConnection} that has been executed
      * @throws CouchDbException for error HTTP status codes or if there is an {@link IOException}

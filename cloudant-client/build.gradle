@@ -1,0 +1,130 @@
+//note the gradle project name (cloudant-client) is the maven artifactId
+//the maven pom name entry and User-Agent name in client.properties are defined by clientName
+ext.clientName = 'java-cloudant'
+
+// Additional configurations for javadoc
+configurations {
+    linkableJavadoc {
+        transitive false
+    }
+}
+
+dependencies {
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.2.4'
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.6'
+    compile project(':cloudant-http')
+    linkableJavadoc project(':cloudant-http')
+    //test dependencies
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile group: 'com.squareup.okhttp', name: 'mockwebserver', version: '2.7.5'
+}
+
+javadoc {
+    options.overview = "overview.html"
+    include("**/lightcouch/*Exception.java",
+            "**/client/api/**")
+}
+
+
+gradle.projectsEvaluated {
+    javadoc {
+        // Add the offline link options for the client API pointing to javadoc.io using the resolved
+        // java-cloudant version. Use the package-list from the javadoc zip file.
+        configurations.linkableJavadoc.each {
+            String moduleName = configurations.linkableJavadoc.resolvedConfiguration.firstLevelModuleDependencies.first().moduleName;
+            String moduleVers = configurations.linkableJavadoc.resolvedConfiguration.firstLevelModuleDependencies.first().moduleVersion;
+            options.linksOffline("http://static.javadoc.io/com.cloudant/$moduleName/$moduleVers","../$moduleName/build/docs/javadoc");
+        }
+    }
+}
+
+test {
+    // Run tests for any DB
+    useJUnit {
+        excludeCategories 'com.cloudant.test.main.RequiresCloudant',
+                'com.cloudant.test.main.RequiresCouch'
+    }
+}
+
+task noDBTest(type: Test, dependsOn: testClasses) {
+    // Run unit tests that do not need a running database
+    useJUnit {
+        excludeCategories 'com.cloudant.test.main.RequiresDB'
+    }
+}
+
+task cloudantTest(type: Test, dependsOn: testClasses) {
+    // Run tests that can use any Cloudant
+    useJUnit {
+        excludeCategories 'com.cloudant.test.main.RequiresCloudantService'
+    }
+}
+
+task cloudantServiceTest(type: Test, dependsOn: testClasses) {
+    // Run all Cloudant service tests
+    useJUnit {
+        excludeCategories 'com.cloudant.test.main.RequiresCloudantLocal',
+                'com.cloudant.test.main.RequiresCouch'
+    }
+}
+
+//task for generating a client properties file
+class ClientProperties extends DefaultTask {
+
+    //allow this to be configured, default to client.properties
+    File clientPropsPath = new File("client.properties")
+
+    //internal
+    private Properties p = new Properties()
+
+    def load() {
+        //if there is a generated file already load the values
+        if (clientPropsPath.exists()) {
+            p.load(new FileInputStream(clientPropsPath));
+        }
+    }
+
+
+    @TaskAction
+    def save() {
+        p.put("user.agent.name", project.clientName)
+        p.put("user.agent.version", project.version)
+        p.store(new FileOutputStream(clientPropsPath), "User agent information for this client")
+    }
+
+    String getPropertyValue(String key) {
+        return p.getProperty(key)
+    }
+}
+
+//generate a client props file, make the jar task depend on this
+task generateClientPropertiesFile(type: ClientProperties) {
+    clientPropsPath = new File(buildDir, "tmp/client.properties")
+    outputs.upToDateWhen {
+        if (clientPropsPath.exists()) {
+            it.load()
+            return project.clientName.equals(it.getPropertyValue("user.agent.name")) && project.version.equals(it.getPropertyValue("user.agent.version"))
+        } else {
+            return false
+        }
+    }
+}
+jar.dependsOn generateClientPropertiesFile
+//include the client props in the built jar
+jar {
+    into "META-INF", { from generateClientPropertiesFile.clientPropsPath }
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+
+            //augment the pom with additional information
+            pom.project {
+                name project.clientName
+                description 'Official Cloudant client for Java'
+                inceptionYear '2014'
+            }
+        }
+    }
+}

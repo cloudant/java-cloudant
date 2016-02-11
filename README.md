@@ -58,13 +58,6 @@ Maven with [optional `okhttp-urlconnection` dependency](#optional-okhttp-depende
 </dependency>
 ~~~
 
-Although Gradle or Maven dependency management is preferred it is also possible to download the dependencies individually to add to a classpath:
-* [cloudant.jar](http://search.maven.org/remotecontent?filepath=com/cloudant/cloudant-client/)
-* [Commons Codec 1.6](http://commons.apache.org/codec/download_codec.cgi)
-* [Commons IO 2.4](http://commons.apache.org/io/download_io.cgi)
-* [Gson 2.2.4](http://code.google.com/p/google-gson/downloads/list)
-* [OkHttp 2.7.5](http://square.github.io/okhttp/#download) (OPTIONAL) - [more info](#optional-okhttp-dependency)
-
 ##### Optional OkHttp dependency
 
 HTTP requests to the database are made using `java.net.HttpURLConnection`. Adding the optional dependency for the `okhttp-urlconnection` changes the

@@ -14,7 +14,6 @@
 
 package com.cloudant.http.interceptors;
 
-import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 
@@ -40,13 +39,12 @@ public class TimeoutCustomizationInterceptor implements HttpConnectionRequestInt
      * </pre>
      *
      * @param connectTimeoutValue value of the connect timeout
-     * @param connectTimeoutUnit TimeUnit for the duration of the connect timeout
+     * @param connectTimeoutUnit  TimeUnit for the duration of the connect timeout
      * @param readTimeoutValue    value of the read timeout
-     * @param readTimeoutUnit TimeUnit for the duration of the read timeout
-     *
-     * @throws CouchDbException if connect or read timeout are null
+     * @param readTimeoutUnit     TimeUnit for the duration of the read timeout
      */
-    public TimeoutCustomizationInterceptor(long connectTimeoutValue, TimeUnit connectTimeoutUnit, long readTimeoutValue, TimeUnit readTimeoutUnit) {
+    public TimeoutCustomizationInterceptor(long connectTimeoutValue, TimeUnit connectTimeoutUnit,
+                                           long readTimeoutValue, TimeUnit readTimeoutUnit) {
         this.connectTimeout = asIntMillis(connectTimeoutValue, connectTimeoutUnit);
         this.readTimeout = asIntMillis(readTimeoutValue, readTimeoutUnit);
     }

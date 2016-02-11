@@ -10,6 +10,7 @@ import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionInterceptorContext;
+import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
 import com.cloudant.http.interceptors.CookieInterceptor;
@@ -262,6 +263,7 @@ public class HttpTest {
     /**
      * This test check that the cookie is renewed if the server presents a Set-Cookie header
      * after the cookie authentication.
+     *
      * @throws Exception
      */
     @Test
@@ -300,7 +302,9 @@ public class HttpTest {
         // this is the request that should have the new cookie.
         RecordedRequest request = mockWebServer.takeRequest();
         String headerValue = request.getHeader("Cookie");
-        Assert.assertEquals("AuthSession=\"RenewCookie_a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz\"", headerValue);
+        Assert.assertEquals
+                ("AuthSession=\"RenewCookie_a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz" +
+                        "\"", headerValue);
     }
 
     /**
@@ -404,7 +408,8 @@ public class HttpTest {
     private static class TestInputStreamGenerator implements HttpConnection.InputStreamGenerator {
 
         private final byte[] content;
-        TestInputStreamGenerator(byte[] content){
+
+        TestInputStreamGenerator(byte[] content) {
             this.content = content;
         }
 
@@ -477,7 +482,7 @@ public class HttpTest {
                 ("{\"error\":\"credentials_expired\", \"reason\":\"Session expired\"}\r\n"));
         mockWebServer.enqueue(MockWebServerResource.OK_COOKIE);
         mockWebServer.enqueue(new MockResponse());
-        
+
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
                 .username("a")
                 .password("b")
@@ -487,5 +492,29 @@ public class HttpTest {
         request.setRequestBody("{\"some\": \"json\"}");
         HttpConnection response = c.executeRequest(request);
         response.getConnection().getResponseCode();
+    }
+
+    @Test
+    public void testCustomHeader() throws Exception {
+        mockWebServer.enqueue(new MockResponse());
+        final String headerName = "Test-Header";
+        final String headerValue = "testHeader";
+        CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .interceptors(new HttpConnectionRequestInterceptor() {
+
+                    @Override
+                    public HttpConnectionInterceptorContext interceptRequest
+                            (HttpConnectionInterceptorContext context) {
+                        context.connection.requestProperties.put(headerName, headerValue);
+                        return context;
+                    }
+                }).build();
+        client.getAllDbs();
+        assertEquals("There should have been 1 request", 1, mockWebServer.getRequestCount());
+        RecordedRequest request = mockWebServer.takeRequest();
+        assertNotNull("The recorded request should not be null", request);
+        assertNotNull("The custom header should have been present", request.getHeader(headerName));
+        assertEquals("The custom header should have the specified value", headerValue, request
+                .getHeader(headerName));
     }
 }
