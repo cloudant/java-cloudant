@@ -1,4 +1,4 @@
-# Unreleased
+# 2.3.0 (2016-02-12)
 - [NEW] Constructor for `Database` subclasses.
 - [IMPROVED] Documentation for `Database.findByIndex` to show complete selector.
 - [IMPROVED] Documentation regarding document revisions.
