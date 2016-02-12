@@ -34,6 +34,7 @@ There is no need to add a head/title as that is provided by Javadoc.
                 <OL>
                     <LI><a href="#Single document CRUD">Single document CRUD</a></LI>
                     <LI><a href="#Bulk document CRU">Bulk document CRU</a></LI>
+                    <LI><a href="#Document revisions">Document revisions</a></LI>
                 </OL>
             </LI>
             <LI><a href="#Attachments">Attachments</a>
@@ -150,6 +151,7 @@ There is no need to add a head/title as that is provided by Javadoc.
     expires. If the credentials become invalid then a new instance of a CloudantClient needs to be
     created.
 </P>
+
 <P>
     Note that if your database is configured with {@code require_valid_user=true} the _session
     request to obtain a cookie will fail unless it is itself authenticated. This authentication can
@@ -162,8 +164,8 @@ There is no need to add a head/title as that is provided by Javadoc.
 
 <P>
     If cookie authentication is not desired then it is possible to build the CloudantClient
-    without credentials and use a {@link HttpConnectionInterceptor} to customize the HTTP request
-    with the desired authentication mechanism.
+    without credentials and use a {@link com.cloudant.http.HttpConnectionInterceptor} to customize
+    the HTTP request with the desired authentication mechanism.
 </P>
 
 <P>
@@ -196,12 +198,12 @@ There is no need to add a head/title as that is provided by Javadoc.
     {@link com.cloudant.client.api.Database} object.
 </P>
 <UL>
-    <LI>Create - {@link com.cloudant.client.api.Database#save(Object)} or {@link
-        com.cloudant.client.api.Database#post(Object)}
+    <LI>Create - {@link com.cloudant.client.api.Database#save(Object)} or
+        {@link com.cloudant.client.api.Database#post(Object)}
     </LI>
     <LI>Read - {@link com.cloudant.client.api.Database#find(Class, String)}</LI>
-    <LI>Update - {@link com.cloudant.client.api.Database#save(Object)} or {@link
-        com.cloudant.client.api.Database#update(Object)}
+    <LI>Update - {@link com.cloudant.client.api.Database#save(Object)} or
+        {@link com.cloudant.client.api.Database#update(Object)}
     </LI>
     <LI>Delete - {@link com.cloudant.client.api.Database#remove(Object)}</LI>
 </UL>
@@ -214,10 +216,60 @@ There is no need to add a head/title as that is provided by Javadoc.
 </P>
 <UL>
     <LI>Create/Update - {@link com.cloudant.client.api.Database#bulk(List)}</LI>
-    <LI>Read - {@link com.cloudant.client.api.views.AllDocsRequestBuilder} via {@link
-        com.cloudant.client.api.Database#getAllDocsRequestBuilder()}
+    <LI>Read - {@link com.cloudant.client.api.views.AllDocsRequestBuilder} via
+        {@link com.cloudant.client.api.Database#getAllDocsRequestBuilder()}
     </LI>
 </UL>
+
+<h3 id="Document revisions">Document revisions</h3>
+
+<P>
+    This library does not modify the Java objects passed to the
+    {@link com.cloudant.client.api.Database#save(Object)},
+    {@link com.cloudant.client.api.Database#post(Object)},
+    {@link com.cloudant.client.api.Database#update(Object)},
+    or {@link com.cloudant.client.api.Database#bulk(List)} methods. As such once the server write
+    completes the Java object(s) will be out of sync with the database server regarding the
+    document revision. For any of these methods the new document revision should be obtained from
+    the server's {@link com.cloudant.client.api.model.Response} as shown here.
+</P>
+<pre>
+    {@code
+    Foo foo = new Foo();
+    Response response = db.save(foo);
+    foo.setRevision(response.getRevision());
+    }
+</pre>
+<P>
+    Note that storing the revision from a server response means the object has the latest server
+    revision only at the point in time the write was completed.
+    The server document may be subsequently updated from another source at which point the revision
+    in the object will no longer be the most recent.
+    The newest revision can be retrieved, for example, by calling
+    {@link com.cloudant.client.api.Database#find(Class, String)}.
+</P>
+
+<P>
+    Documents retrieved from the server, for example using the
+    {@link com.cloudant.client.api.Database#find(Class, String)} method, are deserialized into
+    objects that will contain the revision as long as the type being deserialized into has a
+    {@code _rev} field or an appropriate custom serializer to ensure that the {@code _rev} is mapped
+    to another field.
+</P>
+
+<P>
+    Using the correct revision is required for the
+    {@link com.cloudant.client.api.Database#update(Object)} and
+    {@link com.cloudant.client.api.Database#remove(Object)} methods, as well as when performing bulk
+    updates or deletions via the {@link com.cloudant.client.api.Database#bulk(List)} method. If the
+    latest revision is not used then the server will reject the change and send a 409 conflict
+    response. This results in either a
+    {@link com.cloudant.client.org.lightcouch.DocumentConflictException} being thrown or in the case
+    of the {@link com.cloudant.client.api.Database#bulk(List)} method the corresponding response
+    object in the returned list will return the {@code "conflict"} error string when
+    {@link com.cloudant.client.api.model.Response#getError} is called. In this situation retrieve
+    the latest revision and update the object to be written accordingly before retrying.
+</P>
 
 <h2 id="Attachments">Attachments</h2>
 
@@ -286,8 +338,11 @@ See the <a href="https://docs.cloudant.com/attachments.html" target="_blank">Clo
     a Java object.
 </P>
 
-<P>See {@link com.cloudant.client.api.DesignDocumentManager#get(java.lang.String, java.lang.String)} for an example of
-    retrieving a design document from the sever.</P>
+<P>
+    See
+    {@link com.cloudant.client.api.DesignDocumentManager#get(java.lang.String, java.lang.String)}
+    for an example of retrieving a design document from the sever.
+</P>
 
 <P>Example of creating a view (map-reduce index) using {@link java.util.Map} to generate
     the JSON for the design document </P>
@@ -335,12 +390,12 @@ library to query a view.
         documentation</a> for details.
 </P>
 <UL>
-    <LI>To see all the indexes in a database use: {@link
-        com.cloudant.client.api.Database#listIndices}
+    <LI>To see all the indexes in a database use:
+        {@link com.cloudant.client.api.Database#listIndices}
     </LI>
-    <LI>To create an index use: {@link
-        com.cloudant.client.api.Database#createIndex(java.lang.String)} or {@link
-        com.cloudant.client.api.Database#createIndex(java.lang.String, java.lang.String,
+    <LI>To create an index use:
+        {@link com.cloudant.client.api.Database#createIndex(java.lang.String)} or
+        {@link com.cloudant.client.api.Database#createIndex(java.lang.String, java.lang.String,
         java.lang.String, com.cloudant.client.api.model.IndexField[])}
     </LI>
     <LI>To query an index use: {@link com.cloudant.client.api.Database#findByIndex(java.lang.String,
@@ -386,8 +441,8 @@ library to query a view.
     }
 </pre>
 <P>
-    To query this index, use an instance of {@link com.cloudant.client.api.Search} by calling {@link
-    com.cloudant.client.api.Database#search}.
+    To query this index, use an instance of {@link com.cloudant.client.api.Search} by calling
+    {@link com.cloudant.client.api.Database#search}.
 </P>
 
 <h1 id="Advanced Configuration">Advanced Configuration</h1>
@@ -441,17 +496,18 @@ library to query a view.
 <h4 id="Default pooling">Default pooling</h4>
 
 <P>
-    By default the underlying {@link HttpUrlConnection} will use the JVM wide connection pool
-    configuration (via the {@code http.maxConnections} property). Under these circumstances the pool
-    is shared between all applications in the VM and between all CloudantClient instances.
+    By default the underlying {@link java.net.HttpURLConnection} will use the JVM wide connection
+    pool configuration (via the {@code http.maxConnections} property). Under these circumstances the
+    pool is shared between all applications in the VM and between all CloudantClient instances.
 </P>
 
 <h4 id="With OkHttp">With OkHttp</h4>
 
 <P>
     When the OkHttp dependency is included then connection pools are managed per CloudantClient
-    instance. The default size of the connection pool is 6. Use {@link
-    com.cloudant.client.api.ClientBuilder#maxConnections(int)} to configure the maximum connections in the pool.
+    instance. The default size of the connection pool is 6. Use
+    {@link com.cloudant.client.api.ClientBuilder#maxConnections(int)} to configure the maximum
+    connections in the pool.
 </P>
 
 <h2 id="J2EE">J2EE</h2>
