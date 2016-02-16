@@ -267,7 +267,7 @@ public class UnicodeTest {
             conn.requestProperties.put("Accept", "application/json");
             conn.setRequestBody("{\"foo\":\"" + TESTSTRING + "\"}");
             clientResource.get().executeRequest(conn);
-            assertEquals(201, conn.getConnection().getResponseCode());
+            assertEquals(2, conn.getConnection().getResponseCode() / 100);
             closeResponse(conn);
         }
         {
@@ -302,7 +302,7 @@ public class UnicodeTest {
             conn.requestProperties.put("Accept", "application/json");
             conn.setRequestBody("{\"foo\":\"" + TESTSTRING_ESCAPED + "\"}");
             clientResource.get().executeRequest(conn);
-            assertEquals(201, conn.getConnection().getResponseCode());
+            assertEquals(2, conn.getConnection().getResponseCode() / 100);
             closeResponse(conn);
         }
         {

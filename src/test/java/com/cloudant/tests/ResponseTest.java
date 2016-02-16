@@ -52,7 +52,7 @@ public class ResponseTest {
     @Test
     public void verifyDocumentSaved() {
         Response response = db.save(foo);
-        assertEquals(201, response.getStatusCode());
+        assertEquals(2, response.getStatusCode() / 100);
     }
 
     @Test
@@ -81,7 +81,7 @@ public class ResponseTest {
     public void verifyDocumentConflict() {
         try {
             Response response = db.save(foo);
-            assertEquals(201, response.getStatusCode());
+            assertEquals(2, response.getStatusCode() / 100);
 
             db.save(foo);
             fail("A DocumentConflictException should be thrown");
@@ -111,7 +111,7 @@ public class ResponseTest {
 
         List<Response> responses = db.bulk(foos);
         for (Response response : responses) {
-            assertEquals(201, response.getStatusCode());
+            assertEquals(2, response.getStatusCode() / 100);
         }
     }
 
