@@ -64,6 +64,7 @@ There is no need to add a head/title as that is provided by Javadoc.
                 </OL>
             </LI>
             <LI><a href="#J2EE">J2EE</a></LI>
+            <LI><a href="#Logging">Logging</a></LI>
         </OL>
     <LI><a href="#Project">Project</a></LI>
 </OL>
@@ -523,6 +524,90 @@ library to query a view.
     configuration of your JNDI provider to register this factory and reference this library.
 </P>
 
+<h2 id="Logging">Logging</h2>
+
+<P>
+    This library uses the {@link java.util.logging} package. Classes that log will register a
+    {@link java.util.logging.Logger} under their fully qualified class name.
+    By default java-cloudant does not apply any logging configuration so the system defaults will be
+    used.
+</P>
+
+<P>
+    There are two ways to configure {@link java.util.logging}. It can be configured via a properties
+    file or programmatically. These examples show configuration for writing to the console for FINE
+    level and above for all {@code com.cloudant*} classes. The JVM documentation contains more
+    information about {@link java.util.logging} and many other logging libraries are also able to
+    integrate with it. Note that {@link java.util.logging} uses logging levels for both loggers and
+    handlers and that both levels need to be set appropriately.
+</P>
+
+<OL>
+    <LI>Configuring using a properties file
+        <pre>
+            {@code
+            # "handlers" specifies a comma separated list of log Handler
+            # classes. For this example it will use only the Console Handler
+            # however there a other handlers such as FileHandler
+            # see http://docs.oracle.com/javase/7/docs/api/java/util/logging/package-summary.html
+            # for a list of handlers provided by the JDK.
+            handlers=java.util.logging.ConsoleHandler
+
+            # Limit the messages that are printed on the console to FINE and above.
+            # Full list of levels http://docs.oracle.com/javase/7/docs/api/java/util/logging/Level.html
+            java.util.logging.ConsoleHandler.level=FINE
+
+            # Set the formatter for this handler, there are several default formatter classes
+            # available, or you can create your own custom formatter.
+            java.util.logging.ConsoleHandler.formatter=java.util.logging.SimpleFormatter
+
+            # Set cloudant sync classes to log at level FINE
+            com.cloudant.level=FINE
+            }
+        </pre>
+        The properties file must be loaded using either:
+        <OL>
+            <LI>via the {@code java.util.logging.config.file} system property (e.g. using a
+                command line argument like
+                {@code -Djava.util.logging.config.file=/path/to/logging/config} when running the
+                application).
+
+            </LI>
+            <LI>programmatically via the {@link java.util.logging.LogManager}.
+                    <pre>
+                        {@code
+                        LogManager manager = LogManager.getLogManager();
+                        manager.readConfiguration(new FileInputStream("path/to/logging/config"));
+                        }
+                    </pre>
+            </LI>
+        </OL>
+    </LI>
+    <LI>Configuring the log manager programmatically
+        <pre>
+            {@code
+            // Create a handler in this case a ConsoleHandler
+            Handler consoleHandler = new ConsoleHandler();
+            // Set the console handler to print FINE level and above
+            consoleHandler.setLevel(Level.FINE);
+
+            // Get the target logger, in this case "com.cloudant" domain logger
+            Logger logger = Logger.getLogger("com.cloudant");
+            // Add the handler to the logger
+            logger.addHandler(consoleHandler);
+
+            // Set the logger to log messages with FINE level and above
+            logger.setLevel(Level.FINE);
+            }
+        </pre>
+    </LI>
+</OL>
+<P>
+    In addition to the {@code com.cloudant} classes it may be useful to log the underlying HTTP
+    implementation. The name of the logger for this will vary depending on the JVM in use, but it is
+    possible to use the property {@code .level=ALL} to set the default log level to ALL which will
+    include HTTP logging.
+</P>
 
 <h1 id="Project">Project</h1>
 
