@@ -1,3 +1,6 @@
+# Unreleased
+- [NEW] Handle HTTP status code `429 Too Many Requests` with blocking backoff and retries.
+
 # 2.4.3 (2016-05-05)
 - [IMPROVED] Reduced the length of the User-Agent header string.
 - [IMPROVED] Use a more efficient HEAD request for getting revision information when using

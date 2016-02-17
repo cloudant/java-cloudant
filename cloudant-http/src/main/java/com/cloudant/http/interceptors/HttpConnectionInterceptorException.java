@@ -20,6 +20,12 @@ public class HttpConnectionInterceptorException extends RuntimeException {
     public final String error;
     public final String reason;
 
+    HttpConnectionInterceptorException(Throwable cause) {
+        this.initCause(cause);
+        this.error = null;
+        this.reason = null;
+    }
+
     HttpConnectionInterceptorException(String error) {
         this(error, null);
     }
