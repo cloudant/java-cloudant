@@ -1,6 +1,6 @@
 Thanks for your hard work, please ensure all items are complete before opening.
 
-- [ ] You have signed the CLA as per the instrcutions in [CONTRIBUTING.md](https://github.com/cloudant/java-cloudant/blob/master/CONTRIBUTING.md#contributor-license-agreement)
+- [ ] You have signed the CLA as per the instructions in [CONTRIBUTING.md](https://github.com/cloudant/java-cloudant/blob/master/CONTRIBUTING.md#contributor-license-agreement)
 - [ ] You have added tests for any code changes
 - [ ] You have updated the [CHANGES.md](https://github.com/cloudant/java-cloudant/blob/master/CHANGES.md) 
 - [ ] You have completed the PR template below:
