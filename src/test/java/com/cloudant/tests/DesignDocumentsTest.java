@@ -32,7 +32,9 @@ import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
 import com.cloudant.tests.util.Utils;
+import com.google.gson.JsonObject;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -86,6 +88,26 @@ public class DesignDocumentsTest {
     }
 
     @Test
+    public void updateDesignDocIndex() throws Exception {
+        DesignDocument designDoc1 = DesignDocumentManager.fromFile(
+                new File(String.format("%s/views101_design_doc.js", rootDesignDir)));
+
+        designDoc1.setId("MyAmazingDdoc");
+        JsonObject indexes = designDoc1.getIndexes();
+        designDoc1.setIndexes(null);
+
+        Response response = designManager.put(designDoc1);
+        designDoc1.setRevision(response.getRev());
+
+
+        designDoc1.setIndexes(indexes);
+        response = designManager.put(designDoc1);
+
+        Assert.assertEquals(2, response.getStatusCode() / 100);
+
+    }
+
+    @Test
     public void designDocs() throws Exception {
         List<DesignDocument> designDocs = DesignDocumentManager.fromDirectory(rootDesignDir);
         DesignDocument[] docArray = designDocs.toArray(new DesignDocument[designDocs.size()]);
@@ -136,10 +158,11 @@ public class DesignDocumentsTest {
             }
         }
 
+        //put the new version back in the database
+        Response response = db.getDesignDocumentManager().put(dd);
+        assertNotNull("The design document should have been saved", response);
+
         try {
-            //put the new version back in the database
-            Response response = db.getDesignDocumentManager().put(dd);
-            assertNotNull("The design document should have been saved", response);
 
             //query the diet_count view to ensure the indexes are built
             int count = db.getViewRequestBuilder("views101", "diet_count").newRequest(Key.Type
