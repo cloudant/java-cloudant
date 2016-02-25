@@ -123,100 +123,64 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
 
     @Override
     public int hashCode() {
-        final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((filters == null) ? 0 : filters.hashCode());
-        result = prime * result + ((language == null) ? 0 : language.hashCode());
-        result = prime * result + ((lists == null) ? 0 : lists.hashCode());
-        result = prime * result + ((shows == null) ? 0 : shows.hashCode());
-        result = prime * result + ((updates == null) ? 0 : updates.hashCode());
-        result = prime * result
-                + ((validateDocUpdate == null) ? 0 : validateDocUpdate.hashCode());
-        result = prime * result + ((rewrites == null) ? 0 : rewrites.hashCode());
-        result = prime * result + ((fulltext == null) ? 0 : fulltext.hashCode());
-        result = prime * result + ((views == null) ? 0 : views.hashCode());
+        result = 31 * result + (language != null ? language.hashCode() : 0);
+        result = 31 * result + (views != null ? views.hashCode() : 0);
+        result = 31 * result + (validateDocUpdate != null ? validateDocUpdate.hashCode() : 0);
+        result = 31 * result + (filters != null ? filters.hashCode() : 0);
+        result = 31 * result + (shows != null ? shows.hashCode() : 0);
+        result = 31 * result + (lists != null ? lists.hashCode() : 0);
+        result = 31 * result + (updates != null ? updates.hashCode() : 0);
+        result = 31 * result + (rewrites != null ? rewrites.hashCode() : 0);
+        result = 31 * result + (fulltext != null ? fulltext.hashCode() : 0);
+        result = 31 * result + (indexes != null ? indexes.hashCode() : 0);
         return result;
     }
 
-    /**
-     * Indicates whether some other design document is equals to this one.
-     */
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
-        if (!super.equals(obj)) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
+        if (!super.equals(o)) {
             return false;
         }
-        DesignDocument other = (DesignDocument) obj;
-        if (filters == null) {
-            if (other.filters != null) {
-                return false;
-            }
-        } else if (!filters.equals(other.filters)) {
+
+        DesignDocument that = (DesignDocument) o;
+
+        if (language != null ? !language.equals(that.language) : that.language != null) {
             return false;
         }
-        if (language == null) {
-            if (other.language != null) {
-                return false;
-            }
-        } else if (!language.equals(other.language)) {
+        if (views != null ? !views.equals(that.views) : that.views != null) {
             return false;
         }
-        if (lists == null) {
-            if (other.lists != null) {
-                return false;
-            }
-        } else if (!lists.equals(other.lists)) {
+        if (validateDocUpdate != null ? !validateDocUpdate.equals(that.validateDocUpdate) : that
+                .validateDocUpdate != null) {
             return false;
         }
-        if (shows == null) {
-            if (other.shows != null) {
-                return false;
-            }
-        } else if (!shows.equals(other.shows)) {
+        if (filters != null ? !filters.equals(that.filters) : that.filters != null) {
             return false;
         }
-        if (updates == null) {
-            if (other.updates != null) {
-                return false;
-            }
-        } else if (!updates.equals(other.updates)) {
+        if (shows != null ? !shows.equals(that.shows) : that.shows != null) {
             return false;
         }
-        if (validateDocUpdate == null) {
-            if (other.validateDocUpdate != null) {
-                return false;
-            }
-        } else if (!validateDocUpdate.equals(other.validateDocUpdate)) {
+        if (lists != null ? !lists.equals(that.lists) : that.lists != null) {
             return false;
         }
-        if (rewrites == null) {
-            if (other.rewrites != null) {
-                return false;
-            }
-        } else if (!rewrites.equals(other.rewrites)) {
+        if (updates != null ? !updates.equals(that.updates) : that.updates != null) {
             return false;
         }
-        if (fulltext == null) {
-            if (other.fulltext != null) {
-                return false;
-            }
-        } else if (!fulltext.equals(other.fulltext)) {
+        if (rewrites != null ? !rewrites.equals(that.rewrites) : that.rewrites != null) {
             return false;
         }
-        if (views == null) {
-            if (other.views != null) {
-                return false;
-            }
-        } else if (!views.equals(other.views)) {
+        if (fulltext != null ? !fulltext.equals(that.fulltext) : that.fulltext != null) {
             return false;
         }
-        return true;
+        return !(indexes != null ? !indexes.equals(that.indexes) : that.indexes != null);
+
     }
 
     /**

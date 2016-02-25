@@ -1,5 +1,7 @@
 # Unreleased
 - [NEW] Documentation for logging in project javadoc `overview.html`.
+- [FIX] Fix issue where design documents would not be updated if only the
+  `indexes` field was updated.
 
 # 2.3.0 (2016-02-12)
 - [NEW] Constructor for `Database` subclasses.
