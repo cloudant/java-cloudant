@@ -270,14 +270,6 @@ public class HttpConnection {
                     connection.setChunkedStreamingMode(1024);
                 }
 
-                // See "8.2.3 Use of the 100 (Continue) Status" in http://tools.ietf.org/html
-                // /rfc2616
-                // Attempting to write to the connection's OutputStream may cause an exception to be
-                // thrown. This is useful because it avoids sending large request bodies (such as
-                // attachments) if the server is going to reject our request. Reasons for rejecting
-                // requests could be 401 Unauthorized (eg cookie needs to be refreshed), etc.
-                connection.setRequestProperty("Expect", "100-continue");
-
                 int bufSize = 1024;
                 int nRead = 0;
                 byte[] buf = new byte[bufSize];

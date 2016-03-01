@@ -16,7 +16,6 @@ package com.cloudant.tests;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
-import com.cloudant.tests.util.SimpleHttpServer;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 import java.net.MalformedURLException;
@@ -107,11 +106,6 @@ public abstract class CloudantClientHelper {
 
     public static ClientBuilder newTestAddressClient() throws MalformedURLException {
         return testAddressClient(false);
-    }
-
-    public static ClientBuilder newSimpleHttpServerClient(SimpleHttpServer httpServer) throws
-            MalformedURLException {
-        return ClientBuilder.url(new URL(httpServer.getUrl()));
     }
 
     public static ClientBuilder newMockWebServerClientBuilder(MockWebServer mockServer) throws
