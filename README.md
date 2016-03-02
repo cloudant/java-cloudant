@@ -29,7 +29,7 @@ Gradle with [optional `okhttp-urlconnection` dependency](#optional-okhttp-depend
 ```groovy
 dependencies {
     compile group: 'com.cloudant', name: 'cloudant-client', version: '2.3.0'
-    compile group: 'com.squareup.okhttp', name: 'okhttp-urlconnection', version: '2.5.0'
+    compile group: 'com.squareup.okhttp', name: 'okhttp-urlconnection', version: '2.7.5'
 }
 ```
 
@@ -54,7 +54,7 @@ Maven with [optional `okhttp-urlconnection` dependency](#optional-okhttp-depende
 <dependency>
   <groupId>com.squareup.okhttp</groupId>
   <artifactId>okhttp-urlconnection</artifactId>
-  <version>2.5.0</version>
+  <version>2.7.5</version>
 </dependency>
 ~~~
 
@@ -63,7 +63,7 @@ Although Gradle or Maven dependency management is preferred it is also possible 
 * [Commons Codec 1.6](http://commons.apache.org/codec/download_codec.cgi)
 * [Commons IO 2.4](http://commons.apache.org/io/download_io.cgi)
 * [Gson 2.2.4](http://code.google.com/p/google-gson/downloads/list)
-* [OkHttp 2.5.0](http://square.github.io/okhttp/#download) (OPTIONAL) - [more info](#optional-okhttp-dependency)
+* [OkHttp 2.7.5](http://square.github.io/okhttp/#download) (OPTIONAL) - [more info](#optional-okhttp-dependency)
 
 ##### Optional OkHttp dependency
 

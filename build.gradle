@@ -24,12 +24,12 @@ dependencies {
     compile group: 'commons-io', name: 'commons-io', version: '2.4'
     compile group: 'commons-codec', name: 'commons-codec', version: '1.6'
     //needed to compile, but optional for consumers of java-cloudant
-    compile(group: 'com.squareup.okhttp', name: 'okhttp-urlconnection', version: '2.5.0') {
+    compile(group: 'com.squareup.okhttp', name: 'okhttp-urlconnection', version: '2.7.5') {
         ext.optional = true
     }
     //test dependencies
     testCompile group: 'junit', name: 'junit', version: '4.12'
-    testCompile group: 'com.squareup.okhttp', name: 'mockwebserver', version: '2.5.0'
+    testCompile group: 'com.squareup.okhttp', name: 'mockwebserver', version: '2.7.5'
 }
 
 //include variable debug info in the compiled classes
