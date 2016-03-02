@@ -28,6 +28,7 @@ import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
+import com.cloudant.http.interceptors.BasicAuthInterceptor;
 import com.cloudant.library.Version;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
@@ -45,6 +46,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -338,5 +340,22 @@ public class CloudantClientTests {
         RecordedRequest request = server.takeRequest(10, TimeUnit.SECONDS);
         assertEquals("The request method should be DELETE", "DELETE", request.getMethod());
         assertEquals("The request should be to the _session path", "/_session", request.getPath());
+    }
+
+    /**
+     * Test that adding the Basic Authentication interceptor to CloudantClient works.
+     */
+    @Test
+    @Category(RequiresCloudant.class)
+    public void testBasicAuth() throws IOException {
+        BasicAuthInterceptor interceptor =
+                new BasicAuthInterceptor(CloudantClientHelper.COUCH_USERNAME
+                        + ":" + CloudantClientHelper.COUCH_PASSWORD);
+
+        CloudantClient client = ClientBuilder.account(CloudantClientHelper.COUCH_USERNAME)
+                .interceptors(interceptor).build();
+
+        // Test passes if there are no exceptions
+        client.getAllDbs();
     }
 }
