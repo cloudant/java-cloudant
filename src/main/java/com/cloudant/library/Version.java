@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ *  Copyright (c) 2016 IBM Corp. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ *  except in compliance with the License. You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the
- * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either express or implied. See the License for the specific language governing permissions
- * and limitations under the License.
+ *  Unless required by applicable law or agreed to in writing, software distributed under the
+ *   License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ *  either express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
  */
 
-package com.cloudant.http.internal;
+package com.cloudant.library;
 
 import com.cloudant.client.org.lightcouch.CouchDbClient;
 
@@ -21,12 +21,12 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
 
-public class AgentHelper {
+/**
+ * Created by Rhys Short on 03/03/2016.
+ */
+public class Version implements com.cloudant.http.Version {
 
-    /**
-     * The {@code User-Agent} identifier for this client.
-     */
-    public static final String USER_AGENT;
+    private static final String USER_AGENT;
 
     //init the string, based on a properties file or fallback to some defaults
     static {
@@ -53,15 +53,19 @@ public class AgentHelper {
                 }
             }
         }
-        USER_AGENT = String.format("%s/%s [Java (%s; %s; %s) %s; %s; %s]",
+        USER_AGENT = String.format("%s/%s [Java %s; %s; %s (%s; %s; %s)]",
                 ua,
                 version,
-                System.getProperty("os.arch"),
-                System.getProperty("os.name"),
-                System.getProperty("os.version"),
                 System.getProperty("java.vendor"),
                 System.getProperty("java.version"),
-                System.getProperty("java.runtime.version"));
+                System.getProperty("java.runtime.version"),
+                System.getProperty("os.arch"),
+                System.getProperty("os.name"),
+                System.getProperty("os.version"));
     }
 
+    @Override
+    public String getUserAgentString() {
+        return this.USER_AGENT;
+    }
 }
