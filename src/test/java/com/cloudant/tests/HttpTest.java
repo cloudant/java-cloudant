@@ -1,5 +1,6 @@
 package com.cloudant.tests;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -8,6 +9,8 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
+import com.cloudant.http.HttpConnectionInterceptorContext;
+import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
 import com.cloudant.http.interceptors.CookieInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
@@ -25,6 +28,7 @@ import com.squareup.okhttp.mockwebserver.RecordedRequest;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.RuleChain;
@@ -32,6 +36,7 @@ import org.junit.rules.RuleChain;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -53,6 +58,9 @@ public class HttpTest {
     public static DatabaseResource dbResource = new DatabaseResource(clientResource);
     @ClassRule
     public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
+    @Rule
+    public MockWebServerResource mwr = new MockWebServerResource();
+    public MockWebServer mockWebServer = mwr.getServer();
 
 
     /*
@@ -369,37 +377,32 @@ public class HttpTest {
     @Test
     public void cookie403Renewal() throws Exception {
 
-        MockWebServer server = new MockWebServer();
         // Request sequence
         // _session request to get Cookie
         // GET request -> 403
         // _session for new cookie
         // GET replay -> 200
-        server.enqueue(MockWebServerResource.OK_COOKIE);
-        server.enqueue(new MockResponse().setResponseCode(403).setBody
+        mockWebServer.enqueue(MockWebServerResource.OK_COOKIE);
+        mockWebServer.enqueue(new MockResponse().setResponseCode(403).setBody
                 ("{\"error\":\"credentials_expired\", \"reason\":\"Session expired\"}\r\n"));
-        server.enqueue(MockWebServerResource.OK_COOKIE);
-        server.enqueue(new MockResponse());
+        mockWebServer.enqueue(MockWebServerResource.OK_COOKIE);
+        mockWebServer.enqueue(new MockResponse());
 
-        server.start();
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .username("a")
+                .password("b")
+                .build();
+        //the GET request will try to get a session, then perform the GET
+        //the GET will result in a 403, which should mean another request to _session
+        //followed by a replay of GET
+        c.executeRequest(Http.GET(c.getBaseUri()));
 
-        try {
-            CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server)
-                    .username("a")
-                    .password("b")
-                    .build();
-            //the GET request will try to get a session, then perform the GET
-            //the GET will result in a 403, which should mean another request to _session
-            //followed by a replay of GET
-            c.executeRequest(Http.GET(c.getBaseUri()));
+        //if we don't handle the 403 correctly an exception will be thrown
 
-            //if we don't handle the 403 correctly an exception will be thrown
+        // also assert that there were 4 calls
+        assertEquals("The server should have received 4 requests", 4, mockWebServer
+                .getRequestCount());
 
-            // also assert that there were 4 calls
-            assertEquals("The server should have received 4 requests", 4, server.getRequestCount());
-        } finally {
-            server.shutdown();
-        }
     }
 
     /**
@@ -412,18 +415,15 @@ public class HttpTest {
     @Test
     public void handleNonExpiry403() throws Exception {
 
-        MockWebServer server = new MockWebServer();
         // Request sequence
         // _session request to get Cookie
         // GET request -> 403 (CouchDbException)
-        server.enqueue(MockWebServerResource.OK_COOKIE);
-        server.enqueue(new MockResponse().setResponseCode(403).setBody
+        mockWebServer.enqueue(MockWebServerResource.OK_COOKIE);
+        mockWebServer.enqueue(new MockResponse().setResponseCode(403).setBody
                 ("{\"error\":\"403_not_expired_test\", \"reason\":\"example reason\"}\r\n"));
 
-        server.start();
-
         try {
-            CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server)
+            CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
                     .username("a")
                     .password("b")
                     .build();
@@ -436,8 +436,138 @@ public class HttpTest {
             assertNotNull("The error should not be null", e.getError());
             assertEquals("The error message should be the expected one", "403_not_expired_test", e
                     .getError());
-        } finally {
-            server.shutdown();
         }
+    }
+
+    @Test
+    public void inputStreamRetryString() throws Exception {
+        HttpConnection request = Http.POST(mockWebServer.url("/").url(), "application/json");
+        String content = "abcde";
+        request.setRequestBody(content);
+        testInputStreamRetry(request, content.getBytes("UTF-8"));
+    }
+
+    @Test
+    public void inputStreamRetryBytes() throws Exception {
+        HttpConnection request = Http.POST(mockWebServer.url("/").url(), "application/json");
+        byte[] content = "abcde".getBytes("UTF-8");
+        request.setRequestBody(content);
+        testInputStreamRetry(request, content);
+    }
+
+    private static class UnmarkableInputStream extends InputStream {
+
+        private final byte[] content;
+        int read;
+        int available;
+
+        UnmarkableInputStream(byte[] content) {
+            this.content = content;
+            available = content.length;
+            read = 0;
+        }
+
+        @Override
+        public int read() throws IOException {
+            if (available == 0) {
+                return -1;
+            } else {
+                int i = content[read];
+                read++;
+                available--;
+                return i;
+            }
+        }
+
+        @Override
+        public boolean markSupported() {
+            return false;
+        }
+    }
+
+    @Test
+    public void inputStreamRetry() throws Exception {
+        HttpConnection request = Http.POST(mockWebServer.url("/").url(), "application/json");
+        final byte[] content = "abcde".getBytes("UTF-8");
+        // Mock up an input stream that doesn't support marking
+        request.setRequestBody(new UnmarkableInputStream(content));
+        testInputStreamRetry(request, content);
+    }
+
+    @Test
+    public void inputStreamRetryWithLength() throws Exception {
+        HttpConnection request = Http.POST(mockWebServer.url("/").url(), "application/json");
+        final byte[] content = "abcde".getBytes("UTF-8");
+        // Mock up an input stream that doesn't support marking
+        request.setRequestBody(new UnmarkableInputStream(content), content.length);
+        testInputStreamRetry(request, content);
+    }
+
+    private static class TestInputStreamGenerator implements HttpConnection.InputStreamGenerator {
+
+        private final byte[] content;
+        TestInputStreamGenerator(byte[] content){
+            this.content = content;
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return new ByteArrayInputStream(content);
+        }
+    }
+
+    @Test
+    public void inputStreamRetryGenerator() throws Exception {
+        HttpConnection request = Http.POST(mockWebServer.url("/").url(), "application/json");
+        byte[] content = "abcde".getBytes("UTF-8");
+        request.setRequestBody(new TestInputStreamGenerator(content));
+        testInputStreamRetry(request, content);
+    }
+
+    @Test
+    public void inputStreamRetryGeneratorWithLength() throws Exception {
+        HttpConnection request = Http.POST(mockWebServer.url("/").url(), "application/json");
+        byte[] content = "abcde".getBytes("UTF-8");
+        request.setRequestBody(new TestInputStreamGenerator(content), content.length);
+        testInputStreamRetry(request, content);
+    }
+
+    private void testInputStreamRetry(HttpConnection request, byte[] expectedContent) throws
+            Exception {
+        final MockResponse retry = new MockResponse().setResponseCode(444);
+        mockWebServer.enqueue(retry);
+        mockWebServer.enqueue(new MockResponse());
+        HttpConnection response = CloudantClientHelper.newMockWebServerClientBuilder
+                (mockWebServer).interceptors(new HttpConnectionResponseInterceptor() {
+
+            // This interceptor responds to our 444 request with a retry
+            @Override
+            public HttpConnectionInterceptorContext interceptResponse
+            (HttpConnectionInterceptorContext context) {
+                try {
+                    if (444 == context.connection.getConnection().getResponseCode()) {
+                        context.replayRequest = true;
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    fail("IOException getting response code in test interceptor");
+                }
+                return context;
+            }
+        }).build().executeRequest(request);
+
+        assertEquals("The final response code should be 200", 200, response.getConnection()
+                .getResponseCode());
+
+        // We want the second request
+        assertEquals("There should have been two requests", 2, mockWebServer.getRequestCount());
+        mockWebServer.takeRequest();
+        RecordedRequest rr = mockWebServer.takeRequest();
+        assertNotNull("The request should have been recorded", rr);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream((int) rr
+                .getBodySize());
+        rr.getBody().copyTo(byteArrayOutputStream);
+        assertArrayEquals("The body bytes should have matched after a retry", expectedContent,
+                byteArrayOutputStream.toByteArray());
     }
 }

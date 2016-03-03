@@ -26,6 +26,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
@@ -64,7 +65,7 @@ import java.util.logging.Logger;
  *
  * @see java.net.HttpURLConnection
  */
-public class HttpConnection  {
+public class HttpConnection {
 
     private static final Logger logger = Logger.getLogger(HttpConnection.class.getCanonicalName());
     private final String requestMethod;
@@ -75,7 +76,7 @@ public class HttpConnection  {
     private HttpURLConnection connection;
 
     // set by the various setRequestBody() methods
-    private InputStream input;
+    private InputStreamGenerator input;
     private long inputLength;
 
     public final HashMap<String, String> requestProperties;
@@ -104,10 +105,11 @@ public class HttpConnection  {
     /**
      * Sets the number of times this request can be retried.
      * This method <strong>must</strong> be called before {@link #execute()}
+     *
      * @param numberOfRetries the number of times this request can be retried.
-     * @return an {@link HttpConnection} for method chaining 
+     * @return an {@link HttpConnection} for method chaining
      */
-    public HttpConnection setNumberOfRetries(int numberOfRetries){
+    public HttpConnection setNumberOfRetries(int numberOfRetries) {
         this.numberOfRetries = numberOfRetries;
         return this;
     }
@@ -120,47 +122,78 @@ public class HttpConnection  {
      */
     public HttpConnection setRequestBody(final String input) {
         try {
-            byte[] inputBytes = input.getBytes("UTF-8");
-            this.input = new ByteArrayInputStream(inputBytes);
-            // input is in bytes, not characters
-            this.inputLength = inputBytes.length;
+            final byte[] inputBytes = input.getBytes("UTF-8");
+            return setRequestBody(inputBytes);
         } catch (UnsupportedEncodingException e) {
             // This should never happen as every implementation of the java platform is required
             // to support UTF-8.
+            throw new RuntimeException(e);
         }
-        return this;
     }
 
     /**
      * Set the byte array of request body data to be sent to the server.
+     *
      * @param input byte array of request body data to be sent to the server
-     * @return an {@link HttpConnection} for method chaining 
+     * @return an {@link HttpConnection} for method chaining
      */
     public HttpConnection setRequestBody(final byte[] input) {
-        this.input = new ByteArrayInputStream(input);
-        this.inputLength = input.length;
-        return this;
+        return setRequestBody(new ByteArrayInputStream(input), input.length);
     }
 
     /**
      * Set the InputStream of request body data to be sent to the server.
+     *
      * @param input InputStream of request body data to be sent to the server
-     * @return an {@link HttpConnection} for method chaining 
+     * @return an {@link HttpConnection} for method chaining
+     * @deprecated Use {@link #setRequestBody(InputStreamGenerator)}
      */
-    public HttpConnection setRequestBody(InputStream input) {
-        this.input = input;
+    public HttpConnection setRequestBody(final InputStream input) {
         // -1 signals inputLength unknown
-        this.inputLength = -1;
-        return this;
+        return setRequestBody(input, -1);
     }
 
     /**
      * Set the InputStream of request body data, of known length, to be sent to the server.
-     * @param input InputStream of request body data to be sent to the server
+     *
+     * @param input       InputStream of request body data to be sent to the server
      * @param inputLength Length of request body data to be sent to the server, in bytes
-     * @return an {@link HttpConnection} for method chaining 
+     * @return an {@link HttpConnection} for method chaining
+     * @deprecated Use {@link #setRequestBody(InputStreamGenerator, long)}
      */
-    public HttpConnection setRequestBody(InputStream input, long inputLength) {
+    public HttpConnection setRequestBody(final InputStream input, final long inputLength) {
+        try {
+            return setRequestBody(new InputStreamWrappingGenerator(input, inputLength),
+                    inputLength);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error copying input stream for request body", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Set an InputStreamGenerator for an InputStream of request body data to be sent to the server.
+     *
+     * @param input InputStream of request body data to be sent to the server
+     * @return an {@link HttpConnection} for method chaining
+     * @since 2.4.0
+     */
+    public HttpConnection setRequestBody(final InputStreamGenerator input) {
+        // -1 signals inputLength unknown
+        return setRequestBody(input, -1);
+    }
+
+    /**
+     * Set an InputStreamGenerator for an InputStream, of known length, of request body data to
+     * be sent to the server.
+     *
+     * @param input       InputStreamGenerator that returns an InputStream of request body data
+     *                    to be sent to the server
+     * @param inputLength Length of request body data to be sent to the server, in bytes
+     * @return an {@link HttpConnection} for method chaining
+     * @since 2.4.0
+     */
+    public HttpConnection setRequestBody(final InputStreamGenerator input, final long inputLength) {
         this.input = input;
         this.inputLength = inputLength;
         return this;
@@ -174,86 +207,88 @@ public class HttpConnection  {
      * Call {@code responseAsString}, {@code responseAsBytes}, or {@code responseAsInputStream}
      * after {@code execute} if the response body is required.
      * </p>
+     *
      * @return An {@link HttpConnection} which can be used to obtain the response body
      * @throws IOException if there was a problem writing data to the server
      */
     public HttpConnection execute() throws IOException {
-            boolean retry = true;
-            int n = numberOfRetries;
-            while (retry && n-- > 0) {
-                connection = connectionFactory.openConnection(url);
+        boolean retry = true;
+        int n = numberOfRetries;
+        while (retry && n-- > 0) {
+            connection = connectionFactory.openConnection(url);
 
-                connection.setRequestProperty("User-Agent", AgentHelper.USER_AGENT);
-                if (url.getUserInfo() != null) {
-                    requestInterceptors.add(new BasicAuthInterceptor(url.getUserInfo()));
-                }
-
-                // always read the result, so we can retrieve the HTTP response code
-                connection.setDoInput(true);
-                connection.setRequestMethod(requestMethod);
-                if (contentType != null) {
-                    connection.setRequestProperty("Content-type", contentType);
-                }
-
-                HttpConnectionInterceptorContext currentContext = new HttpConnectionInterceptorContext(this);
-
-                for (HttpConnectionRequestInterceptor requestInterceptor : requestInterceptors) {
-                    currentContext = requestInterceptor.interceptRequest(currentContext);
-                }
-
-                //set request properties after interceptors, in case the interceptors have added
-                // to the properties map
-                for (String key : requestProperties.keySet()) {
-                    connection.setRequestProperty(key, requestProperties.get(key));
-                }
-
-                if (input != null) {
-                    connection.setDoOutput(true);
-                    if (inputLength != -1) {
-                        // TODO on 1.7 upwards this method takes a long, otherwise int
-                        connection.setFixedLengthStreamingMode((int) this.inputLength);
-                    } else {
-                        // TODO some situations where we can't do chunking, like multipart/related
-                        /// https://issues.apache.org/jira/browse/COUCHDB-1403
-                        connection.setChunkedStreamingMode(1024);
-                    }
-
-                    // See "8.2.3 Use of the 100 (Continue) Status" in http://tools.ietf.org/html
-                    // /rfc2616
-                    // Attempting to write to the connection's OutputStream may cause an exception to be
-                    // thrown. This is useful because it avoids sending large request bodies (such as
-                    // attachments) if the server is going to reject our request. Reasons for rejecting
-                    // requests could be 401 Unauthorized (eg cookie needs to be refreshed), etc.
-                    connection.setRequestProperty("Expect", "100-continue");
-
-                    int bufSize = 1024;
-                    int nRead = 0;
-                    byte[] buf = new byte[bufSize];
-                    InputStream is = input;
-                    OutputStream os = connection.getOutputStream();
-
-                    while ((nRead = is.read(buf)) >= 0) {
-                        os.write(buf, 0, nRead);
-                    }
-                    os.flush();
-                    // we do not call os.close() - on some JVMs this incurs a delay of several seconds
-                    // see http://stackoverflow.com/questions/19860436
-                }
-
-                for (HttpConnectionResponseInterceptor responseInterceptor : responseInterceptors) {
-                    currentContext = responseInterceptor.interceptResponse(currentContext);
-                }
-
-                // retry flag is set from the final step in the response interceptRequest pipeline
-                retry = currentContext.replayRequest;
-
-                if (n == 0) {
-                    logger.info("Maximum number of retries reached");
-                }
+            connection.setRequestProperty("User-Agent", AgentHelper.USER_AGENT);
+            if (url.getUserInfo() != null) {
+                requestInterceptors.add(new BasicAuthInterceptor(url.getUserInfo()));
             }
-            // return ourselves to allow method chaining
-            return this;
+
+            // always read the result, so we can retrieve the HTTP response code
+            connection.setDoInput(true);
+            connection.setRequestMethod(requestMethod);
+            if (contentType != null) {
+                connection.setRequestProperty("Content-type", contentType);
+            }
+
+            HttpConnectionInterceptorContext currentContext = new
+                    HttpConnectionInterceptorContext(this);
+
+            for (HttpConnectionRequestInterceptor requestInterceptor : requestInterceptors) {
+                currentContext = requestInterceptor.interceptRequest(currentContext);
+            }
+
+            //set request properties after interceptors, in case the interceptors have added
+            // to the properties map
+            for (String key : requestProperties.keySet()) {
+                connection.setRequestProperty(key, requestProperties.get(key));
+            }
+
+            if (input != null) {
+                connection.setDoOutput(true);
+                if (inputLength != -1) {
+                    // TODO on 1.7 upwards this method takes a long, otherwise int
+                    connection.setFixedLengthStreamingMode((int) this.inputLength);
+                } else {
+                    // TODO some situations where we can't do chunking, like multipart/related
+                    /// https://issues.apache.org/jira/browse/COUCHDB-1403
+                    connection.setChunkedStreamingMode(1024);
+                }
+
+                // See "8.2.3 Use of the 100 (Continue) Status" in http://tools.ietf.org/html
+                // /rfc2616
+                // Attempting to write to the connection's OutputStream may cause an exception to be
+                // thrown. This is useful because it avoids sending large request bodies (such as
+                // attachments) if the server is going to reject our request. Reasons for rejecting
+                // requests could be 401 Unauthorized (eg cookie needs to be refreshed), etc.
+                connection.setRequestProperty("Expect", "100-continue");
+
+                int bufSize = 1024;
+                int nRead = 0;
+                byte[] buf = new byte[bufSize];
+                InputStream is = input.getInputStream();
+                OutputStream os = connection.getOutputStream();
+
+                while ((nRead = is.read(buf)) >= 0) {
+                    os.write(buf, 0, nRead);
+                }
+                os.flush();
+                // we do not call os.close() - on some JVMs this incurs a delay of several seconds
+                // see http://stackoverflow.com/questions/19860436
+            }
+
+            for (HttpConnectionResponseInterceptor responseInterceptor : responseInterceptors) {
+                currentContext = responseInterceptor.interceptResponse(currentContext);
+            }
+
+            // retry flag is set from the final step in the response interceptRequest pipeline
+            retry = currentContext.replayRequest;
+
+            if (n == 0) {
+                logger.info("Maximum number of retries reached");
+            }
         }
+        // return ourselves to allow method chaining
+        return this;
+    }
 
     /**
      * <p>
@@ -262,12 +297,14 @@ public class HttpConnection  {
      * <p>
      * <b>Important:</b> you must call <code>execute()</code> before calling this method.
      * </p>
+     *
      * @return String of response body data from server, if any
      * @throws IOException if there was a problem reading data from the server
      */
     public String responseAsString() throws IOException {
         if (connection == null) {
-            throw new IOException("Attempted to read response from server before calling execute()");
+            throw new IOException("Attempted to read response from server before calling execute" +
+                    "()");
         }
         InputStream is = connection.getInputStream();
         String string = IOUtils.toString(is);
@@ -283,12 +320,14 @@ public class HttpConnection  {
      * <p>
      * <b>Important:</b> you must call <code>execute()</code> before calling this method.
      * </p>
+     *
      * @return Byte array of response body data from server, if any
      * @throws IOException if there was a problem reading data from the server
      */
     public byte[] responseAsBytes() throws IOException {
         if (connection == null) {
-            throw new IOException("Attempted to read response from server before calling execute()");
+            throw new IOException("Attempted to read response from server before calling execute" +
+                    "()");
         }
         InputStream is = connection.getInputStream();
         byte[] bytes = IOUtils.toByteArray(is);
@@ -304,12 +343,14 @@ public class HttpConnection  {
      * <p>
      * <b>Important:</b> you must call <code>execute()</code> before calling this method.
      * </p>
+     *
      * @return InputStream of response body data from server, if any
      * @throws IOException if there was a problem reading data from the server
      */
     public InputStream responseAsInputStream() throws IOException {
         if (connection == null) {
-            throw new IOException("Attempted to read response from server before calling execute()");
+            throw new IOException("Attempted to read response from server before calling execute" +
+                    "()");
         }
         InputStream is = connection.getInputStream();
         return is;
@@ -318,6 +359,7 @@ public class HttpConnection  {
     /**
      * Get the underlying HttpURLConnection object, allowing clients to set/get properties not
      * exposed here.
+     *
      * @return HttpURLConnection the underlying {@link HttpURLConnection} object
      */
     public HttpURLConnection getConnection() {
@@ -357,4 +399,57 @@ public class HttpConnection  {
         void setProxy(URL proxyUrl);
     }
 
+    /**
+     * An InputStreamGenerator has a single method getInputStream. Implementors return an
+     * InputStream ready for consuming by the HttpConnection. The purpose of this is to
+     * facilitate regeneration of an InputStream for cases where a payload is going to be resent
+     * for a retry.
+     *
+     * @since 2.4.0
+     */
+    public interface InputStreamGenerator {
+
+        /**
+         * Implementors must return an InputStream that is ready to read from the beginning.
+         * Implementors must not return the same InputStream instance from multiple calls
+         * to this method unless the stream has been reset.
+         *
+         * @return an InputStream to use to read the body content for a HTTP request
+         * @throws IOException if there is an error getting the InputStream
+         */
+        InputStream getInputStream() throws IOException;
+    }
+
+    /**
+     * Implementation of InputStreamGenerator that checks if an InputStream is markable and performs
+     * the necessary mark/reset required to do retries. If the supplied InputStream does not
+     * support marking then it is copied into memory in a stream that does support marking.
+     */
+    private static final class InputStreamWrappingGenerator implements InputStreamGenerator {
+
+        private final InputStream inputStream;
+
+        InputStreamWrappingGenerator(InputStream inputStream, long size) throws IOException {
+            if (!inputStream.markSupported()) {
+                // If we can't mark/reset the stream then we read it into memory as a
+                // ByteArrayInputStream so we are then able to mark/reset it for retries
+                byte[] inputBytes = (size == -1) ? IOUtils.toByteArray(inputStream) : IOUtils
+                        .toByteArray(inputStream, size);
+                this.inputStream = new ByteArrayInputStream(inputBytes);
+            } else {
+                this.inputStream = inputStream;
+            }
+            // Now we should have a stream that supports marking, so mark it at the beginning,
+            // ready for a reset if we need to retry later. Note use MAX_VALUE to allow as many
+            // bytes as possible to be read before invalidating the mark.
+            this.inputStream.mark(Integer.MAX_VALUE);
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            // Reset the stream to the beginning
+            this.inputStream.reset();
+            return this.inputStream;
+        }
+    }
 }
