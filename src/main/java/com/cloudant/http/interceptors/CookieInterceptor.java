@@ -97,6 +97,13 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
     public HttpConnectionInterceptorContext interceptResponse(HttpConnectionInterceptorContext
                                                                       context) {
         HttpURLConnection connection = context.connection.getConnection();
+
+        String cookieHeader = connection.getHeaderField("Set-Cookie");
+        if(cookieHeader != null){
+            cookie = this.extractCookieFromHeaderValue(cookieHeader);
+            return context;
+        }
+
         try {
             boolean renewCookie = false;
             int statusCode = connection.getResponseCode();
@@ -174,7 +181,7 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
             if (responseCode / 100 == 2) {
 
                 if (sessionHasStarted(connection.getInputStream())) {
-                    return cookieHeader.substring(0, cookieHeader.indexOf(";"));
+                    return this.extractCookieFromHeaderValue(cookieHeader);
                 } else {
                     return null;
                 }
@@ -224,5 +231,9 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
             //UTF-8 should be supported on all JVMs
             throw new RuntimeException(e);
         }
+    }
+
+    private String extractCookieFromHeaderValue(String cookieHeaderValue){
+        return cookieHeaderValue.substring(0, cookieHeaderValue.indexOf(";"));
     }
 }
