@@ -28,7 +28,7 @@ import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
-import com.cloudant.http.internal.AgentHelper;
+import com.cloudant.library.Version;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresDB;
@@ -100,8 +100,8 @@ public class CloudantClientTests {
     }
 
     private final String userAgentRegex = "java-cloudant/[^\\s]+ " +
-            "\\[Java \\([^;]*;[^;]*;[^;]*\\) [^;]*;[^;]*;" +
-            "[^;]*\\]";
+            "\\[Java [^;]*;[^;]*;" +
+            "[^;]* \\([^;]*;[^;]*;[^;]*\\)\\]";
 
     /**
      * Assert that the User-Agent header is of the expected form.
@@ -109,8 +109,8 @@ public class CloudantClientTests {
     @Test
     public void testUserAgentHeaderString() {
         assertTrue("The value of the User-Agent header should match the format " +
-                "\"java-cloudant/version [Java (os.arch; os.name; os.version) jvm.vendor; jvm" +
-                ".version; jvm.runtime.version]\"", AgentHelper.USER_AGENT.matches
+                "\"java-cloudant/version [Java jvm.vendor; jvm" +
+                ".version; jvm.runtime.version (os.arch; os.name; os.version)]\"", new Version().getUserAgentString().matches
                 (userAgentRegex));
     }
 
@@ -139,9 +139,10 @@ public class CloudantClientTests {
                     userAgentHeader);
             assertTrue("The value of the User-Agent header value on the request should match the " +
                     "format " +
-                    "\"java-cloudant/version [Java (os.arch; os.name; os.version) jvm" +
+                    "\"java-cloudant/version [Java jvm" +
                     ".vendor; jvm" +
-                    ".version; jvm.runtime.version]\"", userAgentHeader.matches(userAgentRegex));
+                    ".version; jvm.runtime.version (os.arch; os.name; os.version)]\"",
+                    userAgentHeader.matches(userAgentRegex));
         } finally {
             server.shutdown();
         }

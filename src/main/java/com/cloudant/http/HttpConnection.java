@@ -11,7 +11,6 @@
 package com.cloudant.http;
 
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
-import com.cloudant.http.internal.AgentHelper;
 import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 
 import org.apache.commons.io.IOUtils;
@@ -68,6 +67,23 @@ import java.util.logging.Logger;
 public class HttpConnection {
 
     private static final Logger logger = Logger.getLogger(HttpConnection.class.getCanonicalName());
+
+    private static final String USER_AGENT;
+
+    static {
+        String ua = "java-cloudant-http/unknown";
+        try {
+            Class clazz = Class.forName("com.cloudant.library.Version");
+            com.cloudant.http.Version version = (com.cloudant.http.Version) clazz.newInstance();
+            ua = version.getUserAgentString();
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Could not determine version string using default" +
+                    " user-agent",e);
+        }
+        USER_AGENT = ua;
+    }
+
+
     private final String requestMethod;
     public final URL url;
     private final String contentType;
@@ -212,15 +228,16 @@ public class HttpConnection {
      * @throws IOException if there was a problem writing data to the server
      */
     public HttpConnection execute() throws IOException {
-        boolean retry = true;
-        int n = numberOfRetries;
-        while (retry && n-- > 0) {
-            connection = connectionFactory.openConnection(url);
+            boolean retry = true;
+            int n = numberOfRetries;
+            while (retry && n-- > 0) {
+                connection = connectionFactory.openConnection(url);
 
-            connection.setRequestProperty("User-Agent", AgentHelper.USER_AGENT);
-            if (url.getUserInfo() != null) {
-                requestInterceptors.add(new BasicAuthInterceptor(url.getUserInfo()));
-            }
+                connection.setRequestProperty("User-Agent", USER_AGENT);
+
+                if (url.getUserInfo() != null) {
+                    requestInterceptors.add(new BasicAuthInterceptor(url.getUserInfo()));
+                }
 
             // always read the result, so we can retrieve the HTTP response code
             connection.setDoInput(true);
