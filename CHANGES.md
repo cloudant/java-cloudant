@@ -1,5 +1,8 @@
 # Unreleased
 - [NEW] Documentation for logging in project javadoc `overview.html`.
+- [FIX] Issue where a `java.net.ProtocolException` was thrown if the cookie had expired when a
+  request that included a body was sent. Note that the client no longer uses the
+  `Expect:100-continue` header on requests.
 - [FIX] Fix issue where design documents would not be updated if only the
   `indexes` field was updated.
 - [DEPRECATED] The `InputStream` setters `HttpConnection.setRequestBody(InputStream)` and

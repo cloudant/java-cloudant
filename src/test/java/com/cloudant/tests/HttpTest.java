@@ -17,7 +17,6 @@ import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
 import com.cloudant.tests.util.MockWebServerResource;
-import com.cloudant.tests.util.SimpleHttpServer;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -27,28 +26,20 @@ import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.RuleChain;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Pattern;
 
 public class HttpTest {
 
@@ -61,44 +52,6 @@ public class HttpTest {
     @Rule
     public MockWebServerResource mwr = new MockWebServerResource();
     public MockWebServer mockWebServer = mwr.getServer();
-
-
-    /*
-     * Test "Expect: 100-Continue" header works as expected
-     * See "8.2.3 Use of the 100 (Continue) Status" in http://tools.ietf.org/html/rfc2616
-     * We expect the precondition of having a valid DB name to have failed, and therefore, the body
-     * data will not have been written.
-     *
-     * NB this behaviour is only supported on certain JDKs - so we have to make a weaker set of
-     * asserts. If it is supported, we expect execute() to throw an exception and then nothing will
-     * have been read from the stream. If it is not supported, execute() will not throw and we
-     * cannot make any assumptions about how much of the stream has been read (remote side may close
-     * whilst we are still writing).
-     */
-    @Test
-    public void testExpect100Continue() throws IOException {
-        String no_such_database = clientResource.getBaseURIWithUserInfo() + "/no_such_database";
-        HttpConnection conn = new HttpConnection("POST", new URL(no_such_database),
-                "application/json");
-        ByteArrayInputStream bis = new ByteArrayInputStream(data.getBytes());
-
-        // nothing read from stream
-        Assert.assertEquals(data.getBytes().length, bis.available());
-
-        conn.setRequestBody(bis);
-        boolean thrown = false;
-        try {
-            conn.execute();
-        } catch (ProtocolException pe) {
-            // ProtocolException with message "Server rejected operation" on JDK 1.7
-            thrown = true;
-        }
-
-        if (thrown) {
-            // still nothing read from stream
-            Assert.assertEquals(data.getBytes().length, bis.available());
-        }
-    }
 
     /*
      * Basic test that we can write a document body by POSTing to a known database
@@ -221,106 +174,6 @@ public class HttpTest {
         Assert.assertTrue(response.get("ok").getAsBoolean());
         Assert.assertTrue(response.has("id"));
         Assert.assertTrue(response.has("rev"));
-    }
-
-    /**
-     * This test validates that the client does not make body content available for reading until
-     * after receiving the 100 continue. This is primarily a validation of the 100 continue
-     * performance enhancement functioning correctly in whatever underlying http library is being
-     * used to back our HttpConnection.
-     *
-     * @throws Exception
-     */
-    //TODO re-enable after OkHttp fixes:
-    // https://github.com/square/okhttp/issues/675
-    //https://github.com/square/okhttp/issues/1337
-    @Ignore
-    public void expectContinue() throws Exception {
-
-        final AtomicBoolean foundExpectHeader = new AtomicBoolean();
-        final AtomicBoolean readyBefore100 = new AtomicBoolean();
-        final AtomicBoolean bodyAvailableBefore100 = new AtomicBoolean();
-        final AtomicBoolean bodyReadAfter100 = new AtomicBoolean();
-
-        //Mock server for validating the Expect: 100-continue behaviour
-        SimpleHttpServer server = new SimpleHttpServer() {
-            private int invocationCount = 0;
-
-            @Override
-            protected void serverAction(InputStream is, OutputStream os) throws Exception {
-
-                invocationCount++;
-
-                //we only want to do this once, otherwise this server is a no-op
-                if (invocationCount == 1) {
-                    //read headers from input stream i.e. up to the CRLF between headers and body
-                    BufferedReader r = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-                    String line;
-                    while ((line = r.readLine()) != null && !line.isEmpty()) {
-                        log.finest(line);
-                        //check for the Expect header
-                        if (!foundExpectHeader.get()) {
-                            foundExpectHeader.set(Pattern.compile
-                                    ("Expect\\s*:\\s*100-continue", Pattern.CASE_INSENSITIVE)
-                                    .matcher(line).matches());
-                        }
-                        //if the body content was read before 100-continue was sent then set the
-                        // fail flag
-                        if (line.contains(data)) {
-                            bodyAvailableBefore100.set(true);
-                        }
-                    }
-
-                    readyBefore100.set(r.ready());
-
-                    //write the 100 continue
-                    log.fine("Writing 100 interim response");
-                    BufferedWriter w = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-                    w.write("HTTP/1.1 100 Continue\r\n\r\n");
-                    w.flush();
-
-                    log.fine("Reading body");
-                    while ((line = r.readLine()) != null && !line.isEmpty()) {
-                        log.finest(line);
-                        //if the body content wasn't read here set the fail flag
-                        if (line.contains(data)) {
-                            bodyReadAfter100.set(true);
-                        }
-                    }
-                    super.writeOK(os);
-                } else {
-                    log.fine("Server action invoked more than once, expected for server stop");
-                }
-            }
-        };
-
-
-        try {
-            //start and wait for our simple server to be ready
-            server.start();
-            server.await();
-
-            //create a client to connect to post to the simple server
-            CloudantClient c = CloudantClientHelper.newSimpleHttpServerClient(server).build();
-            HttpConnection conn = Http.POST(c.getBaseUri(), "application/json");
-            //set the body content, add some new lines to make it easier for the simple server
-            conn.setRequestBody(data + "\r\n\r\n");
-            //do the request
-            c.executeRequest(conn);
-
-            //the simple server stores some booleans in the test assertions object
-            // now we validate those assertions
-            Assert.assertTrue("The Expect:100-continue header should be present",
-                    foundExpectHeader.get());
-            Assert.assertFalse("The body should not be readable before 100-continue",
-                    bodyAvailableBefore100.get());
-            Assert.assertFalse("The stream should not be ready before 100-continue",
-                    readyBefore100.get());
-            Assert.assertTrue("The body should have been read after 100-continue",
-                    bodyReadAfter100.get());
-        } finally {
-            server.stop();
-        }
     }
 
     /**
@@ -569,5 +422,25 @@ public class HttpTest {
         rr.getBody().copyTo(byteArrayOutputStream);
         assertArrayEquals("The body bytes should have matched after a retry", expectedContent,
                 byteArrayOutputStream.toByteArray());
+    }
+
+    @Test
+    public void testCookieRenewOnPost() throws Exception {
+
+        mockWebServer.enqueue(MockWebServerResource.OK_COOKIE);
+        mockWebServer.enqueue(new MockResponse().setResponseCode(403).setBody
+                ("{\"error\":\"credentials_expired\", \"reason\":\"Session expired\"}\r\n"));
+        mockWebServer.enqueue(MockWebServerResource.OK_COOKIE);
+        mockWebServer.enqueue(new MockResponse());
+        
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .username("a")
+                .password("b")
+                .build();
+
+        HttpConnection request = Http.POST(mockWebServer.url("/").url(), "application/json");
+        request.setRequestBody("{\"some\": \"json\"}");
+        HttpConnection response = c.executeRequest(request);
+        response.getConnection().getResponseCode();
     }
 }
