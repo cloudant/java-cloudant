@@ -18,7 +18,7 @@ subprojects {
     apply plugin: 'signing'
 
     group = 'com.cloudant'
-    version = '2.3.1-SNAPSHOT'
+    version = '2.4.0-SNAPSHOT'
 
     //if the version says "snapshot" anywhere assume it is not a release
     ext.isReleaseVersion = !version.toUpperCase(Locale.ENGLISH).contains("SNAPSHOT")
