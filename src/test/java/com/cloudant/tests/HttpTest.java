@@ -39,6 +39,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class HttpTest {
@@ -256,6 +257,50 @@ public class HttpTest {
         assertEquals("The server should have received 4 requests", 4, mockWebServer
                 .getRequestCount());
 
+    }
+
+    /**
+     * This test check that the cookie is renewed if the server presents a Set-Cookie header
+     * after the cookie authentication.
+     * @throws Exception
+     */
+    @Test
+    public void cookieRenewal() throws Exception {
+
+        final String renewalCookieValue =
+                "AuthSession=\"RenewCookie_a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz\";";
+        // Request sequence
+        // _session request to get Cookie
+        // GET request -> 403
+        // _session for new cookie
+        // GET replay -> 200
+        mockWebServer.enqueue(MockWebServerResource.OK_COOKIE);
+        mockWebServer.enqueue(new MockResponse().setResponseCode(200).addHeader("Set-Cookie",
+                String.format(Locale.ENGLISH, "%s;", renewalCookieValue))
+                .setBody("{\"hello\":\"world\"}\r\n"));
+        mockWebServer.enqueue(new MockResponse());
+
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .username("a")
+                .password("b")
+                .build();
+
+
+        c.executeRequest(Http.GET(c.getBaseUri()));
+        c.executeRequest(Http.GET(c.getBaseUri()));
+
+
+        // also assert that there were 3 calls
+        assertEquals("The server should have received 3 requests", 3, mockWebServer
+                .getRequestCount());
+
+        mockWebServer.takeRequest(); // cookie
+        mockWebServer.takeRequest(); // actual get
+
+        // this is the request that should have the new cookie.
+        RecordedRequest request = mockWebServer.takeRequest();
+        String headerValue = request.getHeader("Cookie");
+        Assert.assertEquals("AuthSession=\"RenewCookie_a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz\"", headerValue);
     }
 
     /**
