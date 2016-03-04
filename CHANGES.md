@@ -1,5 +1,9 @@
 # Unreleased
 - [NEW] Documentation for logging in project javadoc `overview.html`.
+- [IMPROVED] Upgraded optional okhttp to 2.7.5.
+- [FIX] Issue of `javax.net.ssl.SSLHandshakeException: Received fatal alert: handshake_failure` on
+  IBM Java with okhttp. SSL connections using okhttp are now configured to use the JVM enabled
+   protocols and cipher suites in the same way as the `HttpURLConnection`.
 - [FIX] Issue where a `java.net.ProtocolException` was thrown if the cookie had expired when a
   request that included a body was sent. Note that the client no longer uses the
   `Expect:100-continue` header on requests.

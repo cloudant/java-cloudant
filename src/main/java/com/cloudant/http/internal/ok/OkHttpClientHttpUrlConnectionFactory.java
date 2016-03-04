@@ -15,12 +15,14 @@
 package com.cloudant.http.internal.ok;
 
 import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
+import com.squareup.okhttp.ConnectionSpec;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.OkUrlFactory;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
 
 /**
  * Provides HttpUrlConnections by using an OkHttpClient.
@@ -49,6 +51,14 @@ public class OkHttpClientHttpUrlConnectionFactory extends DefaultHttpUrlConnecti
 
     public OkHttpClientHttpUrlConnectionFactory() {
         client = new OkHttpClient();
+        client.setConnectionSpecs(Arrays.asList(
+                new ConnectionSpec[]{
+                        ConnectionSpec.CLEARTEXT, // for http
+                        new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+                                .allEnabledTlsVersions()
+                                .allEnabledCipherSuites()
+                                .build() // for https
+                }));
         factory = new OkUrlFactory(client);
     }
 
