@@ -15,6 +15,7 @@
 
 package com.cloudant.client.org.lightcouch;
 
+import com.google.gson.JsonElement;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -32,7 +33,7 @@ public class ReplicationResult {
     @SerializedName("session_id")
     private String sessionId;
     @SerializedName("source_last_seq")
-    private String sourceLastSeq;
+    private JsonElement sourceLastSeq;
     @SerializedName("_local_id")
     private String localId;
     @SerializedName("history")
@@ -47,7 +48,7 @@ public class ReplicationResult {
     }
 
     public String getSourceLastSeq() {
-        return sourceLastSeq;
+        return sourceLastSeq.toString();
     }
 
     public String getLocalId() {
@@ -71,11 +72,11 @@ public class ReplicationResult {
         @SerializedName("end_time")
         private String endTime;
         @SerializedName("start_last_seq")
-        private String startLastSeq;
+        private JsonElement startLastSeq;
         @SerializedName("end_last_seq")
-        private String endLastSeq;
+        private JsonElement endLastSeq;
         @SerializedName("recorded_seq")
-        private String recordedSeq;
+        private JsonElement recordedSeq;
         @SerializedName("missing_checked")
         private long missingChecked;
         @SerializedName("missing_found")
@@ -100,15 +101,15 @@ public class ReplicationResult {
         }
 
         public String getStartLastSeq() {
-            return startLastSeq;
+            return startLastSeq.toString();
         }
 
         public String getEndLastSeq() {
-            return endLastSeq;
+            return endLastSeq.toString();
         }
 
         public String getRecordedSeq() {
-            return recordedSeq;
+            return recordedSeq.toString();
         }
 
         public long getMissingChecked() {

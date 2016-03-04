@@ -15,6 +15,7 @@
 
 package com.cloudant.client.org.lightcouch;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
@@ -30,28 +31,28 @@ import java.util.List;
 public class ChangesResult {
     private List<ChangesResult.Row> results;
     @SerializedName("last_seq")
-    private String lastSeq;
+    private JsonElement lastSeq;
 
     public List<ChangesResult.Row> getResults() {
         return results;
     }
 
     public String getLastSeq() {
-        return lastSeq;
+        return lastSeq.toString();
     }
 
     /**
      * Represent a row in Changes result.
      */
     public static class Row {
-        private String seq;
+        private JsonElement seq;
         private String id;
         private List<Row.Rev> changes;
         private boolean deleted;
         private JsonObject doc;
 
         public String getSeq() {
-            return seq;
+            return seq.toString();
         }
 
         public String getId() {
