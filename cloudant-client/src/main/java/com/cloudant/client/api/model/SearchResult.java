@@ -17,6 +17,7 @@ package com.cloudant.client.api.model;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -142,7 +143,7 @@ public class SearchResult<T> {
          * @param order the order to set
          */
         public void setOrder(Object[] order) {
-            this.order = order;
+            this.order = Arrays.copyOf(order, order.length);
         }
 
         /**
@@ -170,7 +171,7 @@ public class SearchResult<T> {
          * @return the order (each element can be a String/Number)
          */
         public Object[] getOrder() {
-            return order;
+            return (order != null) ? Arrays.copyOf(order, order.length) : null;
         }
 
         /**

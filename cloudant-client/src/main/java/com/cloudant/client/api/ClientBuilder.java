@@ -1,9 +1,7 @@
 package com.cloudant.client.api;
 
-import com.cloudant.client.api.model.Index;
-import com.cloudant.client.api.model.Permissions;
-import com.cloudant.client.api.model.Shard;
 import com.cloudant.client.api.views.Key;
+import com.cloudant.client.internal.util.DeserializationTypes;
 import com.cloudant.client.internal.util.IndexDeserializer;
 import com.cloudant.client.internal.util.SecurityDeserializer;
 import com.cloudant.client.internal.util.ShardDeserializer;
@@ -17,14 +15,11 @@ import com.cloudant.http.interceptors.ProxyAuthInterceptor;
 import com.cloudant.http.interceptors.SSLCustomizerInterceptor;
 import com.cloudant.http.interceptors.TimeoutCustomizationInterceptor;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLSocketFactory;
@@ -259,13 +254,9 @@ public class ClientBuilder {
         }
         //always register additional TypeAdapaters for derserializing some Cloudant specific
         // types before constructing the CloudantClient
-        gsonBuilder.registerTypeAdapter(new TypeToken<List<Shard>>() {
-        }.getType(), new ShardDeserializer())
-                .registerTypeAdapter(new TypeToken<List<Index>>() {
-                }.getType(), new IndexDeserializer())
-                .registerTypeAdapter(new TypeToken<Map<String, EnumSet<Permissions>>>() {
-                        }.getType(),
-                        new SecurityDeserializer())
+        gsonBuilder.registerTypeAdapter(DeserializationTypes.SHARDS, new ShardDeserializer())
+                .registerTypeAdapter(DeserializationTypes.INDICES, new IndexDeserializer())
+                .registerTypeAdapter(DeserializationTypes.PERMISSIONS_MAP, new SecurityDeserializer())
                 .registerTypeAdapter(Key.ComplexKey.class, new Key.ComplexKeyDeserializer());
 
         return new CloudantClient(props, gsonBuilder);

@@ -80,7 +80,9 @@ public class DesignDocumentsTest {
     @Test
     public void designDocCompare() throws Exception {
         DesignDocument designDoc1 = DesignDocumentManager.fromFile(designDocExample);
-        designManager.put(designDoc1);
+        Response response = designManager.put(designDoc1);
+        // Assign the revision to our local DesignDocument object (needed for equality)
+        designDoc1.setRevision(response.getRev());
 
         DesignDocument designDoc11 = db.getDesignDocumentManager().get("_design/example");
 

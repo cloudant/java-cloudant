@@ -14,9 +14,7 @@
 
 package com.cloudant.tests;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -64,6 +62,8 @@ public class ReplicateBaseTest {
         ViewResponse<Key.ComplexKey, String> conflicts = db.getViewRequestBuilder
                 ("conflicts", "conflict").newRequest(Key.Type.COMPLEX, String.class).build()
                 .getResponse();
-        assertThat(conflicts.getRows().size(), is(not(0)));
+        int conflictCount = conflicts.getRows().size();
+        assertTrue("There should be at least 1 conflict, there were " + conflictCount,
+                conflictCount > 0);
     }
 }

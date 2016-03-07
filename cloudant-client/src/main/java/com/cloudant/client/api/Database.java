@@ -32,6 +32,7 @@ import com.cloudant.client.api.views.AllDocsRequestBuilder;
 import com.cloudant.client.api.views.ViewRequestBuilder;
 import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.client.internal.URIBase;
+import com.cloudant.client.internal.util.DeserializationTypes;
 import com.cloudant.client.internal.views.AllDocsRequestBuilderImpl;
 import com.cloudant.client.internal.views.AllDocsRequestResponse;
 import com.cloudant.client.internal.views.ViewQueryParameters;
@@ -50,7 +51,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
-import com.google.gson.reflect.TypeToken;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -60,6 +60,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -177,6 +178,7 @@ public class Database {
             String ok = getAsString(response, "ok");
             if (!ok.equalsIgnoreCase("true")) {
                 //raise exception
+                throw new CouchDbException("Error setting permissions.");
             }
         } finally {
             close(response);
@@ -195,7 +197,7 @@ public class Database {
             //currently we can't inspect the HttpResponse code
             //being in this catch block means it was not a 20x code
             //look for the "bad request" that implies the endpoint is not supported
-            if (exception.getMessage().toLowerCase().contains("bad request")) {
+            if (exception.getMessage().toLowerCase(Locale.ENGLISH).contains("bad request")) {
                 throw new UnsupportedOperationException("The methods getPermissions and " +
                         "setPermissions are not supported for this database, consider using the " +
                         "/db/_security endpoint.");
@@ -225,8 +227,8 @@ public class Database {
      */
     public Map<String, EnumSet<Permissions>> getPermissions() {
         JsonObject perms = getPermissionsObject();
-        return client.getGson().getAdapter(new TypeToken<Map<String, EnumSet<Permissions>>>() {
-        }).fromJsonTree(perms);
+        return client.getGson().getAdapter(DeserializationTypes.PERMISSIONS_MAP_TOKEN).fromJsonTree
+                (perms);
     }
 
     /**
@@ -241,9 +243,7 @@ public class Database {
         try {
             response = client.couchDbClient.get(new DatabaseURIHelper(db.getDBUri()).path("_shards")
                     .build());
-            return getResponseList(response, client.getGson(),
-                    new TypeToken<List<Shard>>() {
-                    }.getType());
+            return getResponseList(response, client.getGson(), DeserializationTypes.SHARDS);
         } finally {
             close(response);
         }
@@ -417,9 +417,7 @@ public class Database {
         try {
             URI uri = new DatabaseURIHelper(db.getDBUri()).path("_index").build();
             response = client.couchDbClient.get(uri);
-            return getResponseList(response, client.getGson(),
-                    new TypeToken<List<Index>>() {
-                    }.getType());
+            return getResponseList(response, client.getGson(), DeserializationTypes.INDICES);
         } finally {
             close(response);
         }

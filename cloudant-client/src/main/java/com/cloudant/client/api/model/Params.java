@@ -35,7 +35,7 @@ public class Params {
     private com.cloudant.client.org.lightcouch.Params params = new com.cloudant.client.org.lightcouch.Params();
 
     public Params readQuorum(int quorum) {
-        params.addParam("r", new Integer(quorum).toString());
+        params.addParam("r", Integer.toString(quorum));
         return this;
     }
 
