@@ -16,6 +16,7 @@ package com.cloudant.http.interceptors;
 
 public class HttpConnectionInterceptorException extends RuntimeException {
 
+    public boolean deserialize = false;
     public final String error;
     public final String reason;
 

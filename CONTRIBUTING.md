@@ -29,8 +29,6 @@ slightly different.
 - gradle
 - Java 1.6
 
-
-
 ## Installing requirements
 
 ### Java
@@ -39,7 +37,7 @@ Follow the instructions for your platform.
 
 ### Gradle
 
-The project uses the gradle wrapper to download  specified version of gradle.
+The project uses the gradle wrapper to download the specified version of gradle.
 The gradle wrapper is run by using the following command:
 
 ```bash
@@ -83,6 +81,22 @@ The project should build out of the box with:
 ```bash
 $ ./gradlew compileJava
 ```
+
+## Projects
+There are two sub-projects in java-cloudant each of which produces an artifact for publishing.
+
+### cloudant-client
+The cloudant-client jar is the main java-cloudant artifact and includes the classes for interacting
+with the Cloudant or CouchDB servers. It includes the functionality to build requests for specific
+Cloudant operations and for changing between POJOs and Cloudant documents.
+
+### cloudant-http
+A jar for basic HTTP operations such as forming a request for a URL and specifying the request
+properties and body. It provides methods for executing the requests and getting the response content
+in some different forms. It also includes interceptor interfaces and some implementations for
+customizing requests and handling responses. This jar is used by both the cloudant-client and by the
+[sync-android](https://github.com/cloudant/sync-android) project.
+
 ###Running the tests
 #### Configuration
 

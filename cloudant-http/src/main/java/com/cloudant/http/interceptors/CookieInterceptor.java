@@ -19,15 +19,11 @@ import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -99,7 +95,7 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
         HttpURLConnection connection = context.connection.getConnection();
 
         String cookieHeader = connection.getHeaderField("Set-Cookie");
-        if(cookieHeader != null){
+        if (cookieHeader != null) {
             cookie = this.extractCookieFromHeaderValue(cookieHeader);
             return context;
         }
@@ -111,24 +107,23 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
                 case HttpURLConnection.HTTP_FORBIDDEN: //403
                     //check if it was an expiry case
                     InputStream errorStream = connection.getErrorStream();
-                    String errorString = new String(IOUtils.toString(errorStream, "UTF-8"));
                     try {
-                        JsonObject errorResponse = new Gson().fromJson(errorString, JsonObject
-                                .class);
-                        String error = errorResponse.getAsJsonPrimitive
-                                ("error").getAsString();
-                        String reason = errorResponse.getAsJsonPrimitive
-                                ("reason").getAsString();
-                        if (!"credentials_expired".equals(error)) {
-                            //wasn't a credentials expired, throw exception
-                            throw new HttpConnectionInterceptorException(error, reason);
+                        String errorString = IOUtils.toString(errorStream, "UTF-8");
+                        // Check using a regex to avoid dependency on a JSON library.
+                        // Note (?siu) flags used for . to also match line breaks and for unicode
+                        // case insensitivity.
+                        if (!errorString.matches("(?siu)" +
+                                ".*\\\"error\\\"\\s*:\\s*\\\"credentials_expired\\\".*")) {
+                            // Wasn't a credentials expired, throw exception
+                            HttpConnectionInterceptorException toThrow = new
+                                    HttpConnectionInterceptorException(errorString);
+                            // Set the flag for deserialization
+                            toThrow.deserialize = true;
+                            throw toThrow;
                         } else {
                             // Was expired - set boolean to renew cookie
                             renewCookie = true;
                         }
-                    } catch (JsonParseException e) {
-                        //wasn't JSON throw an exception
-                        throw new HttpConnectionInterceptorException(errorString);
                     } finally {
                         errorStream.close();
                     }
@@ -213,27 +208,27 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
         return null;
     }
 
-    private boolean sessionHasStarted(InputStream responseStream) {
+    private boolean sessionHasStarted(InputStream responseStream) throws IOException {
         try {
-            //check the response body
-            Gson gson = new Gson();
-            JsonObject jsonResponse = gson.fromJson(new InputStreamReader(responseStream,
-                    "UTF-8"), JsonObject.class);
+            // Get the response body as a string
+            String response = IOUtils.toString(responseStream, "UTF-8");
 
-            // only check for ok:true, https://issues.apache.org/jira/browse/COUCHDB-1356
+            // Only check for ok:true, https://issues.apache.org/jira/browse/COUCHDB-1356
             // means we cannot check that the name returned is the one we sent.
-            return jsonResponse != null
-                    && jsonResponse.has("ok")
-                    && jsonResponse.get("ok").isJsonPrimitive()
-                    && jsonResponse.getAsJsonPrimitive("ok").isBoolean()
-                    && jsonResponse.getAsJsonPrimitive("ok").getAsBoolean();
-        } catch (UnsupportedEncodingException e) {
-            //UTF-8 should be supported on all JVMs
-            throw new RuntimeException(e);
+
+            // Check the response body for "ok" : true using a regex because we don't want a JSON
+            // library dependency for something so simple in a shared HTTP artifact used in both
+            // java-cloudant and sync-android. Note (?siu) flags used for . to also match line
+            // breaks and for unicode case insensitivity.
+
+            return response.matches("(?s)(?i)(?u).*\\\"ok\\\"\\s*:\\s*true.*");
+        } finally {
+            IOUtils.closeQuietly(responseStream);
         }
+
     }
 
-    private String extractCookieFromHeaderValue(String cookieHeaderValue){
+    private String extractCookieFromHeaderValue(String cookieHeaderValue) {
         return cookieHeaderValue.substring(0, cookieHeaderValue.indexOf(";"));
     }
 }
