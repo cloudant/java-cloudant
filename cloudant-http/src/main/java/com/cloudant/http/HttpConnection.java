@@ -274,18 +274,15 @@ public class HttpConnection {
                     connection.setChunkedStreamingMode(1024);
                 }
 
-                int bufSize = 1024;
-                int nRead = 0;
-                byte[] buf = new byte[bufSize];
                 InputStream is = input.getInputStream();
                 OutputStream os = connection.getOutputStream();
-
-                while ((nRead = is.read(buf)) >= 0) {
-                    os.write(buf, 0, nRead);
+                try {
+                    IOUtils.copy(is, os);
+                    os.flush();
+                } finally {
+                    IOUtils.closeQuietly(is);
+                    IOUtils.closeQuietly(os);
                 }
-                os.flush();
-                // we do not call os.close() - on some JVMs this incurs a delay of several seconds
-                // see http://stackoverflow.com/questions/19860436
             }
 
             for (HttpConnectionResponseInterceptor responseInterceptor : responseInterceptors) {
