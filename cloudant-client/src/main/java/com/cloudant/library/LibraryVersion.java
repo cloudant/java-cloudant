@@ -15,6 +15,7 @@
 package com.cloudant.library;
 
 import com.cloudant.client.org.lightcouch.CouchDbClient;
+import com.cloudant.http.Version;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +25,7 @@ import java.util.Properties;
 /**
  * Created by Rhys Short on 03/03/2016.
  */
-public class Version implements com.cloudant.http.Version {
+public class LibraryVersion implements Version {
 
     private static final String USER_AGENT;
 

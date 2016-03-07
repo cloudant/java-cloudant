@@ -29,7 +29,7 @@ import com.cloudant.client.api.model.Task;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
-import com.cloudant.library.Version;
+import com.cloudant.library.LibraryVersion;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresDB;
@@ -112,7 +112,7 @@ public class CloudantClientTests {
     public void testUserAgentHeaderString() {
         assertTrue("The value of the User-Agent header should match the format " +
                 "\"java-cloudant/version [Java jvm.vendor; jvm" +
-                ".version; jvm.runtime.version (os.arch; os.name; os.version)]\"", new Version().getUserAgentString().matches
+                ".version; jvm.runtime.version (os.arch; os.name; os.version)]\"", new LibraryVersion().getUserAgentString().matches
                 (userAgentRegex));
     }
 
