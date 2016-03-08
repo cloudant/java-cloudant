@@ -25,6 +25,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -73,8 +74,8 @@ public class HttpConnection {
     static {
         String ua = "java-cloudant-http/unknown";
         try {
-            Class clazz = Class.forName("com.cloudant.library.Version");
-            com.cloudant.http.Version version = (com.cloudant.http.Version) clazz.newInstance();
+            Class clazz = Class.forName("com.cloudant.library.LibraryVersion");
+            Version version = (Version) clazz.newInstance();
             ua = version.getUserAgentString();
         } catch (Exception e) {
             logger.log(Level.WARNING, "Could not determine version string using default" +
@@ -259,8 +260,8 @@ public class HttpConnection {
 
             //set request properties after interceptors, in case the interceptors have added
             // to the properties map
-            for (String key : requestProperties.keySet()) {
-                connection.setRequestProperty(key, requestProperties.get(key));
+            for (Map.Entry<String, String> property : requestProperties.entrySet()) {
+                connection.setRequestProperty(property.getKey(), property.getValue());
             }
 
             if (input != null) {
@@ -274,18 +275,15 @@ public class HttpConnection {
                     connection.setChunkedStreamingMode(1024);
                 }
 
-                int bufSize = 1024;
-                int nRead = 0;
-                byte[] buf = new byte[bufSize];
                 InputStream is = input.getInputStream();
                 OutputStream os = connection.getOutputStream();
-
-                while ((nRead = is.read(buf)) >= 0) {
-                    os.write(buf, 0, nRead);
+                try {
+                    IOUtils.copy(is, os);
+                    os.flush();
+                } finally {
+                    IOUtils.closeQuietly(is);
+                    IOUtils.closeQuietly(os);
                 }
-                os.flush();
-                // we do not call os.close() - on some JVMs this incurs a delay of several seconds
-                // see http://stackoverflow.com/questions/19860436
             }
 
             for (HttpConnectionResponseInterceptor responseInterceptor : responseInterceptors) {

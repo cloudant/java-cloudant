@@ -328,7 +328,11 @@ public class CouchDbClient {
     public <T> T get(URI uri, Class<T> classType) {
         HttpConnection connection = Http.GET(uri);
         InputStream response = executeToInputStream(connection);
-        return getResponse(response, classType, getGson());
+        try {
+            return getResponse(response, classType, getGson());
+        } finally {
+            close(response);
+        }
     }
 
     /**
