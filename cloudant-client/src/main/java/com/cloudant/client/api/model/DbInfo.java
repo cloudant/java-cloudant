@@ -15,6 +15,7 @@
 package com.cloudant.client.api.model;
 
 
+import com.google.gson.JsonElement;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -30,7 +31,7 @@ public class DbInfo {
     @SerializedName("doc_del_count")
     private String docDelCount;
     @SerializedName("update_seq")
-    private String updateSeq;
+    private JsonElement updateSeq;
     @SerializedName("purge_seq")
     private long purgeSeq;
     @SerializedName("compact_running")
@@ -55,7 +56,7 @@ public class DbInfo {
     }
 
     public String getUpdateSeq() {
-        return updateSeq;
+        return updateSeq.toString();
     }
 
     public long getPurgeSeq() {

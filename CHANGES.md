@@ -1,6 +1,8 @@
 # Unreleased
 - [NEW] Documentation for logging in project javadoc `overview.html`.
 - [IMPROVED] Upgraded optional okhttp to 2.7.5.
+- [FIX] Issues with the changes feed, replication, or getting database info when using Cloudant Data
+  Layer Local Edition because sequence IDs were incorrectly always treated as strings not JSON.
 - [FIX] Issue of `javax.net.ssl.SSLHandshakeException: Received fatal alert: handshake_failure` on
   IBM Java with okhttp. SSL connections using okhttp are now configured to use the JVM enabled
    protocols and cipher suites in the same way as the `HttpURLConnection`.

@@ -14,6 +14,8 @@
 
 package com.cloudant.client.api.model;
 
+import com.google.gson.JsonElement;
+
 import java.util.Date;
 
 /**
@@ -36,14 +38,14 @@ public class Task {
     private long doc_write_failures;
     private String doc_id;
     private boolean continuous;
-    private String checkpointed_source_seq;
+    private JsonElement checkpointed_source_seq;
     private long changes_pending;
     private long docs_written;
     private long missing_revisions_found;
     private String replication_id;
     private long revisions_checked;
     private String source;
-    private String source_seq;
+    private JsonElement source_seq;
 
 
     private long changes_done;
@@ -136,7 +138,7 @@ public class Task {
      * @return the checkpointed_source_seq
      */
     public String getCheckpointed_source_seq() {
-        return checkpointed_source_seq;
+        return checkpointed_source_seq.toString();
     }
 
     /**
@@ -185,7 +187,7 @@ public class Task {
      * @return the source_seq
      */
     public String getSource_seq() {
-        return source_seq;
+        return source_seq.toString();
     }
 
     /**
