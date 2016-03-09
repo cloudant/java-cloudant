@@ -25,11 +25,11 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getRespons
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.streamToString;
 
 import com.cloudant.client.internal.DatabaseURIHelper;
+import com.cloudant.client.internal.util.DeserializationTypes;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -287,8 +287,7 @@ public abstract class CouchDatabaseBase {
             couchDbClient.execute(connection);
             responseStream = connection.responseAsInputStream();
             List<Response> bulkResponses = getResponseList(responseStream, getGson(),
-                    new TypeToken<List<Response>>() {
-                    }.getType());
+                    DeserializationTypes.LC_RESPONSES);
             for(Response response : bulkResponses) {
                 response.setStatusCode(connection.getConnection().getResponseCode());
                 response.setReason(connection.getConnection().getResponseMessage());

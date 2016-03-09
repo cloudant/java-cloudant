@@ -177,7 +177,7 @@ subprojects {
     findbugs {
         toolVersion = "3.0.1"
         //report only high severity bugs for now
-        reportLevel = "high"
+        reportLevel = "low"
         //the code base is pretty small so use max effort
         effort = "max"
         //we don't want to run findbugs on the test code yet

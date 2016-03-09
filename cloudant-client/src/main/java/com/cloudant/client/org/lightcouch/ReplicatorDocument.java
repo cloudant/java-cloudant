@@ -20,6 +20,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Arrays;
+
 /**
  * Represents a replication document in the <tt>_replicator</tt> database.
  *
@@ -98,7 +100,7 @@ public class ReplicatorDocument extends Document {
     }
 
     public String[] getDocIds() {
-        return docIds;
+        return (docIds != null) ? Arrays.copyOf(docIds, docIds.length) : null;
     }
 
     public String getProxy() {
@@ -166,7 +168,7 @@ public class ReplicatorDocument extends Document {
     }
 
     public void setDocIds(String[] docIds) {
-        this.docIds = docIds;
+        this.docIds = Arrays.copyOf(docIds, docIds.length);
     }
 
     public void setProxy(String proxy) {
@@ -221,7 +223,7 @@ public class ReplicatorDocument extends Document {
         this.sinceSeq = sinceSeq;
     }
 
-    public class UserCtx {
+    public static class UserCtx {
         private String name;
         private String[] roles;
 
@@ -230,7 +232,7 @@ public class ReplicatorDocument extends Document {
         }
 
         public String[] getRoles() {
-            return roles;
+            return (roles != null) ? Arrays.copyOf(roles, roles.length) : null;
         }
 
         public void setName(String name) {
@@ -238,7 +240,110 @@ public class ReplicatorDocument extends Document {
         }
 
         public void setRoles(String[] roles) {
-            this.roles = roles;
+            this.roles = Arrays.copyOf(roles, roles.length);
         }
     } // /class UserCtx
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        ReplicatorDocument that = (ReplicatorDocument) o;
+
+        if (source != null ? !source.equals(that.source) : that.source != null) {
+            return false;
+        }
+        if (target != null ? !target.equals(that.target) : that.target != null) {
+            return false;
+        }
+        if (continuous != null ? !continuous.equals(that.continuous) : that.continuous != null) {
+            return false;
+        }
+        if (filter != null ? !filter.equals(that.filter) : that.filter != null) {
+            return false;
+        }
+        if (queryParams != null ? !queryParams.equals(that.queryParams) : that.queryParams !=
+                null) {
+            return false;
+        }
+        if (!Arrays.equals(docIds, that.docIds)) {
+            return false;
+        }
+        if (proxy != null ? !proxy.equals(that.proxy) : that.proxy != null) {
+            return false;
+        }
+        if (createTarget != null ? !createTarget.equals(that.createTarget) : that.createTarget !=
+                null) {
+            return false;
+        }
+        if (replicationId != null ? !replicationId.equals(that.replicationId) : that
+                .replicationId != null) {
+            return false;
+        }
+        if (replicationState != null ? !replicationState.equals(that.replicationState) : that
+                .replicationState != null) {
+            return false;
+        }
+        if (replicationStateTime != null ? !replicationStateTime.equals(that
+                .replicationStateTime) : that.replicationStateTime != null) {
+            return false;
+        }
+        if (workerProcesses != null ? !workerProcesses.equals(that.workerProcesses) : that
+                .workerProcesses != null) {
+            return false;
+        }
+        if (workerBatchSize != null ? !workerBatchSize.equals(that.workerBatchSize) : that
+                .workerBatchSize != null) {
+            return false;
+        }
+        if (httpConnections != null ? !httpConnections.equals(that.httpConnections) : that
+                .httpConnections != null) {
+            return false;
+        }
+        if (connectionTimeout != null ? !connectionTimeout.equals(that.connectionTimeout) : that
+                .connectionTimeout != null) {
+            return false;
+        }
+        if (retriesPerRequest != null ? !retriesPerRequest.equals(that.retriesPerRequest) : that
+                .retriesPerRequest != null) {
+            return false;
+        }
+        if (userCtx != null ? !userCtx.equals(that.userCtx) : that.userCtx != null) {
+            return false;
+        }
+        return !(sinceSeq != null ? !sinceSeq.equals(that.sinceSeq) : that.sinceSeq != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (source != null ? source.hashCode() : 0);
+        result = 31 * result + (target != null ? target.hashCode() : 0);
+        result = 31 * result + (continuous != null ? continuous.hashCode() : 0);
+        result = 31 * result + (filter != null ? filter.hashCode() : 0);
+        result = 31 * result + (queryParams != null ? queryParams.hashCode() : 0);
+        result = 31 * result + (docIds != null ? Arrays.hashCode(docIds) : 0);
+        result = 31 * result + (proxy != null ? proxy.hashCode() : 0);
+        result = 31 * result + (createTarget != null ? createTarget.hashCode() : 0);
+        result = 31 * result + (replicationId != null ? replicationId.hashCode() : 0);
+        result = 31 * result + (replicationState != null ? replicationState.hashCode() : 0);
+        result = 31 * result + (replicationStateTime != null ? replicationStateTime.hashCode() : 0);
+        result = 31 * result + (workerProcesses != null ? workerProcesses.hashCode() : 0);
+        result = 31 * result + (workerBatchSize != null ? workerBatchSize.hashCode() : 0);
+        result = 31 * result + (httpConnections != null ? httpConnections.hashCode() : 0);
+        result = 31 * result + (connectionTimeout != null ? connectionTimeout.hashCode() : 0);
+        result = 31 * result + (retriesPerRequest != null ? retriesPerRequest.hashCode() : 0);
+        result = 31 * result + (userCtx != null ? userCtx.hashCode() : 0);
+        result = 31 * result + (sinceSeq != null ? sinceSeq.hashCode() : 0);
+        return result;
+    }
 }

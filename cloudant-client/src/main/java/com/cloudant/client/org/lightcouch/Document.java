@@ -74,32 +74,32 @@ public class Document {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-        return result;
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Document document = (Document) o;
+
+        if (id != null ? !id.equals(document.id) : document.id != null) {
+            return false;
+        }
+        if (revision != null ? !revision.equals(document.revision) : document.revision != null) {
+            return false;
+        }
+        return !(attachments != null ? !attachments.equals(document.attachments) : document
+                .attachments != null);
+
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        Document other = (Document) obj;
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        return true;
+    public int hashCode() {
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (revision != null ? revision.hashCode() : 0);
+        result = 31 * result + (attachments != null ? attachments.hashCode() : 0);
+        return result;
     }
 }

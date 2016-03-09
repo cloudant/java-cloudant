@@ -20,7 +20,6 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -42,9 +41,8 @@ public class ShardDeserializer implements JsonDeserializer<List<Shard>> {
 
         for (Map.Entry<String, JsonElement> entry : shardsObj) {
             String range = entry.getKey();
-            List<String> nodeNames = context.deserialize(entry.getValue(), new
-                    TypeToken<List<String>>() {
-                    }.getType());
+            List<String> nodeNames = context.deserialize(entry.getValue(), DeserializationTypes
+                    .STRINGS);
             shards.add(new Shard(range, nodeNames));
         }
 

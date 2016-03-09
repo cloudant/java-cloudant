@@ -74,7 +74,7 @@ final public class CouchDbUtil {
 
     // JSON
 
-    public static <T> T JsonToObject(Gson gson, JsonElement elem, String key, Class<T> classType) {
+    public static <T> T jsonToObject(Gson gson, JsonElement elem, String key, Class<T> classType) {
         if(elem != null && !elem.isJsonNull()) {
             JsonElement keyElem = elem.getAsJsonObject().get(key);
             if(keyElem != null && !keyElem.isJsonNull()) {

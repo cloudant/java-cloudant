@@ -23,6 +23,7 @@ import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
 import com.cloudant.client.internal.URIBase;
+import com.cloudant.client.internal.util.DeserializationTypes;
 import com.cloudant.client.org.lightcouch.Changes;
 import com.cloudant.client.org.lightcouch.CouchDbClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
@@ -32,7 +33,6 @@ import com.cloudant.client.org.lightcouch.Replicator;
 import com.cloudant.http.HttpConnection;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -179,9 +179,7 @@ public class CloudantClient {
         URI uri = new URIBase(getBaseUri()).path("_active_tasks").build();
         try {
             response = couchDbClient.get(uri);
-            return getResponseList(response, couchDbClient.getGson(),
-                    new TypeToken<List<Task>>() {
-                    }.getType());
+            return getResponseList(response, couchDbClient.getGson(), DeserializationTypes.TASKS);
         } finally {
             close(response);
         }

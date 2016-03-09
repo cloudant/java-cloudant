@@ -23,6 +23,7 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getRespons
 
 import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.client.internal.URIBase;
+import com.cloudant.client.internal.util.DeserializationTypes;
 import com.cloudant.client.org.lightcouch.internal.GsonHelper;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
@@ -37,7 +38,6 @@ import com.google.gson.InstanceCreator;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 import com.squareup.okhttp.ConnectionPool;
 
 import org.apache.commons.io.IOUtils;
@@ -141,7 +141,7 @@ public class CouchDbClient {
      */
     public void shutdown() {
         // Delete the cookie _session if there is one
-        HttpConnection conn = execute(Http.DELETE(new URIBase(clientUri).path("_session")
+        execute(Http.DELETE(new URIBase(clientUri).path("_session")
                 .build()));
 
         // The execute method handles non-2xx response codes by throwing a CouchDbException.
@@ -216,11 +216,9 @@ public class CouchDbClient {
     public List<String> getAllDbs() {
         InputStream instream = null;
         try {
-            Type typeOfList = new TypeToken<List<String>>() {
-            }.getType();
             instream = get(new URIBase(clientUri).path("_all_dbs").build());
             Reader reader = new InputStreamReader(instream, "UTF-8");
-            return getGson().fromJson(reader, typeOfList);
+            return getGson().fromJson(reader, DeserializationTypes.STRINGS);
         } catch (UnsupportedEncodingException e) {
             // This should never happen as every implementation of the java platform is required
             // to support UTF-8.
@@ -274,8 +272,7 @@ public class CouchDbClient {
     public List<String> uuids(long count) {
         final URI uri = new URIBase(clientUri).path("_uuids").query("count", count).build();
         final JsonObject json = get(uri, JsonObject.class);
-        return getGson().fromJson(json.get("uuids").toString(), new TypeToken<List<String>>() {
-        }.getType());
+        return getGson().fromJson(json.get("uuids").toString(), DeserializationTypes.STRINGS);
     }
 
     /**
@@ -521,37 +518,35 @@ public class CouchDbClient {
                 es = connection.getConnection().getErrorStream();
                 //if there is an error stream try to deserialize into the typed exception
                 if (es != null) {
-                    //read the error stream into memory
-                    byte[] errorResponse = IOUtils.toByteArray(es);
-
-                    Class<? extends CouchDbException> exceptionClass = ex.getClass();
-                    //treat the error as JSON and try to deserialize
                     try {
-                        //Register an InstanceCreator that returns the existing exception so we can
-                        //just populate the fields, but not ignore the constructor.
-                        //Uses a new Gson so we don't accidentally recycle an exception.
-                        Gson g = new GsonBuilder().registerTypeAdapter(exceptionClass, new
-                                InstanceCreator<CouchDbException>() {
-                                    @Override
-                                    public CouchDbException createInstance(Type type) {
-                                        return ex;
-                                    }
-                                }).create();
-                        //now populate the exception with the error/reason other info from JSON
-                        g.fromJson(new InputStreamReader(new ByteArrayInputStream(errorResponse),
-                                "UTF-8"), exceptionClass);
-                    } catch (JsonParseException e) {
-                        //the error stream was not JSON so just set the string content as the error
-                        // field on ex before we throw it
-                        ex.error = new String(errorResponse, "UTF-8");
+                        //read the error stream into memory
+                        byte[] errorResponse = IOUtils.toByteArray(es);
+
+                        Class<? extends CouchDbException> exceptionClass = ex.getClass();
+                        //treat the error as JSON and try to deserialize
+                        try {
+                            // Register an InstanceCreator that returns the existing exception so
+                            // we can just populate the fields, but not ignore the constructor.
+                            // Uses a new Gson so we don't accidentally recycle an exception.
+                            Gson g = new GsonBuilder().registerTypeAdapter(exceptionClass, new
+                                    CouchDbExceptionInstanceCreator(ex)).create();
+                            // Now populate the exception with the error/reason other info from JSON
+                            g.fromJson(new InputStreamReader(new ByteArrayInputStream
+                                    (errorResponse),
+                                    "UTF-8"), exceptionClass);
+                        } catch (JsonParseException e) {
+                            // The error stream was not JSON so just set the string content as the
+                            // error field on ex before we throw it
+                            ex.error = new String(errorResponse, "UTF-8");
+                        }
+                    } finally {
+                        close(es);
                     }
                 }
                 throw ex;
             }
         } catch (IOException ioe) {
             throw new CouchDbException("Error retrieving server response", ioe);
-        } finally {
-            close(es);
         }
     }
 
@@ -567,6 +562,21 @@ public class CouchDbClient {
             return execute(connection).responseAsInputStream();
         } catch (IOException ioe) {
             throw new CouchDbException("Error retrieving server response", ioe);
+        }
+    }
+
+    private static final class CouchDbExceptionInstanceCreator implements
+            InstanceCreator<CouchDbException> {
+
+        private final CouchDbException ex;
+
+        CouchDbExceptionInstanceCreator(CouchDbException ex) {
+            this.ex = ex;
+        }
+
+        @Override
+        public CouchDbException createInstance(Type type) {
+            return ex;
         }
     }
 }

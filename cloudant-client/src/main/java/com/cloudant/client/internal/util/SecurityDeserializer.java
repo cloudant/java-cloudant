@@ -19,7 +19,6 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
-import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.EnumSet;
@@ -42,9 +41,8 @@ public class SecurityDeserializer implements JsonDeserializer<Map<String, EnumSe
         Set<Map.Entry<String, JsonElement>> permList = elem.getAsJsonObject().entrySet();
         for (Map.Entry<String, JsonElement> entry : permList) {
             String user = entry.getKey();
-            EnumSet<Permissions> p = context.deserialize(entry.getValue(), new
-                    TypeToken<EnumSet<Permissions>>() {
-                    }.getType());
+            EnumSet<Permissions> p = context.deserialize(entry.getValue(), DeserializationTypes
+                    .PERMISSIONS);
             perms.put(user, p);
         }
         return perms;

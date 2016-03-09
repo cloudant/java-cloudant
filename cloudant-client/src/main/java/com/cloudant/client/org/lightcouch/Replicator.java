@@ -113,7 +113,7 @@ public class Replicator {
         assertNotEmpty(replicatorDoc.getSource(), "Source");
         assertNotEmpty(replicatorDoc.getTarget(), "Target");
         if (userCtxName != null) {
-            UserCtx ctx = replicatorDoc.new UserCtx();
+            UserCtx ctx = new ReplicatorDocument.UserCtx();
             ctx.setName(userCtxName);
             ctx.setRoles(userCtxRoles);
             replicatorDoc.setUserCtx(ctx);

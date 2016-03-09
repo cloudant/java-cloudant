@@ -9,6 +9,8 @@
   `Expect:100-continue` header on requests.
 - [FIX] Fix issue where design documents would not be updated if only the
   `indexes` field was updated.
+- [FIX] The `equals` and `hashcode` methods for `Document` and `ReplicatorDocument` failed to compare
+  revision identifier and some other fields.
 - [FIX] Issue where connections could leak because streams were not closed.
 - [DEPRECATED] The `InputStream` setters `HttpConnection.setRequestBody(InputStream)` and
   `HttpConnection.setRequestBody(InputStream, long)`. Use of the new `InputStreamGenerator` is

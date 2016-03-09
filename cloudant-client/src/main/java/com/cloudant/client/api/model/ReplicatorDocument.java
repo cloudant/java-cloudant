@@ -14,13 +14,11 @@
 
 package com.cloudant.client.api.model;
 
-import com.google.gson.JsonObject;
-
 import com.cloudant.client.org.lightcouch.Attachment;
 import com.cloudant.client.org.lightcouch.Replicator;
+import com.google.gson.JsonObject;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -54,14 +52,9 @@ public class ReplicatorDocument {
         Map<String, Attachment> couchDbAttachments = replicatorDocument.getAttachments();
         Map<String, com.cloudant.client.api.model.Attachment> attachments = new HashMap<String,
                 com.cloudant.client.api.model.Attachment>();
-        Iterator<String> iterator = couchDbAttachments.keySet().iterator();
-        while (iterator.hasNext()) {
-            String key = (String) iterator.next();
-            Attachment couchDbAttachment = couchDbAttachments.get(key);
-            com.cloudant.client.api.model.Attachment attachment = new com.cloudant.client.api
-                    .model.Attachment(couchDbAttachment);
-            attachments.put(key, attachment);
-
+        for (Map.Entry<String, Attachment> attachment : couchDbAttachments.entrySet()) {
+            attachments.put(attachment.getKey(), new com.cloudant.client.api
+                    .model.Attachment(attachment.getValue()));
         }
         return attachments;
     }
@@ -76,12 +69,10 @@ public class ReplicatorDocument {
 
     public void setAttachments(Map<String, com.cloudant.client.api.model.Attachment> attachments) {
         Map<String, Attachment> lightCouchAttachments = new HashMap<String, Attachment>();
-        Iterator<String> iterator = attachments.keySet().iterator();
-        while (iterator.hasNext()) {
-            String key = (String) iterator.next();
-            com.cloudant.client.api.model.Attachment attachment = attachments.get(key);
-            Attachment lightCouchAttachment = attachment.getAttachement();
-            lightCouchAttachments.put(key, lightCouchAttachment);
+
+        for (Map.Entry<String, com.cloudant.client.api.model.Attachment> attachment : attachments
+                .entrySet()) {
+            lightCouchAttachments.put(attachment.getKey(), attachment.getValue().getAttachement());
         }
         replicatorDocument.setAttachments(lightCouchAttachments);
     }
@@ -237,11 +228,11 @@ public class ReplicatorDocument {
     }
 
 
-    public class UserCtx {
+    public static class UserCtx {
         private com.cloudant.client.org.lightcouch.ReplicatorDocument.UserCtx userCtx;
 
         public UserCtx() {
-            this.userCtx = replicatorDocument.new UserCtx();
+            this.userCtx = new com.cloudant.client.org.lightcouch.ReplicatorDocument.UserCtx();
         }
 
         UserCtx(com.cloudant.client.org.lightcouch.ReplicatorDocument.UserCtx userCtx) {

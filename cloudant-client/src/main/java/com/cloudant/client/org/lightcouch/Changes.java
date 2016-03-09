@@ -175,7 +175,7 @@ public class Changes {
             if (!stop) {
                 while (true) {
                     String row = getReader().readLine();
-                    if (row.isEmpty()) {
+                    if (row != null && row.isEmpty()) {
                         continue;
                     }
                     if (row != null && !row.startsWith("{\"last_seq\":")) {

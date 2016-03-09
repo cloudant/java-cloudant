@@ -16,6 +16,7 @@ package com.cloudant.http.internal;
 
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
+import java.util.Locale;
 
 /**
  * Created by tomblench on 07/07/2014.
@@ -26,7 +27,7 @@ public class Base64OutputStreamFactory {
 
     static {
         String javaRuntime = System.getProperty("java.runtime.name", "");
-        runningOnAndroid = javaRuntime.toLowerCase().contains("android runtime");
+        runningOnAndroid = javaRuntime.toLowerCase(Locale.ENGLISH).contains("android runtime");
     }
 
     public static OutputStream get(OutputStream os) {

@@ -16,7 +16,7 @@ package com.cloudant.tests;
 
 
 import static org.junit.Assert.assertEquals;
-import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.JsonToObject;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.jsonToObject;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -28,7 +28,7 @@ public class CouchDbUtilTest {
 
     /**
      * Assert that if doc's value in JSON object
-     * is null, the result from JsonToObject
+     * is null, the result from jsonToObject
      * will be null and no exception occurs.
      */
     @Test
@@ -38,7 +38,7 @@ public class CouchDbUtilTest {
         Gson gson = new Gson();
         JsonObject jsonFromSearchQuery = new JsonParser()
                 .parse(queryResult).getAsJsonObject();
-        JsonObject mockResult = JsonToObject(gson, jsonFromSearchQuery, "doc", JsonObject.class);
+        JsonObject mockResult = jsonToObject(gson, jsonFromSearchQuery, "doc", JsonObject.class);
 
         assertEquals(null, mockResult);
     }

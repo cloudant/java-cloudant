@@ -65,13 +65,15 @@ public class Index {
     }
 
     public String toString() {
-        String index = "ddoc: " + ddoc + ", name: " + name + ", type: " + type + ", fields: [";
+        StringBuilder index = new StringBuilder("ddoc: " + ddoc + ", name: " + name + ", type: "
+                + type + ", fields: [");
         Iterator<IndexField> flds = getFields();
         while (flds.hasNext()) {
-            index += flds.next().toString() + ",";
+            index.append(flds.next().toString());
+            index.append(",");
         }
-        index += "]";
-        return index;
+        index.append("]");
+        return index.toString();
     }
 
 

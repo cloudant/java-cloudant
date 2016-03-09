@@ -16,6 +16,7 @@ A list of known findbugs issues that we cannot fix at this time.
 For example because it requires an API change
 -->
 <FindBugsFilter>
+    
     <!-- This bug is because com.cloudant.client.api.model.Document extends
      com.cloudant.org.lightcouch.Document. Eventually we may roll them into one class and then this
      exclude can be removed.
@@ -24,6 +25,7 @@ For example because it requires an API change
         <Bug code="Nm" pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS"/>
         <Class name="com.cloudant.client.api.model.Document"/>
     </Match>
+    
     <!-- This bug is because addAttachment in com.cloudant.client.api.model.Document does not
      override the addAttachment in com.cloudant.org.lightcouch.Document. This is because of the two
      different Attachment classes. This leads to the confusing situation where there are two
@@ -36,4 +38,61 @@ For example because it requires an API change
         <Class name="com.cloudant.client.api.model.Document"/>
         <Method name="addAttachment"/>
     </Match>
+
+    <!-- Some private fields are flagged as never being written to. This fails to take into account
+    the GSON deserialization which reflectively sets the fields, so these findbugs can be ignored.
+    -->
+    <Match>
+        <Bug code="UwF" pattern="UWF_UNWRITTEN_FIELD"/>
+        <Class name="com.cloudant.client.org.lightcouch.Attachment"/>
+    </Match>
+    <Match>
+        <Bug code="UwF" pattern="UWF_UNWRITTEN_FIELD"/>
+        <Class name="com.cloudant.client.org.lightcouch.ChangesResult$Row$Rev"/>
+    </Match>
+
+
+    <!-- Returning null instead of a zero length array has special meaning in these cases.
+     Firstly, null indicates that no keys have been added to the query so we should not write a
+      parameter at all, whereas the empty array would otherwise get written to the request.
+     The remaining three cases are all also cases where a null means don't specify a parameter, but
+      the empty array means the empty set.
+    -->
+    <Match>
+        <Bug code="PZLA" pattern="PZLA_PREFER_ZERO_LENGTH_ARRAYS"/>
+        <Class name="com.cloudant.client.internal.views.ViewQueryParameters"/>
+        <Method name="getKeys"/>
+    </Match>
+    <Match>
+        <Bug code="PZLA" pattern="PZLA_PREFER_ZERO_LENGTH_ARRAYS"/>
+        <Class name="com.cloudant.client.api.model.SearchResult$SearchResultRow"/>
+        <Method name="getOrder"/>
+    </Match>
+    <Match>
+        <Bug code="PZLA" pattern="PZLA_PREFER_ZERO_LENGTH_ARRAYS"/>
+        <Class name="com.cloudant.client.org.lightcouch.ReplicatorDocument"/>
+        <Method name="getDocIds"/>
+    </Match>
+    <Match>
+        <Bug code="PZLA" pattern="PZLA_PREFER_ZERO_LENGTH_ARRAYS"/>
+        <Class name="com.cloudant.client.org.lightcouch.ReplicatorDocument$UserCtx"/>
+        <Method name="getRoles"/>
+    </Match>
+
+    <!-- It is true that a null check is redundant here, but we should keep it for consistency in
+    case the underlying FindByIndexOptions changes -->
+    <Match>
+        <Bug code="RCN" pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"/>
+        <Class name="com.cloudant.client.api.Database"/>
+        <Method name="getFindByIndexBody"/>
+    </Match>
+
+    <!-- We catch Exception in where it isn't explicitly thrown. We should probably
+    catch a more specific type, but ignore it for now. -->
+    <Match>
+        <Bug code="REC" pattern="REC_CATCH_EXCEPTION"/>
+        <Class name="com.cloudant.client.org.lightcouch.Changes"/>
+        <Method name="readNextRow"/>
+    </Match>
+
 </FindBugsFilter>

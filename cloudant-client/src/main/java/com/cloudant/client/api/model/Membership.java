@@ -43,15 +43,16 @@ public class Membership {
     }
 
     public String toString() {
-        String ret = "all_nodes: ";
+        StringBuilder ret = new StringBuilder("all_nodes: ");
         for (String s : all_nodes) {
-            ret += s + ",";
+            ret.append(s + ",");
         }
-        ret += " cluster_nodes: ";
+        ret.append(" cluster_nodes: ");
         for (String s : cluster_nodes) {
-            ret += s + ",";
+            ret.append(s);
+            ret.append(",");
         }
-        return ret;
+        return ret.toString();
     }
 
     Membership() {
