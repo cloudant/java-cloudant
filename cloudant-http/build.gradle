@@ -37,3 +37,18 @@ uploadArchives {
         }
     }
 }
+
+// Add optional dependency attribute to pom (workaround for https://issues.gradle.org/browse/GRADLE-1749)
+// Get the gradle dependencies and make a map of artifactId to dependency object
+def compileDependencies = configurations.compile.dependencies.collectEntries { [it.name, it] }
+// Identify pom tasks
+def installer = install.repositories.mavenInstaller
+def deployer = uploadArchives.repositories.mavenDeployer
+// When any pom tasks are being configured then analyze the gradle dependency for optional
+// property and apply the optional property to the pom if it was set in the gradle
+[installer, deployer]*.pom*.whenConfigured { pom ->
+    pom.dependencies.findAll {
+        def compileDependency = compileDependencies.get(it.artifactId)
+        return compileDependency?.hasProperty('optional') && compileDependency.optional
+    }.each { dep -> dep.optional = true }
+}
