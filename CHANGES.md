@@ -1,4 +1,4 @@
-# Unreleased
+# 2.4.0 (2016-03-10)
 - [NEW] Documentation for logging in project javadoc `overview.html`.
 - [IMPROVED] Upgraded optional okhttp to 2.7.5.
 - [FIX] Issues with the changes feed, replication, or getting database info when using Cloudant Data
