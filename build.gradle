@@ -18,9 +18,14 @@ subprojects {
     apply plugin: 'signing'
 
     group = 'com.cloudant'
-    version = '2.4.0'
+    version = '2.4.1-SNAPSHOT'
 
-    //if the version says "snapshot" anywhere assume it is not a release
+    // Note the gradle subproject names (e.g. cloudant-client, cloudant-http) are the maven
+    // artifactIds - the maven pom project name entry and User-Agent name in client.properties are
+    // defined by this clientName.
+    ext.clientName = 'java-cloudant'
+
+    // If the version says "snapshot" anywhere assume it is not a release
     ext.isReleaseVersion = !version.toUpperCase(Locale.ENGLISH).contains("SNAPSHOT")
 
     sourceCompatibility = 1.6
@@ -31,17 +36,17 @@ subprojects {
         mavenCentral()
     }
 
-//include variable debug info in the compiled classes
+    // Include variable debug info in the compiled classes
     compileJava.options.debugOptions.debugLevel = "source,lines,vars"
-//fail on javac warnings
+    // Fail on javac warnings
     compileJava.options.compilerArgs << "-Werror"
-//suppress the bootstrap class path warning which will always apply if we build on a JVM newer
-// than the -source setting and do not set the
-// "-bootclasspath pathToJREMatchingSourceLevel/jre/lib/rt.jar"
+    // Suppress the bootstrap class path warning which will always apply if we build on a JVM newer
+    // than the -source setting and do not set the
+    // "-bootclasspath pathToJREMatchingSourceLevel/jre/lib/rt.jar"
     compileJava.options.compilerArgs << "-Xlint:-options"
 
     tasks.withType(Test) {
-        // pick up properties named test.* from command line, gradle.properties first
+        // Pick up properties named test.* from command line, gradle.properties first
         System.properties.each { prop ->
             if (prop.key.startsWith("test")) {
                 systemProperty prop.key, prop.value
@@ -62,7 +67,7 @@ subprojects {
 
     javadoc {
         options.setMemberLevel JavadocMemberLevel.PROTECTED
-        //add a logging listener to check for javadoc warnings and fail the build if there are any
+        // Add a logging listener to check for javadoc warnings and fail the build if there are any
         boolean hasJavaDocWarnings = false;
         doFirst {
             getLogging().addStandardErrorListener(new StandardOutputListener() {
@@ -89,7 +94,7 @@ subprojects {
         archives sourcesJar, javadocJar
     }
 
-//load signing and repository parameters from system properties
+    // Load signing and repository parameters from system properties
     ['signing.keyId', 'signing.password', 'signing.secretKeyRingFile', 'ossrhUsername', 'ossrhPassword']
             .each { propName ->
         //set a property with the given name if the system property is set
@@ -100,11 +105,11 @@ subprojects {
     }
 
     signing {
-        //only apply signing when it is a release and is being published
+        // Only apply signing when it is a release and is being published
         required {
             isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives")
         }
-        //when signing, sign the archives
+        // When signing, sign the archives
         sign configurations.archives
     }
 
@@ -112,7 +117,7 @@ subprojects {
         repositories {
             mavenDeployer {
 
-                //when publishing sign the pom
+                // When publishing sign the pom
                 beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
                 repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
@@ -123,8 +128,9 @@ subprojects {
                     authentication(userName: ossrhUsername, password: ossrhPassword)
                 }
 
-                //augment the pom with additional information
+                // Augment the pom with additional information
                 pom.project {
+                    name project.clientName
                     packaging 'jar'
                     url 'https://cloudant.com'
                     licenses {
@@ -156,40 +162,24 @@ subprojects {
         }
     }
 
-//add optional dependency attribute to pom (workaround for https://issues.gradle.org/browse/GRADLE-1749)
-//get the gradle dependencies and make a map of artifactId to dependency object
-    def compileDependencies = configurations.compile.dependencies.collectEntries { [it.name, it] }
-//identify pom tasks
-    def installer = install.repositories.mavenInstaller
-    def deployer = uploadArchives.repositories.mavenDeployer
-//when any pom tasks are being configured then analyze the gradle dependency for optional property
-//and apply the optional property to the pom if it was set in the gradle
-    [installer, deployer]*.pom*.whenConfigured { pom ->
-        pom.dependencies.findAll {
-            def compileDependency = compileDependencies.get(it.artifactId)
-            return compileDependency?.hasProperty('optional') && compileDependency.optional
-        }.each { dep -> dep.optional = true }
-    }
-
-
+    // Findbugs
     apply plugin: 'findbugs'
-//findbugs
     findbugs {
         toolVersion = "3.0.1"
-        //report only high severity bugs for now
+        // Report only high severity bugs for now
         reportLevel = "low"
-        //the code base is pretty small so use max effort
+        // The code base is pretty small so use max effort
         effort = "max"
-        //we don't want to run findbugs on the test code yet
+        // We don't want to run findbugs on the test code yet
         sourceSets = [sourceSets.main]
-        //exclude a couple of known bugs until we get the chance to fix them
+        // Exclude a couple of known bugs until we get the chance to fix them
         if (file("findbugs_excludes.xml").exists()) {
             excludeFilter = file("findbugs_excludes.xml")
         }
     }
 
     tasks.withType(FindBugs) {
-        //currently only one report type can be used toggle which with a property
+        // Currently only one report type can be used toggle which with a property
         boolean generateXML = Boolean.getBoolean("findbugs.xml.report")
         reports {
             xml.enabled = generateXML
