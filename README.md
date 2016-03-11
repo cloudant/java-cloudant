@@ -143,6 +143,13 @@ You have inserted the document.
 }
 ```
 
+There is significantly more documentation, including additional code samples and explanations, in
+the [javadoc](http://www.javadoc.io/doc/com.cloudant/cloudant-client/).
+The first page you land on when following the javadoc link includes a table of
+contents with further links to help guide you to the documentation you need.
+To find the additional information be sure to scroll down past the auto-generated summary tables and
+do not overlook the package overviews.
+
 ## Related documentation
 * [API reference (javadoc)](http://www.javadoc.io/doc/com.cloudant/cloudant-client/)
 * [Cloudant docs](http://docs.cloudant.com/)
