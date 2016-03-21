@@ -15,6 +15,7 @@
 package com.cloudant.client.api;
 
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotNull;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
@@ -373,6 +374,9 @@ public class Database {
      */
     public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT, FindByIndexOptions
             options) {
+        assertNotNull(selectorJson, "selectorJson");
+        // If it wasn't null we can safely trim
+        selectorJson = selectorJson.trim();
         assertNotEmpty(selectorJson, "selectorJson");
         assertNotEmpty(options, "options");
 
