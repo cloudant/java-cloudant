@@ -1,3 +1,7 @@
+# Unreleased
+- [FIX] Regression where `JsonParseException` would be thrown if `Database.findByIndex` selector
+  contained leading whitespace.
+
 # 2.4.1 (2016-03-10)
 - [NEW] Documentation for logging in project javadoc `overview.html`.
 - [IMPROVED] Upgraded optional okhttp to 2.7.5.

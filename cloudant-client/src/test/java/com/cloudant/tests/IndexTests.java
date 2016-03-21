@@ -168,6 +168,21 @@ public class IndexTests {
     }
 
     @Test
+    public void testNotNullIndexMovieNameAndYearSelectorStringWithSpace() {
+        List<Movie> movies = db.findByIndex("    \"selector\"   :      {    \"Movie_year\"    :  " +
+                        "{\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\" }     ", Movie.class,
+                new FindByIndexOptions()
+                        .sort(new IndexField("Movie_year", SortOrder.desc))
+                        .fields("Movie_name").fields("Movie_year"));
+        assertNotNull(movies);
+        assert (movies.size() > 0);
+        for (Movie m : movies) {
+            assertNotNull(m.getMovie_name());
+            assertNotNull(m.getMovie_year());
+        }
+    }
+
+    @Test
     public void testIndexMovieNameAndYearWithLimitSkipOptions() {
         List<Movie> movies = db.findByIndex("\"selector\": { \"Movie_year\": {\"$gt\": 1960}, " +
                         "\"Person_name\": \"Alec Guinness\" }",
