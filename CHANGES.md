@@ -1,4 +1,5 @@
 # Unreleased
+- [IMPROVED] Use the JVM default chunk size for HTTP content of unknown length.
 - [FIX] Regression where `JsonParseException` would be thrown if `Database.findByIndex` selector
   contained leading whitespace.
 
