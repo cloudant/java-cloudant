@@ -251,6 +251,24 @@ public class HttpConnection {
                 connection.setRequestProperty("Content-type", contentType);
             }
 
+            // We set up the output config before the interceptors to allow the configuration to be
+            // modified. For example an interceptor might change the chunk size by calling
+            // context.connection.getConnection().setChunkedStreamingMode(16384);
+            if (input != null) {
+                connection.setDoOutput(true);
+                if (inputLength != -1) {
+                    // TODO Remove this cast to int when the minimum supported level is 1.7.
+                    // On 1.7 upwards this method takes a long, otherwise int.
+                    connection.setFixedLengthStreamingMode((int) this.inputLength);
+                } else {
+                    connection.setChunkedStreamingMode(0); // Use 0 for the default size
+
+                    // Note that CouchDB does not currently work for a chunked multipart stream, see
+                    // https://issues.apache.org/jira/browse/COUCHDB-1403. Cases that use
+                    // multipart need to provide the content length until that is fixed.
+                }
+            }
+
             HttpConnectionInterceptorContext currentContext = new
                     HttpConnectionInterceptorContext(this);
 
@@ -265,20 +283,13 @@ public class HttpConnection {
             }
 
             if (input != null) {
-                connection.setDoOutput(true);
-                if (inputLength != -1) {
-                    // TODO on 1.7 upwards this method takes a long, otherwise int
-                    connection.setFixedLengthStreamingMode((int) this.inputLength);
-                } else {
-                    // TODO some situations where we can't do chunking, like multipart/related
-                    /// https://issues.apache.org/jira/browse/COUCHDB-1403
-                    connection.setChunkedStreamingMode(1024);
-                }
-
                 InputStream is = input.getInputStream();
                 OutputStream os = connection.getOutputStream();
                 try {
-                    IOUtils.copy(is, os);
+                    // The buffer size used for writing to this output stream has an impact on the
+                    //  HTTP chunk size, so we make it a pretty large size to avoid limiting the size
+                    // of those chunks (although this appears in turn to set the chunk sizes).
+                    IOUtils.copyLarge(is, os, new byte[16 * 1024]);
                     os.flush();
                 } finally {
                     IOUtils.closeQuietly(is);

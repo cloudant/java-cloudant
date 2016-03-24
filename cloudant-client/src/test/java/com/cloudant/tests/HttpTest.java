@@ -3,6 +3,8 @@ package com.cloudant.tests;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.cloudant.client.api.CloudantClient;
@@ -25,7 +27,6 @@ import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
-import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -65,13 +66,13 @@ public class HttpTest {
         ByteArrayInputStream bis = new ByteArrayInputStream(data.getBytes());
 
         // nothing read from stream
-        Assert.assertEquals(data.getBytes().length, bis.available());
+        assertEquals(data.getBytes().length, bis.available());
 
         conn.setRequestBody(bis);
         conn.execute();
 
         // stream was read to end
-        Assert.assertEquals(0, bis.available());
+        assertEquals(0, bis.available());
     }
 
     /*
@@ -85,7 +86,7 @@ public class HttpTest {
         ByteArrayInputStream bis = new ByteArrayInputStream(data.getBytes());
 
         // nothing read from stream
-        Assert.assertEquals(data.getBytes().length, bis.available());
+        assertEquals(data.getBytes().length, bis.available());
 
         conn.setRequestBody(bis);
         try {
@@ -96,7 +97,7 @@ public class HttpTest {
         }
 
         // stream was not read because execute() was not called
-        Assert.assertEquals(data.getBytes().length, bis.available());
+        assertEquals(data.getBytes().length, bis.available());
     }
 
 
@@ -120,24 +121,24 @@ public class HttpTest {
         ByteArrayInputStream bis = new ByteArrayInputStream(data.getBytes());
 
         // nothing read from stream
-        Assert.assertEquals(data.getBytes().length, bis.available());
+        assertEquals(data.getBytes().length, bis.available());
 
         conn.setRequestBody(bis);
         conn.execute();
 
         // stream was read to end
-        Assert.assertEquals(0, bis.available());
-        Assert.assertEquals(2, conn.getConnection().getResponseCode() / 100);
+        assertEquals(0, bis.available());
+        assertEquals(2, conn.getConnection().getResponseCode() / 100);
 
         //check the json
         Gson gson = new Gson();
         JsonObject response = gson.fromJson(new InputStreamReader(conn.getConnection()
                 .getInputStream()), JsonObject.class);
 
-        Assert.assertTrue(response.has("ok"));
-        Assert.assertTrue(response.get("ok").getAsBoolean());
-        Assert.assertTrue(response.has("id"));
-        Assert.assertTrue(response.has("rev"));
+        assertTrue(response.has("ok"));
+        assertTrue(response.get("ok").getAsBoolean());
+        assertTrue(response.has("id"));
+        assertTrue(response.has("rev"));
     }
 
     /**
@@ -158,24 +159,24 @@ public class HttpTest {
         ByteArrayInputStream bis = new ByteArrayInputStream(data.getBytes());
 
         // nothing read from stream
-        Assert.assertEquals(data.getBytes().length, bis.available());
+        assertEquals(data.getBytes().length, bis.available());
 
         conn.setRequestBody(bis);
         conn.execute();
 
         // stream was read to end
-        Assert.assertEquals(0, bis.available());
-        Assert.assertEquals(2, conn.getConnection().getResponseCode() / 100);
+        assertEquals(0, bis.available());
+        assertEquals(2, conn.getConnection().getResponseCode() / 100);
 
         //check the json
         Gson gson = new Gson();
         JsonObject response = gson.fromJson(new InputStreamReader(conn.getConnection()
                 .getInputStream()), JsonObject.class);
 
-        Assert.assertTrue(response.has("ok"));
-        Assert.assertTrue(response.get("ok").getAsBoolean());
-        Assert.assertTrue(response.has("id"));
-        Assert.assertTrue(response.has("rev"));
+        assertTrue(response.has("ok"));
+        assertTrue(response.get("ok").getAsBoolean());
+        assertTrue(response.has("id"));
+        assertTrue(response.has("rev"));
     }
 
     /**
@@ -213,10 +214,10 @@ public class HttpTest {
             //expecting name=...&password=...
             String[] parts = Utils.splitAndAssert(sessionRequestContent, "&", 1);
             String username = URLDecoder.decode(Utils.splitAndAssert(parts[0], "=", 1)[1], "UTF-8");
-            Assert.assertEquals("The username URL decoded username should match", mockUser,
+            assertEquals("The username URL decoded username should match", mockUser,
                     username);
             String password = URLDecoder.decode(Utils.splitAndAssert(parts[1], "=", 1)[1], "UTF-8");
-            Assert.assertEquals("The username URL decoded password should match", mockPass,
+            assertEquals("The username URL decoded password should match", mockPass,
                     password);
         } finally {
             server.shutdown();
@@ -302,7 +303,7 @@ public class HttpTest {
         // this is the request that should have the new cookie.
         RecordedRequest request = mockWebServer.takeRequest();
         String headerValue = request.getHeader("Cookie");
-        Assert.assertEquals
+        assertEquals
                 ("AuthSession=\"RenewCookie_a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz" +
                         "\"", headerValue);
     }
@@ -516,5 +517,51 @@ public class HttpTest {
         assertNotNull("The custom header should have been present", request.getHeader(headerName));
         assertEquals("The custom header should have the specified value", headerValue, request
                 .getHeader(headerName));
+    }
+
+    /**
+     * Test that chunking is used when input stream length is not known.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testChunking() throws Exception {
+        mockWebServer.enqueue(new MockResponse());
+        final int chunkSize = 1024 * 8;
+        final int chunks = 50 * 4;
+        CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .build();
+        // POST some large random data
+        client.executeRequest(Http.POST(mockWebServer.url("/").url(), "text/plain")
+                .setRequestBody(new RandomInputStreamGenerator(chunks * chunkSize)));
+        assertEquals("There should have been 1 request", 1, mockWebServer
+                .getRequestCount());
+        RecordedRequest request = mockWebServer.takeRequest();
+        assertNotNull("The recorded request should not be null", request);
+        assertNull("There should be no Content-Length header", request.getHeader("Content-Length"));
+        assertEquals("The Transfer-Encoding should be chunked", "chunked", request.getHeader
+                ("Transfer-Encoding"));
+
+        // It would be nice to assert that we got the chunk sizes we were expecting, but sadly the
+        // HttpURLConnection and ChunkedOutputStream only use the chunkSize as a suggestion and seem
+        // to use the buffer size instead. The best assertion we can make is that we did receive
+        // multiple chunks.
+        assertTrue("There should have been at least 2 chunks", request.getChunkSizes().size() > 1);
+    }
+
+    private static final class RandomInputStreamGenerator implements HttpConnection
+            .InputStreamGenerator {
+        final byte[] content;
+
+        RandomInputStreamGenerator(int sizeOfRandomContent) {
+            // Construct a byte array of random data
+            content = new byte[sizeOfRandomContent];
+            new java.util.Random().nextBytes(content);
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return new ByteArrayInputStream(content);
+        }
     }
 }
