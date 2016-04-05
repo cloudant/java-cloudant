@@ -16,13 +16,9 @@ package com.cloudant.tests.util;
 
 import com.squareup.okhttp.mockwebserver.Dispatcher;
 import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
-import org.junit.rules.ExternalResource;
-
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.security.KeyStore;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -32,7 +28,7 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
-public class MockWebServerResource extends ExternalResource {
+public class MockWebServerResources {
 
     /**
      * A mock cookie response that is OK
@@ -43,42 +39,12 @@ public class MockWebServerResource extends ExternalResource {
                     "AuthSession=\"a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz\";")
             .setBody("{\"ok\":true,\"name\":\"mockUser\",\"roles\":[]}");
 
-    private static final Logger logger = Logger.getLogger(MockWebServerResource.class.getName());
+    private static final Logger logger = Logger.getLogger(MockWebServerResources.class.getName());
 
     //Keystore information for https
     private static String KEYSTORE_FILE = "src/test/resources/SslAuthenticationTest.keystore";
     private static String KEYSTORE_PASSWORD = "password";
     private static String KEY_PASSWORD = "password";
-
-    private final MockWebServer mockWebServer = new MockWebServer();
-
-    public MockWebServerResource() {
-        this(false);
-    }
-
-    public MockWebServerResource(boolean useHttps) {
-        if (useHttps) {
-            mockWebServer.useHttps(getSSLSocketFactory(), false);
-        }
-    }
-
-    @Override
-    protected void before() throws Throwable {
-        mockWebServer.start();
-    }
-
-    @Override
-    protected void after() {
-        try {
-            mockWebServer.shutdown();
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "IOExeption during mock server shutdown", e);
-        }
-    }
-
-    public MockWebServer getServer() {
-        return mockWebServer;
-    }
 
     public static SSLSocketFactory getSSLSocketFactory() {
         try {
@@ -92,7 +58,7 @@ public class MockWebServerResource extends ExternalResource {
             sslContext.init(kmf.getKeyManagers(), null, null);
             return sslContext.getSocketFactory();
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error initializing SimpleHttpsServer", e);
+            logger.log(Level.SEVERE, "Error initializing test SSLSocketFactory", e);
             return null;
         }
     }

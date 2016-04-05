@@ -22,7 +22,7 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.MockWebServerResource;
+import com.cloudant.tests.util.MockWebServerResources;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 
@@ -42,13 +42,11 @@ public class SslAuthenticationTest {
     private static CloudantClient dbClient = dbClientResource.get();
 
     @Rule
-    public MockWebServerResource mockServerResource = new MockWebServerResource(true);
-
-    private MockWebServer server;
+    public MockWebServer server = new MockWebServer();
 
     @Before
     public void getMockWebServer() {
-        server = mockServerResource.getServer();
+        server.useHttps(MockWebServerResources.getSSLSocketFactory(), false);
     }
 
     /**
@@ -177,7 +175,7 @@ public class SslAuthenticationTest {
     public void localSSLAuthenticationDisabledWithCookieAuth() throws Exception {
 
         // Mock up an OK cookie response then an OK response for the getAllDbs()
-        server.enqueue(MockWebServerResource.OK_COOKIE);
+        server.enqueue(MockWebServerResources.OK_COOKIE);
         server.enqueue(new MockResponse()); //OK 200
 
         // Use a username and password to enable the cookie auth interceptor
@@ -197,7 +195,7 @@ public class SslAuthenticationTest {
     public void localSSLAuthenticationEnabledWithCookieAuth() throws Exception {
 
         // Mock up an OK cookie response then an OK response for the getAllDbs()
-        server.enqueue(MockWebServerResource.OK_COOKIE);
+        server.enqueue(MockWebServerResources.OK_COOKIE);
         server.enqueue(new MockResponse()); //OK 200
 
         // Use a username and password to enable the cookie auth interceptor

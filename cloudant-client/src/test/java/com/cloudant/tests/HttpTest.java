@@ -19,7 +19,7 @@ import com.cloudant.http.interceptors.CookieInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
-import com.cloudant.tests.util.MockWebServerResource;
+import com.cloudant.tests.util.MockWebServerResources;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -53,8 +53,7 @@ public class HttpTest {
     @ClassRule
     public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
     @Rule
-    public MockWebServerResource mwr = new MockWebServerResource();
-    public MockWebServer mockWebServer = mwr.getServer();
+    public MockWebServer mockWebServer = new MockWebServer();
 
     /*
      * Basic test that we can write a document body by POSTing to a known database
@@ -194,7 +193,7 @@ public class HttpTest {
 
         MockWebServer server = new MockWebServer();
         //expect a cookie request then a GET
-        server.enqueue(MockWebServerResource.OK_COOKIE);
+        server.enqueue(MockWebServerResources.OK_COOKIE);
         server.enqueue(new MockResponse());
 
         server.start();
@@ -238,10 +237,10 @@ public class HttpTest {
         // GET request -> 403
         // _session for new cookie
         // GET replay -> 200
-        mockWebServer.enqueue(MockWebServerResource.OK_COOKIE);
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
         mockWebServer.enqueue(new MockResponse().setResponseCode(403).setBody
                 ("{\"error\":\"credentials_expired\", \"reason\":\"Session expired\"}\r\n"));
-        mockWebServer.enqueue(MockWebServerResource.OK_COOKIE);
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
         mockWebServer.enqueue(new MockResponse());
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
@@ -277,7 +276,7 @@ public class HttpTest {
         // GET request -> 403
         // _session for new cookie
         // GET replay -> 200
-        mockWebServer.enqueue(MockWebServerResource.OK_COOKIE);
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
         mockWebServer.enqueue(new MockResponse().setResponseCode(200).addHeader("Set-Cookie",
                 String.format(Locale.ENGLISH, "%s;", renewalCookieValue))
                 .setBody("{\"hello\":\"world\"}\r\n"));
@@ -321,7 +320,7 @@ public class HttpTest {
         // Request sequence
         // _session request to get Cookie
         // GET request -> 403 (CouchDbException)
-        mockWebServer.enqueue(MockWebServerResource.OK_COOKIE);
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
         mockWebServer.enqueue(new MockResponse().setResponseCode(403).setBody
                 ("{\"error\":\"403_not_expired_test\", \"reason\":\"example reason\"}\r\n"));
 
@@ -478,10 +477,10 @@ public class HttpTest {
     @Test
     public void testCookieRenewOnPost() throws Exception {
 
-        mockWebServer.enqueue(MockWebServerResource.OK_COOKIE);
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
         mockWebServer.enqueue(new MockResponse().setResponseCode(403).setBody
                 ("{\"error\":\"credentials_expired\", \"reason\":\"Session expired\"}\r\n"));
-        mockWebServer.enqueue(MockWebServerResource.OK_COOKIE);
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
         mockWebServer.enqueue(new MockResponse());
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)

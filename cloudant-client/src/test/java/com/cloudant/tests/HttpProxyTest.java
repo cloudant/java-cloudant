@@ -21,12 +21,10 @@ import static org.junit.Assert.assertTrue;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.http.Http;
 import com.cloudant.http.interceptors.ProxyAuthInterceptor;
-import com.cloudant.tests.util.MockWebServerResource;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -37,14 +35,7 @@ import java.util.regex.Pattern;
 public class HttpProxyTest {
 
     @Rule
-    public MockWebServerResource serverResource = new MockWebServerResource();
-    public MockWebServer server;
-
-    @Before
-    public void setup() {
-        server = serverResource.getServer();
-    }
-
+    public MockWebServer server = new MockWebServer();
 
     /**
      * This test validates that proxy configuration is correctly used.

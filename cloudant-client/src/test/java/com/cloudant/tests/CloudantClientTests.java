@@ -34,7 +34,7 @@ import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.MockWebServerResource;
+import com.cloudant.tests.util.MockWebServerResources;
 import com.cloudant.tests.util.TestLog;
 import com.cloudant.tests.util.Utils;
 import com.squareup.okhttp.mockwebserver.MockResponse;
@@ -247,7 +247,7 @@ public class CloudantClientTests {
 
         //start a simple http server
         MockWebServer server = new MockWebServer();
-        server.setDispatcher(new MockWebServerResource.SleepingDispatcher(READ_TIMEOUT * 2,
+        server.setDispatcher(new MockWebServerResources.SleepingDispatcher(READ_TIMEOUT * 2,
                 TimeUnit.MILLISECONDS));
 
         try {
