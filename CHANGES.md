@@ -1,3 +1,6 @@
+# Unreleased
+- [FIX] Incorrect method names in overview documentation example for connecting to Cloudant service.
+
 # 2.4.2 (2016-04-07)
 - [IMPROVED] Use the JVM default chunk size for HTTP content of unknown length.
 - [FIX] Regression where `JsonParseException` would be thrown if `Database.findByIndex` selector
