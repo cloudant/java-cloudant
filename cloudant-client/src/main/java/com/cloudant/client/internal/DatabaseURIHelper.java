@@ -31,8 +31,6 @@ import java.util.Map;
  */
 public class DatabaseURIHelper extends URIBaseMethods<DatabaseURIHelper> {
 
-    private static final String DESIGN_PREFIX = "_design/";
-
     /**
      * Constructs a {@code DatabaseURIHelper} for a given Cloudant or CouchDB URI and database name.
      */
@@ -166,12 +164,7 @@ public class DatabaseURIHelper extends URIBaseMethods<DatabaseURIHelper> {
     }
 
     public DatabaseURIHelper documentId(String documentId) {
-        //Handle design documents
-        if(documentId.startsWith(DESIGN_PREFIX)) {
-            ensureDesignPrefix(documentId);
-        } else {
-            this.path(documentId);
-        }
+        this.path(documentId);
         return returnThis();
     }
 
@@ -199,17 +192,4 @@ public class DatabaseURIHelper extends URIBaseMethods<DatabaseURIHelper> {
         return returnThis();
     }
 
-    /**
-     * Certify that the id in the design document contains the necessary `_design` prefix.
-     * The _design prefix is passed separately to path method.
-     * @param id The design document's id
-     */
-    private DatabaseURIHelper ensureDesignPrefix(String id)
-    {
-        id = id.startsWith(DESIGN_PREFIX)
-                ? id.replace(DESIGN_PREFIX, "")
-                : id;
-        this.path("_design").path(id);
-        return returnThis();
-    }
 }

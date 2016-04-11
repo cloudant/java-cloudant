@@ -71,6 +71,7 @@ import java.util.List;
  */
 public class DesignDocumentManager {
 
+    private static final String DESIGN_PREFIX = "_design/";
     private Database db;
 
     DesignDocumentManager(Database db) {
@@ -82,17 +83,27 @@ public class DesignDocumentManager {
      * <p>This method will first try to find a document in the database with the same id
      * as the given document, if it is not found then the given document will be saved to the
      * database.
+     * </p>
      * <p>If the document was found in the database, it will be compared with the given document
      * using {@code equals()}. If both documents are not equal, then the given document will be
      * saved to the database and updates the existing document.
+     * </p>
+     * <p>
+     * If the design document's ID is not prefixed with _design, then the _design prefix will be
+     * added.
+     * </p>
      *
-     * @param document the design document to synchronize (optionally prefixed with "_design/")
+     * @param document the design document to synchronize
      * @return {@link Response} as a result of a document save or update, or returns {@code null}
      * if no action was taken and the document in the database is up-to-date with the given
      * document.
      */
     public Response put(DesignDocument document) {
         CouchDbUtil.assertNotEmpty(document, "DesignDocument");
+
+        // Ensure the _design prefix
+        ensureDesignPrefixObject(document);
+
         DesignDocument documentFromDb;
         try {
             documentFromDb = get(document.getId());
@@ -127,7 +138,7 @@ public class DesignDocumentManager {
      */
     public DesignDocument get(String id) {
         assertNotEmpty(id, "id");
-        return db.find(DesignDocument.class, id);
+        return db.find(DesignDocument.class, ensureDesignPrefix(id));
     }
 
     /**
@@ -140,7 +151,7 @@ public class DesignDocumentManager {
     public DesignDocument get(String id, String rev) {
         assertNotEmpty(id, "id");
         assertNotEmpty(id, "rev");
-        return db.find(DesignDocument.class, id, rev);
+        return db.find(DesignDocument.class, ensureDesignPrefix(id), rev);
     }
 
     /**
@@ -151,21 +162,21 @@ public class DesignDocumentManager {
      */
     public Response remove(String id) {
         assertNotEmpty(id, "id");
-        DesignDocument find = db.find(DesignDocument.class, id);
+        DesignDocument find = db.find(DesignDocument.class, ensureDesignPrefix(id));
         return db.remove(find.getId(), find.getRevision());
     }
 
     /**
      * Removes a design document using the id and rev from the database.
      *
-     * @param id  the document id
+     * @param id  the document id (optionally prefixed with "_design/")
      * @param rev the document revision
      * @return {@link DesignDocument}
      */
     public Response remove(String id, String rev) {
         assertNotEmpty(id, "id");
         assertNotEmpty(id, "rev");
-        return db.remove(id, rev);
+        return db.remove(ensureDesignPrefix(id), rev);
 
     }
 
@@ -177,6 +188,7 @@ public class DesignDocumentManager {
      */
     public Response remove(DesignDocument designDocument) {
         assertNotEmpty(designDocument, "DesignDocument");
+        ensureDesignPrefixObject(designDocument);
         return db.remove(designDocument);
     }
 
@@ -221,6 +233,17 @@ public class DesignDocumentManager {
             //UTF-8 should be supported on all JVMs
             throw new RuntimeException(e);
         }
+    }
+
+    private static void ensureDesignPrefixObject(DesignDocument ddoc) {
+        ddoc.setId(ensureDesignPrefix(ddoc.getId()));
+    }
+
+    private static String ensureDesignPrefix(String id) {
+        if (!id.startsWith(DESIGN_PREFIX)) {
+            id = DESIGN_PREFIX + id;
+        }
+        return id;
     }
 
 }

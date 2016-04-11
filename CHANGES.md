@@ -1,4 +1,5 @@
 # Unreleased
+- [FIX] Regression where `_design/` was not optional in ID when using `DesignDocumentManager` methods.
 - [FIX] Incorrect method names in overview documentation example for connecting to Cloudant service.
 
 # 2.4.2 (2016-04-07)
