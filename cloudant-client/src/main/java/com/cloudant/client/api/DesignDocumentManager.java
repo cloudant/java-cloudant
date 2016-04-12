@@ -18,8 +18,11 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotE
 
 import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.api.model.Response;
+import com.cloudant.client.internal.DatabaseURIHelper;
+import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
+import com.cloudant.http.Http;
 import com.google.gson.Gson;
 
 import org.apache.commons.io.FileUtils;
@@ -72,9 +75,12 @@ import java.util.List;
 public class DesignDocumentManager {
 
     private static final String DESIGN_PREFIX = "_design/";
-    private Database db;
 
-    DesignDocumentManager(Database db) {
+    private final CloudantClient client;
+    private final Database db;
+
+    DesignDocumentManager(CloudantClient client, Database db) {
+        this.client = client;
         this.db = db;
     }
 
@@ -162,8 +168,17 @@ public class DesignDocumentManager {
      */
     public Response remove(String id) {
         assertNotEmpty(id, "id");
-        DesignDocument find = db.find(DesignDocument.class, ensureDesignPrefix(id));
-        return db.remove(find.getId(), find.getRevision());
+        id = ensureDesignPrefix(id);
+        String revision = null;
+        // Get the revision ID from ETag, removing leading and trailing "
+        revision = client.executeRequest(Http.HEAD(new DatabaseURIHelper(db.getDBUri()
+        ).documentUri(id))).getConnection().getHeaderField("ETag");
+        if (revision != null) {
+            revision = revision.substring(1, revision.length() - 1);
+            return db.remove(id, revision);
+        } else {
+            throw new CouchDbException("No ETag header found for design document with id " + id);
+        }
     }
 
     /**

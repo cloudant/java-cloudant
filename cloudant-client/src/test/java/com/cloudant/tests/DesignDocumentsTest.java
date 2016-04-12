@@ -27,12 +27,17 @@ import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.api.views.AllDocsRequest;
 import com.cloudant.client.api.views.Key;
+import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.util.MockWebServerResource;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.JsonObject;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -52,6 +57,8 @@ public class DesignDocumentsTest {
     public static CloudantClientResource clientResource = new CloudantClientResource();
     @Rule
     public DatabaseResource dbResource = new DatabaseResource(clientResource);
+    @ClassRule
+    public static MockWebServer mockWebServer = new MockWebServer();
 
     private Database db;
     private CloudantClient account;
@@ -323,4 +330,45 @@ public class DesignDocumentsTest {
         designManager.remove("_design/views101");
     }
 
+    /**
+     * Test that a CouchDbException is thrown if an IOException is encountered when trying to get
+     * revision information for a design document removal.
+     *
+     * @throws Exception
+     */
+    @Test(expected = CouchDbException.class)
+    public void couchDbExceptionIfIOExceptionDuringDDocRemove() throws Exception {
+        CloudantClient mockClient = CloudantClientHelper.newMockWebServerClientBuilder
+                (mockWebServer).readTimeout(50, TimeUnit.MILLISECONDS).build();
+        // Cause a read timeout to generate an IOException
+        mockWebServer.setDispatcher(new MockWebServerResource.SleepingDispatcher(100, TimeUnit
+                .MILLISECONDS) {
+            @Override
+            public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+                if ("HEAD".equals(request.getMethod())) {
+                    return super.dispatch(request);
+                } else {
+                    return new MockResponse();
+                }
+            }
+        });
+        Database database = mockClient.database(dbResource.getDatabaseName(), false);
+        // Try to remove a design document by id only, generates a HEAD request for revision info
+        database.getDesignDocumentManager().remove("example");
+    }
+
+    /**
+     * Test that a CouchDbException is thrown
+     *
+     * @throws Exception
+     */
+    @Test(expected = CouchDbException.class)
+    public void couchDbExceptionIfNoETagOnDDocRemove() throws Exception {
+        CloudantClient mockClient = CloudantClientHelper.newMockWebServerClientBuilder
+                (mockWebServer).build();
+        Database database = mockClient.database(dbResource.getDatabaseName(), false);
+        // Queue a mock response with no "ETag" header
+        mockWebServer.enqueue(new MockResponse());
+        database.getDesignDocumentManager().remove("example");
+    }
 }
