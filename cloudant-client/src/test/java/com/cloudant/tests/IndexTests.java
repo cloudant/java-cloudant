@@ -14,7 +14,10 @@
 
 package com.cloudant.tests;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -27,8 +30,14 @@ import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -40,6 +49,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Category(RequiresCloudant.class)
 public class IndexTests {
@@ -277,5 +287,100 @@ public class IndexTests {
         FindByIndexOptions findByIndexOptions = new FindByIndexOptions();
         findByIndexOptions.fields("\"");
         db.findByIndex("{\"type\":\"subscription\"}", Movie.class, findByIndexOptions);
+    }
+
+    /**
+     * Test that a design document name is passed as a string.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void useIndexDesignDocJsonTypeIsString() throws Exception {
+        JsonElement useIndex = getUseIndexFromRequest(new FindByIndexOptions().useIndex
+                ("Movie_year"));
+        assertUseIndexString(useIndex);
+    }
+
+    private void assertUseIndexString(JsonElement useIndex) throws Exception {
+        assertNotNull("The use_index property should not be null", useIndex);
+        assertTrue("The use_index property should be a JsonPrimitive", useIndex.isJsonPrimitive());
+        JsonPrimitive useIndexPrimitive = useIndex.getAsJsonPrimitive();
+        assertTrue("The use_index property should be a string", useIndexPrimitive.isString());
+        String useIndexString = useIndexPrimitive.getAsString();
+        assertEquals("The use_index property should be Movie_year", "Movie_year", useIndexString);
+    }
+
+    /**
+     * Test that a design document and index name is passed as an array.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void useIndexDesignDocAndIndexNameJsonTypeIsArray() throws Exception {
+        JsonElement useIndex = getUseIndexFromRequest(new FindByIndexOptions().useIndex
+                ("Movie_year", "Person_name"));
+        System.out.println(useIndex);
+        assertNotNull("The use_index property should not be null", useIndex);
+        assertTrue("The use_index property should be a JsonArray", useIndex.isJsonArray());
+        JsonArray useIndexArray = useIndex.getAsJsonArray();
+        assertEquals("The use_index array should have two elements", 2, useIndexArray.size());
+        assertEquals("The use_index design document should be Movie_year", "Movie_year",
+                useIndexArray.get(0).getAsString());
+        assertEquals("The use_index index name should be Person_name", "Person_name",
+                useIndexArray.get(1).getAsString());
+    }
+
+    /**
+     * Test that use_index is not specified if no index is provided
+     *
+     * @throws Exception
+     */
+    @Test
+    public void useIndexNotSpecified() throws Exception {
+        JsonElement useIndex = getUseIndexFromRequest(null);
+        assertNull("The use_index property should be null (i.e. was not specified)", useIndex);
+    }
+
+    /**
+     * Test that use_index is replaced if called multiple times
+     *
+     * @throws Exception
+     */
+    @Test
+    public void useIndexReplaced() throws Exception {
+        FindByIndexOptions options = new FindByIndexOptions().useIndex("Movie_year",
+                "Person_name").useIndex("Movie_year");
+        assertUseIndexString(getUseIndexFromRequest(options));
+    }
+
+    /**
+     * Uses a mock web server to record a _find request using the specified options
+     *
+     * @param options FindByIndexOptions to test
+     * @return the JsonElement from the use_index property of the JsonObject POSTed with the request
+     * @throws Exception
+     */
+    private JsonElement getUseIndexFromRequest(FindByIndexOptions options) throws Exception {
+        JsonElement useIndexRequestProperty = null;
+        MockWebServer mockWebServer = new MockWebServer();
+        // Return 200 OK with empty array of docs (once for each request)
+        mockWebServer.enqueue(new MockResponse().setBody("{ \"docs\" : []}"));
+        mockWebServer.start();
+        try {
+            CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder
+                    (mockWebServer).build();
+            Database db = client.database("mock", false);
+            if (options != null) {
+                db.findByIndex("{}", Movie.class, options);
+            } else {
+                db.findByIndex("{}", Movie.class);
+            }
+            RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+            JsonObject body = new Gson().fromJson(request.getBody().readUtf8(), JsonObject.class);
+            useIndexRequestProperty = body.get("use_index");
+        } finally {
+            mockWebServer.shutdown();
+        }
+        return useIndexRequestProperty;
     }
 }

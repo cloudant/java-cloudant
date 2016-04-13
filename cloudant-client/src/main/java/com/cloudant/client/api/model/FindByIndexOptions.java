@@ -14,8 +14,11 @@
 
 package com.cloudant.client.api.model;
 
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotNull;
+
 import com.cloudant.client.api.Database;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 
 import java.util.ArrayList;
@@ -48,7 +51,8 @@ public class FindByIndexOptions {
     private List<IndexField> sort = new ArrayList<IndexField>();
     private List<String> fields = new ArrayList<String>();
     private Integer readQuorum;
-    private JsonArray useIndex = new JsonArray();
+    // Either a string for design document only or an array of ["designDoc", "indexName"]
+    private JsonElement useIndex = null;
 
     /**
      * @param limit limit the number of results return
@@ -84,6 +88,7 @@ public class FindByIndexOptions {
      * @return this to set additional options
      */
     public FindByIndexOptions sort(IndexField sort) {
+        assertNotNull(sort, "sort");
         this.sort.add(sort);
         return this;
     }
@@ -96,6 +101,7 @@ public class FindByIndexOptions {
      * @return this to set additional options
      */
     public FindByIndexOptions fields(String field) {
+        assertNotNull(field, "field");
         this.fields.add(field);
         return this;
     }
@@ -107,8 +113,8 @@ public class FindByIndexOptions {
      * @return this to set additional options
      */
     public FindByIndexOptions useIndex(String designDocument) {
-        JsonPrimitive jsonDesign = new JsonPrimitive(designDocument);
-        this.useIndex.add(jsonDesign);
+        assertNotNull(designDocument, "designDocument");
+        this.useIndex = new JsonPrimitive(designDocument);
         return this;
     }
 
@@ -120,10 +126,12 @@ public class FindByIndexOptions {
      * @return this to set additional options
      */
     public FindByIndexOptions useIndex(String designDocument, String indexName) {
-        JsonPrimitive jsonDesign = new JsonPrimitive(designDocument);
-        JsonPrimitive jsonIndex = new JsonPrimitive(indexName);
-        this.useIndex.add(jsonDesign);
-        this.useIndex.add(jsonIndex);
+        assertNotNull(designDocument, "designDocument");
+        assertNotNull(indexName, "indexName");
+        JsonArray index = new JsonArray();
+        index.add(new JsonPrimitive(designDocument));
+        index.add(new JsonPrimitive(indexName));
+        this.useIndex = index;
         return this;
     }
 
@@ -148,6 +156,6 @@ public class FindByIndexOptions {
     }
 
     public String getUseIndex() {
-        return useIndex.toString();
+        return (useIndex != null) ? useIndex.toString() : null;
     }
 }

@@ -1188,7 +1188,7 @@ public class Database {
         }
         if (options.getUseIndex() != null) {
             indexObject.add("use_index", getGson().fromJson(options.getUseIndex(),
-                    JsonArray.class));
+                    JsonElement.class));
         }
 
         return indexObject;
