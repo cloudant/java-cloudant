@@ -34,12 +34,11 @@ import com.cloudant.tests.util.DatabaseResource;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.JsonObject;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.rules.RuleChain;
 
 import java.io.File;
 import java.util.List;
@@ -49,44 +48,56 @@ import java.util.concurrent.TimeUnit;
 @Category(RequiresDB.class)
 public class DesignDocumentsTest {
 
-    private static CloudantClientResource clientResource = new CloudantClientResource();
-    private static DatabaseResource dbResource = new DatabaseResource(clientResource);
     @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
+    public static CloudantClientResource clientResource = new CloudantClientResource();
+    @Rule
+    public DatabaseResource dbResource = new DatabaseResource(clientResource);
 
-    private static Database db;
+    private Database db;
     private CloudantClient account;
     private File rootDesignDir;
-    private File designDocExample;
+    private DesignDocument designDocExample;
     private DesignDocumentManager designManager;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         account = clientResource.get();
         db = dbResource.get();
         rootDesignDir = new File(System.getProperty("user.dir")
                 + "/src/test/resources/design-files");
-        designDocExample = new File(String.format("%s/example_design_doc.js", rootDesignDir));
         designManager = db.getDesignDocumentManager();
+        designDocExample = fileToDesignDocument("example");
+    }
+
+    /**
+     * Test helper that converts a test resource js file (located in the {@link #rootDesignDir}
+     * to a DesignDocument.
+     *
+     * @param name parts of the file name before _design_doc.js (e.g. "conflicts", "example", or
+     *             "views101")
+     * @return the DesignDocument object generated from the file.
+     * @throws Exception
+     */
+    private DesignDocument fileToDesignDocument(String name) throws Exception {
+        File testDesignDocFile = new File(String.format("%s/%s_design_doc.js", rootDesignDir, name));
+        return designManager.fromFile(testDesignDocFile);
     }
 
     @Test
     public void designDocSync() throws Exception {
-        DesignDocument designDoc = DesignDocumentManager.fromFile(designDocExample);
-
-        db.getDesignDocumentManager().put(designDoc);
+        Utils.assertOKResponse(designManager.put(designDocExample));
     }
 
     @Test
     public void designDocCompare() throws Exception {
-        DesignDocument designDoc1 = DesignDocumentManager.fromFile(designDocExample);
-        Response response = designManager.put(designDoc1);
+        DesignDocument exampleDoc = fileToDesignDocument("example");
+        Response response = designManager.put(exampleDoc);
         // Assign the revision to our local DesignDocument object (needed for equality)
-        designDoc1.setRevision(response.getRev());
+        exampleDoc.setRevision(response.getRev());
 
         DesignDocument designDoc11 = db.getDesignDocumentManager().get("_design/example");
 
-        assertEquals(designDoc1, designDoc11);
+        assertEquals("The design document retrieved should equal ", exampleDoc, designDoc11);
     }
 
     @Test
@@ -94,7 +105,7 @@ public class DesignDocumentsTest {
         DesignDocument designDoc1 = DesignDocumentManager.fromFile(
                 new File(String.format("%s/views101_design_doc.js", rootDesignDir)));
 
-        designDoc1.setId("MyAmazingDdoc");
+        designDoc1.setId("_design/MyAmazingDdoc");
         JsonObject indexes = designDoc1.getIndexes();
         designDoc1.setIndexes(null);
 
@@ -104,9 +115,7 @@ public class DesignDocumentsTest {
 
         designDoc1.setIndexes(indexes);
         response = designManager.put(designDoc1);
-
-        Assert.assertEquals(2, response.getStatusCode() / 100);
-
+        Utils.assertOKResponse(response);
     }
 
     @Test
@@ -121,11 +130,14 @@ public class DesignDocumentsTest {
     @Test
     public void updateDesignDocs() throws Exception {
         List<DesignDocument> designDocs = DesignDocumentManager.fromDirectory(rootDesignDir);
+        assertThat(designDocs.size(), not(0));
 
         DesignDocument[] docArray = designDocs.toArray(new DesignDocument[designDocs.size()]);
         designManager.put(docArray);
 
-        assertThat(designDocs.size(), not(0));
+        for (String id : new String[]{"_design/conflicts", "_design/example", "_design/views101"}) {
+            assertNotNull("", designManager.get(id));
+        }
     }
 
     /**
@@ -198,6 +210,117 @@ public class DesignDocumentsTest {
             //clean up the copied db (the original db will be cleaned up in the dbResource clean up)
             account.deleteDB(copiedDbName);
         }
+    }
+
+    /**
+     * Validate that a design document can be retrieved without using the "_design" prefix.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void designDocGetNoPrefix() throws Exception {
+        // Write a doc with a _design prefix
+        designManager.put(designDocExample);
+
+        // Retrieve it without a prefix
+        assertNotNull("The design doc should be retrieved without a _design prefix",
+                designManager.get("example"));
+    }
+
+    /**
+     * Validate that a design document can be retrieved without using the "_design" prefix when a
+     * revision is supplied
+     *
+     * @throws Exception
+     */
+    @Test
+    public void designDocGetNoPrefixWithRevision() throws Exception {
+        // Write a doc with a _design prefix
+        Response r = designManager.put(designDocExample);
+
+        // Retrieve it without a prefix
+        assertNotNull("The design doc should be retrieved without a _design prefix",
+                designManager.get("example", r.getRev()));
+    }
+
+    /**
+     * Validate that a design document can be retrieved without using the "_design" prefix.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void designDocRemoveNoPrefix() throws Exception {
+        // Write a doc with a _design prefix
+        designManager.put(designDocExample);
+
+        // Remove it without a prefix
+        Utils.assertOKResponse(designManager.remove("example"));
+    }
+
+    /**
+     * Validate that a design document can be retrieved without using the "_design" prefix when a
+     * revision is supplied
+     *
+     * @throws Exception
+     */
+    @Test
+    public void designDocRemoveNoPrefixWithRevision() throws Exception {
+        // Write a doc with a _design prefix
+        Response r = designManager.put(designDocExample);
+
+        // Retrieve it without a prefix
+        Utils.assertOKResponse(designManager.remove("example", r.getRev()));
+    }
+
+    /**
+     * Validate that a design document can be removed without using the "_design" prefix when a
+     * DesignDocument object is supplied
+     *
+     * @throws Exception
+     */
+    @Test
+    public void designDocRemoveNoPrefixWithObject() throws Exception {
+        // Write a doc with a _design prefix
+        Response r = designManager.put(designDocExample);
+
+        DesignDocument ddoc = new DesignDocument();
+        ddoc.setId("example");
+        ddoc.setRevision(r.getRev());
+
+        // Retrieve it without a prefix
+        Utils.assertOKResponse(designManager.remove(ddoc));
+    }
+
+    /**
+     * Validate that a design document can be retrieved without using the "_design" prefix.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void designDocPutNoPrefix() throws Exception {
+        // Write a doc without a _design prefix
+        // Create an example without the _design prefix
+        DesignDocument designDocExampleNoPrefix = fileToDesignDocument("example");
+        designDocExampleNoPrefix.setId("example");
+        Utils.assertOKResponse(designManager.put(designDocExampleNoPrefix));
+
+        // Retrieve it with a prefix
+        assertNotNull("The design doc should be retrievable with a _design prefix",
+                designManager.get("_design/example"));
+    }
+
+    /**
+     * Test that a design document with an index can be deleted.
+     * @throws Exception
+     */
+    @Test
+    public void deleteDesignDocWithIndex() throws Exception {
+        // Put a design document with indices
+        DesignDocument ddocWithIndices = fileToDesignDocument("views101");
+        designManager.put(ddocWithIndices);
+
+        // Now delete the design doc with indices
+        designManager.remove("_design/views101");
     }
 
 }

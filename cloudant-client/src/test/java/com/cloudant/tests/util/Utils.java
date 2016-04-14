@@ -19,6 +19,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -208,5 +209,10 @@ public class Utils {
 
     public static void putDesignDocs(Database db) throws FileNotFoundException {
         putDesignDocs(db, DESIGN_DOC_DIR);
+    }
+
+    public static void assertOKResponse(Response r) throws Exception {
+        assertTrue("The response code should be 2XX was " + r.getStatusCode(), r.getStatusCode()
+                / 100 == 2);
     }
 }
