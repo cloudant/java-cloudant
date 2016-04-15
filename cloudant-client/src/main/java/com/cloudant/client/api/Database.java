@@ -466,7 +466,7 @@ public class Database {
      * @see DesignDocumentManager
      */
     public DesignDocumentManager getDesignDocumentManager() {
-        return new DesignDocumentManager(this);
+        return new DesignDocumentManager(client, this);
     }
 
     /**

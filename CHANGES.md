@@ -1,4 +1,6 @@
 # Unreleased
+- [IMPROVED] Use a more efficient HEAD request for getting revision information when using
+  `DesignDocumentManager.remove(String id)`.
 - [FIX] Regression where `_design/` was not optional in ID when using `DesignDocumentManager` methods.
 - [FIX] Incorrect method names in overview documentation example for connecting to Cloudant service.
 

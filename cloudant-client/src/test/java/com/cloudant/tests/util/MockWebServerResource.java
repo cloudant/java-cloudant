@@ -14,14 +14,17 @@
 
 package com.cloudant.tests.util;
 
+import com.squareup.okhttp.mockwebserver.Dispatcher;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
 import org.junit.rules.ExternalResource;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.KeyStore;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -91,6 +94,27 @@ public class MockWebServerResource extends ExternalResource {
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error initializing SimpleHttpsServer", e);
             return null;
+        }
+    }
+
+    /**
+     * A dispatcher that sleeps for the time specified at construction on each request before
+     * responding. Useful for getting a SocketTimeoutException.
+     */
+    public static class SleepingDispatcher extends Dispatcher {
+
+        private final long sleepTime;
+        private final TimeUnit unit;
+
+        public SleepingDispatcher(long sleepTime, TimeUnit unit) {
+            this.sleepTime = sleepTime;
+            this.unit = unit;
+        }
+
+        @Override
+        public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+            unit.sleep(sleepTime);
+            return new MockResponse();
         }
     }
 }
