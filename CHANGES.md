@@ -2,6 +2,10 @@
 - [IMPROVED] Use a more efficient HEAD request for getting revision information when using
   `DesignDocumentManager.remove(String id)`.
 - [FIX] Regression where `_design/` was not optional in ID when using `DesignDocumentManager` methods.
+- [FIX] Issue where `use_index` was specified as an array instead of a string when only a design
+  document name was provided.
+- [FIX] Issue where empty array was passed for `use_index` option when `FindByIndexOptions.useIndex()`
+  was not used.
 - [FIX] Incorrect method names in overview documentation example for connecting to Cloudant service.
 
 # 2.4.2 (2016-04-07)
