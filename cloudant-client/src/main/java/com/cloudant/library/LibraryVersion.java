@@ -54,15 +54,13 @@ public class LibraryVersion implements Version {
                 }
             }
         }
-        USER_AGENT = String.format("%s/%s [Java %s; %s; %s (%s; %s; %s)]",
+        USER_AGENT = String.format("%s/%s/%s/%s/%s/%s",
                 ua,
                 version,
-                System.getProperty("java.vendor"),
                 System.getProperty("java.version"),
-                System.getProperty("java.runtime.version"),
-                System.getProperty("os.arch"),
+                System.getProperty("java.vendor"),
                 System.getProperty("os.name"),
-                System.getProperty("os.version"));
+                System.getProperty("os.arch"));
     }
 
     @Override
