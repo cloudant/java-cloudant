@@ -1,4 +1,5 @@
 # Unreleased
+- [IMPROVED] Reduced the length of the User-Agent header string.
 - [IMPROVED] Use a more efficient HEAD request for getting revision information when using
   `DesignDocumentManager.remove(String id)`.
 - [FIX] Regression where `_design/` was not optional in ID when using `DesignDocumentManager` methods.

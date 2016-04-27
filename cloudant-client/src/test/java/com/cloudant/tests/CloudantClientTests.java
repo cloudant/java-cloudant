@@ -101,19 +101,22 @@ public class CloudantClientTests {
         assertNotNull(membership);
     }
 
-    private final String userAgentRegex = "java-cloudant/[^\\s]+ " +
-            "\\[Java [^;]*;[^;]*;" +
-            "[^;]* \\([^;]*;[^;]*;[^;]*\\)\\]";
+    // java-cloudant/n.n.n or java-cloudant/unknown followed by 4 groups of /anything
+    private final String userAgentRegex = "java-cloudant/(?:(?:\\d+.\\d+.\\d+)|(?:unknown))" +
+            "(?:/{1}[^/]+){4}";
+    private final String userAgentFormat = "java-cloudant/version/jvm.version/jvm.vendor/os" +
+            ".name/os.arch";
 
     /**
      * Assert that the User-Agent header is of the expected form.
      */
     @Test
     public void testUserAgentHeaderString() {
-        assertTrue("The value of the User-Agent header should match the format " +
-                "\"java-cloudant/version [Java jvm.vendor; jvm" +
-                ".version; jvm.runtime.version (os.arch; os.name; os.version)]\"", new LibraryVersion().getUserAgentString().matches
-                (userAgentRegex));
+        String userAgentHeader = new LibraryVersion().getUserAgentString();
+        System.out.println(userAgentHeader);
+        assertTrue("The value of the User-Agent header: " + userAgentHeader + " should match the " +
+                        "format: " + userAgentFormat,
+                userAgentHeader.matches(userAgentRegex));
     }
 
     /**
@@ -139,11 +142,8 @@ public class CloudantClientTests {
                     .getHeader("User-Agent");
             assertNotNull("The User-Agent header should be present on the request",
                     userAgentHeader);
-            assertTrue("The value of the User-Agent header value on the request should match the " +
-                    "format " +
-                    "\"java-cloudant/version [Java jvm" +
-                    ".vendor; jvm" +
-                    ".version; jvm.runtime.version (os.arch; os.name; os.version)]\"",
+            assertTrue("The value of the User-Agent header " + userAgentHeader + " on the request" +
+                            " should match the format " + userAgentFormat,
                     userAgentHeader.matches(userAgentRegex));
         } finally {
             server.shutdown();
