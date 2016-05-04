@@ -23,8 +23,45 @@ import java.util.Map;
 
 /**
  * Encapsulates a design document.
+ * <P>
+ * This is the type of design document objects used by the
+ * {@link com.cloudant.client.api.DesignDocumentManager}.
+ * </P>
+ * <P>
+ * This class can be used as a deserialization target for design documents stored in a database.
+ * For example:
+ * </P>
+ * <pre>
+ * {@code
+ * DesignDocument exampleDDoc = database.find(DesignDocument.class, "_design/exampleDesignDoc");
+ * }
+ * </pre>
+ * <P>
+ * This class can also be used to create or update design documents.
+ * For example:
+ * </P>
+ * <pre>
+ * {@code
+ * // Create
+ * DesignDocument ddoc = new DesignDocument();
+ * // Call setters on ddoc to populate document
+ * ddoc.setId("_design/exampleDesignDoc");
+ * // Save to create the design document
+ * database.save(ddoc)
+ *
+ * // Update
+ * DesignDocument ddoc = database.find(DesignDocument.class, "_design/exampleDesignDoc");
+ * // Call setters to update values
+ * Map<String, String> updates = new HashMap<String, String>();
+ * updates.put("newUpdateHandler", "function (doc, req) { ... }");
+ * ddoc.setUpdates(updates);
+ * database.update(ddoc);
+ *
+ * }
+ * </pre>
  *
  * @author Ahmed Yehia
+ * @see com.cloudant.client.api.DesignDocumentManager
  * @since 0.0.2
  */
 public class DesignDocument extends com.cloudant.client.org.lightcouch.Document {
@@ -41,82 +78,214 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
     private JsonObject fulltext;
     private JsonObject indexes;
 
+    /**
+     * Get the language used for the views defined in this design document.
+     *
+     * @return typically either "javascript" or "query".
+     */
     public String getLanguage() {
         return language;
     }
 
+    /**
+     * Get the views defined in this design document.
+     *
+     * @return a map of view name to {@link MapReduce}
+     * from the view
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#views">Views</a>
+     */
     public Map<String, MapReduce> getViews() {
         return views;
     }
 
+    /**
+     * Get the string of the javascript function set for the design document's {@code
+     * validate_doc_update} property.
+     *
+     * @return string of validate_doc_update function
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#update-validators">Update validators
+     * </a>
+     */
     public String getValidateDocUpdate() {
         return validateDocUpdate;
     }
 
+    /**
+     * Get the array of URL rewriting rules set in the design document's {@code rewrites} property.
+     *
+     * @return array of JSON objects each representing a rewrite rule
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#rewrite-rules">Rewrite rules</a>
+     */
     public JsonArray getRewrites() {
         return rewrites;
     }
 
+    /**
+     * @return the design document's {@code fulltext} property
+     */
     public JsonObject getFulltext() {
         return fulltext;
     }
 
+    /**
+     * Get a JSON object containing all the indexes defined in the design document.
+     *
+     * @return the JSON object stored in the design document's {@code indexes} property
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#indexes">Indexes</a>
+     */
     public JsonObject getIndexes() {
         return indexes;
     }
 
+    /**
+     * Get the changes feed filter functions defined in this design document.
+     *
+     * @return map of filter name to function string
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#filter-functions">Filter functions</a>
+     */
     public Map<String, String> getFilters() {
         return filters;
     }
 
+    /**
+     * Get the show functions defined in this design document.
+     *
+     * @return map of show function name to function string
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#show-functions">Show functions</a>
+     */
     public Map<String, String> getShows() {
         return shows;
     }
 
+    /**
+     * Get the list functions defined in this design document.
+     *
+     * @return map of list function name to function string
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#list-functions">List functions</a>
+     */
     public Map<String, String> getLists() {
         return lists;
     }
 
+    /**
+     * Get the update handlers defined in this design document.
+     *
+     * @return map of update handler name to function string
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#update-handlers">Update handlers</a>
+     */
     public Map<String, String> getUpdates() {
         return updates;
     }
 
+    /**
+     * Set the language of the design document.
+     *
+     * @param language typically {@code "javascript"}
+     */
     public void setLanguage(String language) {
         this.language = language;
     }
 
+    /**
+     * Set the views defined in this design document's view property.
+     *
+     * @param views map of view name to MapReduce class
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#views">Views</a>
+     */
     public void setViews(Map<String, MapReduce> views) {
         this.views = views;
     }
 
+    /**
+     * Set the javascript function for the design document's {@code validate_doc_update} property.
+     *
+     * @param validateDocUpdate string defining validate_doc_update function
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#update-validators">Update validators
+     * </a>
+     */
     public void setValidateDocUpdate(String validateDocUpdate) {
         this.validateDocUpdate = validateDocUpdate;
     }
 
+    /**
+     * Set the array of URL rewriting rules set in the design document's {@code rewrites} property.
+     *
+     * @param rewrites array of JsonObjects each representing a rewrite rule
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#rewrite-rules">Rewrite rules</a>
+     */
     public void setRewrites(JsonArray rewrites) {
         this.rewrites = rewrites;
     }
 
+    /**
+     * @param fulltext JsonObject to set as the design document's {@code fulltext} property
+     */
     public void setFulltext(JsonObject fulltext) {
         this.fulltext = fulltext;
     }
 
+    /**
+     * Set a JSON object defining the indexes of this design document.
+     *
+     * @param indexes JsonObject defining the indexes
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#indexes">Indexes</a>
+     */
     public void setIndexes(JsonObject indexes) {
         this.indexes = indexes;
     }
 
+    /**
+     * Define the changes feed filter functions set in this design document.
+     *
+     * @param filters map of filter name to function string
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#filter-functions">Filter functions</a>
+     */
     public void setFilters(Map<String, String> filters) {
         this.filters = filters;
     }
 
+    /**
+     * Set the show functions defined in this design document.
+     *
+     * @param shows map of show function name to function string
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#show-functions">Show functions</a>
+     */
     public void setShows(Map<String, String> shows) {
         this.shows = shows;
     }
 
+    /**
+     * Set the list functions defined in this design document.
+     *
+     * @param lists map of list function name to function string
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#list-functions">List functions</a>
+     */
     public void setLists(Map<String, String> lists) {
         this.lists = lists;
     }
 
+    /**
+     * Set the update handlers defined in this design document.
+     *
+     * @param updates map of update handler name to function string
+     * @see <a target="_blank"
+     * href="https://docs.cloudant.com/design_documents.html#update-handlers">Update handlers</a>
+     */
     public void setUpdates(Map<String, String> updates) {
         this.updates = updates;
     }
@@ -184,7 +353,32 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
     }
 
     /**
-     * Encapsulates a Map-Reduce function in a view.
+     * Encapsulates the Map-Reduce function of a view.
+     *
+     * <pre>
+     * {@code
+     *
+     * // Javascript view definition in design document
+     * "views": {
+     *   "exampleView" : {
+     *       "map" : "function(doc) { emit(doc.propertyA, doc.propertyB); }"
+     *       "reduce" : "_count"
+     *   }
+     * }
+     *
+     * // Java example using MapReduce
+     *
+     * // Get the views from the design document
+     * Map<String, MapReduce> views = ddoc.getViews();
+     *
+     * // Get the MapReduce for the "exampleView"
+     * MapReduce exampleView = views.get("exampleView");
+     *
+     * // Get the strings of the map and reduce functions
+     * exampleView.getMap(); // "function(doc) { emit(doc.propertyA, doc.propertyB); }"
+     * exampleView.getReduce(); // "_count"
+     * }
+     * </pre>
      *
      * @author Ahmed Yehia
      */
@@ -193,18 +387,38 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
         private String reduce;
         private String dbcopy;
 
+        /**
+         * Get the defined map function.
+         *
+         * @return string of the javascript map function
+         */
         public String getMap() {
             return map;
         }
 
+        /**
+         * Get the defined reduce function.
+         *
+         * @return string of the javascript reduce function
+         */
         public String getReduce() {
             return reduce;
         }
 
+        /**
+         * Set the map function.
+         *
+         * @param map string of the javascript map function
+         */
         public void setMap(String map) {
             this.map = map;
         }
 
+        /**
+         * Set the reduce function.
+         *
+         * @param reduce string of the javascript reduce function
+         */
         public void setReduce(String reduce) {
             this.reduce = reduce;
         }
