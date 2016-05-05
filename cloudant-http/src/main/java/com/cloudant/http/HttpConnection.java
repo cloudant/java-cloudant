@@ -11,6 +11,8 @@
 package com.cloudant.http;
 
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
+import com.cloudant.http.interceptors.HttpConnectionInterceptorException;
+import com.cloudant.http.interceptors.RequestLimitInterceptor;
 import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 
 import org.apache.commons.io.IOUtils;
@@ -132,6 +134,15 @@ public class HttpConnection {
     }
 
     /**
+     *
+     * @return the number of retries remaining for this request
+     * @see #setNumberOfRetries(int)
+     */
+    public int getNumberOfRetriesRemaining() {
+        return this.numberOfRetries;
+    }
+
+    /**
      * Set the String of request body data to be sent to the server.
      *
      * @param input String of request body data to be sent to the server
@@ -233,8 +244,11 @@ public class HttpConnection {
      */
     public HttpConnection execute() throws IOException {
         boolean retry = true;
-        int n = numberOfRetries;
-        while (retry && n-- > 0) {
+
+        // Add a response interceptor for 429 backoff
+        responseInterceptors.add(new RequestLimitInterceptor());
+
+        while (retry && numberOfRetries-- > 0) {
             connection = connectionFactory.openConnection(url);
 
             connection.setRequestProperty("User-Agent", USER_AGENT);
@@ -243,7 +257,6 @@ public class HttpConnection {
                 // Insert at position 0 in case another interceptor wants to overwrite the BasicAuth
                 requestInterceptors.add(0, new BasicAuthInterceptor(url.getUserInfo()));
             }
-
             // always read the result, so we can retrieve the HTTP response code
             connection.setDoInput(true);
             connection.setRequestMethod(requestMethod);
@@ -298,13 +311,25 @@ public class HttpConnection {
             }
 
             for (HttpConnectionResponseInterceptor responseInterceptor : responseInterceptors) {
-                currentContext = responseInterceptor.interceptResponse(currentContext);
+                try {
+                    currentContext = responseInterceptor.interceptResponse(currentContext);
+                } catch (HttpConnectionInterceptorException e) {
+                    // Sadly the current interceptor API doesn't allow an IOException to be thrown
+                    // so to avoid swallowing them the interceptors need to wrap them in the runtime
+                    // HttpConnectionInterceptorException and we can then unwrap them here.
+                    Throwable cause = e.getCause();
+                    if (cause != null && cause instanceof IOException) {
+                        throw (IOException) cause;
+                    } else {
+                        throw e;
+                    }
+                }
             }
 
             // retry flag is set from the final step in the response interceptRequest pipeline
             retry = currentContext.replayRequest;
 
-            if (n == 0) {
+            if (numberOfRetries == 0) {
                 logger.info("Maximum number of retries reached");
             }
         }

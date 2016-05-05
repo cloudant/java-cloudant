@@ -32,7 +32,7 @@ import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
-import com.cloudant.tests.util.MockWebServerResource;
+import com.cloudant.tests.util.MockWebServerResources;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.JsonObject;
 import com.squareup.okhttp.mockwebserver.MockResponse;
@@ -341,7 +341,7 @@ public class DesignDocumentsTest {
         CloudantClient mockClient = CloudantClientHelper.newMockWebServerClientBuilder
                 (mockWebServer).readTimeout(50, TimeUnit.MILLISECONDS).build();
         // Cause a read timeout to generate an IOException
-        mockWebServer.setDispatcher(new MockWebServerResource.SleepingDispatcher(100, TimeUnit
+        mockWebServer.setDispatcher(new MockWebServerResources.SleepingDispatcher(100, TimeUnit
                 .MILLISECONDS) {
             @Override
             public MockResponse dispatch(RecordedRequest request) throws InterruptedException {

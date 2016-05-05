@@ -511,6 +511,12 @@ public class CouchDbClient {
                     case HttpURLConnection.HTTP_PRECON_FAILED: //412
                         ex = new PreconditionFailedException(response);
                         break;
+                    case 429:
+                        // The RequestLimitInterceptor will check for 429 and retry with a doubling
+                        // duration wait. If the default 10 retries are exceeded before the request
+                        // succeeds we end up here and throw a TooManyRequestsException.
+                        ex = new TooManyRequestsException(response);
+                        break;
                     default:
                         ex = new CouchDbException(response, code);
                         break;
