@@ -30,6 +30,7 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -205,6 +206,22 @@ public class DesignDocumentManager {
         assertNotEmpty(designDocument, "DesignDocument");
         ensureDesignPrefixObject(designDocument);
         return db.remove(designDocument);
+    }
+
+    /**
+     * Performs a query to retrieve all the design documents defined in the database.
+     *
+     * @return a list of the design documents from the database
+     * @throws IOException if there was an error communicating with the server
+     */
+    public List<DesignDocument> list() throws IOException {
+        return db.getAllDocsRequestBuilder()
+                .startKey("_design/")
+                .endKey("_design0")
+                .inclusiveEnd(false)
+                .includeDocs(true)
+                .build()
+                .getResponse().getDocsAs(DesignDocument.class);
     }
 
     /**
