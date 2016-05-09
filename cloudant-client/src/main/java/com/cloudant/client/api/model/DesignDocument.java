@@ -15,7 +15,9 @@
 
 package com.cloudant.client.api.model;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
@@ -55,6 +57,7 @@ import java.util.Map;
  * Map<String, String> updates = new HashMap<String, String>();
  * updates.put("newUpdateHandler", "function (doc, req) { ... }");
  * ddoc.setUpdates(updates);
+ * // Update the design document
  * database.update(ddoc);
  *
  * }
@@ -65,6 +68,10 @@ import java.util.Map;
  * @since 0.0.2
  */
 public class DesignDocument extends com.cloudant.client.org.lightcouch.Document {
+
+    private static final String LANG_QUERY = "query";
+    // Default GSON instance for serializing/deserializing JsonElements of views
+    private static final Gson GSON = new Gson();
 
     private String language;
     private Map<String, MapReduce> views;
@@ -383,9 +390,13 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * @author Ahmed Yehia
      */
     public static class MapReduce {
-        private String map;
-        private String reduce;
+        private JsonElement map;
+        private JsonElement reduce;
         private String dbcopy;
+
+        public MapReduce() {
+            super();
+        }
 
         /**
          * Get the defined map function.
@@ -393,7 +404,7 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
          * @return string of the javascript map function
          */
         public String getMap() {
-            return map;
+            return stringifyMRElement(map);
         }
 
         /**
@@ -402,7 +413,7 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
          * @return string of the javascript reduce function
          */
         public String getReduce() {
-            return reduce;
+            return stringifyMRElement(reduce);
         }
 
         /**
@@ -411,7 +422,7 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
          * @param map string of the javascript map function
          */
         public void setMap(String map) {
-            this.map = map;
+            this.map = GSON.toJsonTree(map);
         }
 
         /**
@@ -420,7 +431,7 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
          * @param reduce string of the javascript reduce function
          */
         public void setReduce(String reduce) {
-            this.reduce = reduce;
+            this.reduce = GSON.toJsonTree(reduce);
         }
 
         /**
@@ -444,6 +455,25 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
          */
         public String getDbCopy() {
             return dbcopy;
+        }
+
+        /**
+         * @param element JSON object or string
+         * @return a string form of the object or the JSON string with leading and trailing "
+         * stripped
+         */
+        private String stringifyMRElement(JsonElement element) {
+            if (element != null) {
+                String stringifiedElement = element.toString();
+                if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isString()) {
+                    // If the element is a JSON string, strip the leading and trailing "
+                    return stringifiedElement.substring(1, stringifiedElement.length() - 1);
+                } else {
+                    return stringifiedElement;
+                }
+            } else {
+                return null;
+            }
         }
 
         @Override

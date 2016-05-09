@@ -4,6 +4,8 @@
 - [NEW] Added an optional `SettableViewParameters.STALE_NO` constant for the default omitted case of
   the stale parameter on a view request.
 - [NEW] Added `descending` option for changes feed.
+- [FIX] `JsonSyntaxException` when deserializing Cloudant query language generated design
+  documents into the `DesignDocument` class.
 
 # 2.4.3 (2016-05-05)
 - [IMPROVED] Reduced the length of the User-Agent header string.
