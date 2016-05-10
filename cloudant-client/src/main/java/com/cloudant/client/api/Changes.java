@@ -241,6 +241,19 @@ public class Changes {
         return this;
     }
 
+    /**
+     * Add a custom query parameter to the _changes request. Useful for specifying extra parameters
+     * to a filter function for example.
+     *
+     * @param name the name of the query parameter
+     * @param value the value of the query parameter
+     * @return this Changes instance
+     */
+    public Changes parameter(String name, String value) {
+        this.databaseHelper.query(name, value);
+        return this;
+    }
+
     // Helper
 
     /**
