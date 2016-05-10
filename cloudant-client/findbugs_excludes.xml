@@ -48,7 +48,7 @@ For example because it requires an API change
     </Match>
     <Match>
         <Bug code="UwF" pattern="UWF_UNWRITTEN_FIELD"/>
-        <Class name="com.cloudant.client.org.lightcouch.ChangesResult$Row$Rev"/>
+        <Class name="com.cloudant.client.api.model.ChangesResult$Row$Rev"/>
     </Match>
 
 
@@ -91,7 +91,7 @@ For example because it requires an API change
     catch a more specific type, but ignore it for now. -->
     <Match>
         <Bug code="REC" pattern="REC_CATCH_EXCEPTION"/>
-        <Class name="com.cloudant.client.org.lightcouch.Changes"/>
+        <Class name="com.cloudant.client.api.Changes"/>
         <Method name="readNextRow"/>
     </Match>
 

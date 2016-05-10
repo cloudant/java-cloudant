@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright (C) 2011 lightcouch.org
+ * Copyright (c) 2015 2016 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,11 +15,11 @@
 
 package com.cloudant.client.api.model;
 
+import com.cloudant.client.api.Changes;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.annotations.SerializedName;
 
-import com.cloudant.client.org.lightcouch.Changes;
-
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,28 +31,16 @@ import java.util.List;
  */
 public class ChangesResult {
 
-    private com.cloudant.client.org.lightcouch.ChangesResult changesResult;
-
-    public ChangesResult() {
-        this.changesResult = new com.cloudant.client.org.lightcouch.ChangesResult();
-    }
-
-    public ChangesResult(com.cloudant.client.org.lightcouch.ChangesResult changesResult) {
-        this.changesResult = changesResult;
-    }
+    private List<ChangesResult.Row> results;
+    @SerializedName("last_seq")
+    private JsonElement lastSeq;
 
     public List<Row> getResults() {
-        List<com.cloudant.client.org.lightcouch.ChangesResult.Row> lightCouchResults = changesResult.getResults();
-        List<Row> rows = new ArrayList<Row>();
-        for (com.cloudant.client.org.lightcouch.ChangesResult.Row couchRow : lightCouchResults) {
-            Row row = new Row(couchRow);
-            rows.add(row);
-        }
-        return rows;
+        return results;
     }
 
     public String getLastSeq() {
-        return changesResult.getLastSeq();
+        return lastSeq.toString();
     }
 
 
@@ -59,55 +48,42 @@ public class ChangesResult {
      * Encapsulates a Changes feed result row.
      */
     public static class Row {
-        private com.cloudant.client.org.lightcouch.ChangesResult.Row row;
-
-        public Row(com.cloudant.client.org.lightcouch.ChangesResult.Row row) {
-            this.row = row;
-        }
-
+        private JsonElement seq;
+        private String id;
+        private List<Row.Rev> changes;
+        private boolean deleted;
+        private JsonObject doc;
 
         public String getSeq() {
-            return row.getSeq();
+            return seq.toString();
         }
-
 
         public String getId() {
-            return row.getId();
+            return id;
         }
 
-
-        public List<Rev> getChanges() {
-            List<com.cloudant.client.org.lightcouch.ChangesResult.Row.Rev> lightCouchChanges = row.getChanges();
-            List<Rev> changes = new ArrayList<Rev>();
-            for (com.cloudant.client.org.lightcouch.ChangesResult.Row.Rev rev : lightCouchChanges) {
-                changes.add(new Rev(rev));
-            }
+        public List<Row.Rev> getChanges() {
             return changes;
         }
 
-        public JsonObject getDoc() {
-            return row.getDoc();
+        public boolean isDeleted() {
+            return deleted;
         }
 
-
-        public boolean isDeleted() {
-            return row.isDeleted();
+        public JsonObject getDoc() {
+            return doc;
         }
 
         /**
-         * Encapsulates the revision of a change result row.
+         * Represent a Change rev.
          */
         public static class Rev {
-            private com.cloudant.client.org.lightcouch.ChangesResult.Row.Rev rev;
-
-            public Rev(com.cloudant.client.org.lightcouch.ChangesResult.Row.Rev rev) {
-                this.rev = rev;
-            }
+            private String rev;
 
             public String getRev() {
-                return rev.getRev();
+                return rev;
             }
-        }
-    }
+        } // end class Rev
+    } // end class Row
 
 }

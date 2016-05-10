@@ -37,7 +37,6 @@ import com.cloudant.client.internal.util.DeserializationTypes;
 import com.cloudant.client.internal.views.AllDocsRequestBuilderImpl;
 import com.cloudant.client.internal.views.AllDocsRequestResponse;
 import com.cloudant.client.internal.views.ViewQueryParameters;
-import com.cloudant.client.org.lightcouch.Changes;
 import com.cloudant.client.org.lightcouch.CouchDatabase;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.DocumentConflictException;
@@ -507,11 +506,8 @@ public class Database {
      * href="https://docs.cloudant.com/database.html#get-changes">Databases - get
      * changes</a>
      */
-    public com.cloudant.client.api.Changes changes() {
-        Changes couchDbChanges = db.changes();
-        com.cloudant.client.api.Changes changes = new com.cloudant.client.api.Changes
-                (couchDbChanges);
-        return changes;
+    public Changes changes() {
+        return new Changes(client, this);
     }
 
     /**

@@ -64,15 +64,6 @@ public abstract class CouchDatabaseBase {
     }
 
     /**
-     * Provides access to <tt>Change Notifications</tt> API.
-     *
-     * @see Changes
-     */
-    public Changes changes() {
-        return new Changes(this);
-    }
-
-    /**
      * Finds an Object of the specified type.
      *
      * @param <T>       Object type.
