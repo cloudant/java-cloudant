@@ -18,8 +18,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.Changes;
+import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ChangesResult;
 import com.cloudant.client.api.model.ChangesResult.Row;
@@ -29,6 +31,9 @@ import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
 import com.google.gson.JsonObject;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -37,12 +42,15 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Category(RequiresDB.class)
 public class ChangeNotificationsTest {
 
     @ClassRule
     public static CloudantClientResource clientResource = new CloudantClientResource();
+    @ClassRule
+    public static MockWebServer mockWebServer = new MockWebServer();
 
     @Rule
     public DatabaseResource dbResource = new DatabaseResource(clientResource);
@@ -104,4 +112,25 @@ public class ChangeNotificationsTest {
             changes.stop();
         }
     }
+
+    /**
+     * Test that the descending true parameter is applied and the results are returned in reverse
+     * order.
+     */
+    @Test
+    public void changesDescending() throws Exception {
+
+        CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .build();
+        Database db = client.database("notreal", false);
+
+        // Mock up an empty set of changes
+        mockWebServer.enqueue(new MockResponse().setBody("{\"results\": []}"));
+        db.changes().descending(true).getChanges();
+        RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+        assertNotNull("There should be a changes request", request);
+        assertTrue("There should be a descending parameter on the request", request.getPath()
+                .contains("descending=true"));
+    }
+
 }

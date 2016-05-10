@@ -232,6 +232,15 @@ public class Changes {
         return this;
     }
 
+    /**
+     * @param descending {@code true} to return changes in descending order
+     * @return this Changes instance
+     */
+    public Changes descending(boolean descending) {
+        this.databaseHelper.query("descending", descending);
+        return this;
+    }
+
     // Helper
 
     /**
