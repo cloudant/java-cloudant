@@ -1,6 +1,8 @@
 # Unreleased
 - [NEW] Handle HTTP status code `429 Too Many Requests` with blocking backoff and retries.
 - [NEW] Added `DesignDocumentManager.list()` to return all design documents defined in a database.
+- [NEW] Added an optional `SettableViewParameters.STALE_NO` constant for the default omitted case of
+  the stale parameter on a view request.
 
 # 2.4.3 (2016-05-05)
 - [IMPROVED] Reduced the length of the User-Agent header string.
