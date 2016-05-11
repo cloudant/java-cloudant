@@ -39,6 +39,12 @@ public class MockWebServerResources {
                     "AuthSession=\"a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz\";")
             .setBody("{\"ok\":true,\"name\":\"mockUser\",\"roles\":[]}");
 
+    public static final MockResponse JSON_OK = new MockResponse().setResponseCode(200).setBody
+            ("{\"ok\":true}");
+
+    public static final MockResponse PERMISSIONS = new MockResponse().setResponseCode(200)
+            .setBody("{\"_id\":\"security\", \"cloudant\":{\"user\": [\"_reader\"]}}");
+
     private static final Logger logger = Logger.getLogger(MockWebServerResources.class.getName());
 
     //Keystore information for https
