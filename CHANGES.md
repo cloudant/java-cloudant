@@ -16,6 +16,7 @@
 - [FIX] Documentation that suggested calling `database("dbname", false)` would immediately throw a
   `NoDocumentException` if the database did not exist. The exception is not thrown until the first
   operation on the `Database` instance.
+- [FIX] `ClassCastException` when the server responded `403` with a `null` reason in the JSON.
 
 # 2.4.3 (2016-05-05)
 - [IMPROVED] Reduced the length of the User-Agent header string.

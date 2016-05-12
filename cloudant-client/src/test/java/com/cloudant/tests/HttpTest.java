@@ -24,7 +24,10 @@ import com.cloudant.tests.util.DatabaseResource;
 import com.cloudant.tests.util.MockWebServerResources;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.squareup.okhttp.mockwebserver.Dispatcher;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
@@ -229,43 +232,6 @@ public class HttpTest {
     }
 
     /**
-     * This test checks that the cookie is successfully renewed if a 403 with an error of
-     * "credentials_expired" is returned.
-     *
-     * @throws Exception
-     */
-    @Test
-    public void cookie403Renewal() throws Exception {
-
-        // Request sequence
-        // _session request to get Cookie
-        // GET request -> 403
-        // _session for new cookie
-        // GET replay -> 200
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
-        mockWebServer.enqueue(new MockResponse().setResponseCode(403).setBody
-                ("{\"error\":\"credentials_expired\", \"reason\":\"Session expired\"}\r\n"));
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
-        mockWebServer.enqueue(new MockResponse());
-
-        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
-                .username("a")
-                .password("b")
-                .build();
-        //the GET request will try to get a session, then perform the GET
-        //the GET will result in a 403, which should mean another request to _session
-        //followed by a replay of GET
-        c.executeRequest(Http.GET(c.getBaseUri()));
-
-        //if we don't handle the 403 correctly an exception will be thrown
-
-        // also assert that there were 4 calls
-        assertEquals("The server should have received 4 requests", 4, mockWebServer
-                .getRequestCount());
-
-    }
-
-    /**
      * This test check that the cookie is renewed if the server presents a Set-Cookie header
      * after the cookie authentication.
      *
@@ -278,7 +244,7 @@ public class HttpTest {
                 "AuthSession=\"RenewCookie_a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz\";";
         // Request sequence
         // _session request to get Cookie
-        // GET request -> 403
+        // GET request -> 200 with a Set-Cookie
         // _session for new cookie
         // GET replay -> 200
         mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
@@ -313,6 +279,19 @@ public class HttpTest {
     }
 
     /**
+     * This test checks that the cookie is successfully renewed if a 403 with an error of
+     * "credentials_expired" is returned.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void cookie403Renewal() throws Exception {
+
+        // Test for a 403 with expired credentials, should result in 4 requests
+        basic403Test("credentials_expired", "Session expired", 4);
+    }
+
+    /**
      * This test checks that if we get a 403 that is not an error of "credentials_expired" then
      * the exception is correctly thrown and the error stream is deserialized. This is important
      * because the CookieInterceptor will have consumed 403 error streams to check for the expiry.
@@ -322,28 +301,90 @@ public class HttpTest {
     @Test
     public void handleNonExpiry403() throws Exception {
 
-        // Request sequence
-        // _session request to get Cookie
-        // GET request -> 403 (CouchDbException)
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
-        mockWebServer.enqueue(new MockResponse().setResponseCode(403).setBody
-                ("{\"error\":\"403_not_expired_test\", \"reason\":\"example reason\"}\r\n"));
+        // Test for a non-expiry 403, expect 2 requests
+        basic403Test("403_not_expired_test", "example reason", 2);
+    }
 
-        try {
-            CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
-                    .username("a")
-                    .password("b")
-                    .build();
-            //the GET request will try to get a session, then perform the GET
-            //the GET will result in a 403, which should result in a CouchDbException
-            c.executeRequest(Http.GET(c.getBaseUri()));
-            fail("A 403 not due to cookie expiry should result in a CouchDbException");
-        } catch (CouchDbException e) {
-            e.printStackTrace();
-            assertNotNull("The error should not be null", e.getError());
-            assertEquals("The error message should be the expected one", "403_not_expired_test", e
-                    .getError());
+    /**
+     * Same as {@link #handleNonExpiry403()} but with no reason property in the JSON.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void handleNonExpiry403NoReason() throws Exception {
+
+        // Test for a non-expiry 403, expect 2 requests
+        basic403Test("403_not_expired_test", null, 2);
+    }
+
+    /**
+     * * Same as {@link #handleNonExpiry403()} but with a {@code null} reason property in the JSON.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void handleNonExpiry403NullReason() throws Exception {
+
+        // Test for a non-expiry 403, expect 2 requests
+        basic403Test("403_not_expired_test", "null", 2);
+    }
+
+    /**
+     * Method that performs a basic test for a 403 response. The sequence of requests is:
+     * <OL>
+     * <LI>_session request to get Cookie</LI>
+     * <LI>GET request -> a 403 response</LI>
+     * <LI>_session for new cookie*</LI>
+     * <LI>GET replay -> a 200 response*</LI>
+     * </OL>
+     * The requests annotated * should only happen in the credentials_expired 403 case
+     *
+     * @param error  the response JSON error content for the 403
+     * @param reason the response JSON reason content for the 403
+     */
+    private void basic403Test(String error, String reason, int expectedRequests) throws
+            Exception {
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        JsonObject responseBody = new JsonObject();
+        responseBody.add("error", new JsonPrimitive(error));
+        JsonElement jsonReason;
+        if (reason != null) {
+            if ("null".equals(reason)) {
+                jsonReason = JsonNull.INSTANCE;
+                reason = null; // For the assertion we need a real null, not a JsonNull
+            } else {
+                jsonReason = new JsonPrimitive(reason);
+            }
+            responseBody.add("reason", jsonReason);
         }
+        mockWebServer.enqueue(new MockResponse().setResponseCode(403).setBody(responseBody
+                .toString()));
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(new MockResponse());
+
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .username("a")
+                .password("b")
+                .build();
+
+        //the GET request will try to get a session, then perform the GET
+        //the GET will result in a 403, which in a renewal case should mean another request to
+        // _session followed by a replay of GET
+        try {
+            c.executeRequest(Http.GET(c.getBaseUri()));
+            if (!error.equals("credentials_expired")) {
+                fail("A 403 not due to cookie expiry should result in a CouchDbException");
+            }
+        } catch (CouchDbException e) {
+            assertEquals("The exception error should be the expected message", error, e.getError());
+            assertEquals("The exception reason should be the expected message", reason, e
+                    .getReason());
+        }
+
+        // also assert that there were the correct number of calls
+        assertEquals("The server should receive the expected number of requests",
+                expectedRequests, mockWebServer
+                        .getRequestCount());
     }
 
     @Test
