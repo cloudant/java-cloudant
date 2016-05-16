@@ -171,19 +171,10 @@ public class Database {
         }
         elem.getAsJsonObject().add(userNameorApikey, jsonPermissions);
 
-        InputStream response = null;
         HttpConnection put = Http.PUT(apiV2DBSecurityURI, "application/json");
         put.setRequestBody(client.getGson().toJson(perms));
-        try {
-            response = client.couchDbClient.executeToInputStream(put);
-            String ok = getAsString(response, "ok");
-            if (!ok.equalsIgnoreCase("true")) {
-                //raise exception
-                throw new CouchDbException("Error setting permissions.");
-            }
-        } finally {
-            close(response);
-        }
+        // CouchDbExceptions will be thrown for non-2XX cases
+        client.couchDbClient.executeToResponse(put);
     }
 
     /**

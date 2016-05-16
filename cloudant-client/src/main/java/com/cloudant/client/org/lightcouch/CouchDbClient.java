@@ -276,11 +276,10 @@ public class CouchDbClient {
     }
 
     /**
-     * Executes a HTTP request.
-     * <p><b>Note</b>: The stream must be closed after use to release the connection.
+     * Executes a HTTP request and parses the JSON response into a Response instance.
      *
      * @param connection The HTTP request to execute.
-     * @return Class type of object T (i.e. {@link Response}
+     * @return Response object of the deserialized JSON response
      */
     public Response executeToResponse(HttpConnection connection) {
         InputStream is = null;

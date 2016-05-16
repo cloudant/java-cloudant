@@ -22,6 +22,7 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.model.Shard;
+import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantLocal;
 import com.cloudant.test.main.RequiresCloudantService;
@@ -29,7 +30,10 @@ import com.cloudant.test.main.RequiresCouch;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.util.MockWebServerResources;
 import com.google.gson.GsonBuilder;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -51,6 +55,8 @@ public class DatabaseTest {
 
     @ClassRule
     public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
+    @ClassRule
+    public static MockWebServer mockWebServer = new MockWebServer();
 
     private static Database db;
     private static CloudantClient account;
@@ -87,8 +93,6 @@ public class DatabaseTest {
         assertNotNull(userPerms);
         assertEquals(1, userPerms.size());
         assertEquals(p, userPerms.get(key.getKey()));
-
-
     }
 
     /**
@@ -99,6 +103,31 @@ public class DatabaseTest {
     @Category({RequiresCouch.class, RequiresCloudantLocal.class})
     public void testPermissionsException() {
         Map<String, EnumSet<Permissions>> userPerms = db.getPermissions();
+    }
+
+    @Test
+    public void permissionsParsing() throws Exception {
+        CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .build();
+        Database db = client.database("notarealdb", false);
+
+        // Mock up a request of all permissions
+        mockWebServer.enqueue(MockWebServerResources.PERMISSIONS); // for GET _security
+        mockWebServer.enqueue(MockWebServerResources.JSON_OK); // for PUT _security
+        db.setPermissions("testUsername", EnumSet.allOf(Permissions.class));
+
+        // Mock up a failing request
+        String testError = "test error";
+        String testReason = "test reason";
+        mockWebServer.enqueue(MockWebServerResources.PERMISSIONS); // for GET _security
+        mockWebServer.enqueue(new MockResponse().setResponseCode(400).setBody("{\"reason\":\"" +
+                testReason + "\", \"error\":\"" + testError + "\"}"));
+        try {
+            db.setPermissions("testUsername", EnumSet.allOf(Permissions.class));
+        } catch (CouchDbException e) {
+            assertEquals("", testError, e.getError());
+            assertEquals("", testReason, e.getReason());
+        }
     }
 
     @Test
