@@ -46,6 +46,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -370,5 +372,34 @@ public class DesignDocumentsTest {
         // Queue a mock response with no "ETag" header
         mockWebServer.enqueue(new MockResponse());
         database.getDesignDocumentManager().remove("example");
+    }
+
+    /**
+     * Test the {@link DesignDocumentManager#list()} function. Assert that the returned list of
+     * design documents matches that expected.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void listDesignDocuments() throws Exception {
+        // Put all the design docs from the directory
+        List<DesignDocument> designDocs = DesignDocumentManager.fromDirectory(rootDesignDir);
+
+        // Sort the list lexicographically so that the order matches that returned by the list
+        // function, as elements need to be in the same order for list.equals().
+        Collections.sort(designDocs, new Comparator<DesignDocument>() {
+            @Override
+            public int compare(DesignDocument doc1, DesignDocument doc2) {
+                return doc1.getId().compareTo(doc2.getId());
+            }
+        });
+
+        for (DesignDocument doc : designDocs) {
+            // Put each design document and set the revision for equality comparison later
+            doc.setRevision(designManager.put(doc).getRev());
+        }
+
+        assertEquals("The retrieved list of design documents should match the expected list",
+                designDocs, designManager.list());
     }
 }
