@@ -59,7 +59,13 @@ public abstract class CouchDatabaseBase {
         this.clientUri = couchDbClient.getBaseUri();
         this.dbUri = new DatabaseURIHelper(clientUri, name).getDatabaseUri();
         if (create) {
-            create();
+            try {
+                couchDbClient.createDB(dbName);
+            } catch (PreconditionFailedException e) {
+                // The PreconditionFailedException is thrown if the database already existed.
+                // To preserve the behaviour of the previous version, suppress this type of exception.
+                // All other CouchDbExceptions will be thrown.
+            }
         }
     }
 
@@ -424,21 +430,6 @@ public abstract class CouchDatabaseBase {
      */
     public String getDbName() {
         return dbName;
-    }
-
-
-    private void create() {
-        InputStream putresp = null;
-        try {
-            putresp = couchDbClient.put(new DatabaseURIHelper(clientUri, dbName).build());
-            log.info(String.format("Created Database: '%s'", dbName));
-        } catch (PreconditionFailedException e) {
-            // The PreconditionFailedException is thrown if the database already existed.
-            // To preserve the behaviour of the previous version, suppress this type of exception.
-            // All other CouchDbExceptions will be thrown.
-        } finally {
-            close(putresp);
-        }
     }
 
     // helper

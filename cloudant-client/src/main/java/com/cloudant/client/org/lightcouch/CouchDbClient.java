@@ -198,16 +198,9 @@ public class CouchDbClient {
      */
     public void createDB(String dbName) {
         assertNotEmpty(dbName, "dbName");
-        InputStream is = null;
         final URI uri = new DatabaseURIHelper(getBaseUri(), dbName).getDatabaseUri();
-        try {
-            is = get(uri);
-        } catch (NoDocumentException e) { // db doesn't exist
-            is = put(uri);
-            log.info(String.format("Created Database: '%s'", dbName));
-        } finally {
-            close(is);
-        }
+        executeToResponse(Http.PUT(uri, "application/json"));
+        log.info(String.format("Created Database: '%s'", dbName));
     }
 
     /**
