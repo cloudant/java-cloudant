@@ -21,6 +21,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import javax.net.ssl.SSLSocketFactory;
 
@@ -101,6 +102,8 @@ public class ClientBuilder {
      **/
     public static final long DEFAULT_READ_TIMEOUT = 5l;
 
+    private static final Logger logger = Logger.getLogger(ClientBuilder.class.getName());
+
     private List<HttpConnectionRequestInterceptor> requestInterceptors = new ArrayList
             <HttpConnectionRequestInterceptor>();
     private List<HttpConnectionResponseInterceptor> responseInterceptors = new ArrayList
@@ -133,6 +136,7 @@ public class ClientBuilder {
      * @throws IllegalArgumentException if the specified account name forms an invalid endpoint URL
      */
     public static ClientBuilder account(String account) {
+        logger.config("Account: " + account);
         try {
             URL url = new URL(String.format("https://%s.cloudant.com", account));
             return ClientBuilder.url(url);
@@ -154,6 +158,7 @@ public class ClientBuilder {
 
 
     private ClientBuilder(URL url) {
+        logger.config("URL: " + url);
         String urlProtocol = url.getProtocol();
         String urlHost = url.getHost();
 
@@ -192,6 +197,8 @@ public class ClientBuilder {
      */
     public CloudantClient build() {
 
+        logger.config("Building client using URL: " + url);
+
         //Build properties and couchdb client
         CouchDbProperties props = new CouchDbProperties(url);
 
@@ -204,6 +211,7 @@ public class ClientBuilder {
 
             props.addRequestInterceptors(cookieInterceptor);
             props.addResponseInterceptors(cookieInterceptor);
+            logger.config("Added cookie interceptor");
         } else {
             //If username or password is null, throw an exception
             if (username != null || password != null) {
@@ -215,6 +223,8 @@ public class ClientBuilder {
 
 
         //If setter methods for read and connection timeout are not called, default values are used.
+        logger.config(String.format("Connect timeout: %s %s", connectTimeout, connectTimeoutUnit));
+        logger.config(String.format("Read timeout: %s %s", readTimeout, readTimeoutUnit));
         props.addRequestInterceptors(new TimeoutCustomizationInterceptor(connectTimeout,
                 connectTimeoutUnit, readTimeout, readTimeoutUnit));
 
@@ -225,32 +235,42 @@ public class ClientBuilder {
             //if there was proxy auth information create an interceptor for it
             props.addRequestInterceptors(new ProxyAuthInterceptor(proxyUser,
                     proxyPassword));
+            logger.config("Added proxy auth interceptor");
         }
         if (isSSLAuthenticationDisabled) {
             props.addRequestInterceptors(SSLCustomizerInterceptor
                     .SSL_AUTH_DISABLED_INTERCEPTOR);
+            logger.config("SSL authentication is disabled");
         }
         if (authenticatedModeSSLSocketFactory != null) {
             props.addRequestInterceptors(new SSLCustomizerInterceptor(
                     authenticatedModeSSLSocketFactory
             ));
+            logger.config("Added custom SSL socket factory");
         }
 
         //Set http connection interceptors
         if (requestInterceptors != null) {
             for (HttpConnectionRequestInterceptor requestInterceptor : requestInterceptors) {
                 props.addRequestInterceptors(requestInterceptor);
+                logger.config("Added request interceptor: " + requestInterceptor.getClass()
+                        .getName());
             }
         }
         if (responseInterceptors != null) {
             for (HttpConnectionResponseInterceptor responseInterceptor : responseInterceptors) {
                 props.addResponseInterceptors(responseInterceptor);
+                logger.config("Added response interceptor: " + responseInterceptor.getClass()
+                        .getName());
             }
         }
 
         //if no gsonBuilder has been provided, create a new one
         if (gsonBuilder == null) {
             gsonBuilder = new GsonBuilder();
+            logger.config("Using default GSON builder");
+        } else {
+            logger.config("Using custom GSON builder");
         }
         //always register additional TypeAdapaters for derserializing some Cloudant specific
         // types before constructing the CloudantClient
