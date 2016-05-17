@@ -76,10 +76,7 @@ public class CouchDbClient {
     private List<HttpConnectionRequestInterceptor> requestInterceptors;
     private List<HttpConnectionResponseInterceptor> responseInterceptors;
 
-    private HttpConnection.HttpUrlConnectionFactory factory =
-            (OkHttpClientHttpUrlConnectionFactory.isOkUsable())
-                    ? new OkHttpClientHttpUrlConnectionFactory()
-                    : new DefaultHttpUrlConnectionFactory();
+    private final HttpConnection.HttpUrlConnectionFactory factory;
 
     CouchDbClient(CouchDbConfig config) {
         final CouchDbProperties props = config.getProperties();
@@ -92,19 +89,24 @@ public class CouchDbClient {
 
         this.gson = GsonHelper.initGson(new GsonBuilder()).create();
 
-        //if OkHttp is available then use it for connection pooling, otherwise default to the
-        //JVM built-in pooling for HttpUrlConnection
-        if (OkHttpClientHttpUrlConnectionFactory.isOkUsable() && props.getMaxConnections() > 0) {
+        // If OkHttp is available then use it for connection pooling, otherwise default to the
+        // JVM built-in pooling for HttpUrlConnection
+        if (OkHttpClientHttpUrlConnectionFactory.isOkUsable()) {
+            log.config("Using OkHttp");
             OkHttpClientHttpUrlConnectionFactory factory = new
                     OkHttpClientHttpUrlConnectionFactory();
-            //keep connections open for as long as possible, anything over 2.5 minutes will be
-            //longer than the server
-            ConnectionPool pool = new ConnectionPool(props.getMaxConnections(), TimeUnit.MINUTES
-                    .toMillis(3));
-            factory.getOkHttpClient().setConnectionPool(pool);
+            final int maxConns = props.getMaxConnections();
+            if (maxConns > 0) {
+                log.config("Setting max connections to " + maxConns);
+                //keep connections open for as long as possible, anything over 2.5 minutes will be
+                //longer than the server
+                ConnectionPool pool = new ConnectionPool(maxConns, TimeUnit.MINUTES.toMillis(3));
+                factory.getOkHttpClient().setConnectionPool(pool);
+            }
             this.factory = factory;
         } else {
-            factory = new DefaultHttpUrlConnectionFactory();
+            log.config("Using built-in HttpUrlConnection");
+            this.factory = new DefaultHttpUrlConnectionFactory();
         }
 
         //set the proxy if it has been configured
