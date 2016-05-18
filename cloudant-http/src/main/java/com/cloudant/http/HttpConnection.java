@@ -111,7 +111,6 @@ public class HttpConnection {
     public HttpUrlConnectionFactory connectionFactory = new DefaultHttpUrlConnectionFactory();
 
     private int numberOfRetries = 10;
-    private int attemptNumber = 1;
     private boolean requestIsLoggable = true;
 
     public HttpConnection(String requestMethod,
@@ -375,7 +374,6 @@ public class HttpConnection {
             if (numberOfRetries == 0) {
                 logger.info("Maximum number of retries reached");
             }
-            attemptNumber++;
         }
         // return ourselves to allow method chaining
         return this;
@@ -552,8 +550,8 @@ public class HttpConnection {
      */
     private String getLogRequestIdentifier() {
         if (logIdentifier == null) {
-            logIdentifier = String.format("%s attempt %s %s %s", Integer.toHexString(hashCode()),
-                    attemptNumber, connection.getRequestMethod(), connection.getURL());
+            logIdentifier = String.format("%s-%s %s %s", Integer.toHexString(hashCode()),
+                    numberOfRetries, connection.getRequestMethod(), connection.getURL());
         }
         return logIdentifier;
     }

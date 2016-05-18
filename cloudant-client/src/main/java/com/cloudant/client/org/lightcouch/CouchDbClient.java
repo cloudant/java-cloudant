@@ -99,7 +99,7 @@ public class CouchDbClient {
             if (maxConns > 0) {
                 log.config("Setting max connections to " + maxConns);
                 //keep connections open for as long as possible, anything over 2.5 minutes will be
-                //longer than the server
+                //longer than the server so we'll use a 3 minute timeout
                 ConnectionPool pool = new ConnectionPool(maxConns, TimeUnit.MINUTES.toMillis(3));
                 factory.getOkHttpClient().setConnectionPool(pool);
             }

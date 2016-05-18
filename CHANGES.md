@@ -6,6 +6,8 @@
 - [NEW] Added `descending` option for changes feed.
 - [NEW] Added `parameter` option for changes feed to allow specifying a custom query parameter on
   the request for example to be used by a filter function.
+- [NEW] Added HttpConnection logging filters for HTTP request method and URL regex.
+- [IMPROVED] Added additional logging output and documentation.
 - [IMPROVED] Documentation for `Replication` class.
 - [FIX] `JsonSyntaxException` when deserializing Cloudant query language generated design
   documents into the `DesignDocument` class.

@@ -541,9 +541,10 @@ library to query a view.
     integrate with it. Note that {@link java.util.logging} uses logging levels for both loggers and
     handlers and that both levels need to be set appropriately.
 </P>
-
 <OL>
-    <LI>Configuring using a properties file
+    <LI>Configuring using a properties file (see also this heavily commented example
+        <a href="{@docroot}logging.properties" target="_blank">logging.properties</a> file).
+    </P>
         <pre>
             {@code
             # "handlers" specifies a comma separated list of log Handler
@@ -561,7 +562,7 @@ library to query a view.
             # available, or you can create your own custom formatter.
             java.util.logging.ConsoleHandler.formatter=java.util.logging.SimpleFormatter
 
-            # Set cloudant sync classes to log at level FINE
+            # Set com.cloudant classes to log at level FINE
             com.cloudant.level=FINE
             }
         </pre>
@@ -603,10 +604,18 @@ library to query a view.
     </LI>
 </OL>
 <P>
-    In addition to the {@code com.cloudant} classes it may be useful to log the underlying HTTP
-    implementation. The name of the logger for this will vary depending on the JVM in use, but it is
-    possible to use the property {@code .level=ALL} to set the default log level to ALL which will
-    include HTTP logging.
+    Enabling logging for {@code com.cloudant.http} classes will provide debug information about HTTP
+    requests and responses. FINE logging will include request and response URLs and status codes.
+    FINER level logging will include request and response HTTP headers. Note that this logging may
+    include sensitive information such as encoded credentials in HTTP headers.
+</P>
+<P>
+    Whilst {@code com.cloudant.http} logging should meet most HTTP logging needs it may on occasion
+    be useful to also log from the underlying HTTP implementation. The name of the logger for this
+    will vary depending on the JVM and HTTP provider in use. It is possible to use the property
+    {@code .level=ALL} to set the default log level to ALL to catch log messages from some JVM
+    HttpURLConnection implementations. The optional okhttp dependency does not use java.util.logging
+    and at this time it is not possible to enable any additional logging for that provider.
 </P>
 
 <h1 id="Project">Project</h1>

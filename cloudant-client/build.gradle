@@ -35,6 +35,10 @@ javadoc {
             "**/client/api/**")
 }
 
+javadocJar {
+    // Include the logging.properties example
+    from rootProject.rootDir.path + '/logging.properties'
+}
 
 gradle.projectsEvaluated {
     javadoc {
