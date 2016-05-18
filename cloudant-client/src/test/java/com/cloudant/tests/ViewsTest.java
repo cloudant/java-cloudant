@@ -24,8 +24,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.views.Key;
+import com.cloudant.client.api.views.SettableViewParameters;
+import com.cloudant.client.api.views.UnpaginatedRequestBuilder;
 import com.cloudant.client.api.views.ViewMultipleRequest;
 import com.cloudant.client.api.views.ViewRequest;
 import com.cloudant.client.api.views.ViewRequestBuilder;
@@ -41,6 +44,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -56,12 +62,16 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 @Category(RequiresDB.class)
 public class ViewsTest {
 
     @ClassRule
     public static CloudantClientResource clientResource = new CloudantClientResource();
+    @ClassRule
+    public static MockWebServer mockWebServer = new MockWebServer();
 
     @Rule
     public DatabaseResource dbResource = new DatabaseResource(clientResource);
@@ -1023,5 +1033,68 @@ public class ViewsTest {
         } catch (Exception e) {
             fail("The character " + c + " caused an exception to be thrown.");
         }
+    }
+
+    /**
+     * We can't test the server behaviour of stale, but we can test the URL values are what we
+     * expect. This test uses the various values and checks the stale parameter in the URL, it makes
+     * a request using getSingleValue() as it is easier to mock the responses.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void staleParameterValues() throws Exception {
+        CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .build();
+        Database database = client.database("notarealdb", false);
+        UnpaginatedRequestBuilder<String, Integer> viewBuilder = database.getViewRequestBuilder
+                ("testDDoc", "testView").newRequest(Key.Type.STRING, Integer.class);
+
+        MockResponse mockResponse = new MockResponse().setResponseCode(200).setBody
+                ("{\"rows\":[{\"key\":null,\"value\":10}]}");
+
+        // Regex patterns for stale parameter cases
+        Pattern noStaleParameter = Pattern.compile(".*/notarealdb/_design/testDDoc/_view/testView");
+        Pattern staleParameterOK = Pattern.compile(".*/notarealdb/_design/testDDoc/_view" +
+                "/testView\\?stale=ok");
+        Pattern staleParameterUpdate = Pattern.compile(".*/notarealdb/_design/testDDoc/_view" +
+                "/testView\\?stale=update_after");
+
+        // Test the no stale argument supplied case
+        mockWebServer.enqueue(mockResponse);
+        assertStaleParameter(viewBuilder.build(), noStaleParameter);
+
+        // Test the OK stale argument supplied case
+        mockWebServer.enqueue(mockResponse);
+        assertStaleParameter(viewBuilder.stale(SettableViewParameters.STALE_OK).build(), staleParameterOK);
+
+        // Test the update_after stale argument supplied case
+        mockWebServer.enqueue(mockResponse);
+        assertStaleParameter(viewBuilder.stale(SettableViewParameters.STALE_UPDATE_AFTER).build(), staleParameterUpdate);
+
+        // Test the NO stale argument supplied case
+        mockWebServer.enqueue(mockResponse);
+        assertStaleParameter(viewBuilder.stale(SettableViewParameters.STALE_NO).build(), noStaleParameter);
+    }
+
+    /**
+     * Perform a view request against a mock getting a single value and asserting that the path
+     * matches the pattern.
+     *
+     * @param viewRequest view request
+     * @param p           pattern to match
+     * @throws Exception
+     */
+    private void assertStaleParameter(ViewRequest<String, Integer> viewRequest, Pattern p) throws
+            Exception {
+        MockResponse mockResponse = new MockResponse().setResponseCode(200).setBody
+                ("{\"rows\":[{\"key\":null,\"value\":10}]}");
+
+        mockWebServer.enqueue(mockResponse);
+        viewRequest.getSingleValue();
+        RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+        assertNotNull("There should have been a view request", request);
+        assertTrue("There request URL should match the pattern " + p.toString(), p.matcher
+                (request.getPath()).matches());
     }
 }
