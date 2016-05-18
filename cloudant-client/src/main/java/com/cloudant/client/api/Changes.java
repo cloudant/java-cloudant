@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright (C) 2011 lightcouch.org
+ * Copyright (c) 2015 2016 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -17,6 +18,17 @@ package com.cloudant.client.api;
 
 import com.cloudant.client.api.model.ChangesResult;
 import com.cloudant.client.api.model.ChangesResult.Row;
+import com.cloudant.client.internal.DatabaseURIHelper;
+import com.cloudant.client.org.lightcouch.CouchDbClient;
+import com.cloudant.client.org.lightcouch.CouchDbException;
+import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
+import com.google.gson.Gson;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
 
 /**
  * <p>Contains the Change Notifications API, supports <i>normal</i> and <i>continuous</i> feed
@@ -66,20 +78,43 @@ import com.cloudant.client.api.model.ChangesResult.Row;
  * @since 0.0.1
  */
 public class Changes {
-    private com.cloudant.client.org.lightcouch.Changes changes;
 
-    Changes(com.cloudant.client.org.lightcouch.Changes changes) {
-        this.changes = changes;
+    private final CouchDbClient client;
+    private final Gson gson;
+    private final DatabaseURIHelper databaseHelper;
+
+    private BufferedReader reader;
+    private ChangesResult.Row nextRow;
+    private boolean stop;
+
+    Changes(CloudantClient client, Database database) {
+        this.client = client.couchDbClient;
+        this.gson = database.getGson();
+        this.databaseHelper = new DatabaseURIHelper(database.getDBUri());
     }
 
     /**
      * Requests Change notifications of feed type continuous.
      * <p>Feed notifications are accessed in an <i>iterator</i> style.</p>
+     * <P>
+     * This method will connect to the changes feed; any configuration options applied after calling
+     * it will be ignored.
+     * </P>
      *
-     * @return this Changes object configured for continuous feed.
+     * @return this Changes instance connected to a continuous feed, use
+     * {@link #hasNext()} and {@link #next()} to iterate the changes.
      */
     public Changes continuousChanges() {
-        changes = changes.continuousChanges();
+        final URI uri = this.databaseHelper.changesUri("feed", "continuous");
+        final InputStream in = client.get(uri);
+        try {
+            final InputStreamReader is = new InputStreamReader(in, "UTF-8");
+            setReader(new BufferedReader(is));
+        } catch (UnsupportedEncodingException e) {
+            // This should never happen as every implementation of the java platform is required
+            // to support UTF-8.
+            throw new RuntimeException(e);
+        }
         return this;
     }
 
@@ -90,23 +125,21 @@ public class Changes {
      * @return true if there is a change
      */
     public boolean hasNext() {
-        return changes.hasNext();
+        return readNextRow();
     }
 
     /**
      * @return The next feed in the stream.
      */
     public Row next() {
-        com.cloudant.client.org.lightcouch.ChangesResult.Row next = changes.next();
-        Row row = new Row(next);
-        return row;
+        return getNextRow();
     }
 
     /**
      * Stops a running continuous feed.
      */
     public void stop() {
-        changes.stop();
+        stop = true;
     }
 
     /**
@@ -115,54 +148,147 @@ public class Changes {
      * @return {@link ChangesResult} encapsulating the normal feed changes
      */
     public ChangesResult getChanges() {
-        com.cloudant.client.org.lightcouch.ChangesResult couchDbChangesResult = changes
-                .getChanges();
-        ChangesResult changeResult = new ChangesResult(couchDbChangesResult);
-        return changeResult;
+        final URI uri = this.databaseHelper.changesUri("feed", "normal");
+        return client.get(uri, ChangesResult.class);
     }
 
     // Query Params
 
+    /**
+     * Return only changes after the specified sequence identifier.
+     *
+     * @param since sequence identifier or {@code "now"}
+     * @return this Changes instance
+     */
     public Changes since(String since) {
-        changes = changes.since(since);
+        this.databaseHelper.query("since", since);
         return this;
     }
 
-
+    /**
+     * Limit the number of rows to return.
+     *
+     * @param limit the number of rows
+     * @return this Changes instance
+     */
     public Changes limit(int limit) {
-        changes = changes.limit(limit);
+        this.databaseHelper.query("limit", limit);
         return this;
     }
 
-
-    public Changes filter(String filter) {
-        changes = changes.filter(filter);
-        return this;
-    }
-
-
+    /**
+     * Enable an empty line heartbeat for longpoll or continuous feeds for when there have been no
+     * changes.
+     *
+     * @param heartBeat time in milliseconds after which an empty line is sent
+     * @return this Changes instance
+     */
     public Changes heartBeat(long heartBeat) {
-        changes = changes.heartBeat(heartBeat);
+        this.databaseHelper.query("heartbeat", heartBeat);
         return this;
     }
 
-
+    /**
+     * Configure a timeout for the changes feed.
+     *
+     * @param timeout time in milliseconds to wait for data
+     * @return this Changes instance
+     */
     public Changes timeout(long timeout) {
-        changes = changes.timeout(timeout);
+        this.databaseHelper.query("timeout", timeout);
         return this;
     }
 
+    /**
+     * Specify a filter function to apply to the changes feed.
+     *
+     * @param filter name of the design document filter function e.g {@code
+     * "designDoc/filterFunction"}
+     * @return this Changes instance
+     */
+    public Changes filter(String filter) {
+        this.databaseHelper.query("filter", filter);
+        return this;
+    }
 
+    /**
+     * @param includeDocs whether to include document content in the returned rows
+     * @return this Changes instance
+     */
     public Changes includeDocs(boolean includeDocs) {
-        changes = changes.includeDocs(includeDocs);
+        this.databaseHelper.query("include_docs", includeDocs);
         return this;
     }
 
-
+    /**
+     * Configures how many changes are returned "main_only" for the winning revision only or
+     * "all_docs" to also include leaf revisions.
+     *
+     * @param style {@code "main_only"} or {@code "all_docs"}
+     * @return this Changes instance
+     */
     public Changes style(String style) {
-        changes = changes.style(style);
+        this.databaseHelper.query("style", style);
         return this;
     }
 
+    /**
+     * @param descending {@code true} to return changes in descending order
+     * @return this Changes instance
+     */
+    public Changes descending(boolean descending) {
+        this.databaseHelper.query("descending", descending);
+        return this;
+    }
 
+    // Helper
+
+    /**
+     * Reads and sets the next feed in the stream.
+     */
+    private boolean readNextRow() {
+        boolean hasNext = false;
+        try {
+            if (!stop) {
+                while (true) {
+                    String row = getReader().readLine();
+                    if (row != null && row.isEmpty()) {
+                        continue;
+                    }
+                    if (row != null && !row.startsWith("{\"last_seq\":")) {
+                        setNextRow(gson.fromJson(row, ChangesResult.Row.class));
+                        hasNext = true;
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            terminate();
+            throw new CouchDbException("Error reading continuous stream.", e);
+        }
+        if (!hasNext) {
+            terminate();
+        }
+        return hasNext;
+    }
+
+    private BufferedReader getReader() {
+        return reader;
+    }
+
+    private void setReader(BufferedReader reader) {
+        this.reader = reader;
+    }
+
+    private ChangesResult.Row getNextRow() {
+        return nextRow;
+    }
+
+    private void setNextRow(ChangesResult.Row nextRow) {
+        this.nextRow = nextRow;
+    }
+
+    private void terminate() {
+        CouchDbUtil.close(getReader());
+    }
 }

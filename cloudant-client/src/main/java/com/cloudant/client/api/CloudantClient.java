@@ -24,7 +24,6 @@ import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
 import com.cloudant.client.internal.URIBase;
 import com.cloudant.client.internal.util.DeserializationTypes;
-import com.cloudant.client.org.lightcouch.Changes;
 import com.cloudant.client.org.lightcouch.CouchDbClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.CouchDbProperties;
