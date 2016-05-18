@@ -62,31 +62,72 @@ public class Replication {
         return replicationResult;
     }
 
+    /**
+     * Specify the name or URL of the database source of the replication. A URL is required if the
+     * database is on a different server or account than the CloudantClient is connected to. If the
+     * database requires credentials they should be URL encoded in the user info of the URL.
+     *
+     * @param source name or URL of the source database
+     * @return this Replication instance to set more options or trigger the replication
+     */
     public Replication source(String source) {
         this.replication = replication.source(source);
         return this;
     }
 
+    /**
+     * Specify the name or URL of the database target of the replication. A URL is required if the
+     * database is on a different server or account than the CloudantClient is connected to. If the
+     * database requires credentials they should be URL encoded in the user info of the URL.
+     *
+     * @param target name or URL of the target database
+     * @return this Replication instance to set more options or trigger the replication
+     */
     public Replication target(String target) {
         this.replication = replication.target(target);
         return this;
     }
 
+    /**
+     * @param continuous {@code true} if the Replication should be continuous
+     * @return this Replication instance to set more options or trigger the replication
+     */
     public Replication continuous(Boolean continuous) {
         this.replication = replication.continuous(continuous);
         return this;
     }
 
+    /**
+     * Specify a filter function to limit the documents that are replicated from the source
+     * database.
+     *
+     * @param filter name of the filter function in the form of {@code designDoc/filter}
+     * @return this Replication instance to set more options or trigger the replication
+     */
     public Replication filter(String filter) {
         this.replication = replication.filter(filter);
         return this;
     }
 
+    /**
+     * Specify additional query parameters to be passed to the filter function. Takes a string form
+     * of a JSON object of the key value parameters. For example:
+     * {@code "{\"key1\": \"value1\", \"key2\": \"value2\"}"}
+     *
+     * @param queryParams string form of JSON object of query parameters
+     * @return this Replication instance to set more options or trigger the replication
+     */
     public Replication queryParams(String queryParams) {
         this.replication = replication.queryParams(queryParams);
         return this;
     }
 
+    /**
+     * Specify additional query parameters to be passed to the filter function.
+     *
+     * @param queryParams map of key-value parameters
+     * @return this Replication instance to set more options or trigger the replication
+     */
     public Replication queryParams(Map<String, Object> queryParams) {
         this.replication = replication.queryParams(queryParams);
         return this;
@@ -96,34 +137,45 @@ public class Replication {
      * Limit the replication to the specified document IDs.
      *
      * @param docIds one or more document IDs to include in the replication
-     * @return this to set more options or trigger the replication
+     * @return this Replication instance to set more options or trigger the replication
      */
     public Replication docIds(String... docIds) {
         this.replication = replication.docIds(docIds);
         return this;
     }
 
+    /**
+     * @param proxy address of a proxy server through which the replication should occur
+     * @return this Replication instance to set more options or trigger the replication
+     */
     public Replication proxy(String proxy) {
         this.replication = replication.proxy(proxy);
         return this;
     }
 
+    /**
+     * @param cancel {@code true} to cancel the replication
+     * @return this Replication instance to set more options or trigger the replication
+     */
     public Replication cancel(Boolean cancel) {
         this.replication = replication.cancel(cancel);
         return this;
     }
 
+    /**
+     * @param createTarget {@code true} if the target database should be created
+     * @return this Replication instance to set more options or trigger the replication
+     */
     public Replication createTarget(Boolean createTarget) {
         this.replication = replication.createTarget(createTarget);
         return this;
     }
 
-
     /**
      * Starts a replication since an update sequence.
      *
      * @param sinceSeq sequence number
-     * @return this to set more options or trigger the replication
+     * @return this Replication instance to set more options or trigger the replication
      */
     public Replication sinceSeq(Integer sinceSeq) {
         this.replication = replication.sinceSeq(sinceSeq);
@@ -137,7 +189,7 @@ public class Replication {
      * @param consumerKey client identifier
      * @param tokenSecret OAuth server token secret
      * @param token OAuth server issued token
-     * @return this to set more options or trigger the replication
+     * @return this Replication instance to set more options or trigger the replication
      */
     public Replication targetOauth(String consumerSecret,
                                    String consumerKey, String tokenSecret, String token) {
