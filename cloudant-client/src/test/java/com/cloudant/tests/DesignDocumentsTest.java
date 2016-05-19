@@ -16,8 +16,10 @@ package com.cloudant.tests;
 
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -48,6 +50,7 @@ import org.junit.experimental.categories.Category;
 import java.io.File;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -401,5 +404,116 @@ public class DesignDocumentsTest {
 
         assertEquals("The retrieved list of design documents should match the expected list",
                 designDocs, designManager.list());
+    }
+
+    /**
+     * Test that for javascript language MR view (i.e. the map function is a JSON string) that the
+     * map function is correctly deserialized as a Java String.
+     * The javascript string must be enclosed in \", for compatibility with JSON objects that might
+     * be stored in maps we have to internally switch between the two, but the library did not
+     * originally deal with both cases so for backwards compatibility must return the JSON strings
+     * without the leading and trailing " when they are java strings.
+     *
+     * @throws Exception
+     * @see #serializeJavascriptView()
+     * @see #serializeQueryDesignDoc()
+     * @see #deserializeQueryDesignDoc()
+     */
+    @Test
+    public void deserializeJavascriptView() throws Exception {
+        DesignDocument queryDDoc = fileToDesignDocument("example");
+        Map<String, DesignDocument.MapReduce> views = queryDDoc.getViews();
+        for (DesignDocument.MapReduce mrView : views.values()) {
+            assertFalse("The map function should not start with \"", mrView.getMap().startsWith
+                    ("\""));
+            assertFalse("The map function should not end with \"", mrView.getMap().endsWith("\""));
+        }
+    }
+
+    /**
+     * Test that when setting a javascript map function it is correctly serialized and deserialized.
+     *
+     * @throws Exception
+     * @see #deserializeJavascriptView()
+     * @see #serializeQueryDesignDoc()
+     * @see #deserializeQueryDesignDoc()
+     */
+    @Test
+    public void serializeJavascriptView() throws Exception {
+        // Create and write a design document with a javascript lang map function
+        String testDDocName = "testJSMapFn";
+        String mapFunction = "function(doc){emit([doc.contentArray[0].boolean,doc.contentArray[0]" +
+                ".creator,doc.contentArray[0].created],doc);}";
+        DesignDocument ddoc = new DesignDocument();
+        ddoc.setId(testDDocName);
+        Map<String, DesignDocument.MapReduce> views = new HashMap<String, DesignDocument
+                .MapReduce>();
+        DesignDocument.MapReduce mr = new DesignDocument.MapReduce();
+        mr.setMap(mapFunction);
+        mr.setReduce("_count");
+        views.put("testView", mr);
+        ddoc.setViews(views);
+        Response r = designManager.put(ddoc);
+
+        // Retrieve the doc and check that the javascript function is correct
+        DesignDocument retrievedDDoc = designManager.get(testDDocName, r.getRev());
+        assertNotNull("There should be a retrieved design doc", retrievedDDoc);
+        Map<String, DesignDocument.MapReduce> retrievedViews = retrievedDDoc.getViews();
+        assertNotNull("There should be views defined on the design doc", retrievedViews);
+        DesignDocument.MapReduce mrView = retrievedViews.get("testView");
+        assertNotNull("There should be a testView in the retrieved design doc", mrView);
+        assertEquals("The map function string should be the expected string",
+                mapFunction, mrView.getMap());
+    }
+
+    /**
+     * Test that if a query language design document is serialized the map function is a string
+     * form of the JSON object.
+     *
+     * @throws Exception
+     * @see #serializeJavascriptView()
+     * @see #deserializeJavascriptView()
+     * @see #deserializeQueryDesignDoc()
+     */
+    @Test
+    public void serializeQueryDesignDoc() throws Exception {
+        DesignDocument queryDDoc = fileToDesignDocument("query");
+        Map<String, DesignDocument.MapReduce> views = queryDDoc.getViews();
+        assertEquals("There should be one view", 1, views.size());
+        for (DesignDocument.MapReduce mrView : views.values()) {
+            assertTrue("The map function should be a javascript function in a JSON form, " +
+                    "so start with {", mrView.getMap().startsWith("{"));
+            assertTrue("The map function should be a javascript function in a JSON form, " +
+                    "so end with }", mrView.getMap().endsWith("}"));
+            assertEquals("The map function string should be an object form",
+                    "{\"fields\":{\"Person_dob\":\"asc\"}}", mrView.getMap());
+        }
+    }
+
+    /**
+     * Test that deserializing a query language design document results in the correct form of the
+     * map function.
+     *
+     * @throws Exception
+     * @see #serializeJavascriptView()
+     * @see #deserializeJavascriptView()
+     * @see #serializeQueryDesignDoc()
+     */
+    @Test
+    public void deserializeQueryDesignDoc() throws Exception {
+        // Put the query design document
+        designManager.put(fileToDesignDocument("query"));
+        // Get the query design document
+        DesignDocument queryDDoc = designManager.get("testQuery");
+        Map<String, DesignDocument.MapReduce> views = queryDDoc.getViews();
+        assertEquals("There should be one view", 1, views.size());
+        for (DesignDocument.MapReduce mrView : views.values()) {
+            assertTrue("The map function should be a javascript function in a JSON form, " +
+                    "so start with {", mrView.getMap().startsWith("{"));
+            assertTrue("The map function should be a javascript function in a JSON form, " +
+                    "so end with }", mrView.getMap().endsWith("}"));
+            assertEquals("The map function string should be an object form",
+                    "{\"fields\":{\"Person_dob\":\"asc\"}}", mrView.getMap());
+        }
     }
 }
