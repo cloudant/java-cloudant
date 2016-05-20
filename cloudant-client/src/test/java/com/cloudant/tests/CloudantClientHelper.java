@@ -20,6 +20,7 @@ import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -72,10 +73,11 @@ public abstract class CloudantClientHelper {
                     + COUCH_HOST
                     + ((COUCH_PORT != null) ? ":" + COUCH_PORT : "")); //port if supplied
 
+            // Ensure username and password are correctly URL encoded when included in the URI
             SERVER_URI_WITH_USER_INFO = HTTP_PROTOCOL + "://"
-                    + ((COUCH_USERNAME != null) ? COUCH_USERNAME + ":" + COUCH_PASSWORD + "@" : "")
-                    + COUCH_HOST
-                    + ((COUCH_PORT != null) ? ":" + COUCH_PORT : ""); //port if supplied
+                    + ((COUCH_USERNAME != null) ? URLEncoder.encode(COUCH_USERNAME, "UTF-8") +
+                    ":" + URLEncoder.encode(COUCH_PASSWORD, "UTF-8") + "@" : "") + COUCH_HOST + (
+                    (COUCH_PORT != null) ? ":" + COUCH_PORT : ""); //port if supplied
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
