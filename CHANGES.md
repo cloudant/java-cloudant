@@ -4,6 +4,8 @@
 - [NEW] Added an optional `SettableViewParameters.STALE_NO` constant for the default omitted case of
   the stale parameter on a view request.
 - [NEW] Added `descending` option for changes feed.
+- [NEW] Added `parameter` option for changes feed to allow specifying a custom query parameter on
+  the request for example to be used by a filter function.
 - [FIX] `JsonSyntaxException` when deserializing Cloudant query language generated design
   documents into the `DesignDocument` class.
 

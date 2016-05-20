@@ -235,9 +235,24 @@ public class Changes {
     /**
      * @param descending {@code true} to return changes in descending order
      * @return this Changes instance
+     * @since 2.5.0
      */
     public Changes descending(boolean descending) {
         this.databaseHelper.query("descending", descending);
+        return this;
+    }
+
+    /**
+     * Add a custom query parameter to the _changes request. Useful for specifying extra parameters
+     * to a filter function for example.
+     *
+     * @param name  the name of the query parameter
+     * @param value the value of the query parameter
+     * @return this Changes instance
+     * @since 2.5.0
+     */
+    public Changes parameter(String name, String value) {
+        this.databaseHelper.query(name, value);
         return this;
     }
 

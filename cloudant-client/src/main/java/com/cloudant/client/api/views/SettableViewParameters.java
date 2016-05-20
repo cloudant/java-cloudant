@@ -31,6 +31,8 @@ public interface SettableViewParameters {
      * Convenience constant defined as null to omit the value for a stale parameter, resulting in
      * the server default case, i.e. not allowing stale documents.
      * {@link com.cloudant.client.api.views.SettableViewParameters.Common#stale(String)}
+     *
+     * @since 2.5.0
      */
     String STALE_NO = null;
     /**

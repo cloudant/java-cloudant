@@ -213,6 +213,7 @@ public class DesignDocumentManager {
      *
      * @return a list of the design documents from the database
      * @throws IOException if there was an error communicating with the server
+     * @since 2.5.0
      */
     public List<DesignDocument> list() throws IOException {
         return db.getAllDocsRequestBuilder()

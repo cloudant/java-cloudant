@@ -133,4 +133,22 @@ public class ChangeNotificationsTest {
                 .contains("descending=true"));
     }
 
+    /**
+     * Test that a custom parameter can be added to a changes request.
+     */
+    @Test
+    public void changesCustomParameter() throws Exception {
+        CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .build();
+        Database db = client.database("notreal", false);
+        // Mock up an empty set of changes
+        mockWebServer.enqueue(new MockResponse().setBody("{\"results\": []}"));
+        db.changes().filter("myFilter").parameter("myParam", "paramValue").getChanges();
+        RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
+        assertNotNull("There should be a changes request", request);
+        assertTrue("There should be a filter parameter on the request", request.getPath()
+                .contains("filter=myFilter"));
+        assertTrue("There should be a custom parameter on the request", request.getPath()
+                .contains("myParam=paramValue"));
+    }
 }
