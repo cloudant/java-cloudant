@@ -21,8 +21,12 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
+import java.util.logging.Logger;
 
 public class DefaultHttpUrlConnectionFactory implements HttpConnection.HttpUrlConnectionFactory {
+
+    private static final Logger logger = Logger.getLogger(DefaultHttpUrlConnectionFactory.class
+            .getName());
 
     protected Proxy proxy = null;
 
@@ -41,6 +45,7 @@ public class DefaultHttpUrlConnectionFactory implements HttpConnection.HttpUrlCo
                 ())) {
             proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyUrl.getHost(),
                     proxyUrl.getPort()));
+            logger.config(String.format("Configured HTTP proxy url %s", proxyUrl));
         } else {
             throw new IllegalArgumentException("Only HTTP type proxies are supported");
         }
