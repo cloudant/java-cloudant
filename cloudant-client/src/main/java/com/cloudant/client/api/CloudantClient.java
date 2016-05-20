@@ -200,12 +200,16 @@ public class CloudantClient {
 
     /**
      * Get a database reference for the database with the specified name.
+     * <P>
+     * Note that if create is {@code false} and the database does not exist an instance will be
+     * returned, but the first operation on that instance will throw a
+     * {@link com.cloudant.client.org.lightcouch.NoDocumentException} because the database does not
+     * exist.
+     * </P>
      *
      * @param name   name of database to access
      * @param create flag indicating whether to create the database if it does not exist
      * @return Database object
-     * @throws com.cloudant.client.org.lightcouch.NoDocumentException if the database does not
-     *                                                                exist and create was false
      * @see <a target="_blank" href="https://docs.cloudant.com/database.html#read">Databases -
      * read</a>
      */

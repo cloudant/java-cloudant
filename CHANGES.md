@@ -9,6 +9,11 @@
 - [IMPROVED] Documentation for `Replication` class.
 - [FIX] `JsonSyntaxException` when deserializing Cloudant query language generated design
   documents into the `DesignDocument` class.
+- [FIX] `PreconditionFailedException` was never thrown when calling `createDB("dbname")` when the
+  database already existed.
+- [FIX] Documentation that suggested calling `database("dbname", false)` would immediately throw a
+  `NoDocumentException` if the database did not exist. The exception is not thrown until the first
+  operation on the `Database` instance.
 
 # 2.4.3 (2016-05-05)
 - [IMPROVED] Reduced the length of the User-Agent header string.

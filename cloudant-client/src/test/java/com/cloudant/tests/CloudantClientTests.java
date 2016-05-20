@@ -28,6 +28,7 @@ import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
+import com.cloudant.client.org.lightcouch.PreconditionFailedException;
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
 import com.cloudant.library.LibraryVersion;
 import com.cloudant.test.main.RequiresCloudant;
@@ -174,8 +175,30 @@ public class CloudantClientTests {
             //create a DB for this test
             account.createDB(dbName);
 
-            //do a get with create true for the already existing DB
+            // Get a database instance using create true for the already existing DB
             account.database(dbName, true);
+        } finally {
+            //clean up the DB created by this test
+            account.deleteDB(dbName);
+        }
+    }
+
+    /**
+     * Validate that a PreconditionFailedException is thrown when using the createDB method to
+     * create a database that already exists.
+     */
+    @Test(expected = PreconditionFailedException.class)
+    @Category(RequiresDB.class)
+    public void existingDatabaseCreateDBException() {
+        String id = Utils.generateUUID();
+        String dbName = "existing" + id;
+        try {
+            //create a DB for this test
+            account.createDB(dbName);
+
+            //do a get with create true for the already existing DB
+            account.createDB(dbName);
+
         } finally {
             //clean up the DB created by this test
             account.deleteDB(dbName);
