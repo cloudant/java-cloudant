@@ -23,11 +23,15 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 /**
  * Provides HttpUrlConnections by using an OkHttpClient.
  */
 public class OkHttpClientHttpUrlConnectionFactory extends DefaultHttpUrlConnectionFactory {
+
+    private static final Logger logger = Logger.getLogger(OkHttpClientHttpUrlConnectionFactory
+            .class.getName());
 
     private final OkHttpClient client;
     private final OkUrlFactory factory;
@@ -71,6 +75,7 @@ public class OkHttpClientHttpUrlConnectionFactory extends DefaultHttpUrlConnecti
     public void setProxy(URL proxyUrl) {
         super.setProxy(proxyUrl);
         client.setProxy(proxy);
+        logger.config(String.format("Configured HTTP proxy url %s", proxyUrl));
     }
 
     public OkHttpClient getOkHttpClient() {

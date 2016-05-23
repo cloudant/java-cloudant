@@ -24,11 +24,13 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 
@@ -109,6 +111,7 @@ public class HttpConnection {
     public HttpUrlConnectionFactory connectionFactory = new DefaultHttpUrlConnectionFactory();
 
     private int numberOfRetries = 10;
+    private boolean requestIsLoggable = true;
 
     public HttpConnection(String requestMethod,
                           URL url,
@@ -119,6 +122,21 @@ public class HttpConnection {
         this.requestProperties = new HashMap<String, String>();
         this.requestInterceptors = new LinkedList<HttpConnectionRequestInterceptor>();
         this.responseInterceptors = new LinkedList<HttpConnectionResponseInterceptor>();
+
+        // Calculate log filter for this request if logging is enabled
+        if (logger.isLoggable(Level.FINE)) {
+            LogManager m = LogManager.getLogManager();
+            String httpMethodFilter = m.getProperty("com.cloudant.http.filter.method");
+            String urlFilter = m.getProperty("com.cloudant.http.filter.url");
+            if (httpMethodFilter != null) {
+                // Split the comma separated list of methods
+                List<String> methods = Arrays.asList(httpMethodFilter.split(","));
+                requestIsLoggable = requestIsLoggable && methods.contains(requestMethod);
+            }
+            if (urlFilter != null) {
+                requestIsLoggable = requestIsLoggable && url.toString().matches(urlFilter);
+            }
+        }
     }
 
     /**
@@ -134,7 +152,6 @@ public class HttpConnection {
     }
 
     /**
-     *
      * @return the number of retries remaining for this request
      * @see #setNumberOfRetries(int)
      */
@@ -295,12 +312,25 @@ public class HttpConnection {
                 connection.setRequestProperty(property.getKey(), property.getValue());
             }
 
+            // Log the request
+            if (requestIsLoggable && logger.isLoggable(Level.FINE)) {
+                logger.fine(String.format("%s request%s", getLogRequestIdentifier(), (connection
+                        .usingProxy() ? " via proxy" : "")));
+            }
+
+            // Log the request headers
+            if (requestIsLoggable && logger.isLoggable(Level.FINER)) {
+                logger.finer(String.format("%s request headers %s", getLogRequestIdentifier(),
+                        connection.getRequestProperties()));
+            }
+
             if (input != null) {
                 InputStream is = input.getInputStream();
                 OutputStream os = connection.getOutputStream();
                 try {
                     // The buffer size used for writing to this output stream has an impact on the
-                    //  HTTP chunk size, so we make it a pretty large size to avoid limiting the size
+                    //  HTTP chunk size, so we make it a pretty large size to avoid limiting the
+                    // size
                     // of those chunks (although this appears in turn to set the chunk sizes).
                     IOUtils.copyLarge(is, os, new byte[16 * 1024]);
                     os.flush();
@@ -308,6 +338,18 @@ public class HttpConnection {
                     IOUtils.closeQuietly(is);
                     IOUtils.closeQuietly(os);
                 }
+            }
+
+            // Log the response
+            if (requestIsLoggable && logger.isLoggable(Level.FINE)) {
+                logger.fine(String.format("%s response %s %s", getLogRequestIdentifier(),
+                        connection.getResponseCode(), connection.getResponseMessage()));
+            }
+
+            // Log the response headers
+            if (requestIsLoggable && logger.isLoggable(Level.FINER)) {
+                logger.finer(String.format("%s response headers %s", getLogRequestIdentifier(),
+                        connection.getHeaderFields()));
             }
 
             for (HttpConnectionResponseInterceptor responseInterceptor : responseInterceptors) {
@@ -498,5 +540,19 @@ public class HttpConnection {
             this.inputStream.reset();
             return this.inputStream;
         }
+    }
+
+    private String logIdentifier = null;
+
+    /**
+     * Get a prefix for the log message to help identify which request is which and which responses
+     * belong to which requests.
+     */
+    private String getLogRequestIdentifier() {
+        if (logIdentifier == null) {
+            logIdentifier = String.format("%s-%s %s %s", Integer.toHexString(hashCode()),
+                    numberOfRetries, connection.getRequestMethod(), connection.getURL());
+        }
+        return logIdentifier;
     }
 }
