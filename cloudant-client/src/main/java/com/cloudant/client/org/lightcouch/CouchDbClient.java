@@ -475,10 +475,8 @@ public class CouchDbClient {
                     try {
                         JsonObject errorResponse = new Gson().fromJson(e.error, JsonObject
                                 .class);
-                        exception.error = errorResponse.getAsJsonPrimitive
-                                ("error").getAsString();
-                        exception.reason = errorResponse.getAsJsonPrimitive
-                                ("reason").getAsString();
+                        exception.error = getAsString(errorResponse, "error");
+                        exception.reason = getAsString(errorResponse, "reason");
                     } catch (JsonParseException jpe) {
                         exception.error = e.error;
                     }

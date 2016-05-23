@@ -93,10 +93,17 @@ final public class CouchDbUtil {
     }
 
     /**
-     * @return A JSON element as a String, or null if not found.
+     * @return A JSON element as a String, or null if there is no member with that name or the
+     * value was a JSON null.
      */
     public static String getAsString(JsonObject j, String e) {
-        return (j.get(e) == null) ? null : j.get(e).getAsString();
+        if (j != null && e != null) {
+            JsonElement element = j.get(e);
+            if (element != null && !element.isJsonNull()) {
+                return element.getAsString();
+            }
+        }
+        return null;
     }
 
     /**
