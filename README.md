@@ -15,6 +15,7 @@ This is the official Cloudant library for Java.
     * [Using in Other Projects](#using-in-other-projects)
     * [License](#license)
     * [Issues](#issues)
+* [Caching, Encryption, and Compression](#caching-encryption-and-compression)
 
 ## Installation and Usage
 
@@ -178,3 +179,13 @@ Unless required by applicable law or agreed to in writing, software distributed 
 If you are a Cloudant customer please contact Cloudant support for help with any issues.
 
 It is also possible to open issues [here in github](../../issues).
+
+## Caching, Encryption, and Compression
+
+Caching data at the client, when it is appropriate for the application, can often improve performance considerably. In some cases, it may also be desirable to encrypt or compress data at the client.
+There is no built-in support for caching, encryption or compression at the client in java-cloudant. Other Java libraries that are [not officially supported by Cloudant](https://docs.cloudant.com/libraries.html#-client-libraries), but can provide these capabilities are:
+
+* [java-cloudant-cache](https://github.com/cloudant-labs/java-cloudant-cache) can be used to provide caching integrated with the API of java-cloudant.
+
+* [storage-client-library](https://github.com/aruniyengar/storage-client-library) can be used to provide client-side encryption and compression.
+
