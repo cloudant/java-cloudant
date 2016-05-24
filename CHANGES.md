@@ -1,4 +1,4 @@
-# Unreleased
+# 2.5.0 (2016-05-24)
 - [NEW] Handle HTTP status code `429 Too Many Requests` with blocking backoff and retries.
 - [NEW] Added `DesignDocumentManager.list()` to return all design documents defined in a database.
 - [NEW] Added an optional `SettableViewParameters.STALE_NO` constant for the default omitted case of
