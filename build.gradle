@@ -18,7 +18,7 @@ subprojects {
     apply plugin: 'signing'
 
     group = 'com.cloudant'
-    version = '2.5.0'
+    version = '2.5.1-SNAPSHOT'
 
     // Note the gradle subproject names (e.g. cloudant-client, cloudant-http) are the maven
     // artifactIds - the maven pom project name entry and User-Agent name in client.properties are
