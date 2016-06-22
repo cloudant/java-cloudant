@@ -1,7 +1,7 @@
 # Cloudant Java Client
 [![Build Status](https://travis-ci.org/cloudant/java-cloudant.svg?branch=master)](https://travis-ci.org/cloudant/java-cloudant)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.cloudant/cloudant-client/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.cloudant/cloudant-client)
-[![Javadoc](https://javadoc-emblem.rhcloud.com/doc/com.cloudant/cloudant-client/badge.svg)](http://www.javadoc.io/doc/com.cloudant/cloudant-client)
+[![Javadocs](http://www.javadoc.io/badge/com.cloudant/cloudant-client.svg)](http://www.javadoc.io/doc/com.cloudant/cloudant-client)
 
 This is the official Cloudant library for Java.
 
