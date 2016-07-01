@@ -140,10 +140,10 @@ public class HttpConnection {
     }
 
     /**
-     * Sets the number of times this request can be retried.
+     * Sets the number of times this request can be attempted.
      * This method <strong>must</strong> be called before {@link #execute()}
      *
-     * @param numberOfRetries the number of times this request can be retried.
+     * @param numberOfRetries the number of times this request can be attempted.
      * @return an {@link HttpConnection} for method chaining
      */
     public HttpConnection setNumberOfRetries(int numberOfRetries) {
