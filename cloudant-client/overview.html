@@ -65,6 +65,7 @@ There is no need to add a head/title as that is provided by Javadoc.
             </LI>
             <LI><a href="#J2EE">J2EE</a></LI>
             <LI><a href="#Logging">Logging</a></LI>
+            <LI><a href="#Replays">Replays</a></LI>
         </OL>
     <LI><a href="#Project">Project</a></LI>
 </OL>
@@ -616,6 +617,19 @@ library to query a view.
     {@code .level=ALL} to set the default log level to ALL to catch log messages from some JVM
     HttpURLConnection implementations. The optional okhttp dependency does not use java.util.logging
     and at this time it is not possible to enable any additional logging for that provider.
+</P>
+
+<h2 id="Replays">Replays</h2>
+
+<P>
+    The library can make use of optionally added interceptors to replay failed requests.
+</P>
+<P>
+    For example in the case of a 429 Too Many Requests response a
+    {@link com.cloudant.http.interceptors.Replay429Interceptor} can intercept the 429 response and
+    replay the request after a delay. If the number of replays is exceeded before a successful
+    response then the expected {@link com.cloudant.client.org.lightcouch.TooManyRequestsException}
+    is thrown as would be the case if no interceptor was configured.
 </P>
 
 <h1 id="Project">Project</h1>

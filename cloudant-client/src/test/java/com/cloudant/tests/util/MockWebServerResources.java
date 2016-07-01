@@ -45,6 +45,8 @@ public class MockWebServerResources {
     public static final MockResponse PERMISSIONS = new MockResponse().setResponseCode(200)
             .setBody("{\"_id\":\"security\", \"cloudant\":{\"user\": [\"_reader\"]}}");
 
+    public static final Dispatcher ALL_429 = new ConstantResponseDispatcher(get429());
+
     private static final Logger logger = Logger.getLogger(MockWebServerResources.class.getName());
 
     //Keystore information for https
@@ -88,5 +90,31 @@ public class MockWebServerResources {
             unit.sleep(sleepTime);
             return new MockResponse();
         }
+    }
+
+    /**
+     * A dispatcher that repeatedly returns the same status code for all requests.
+     */
+    public static class ConstantResponseDispatcher extends Dispatcher {
+
+        private final MockResponse response;
+
+        public ConstantResponseDispatcher(MockResponse response) {
+            this.response = response;
+        }
+
+        public ConstantResponseDispatcher(int statusCode) {
+            this(new MockResponse().setResponseCode(statusCode));
+        }
+
+        @Override
+        public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+            return response;
+        }
+    }
+
+    public static MockResponse get429() {
+        return new MockResponse().setResponseCode(429)
+                .setBody("{\"error\":\"too_many_requests\", \"reason\":\"example reason\"}\r\n");
     }
 }

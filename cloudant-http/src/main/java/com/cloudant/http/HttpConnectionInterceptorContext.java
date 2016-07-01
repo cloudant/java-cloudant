@@ -22,6 +22,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Provides the context for a {@link HttpConnectionInterceptor}.
+ * <P>
+ * The context is new for each request or replay of a request. If an interceptor instance needs to
+ * carry some state across replays of a request then the state must be stored using the
+ * {@link #setState(HttpConnectionInterceptor, String, Object)} method and retrieved using the
+ * {@link #getState(HttpConnectionInterceptor, String, Class)} method.
+ * </P>
  *
  * @since 2.0.0
  */
@@ -73,6 +79,7 @@ public class HttpConnectionInterceptorContext {
      * @param stateObjectToStore the state object to store
      * @param <T>                the type of the state object to store
      * @see #getState(HttpConnectionInterceptor, String, Class)
+     * @since 2.6.0
      */
     public <T> void setState(HttpConnectionInterceptor interceptor, String stateName, T
             stateObjectToStore) {
@@ -93,6 +100,7 @@ public class HttpConnectionInterceptorContext {
      * @param <T>         the type the stored state should be returned as
      * @return the stored state object
      * @see #setState(HttpConnectionInterceptor, String, Object)
+     * @since 2.6.0
      */
     public <T> T getState(HttpConnectionInterceptor interceptor, String stateName, Class<T>
             stateType) {

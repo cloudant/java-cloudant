@@ -12,7 +12,6 @@ package com.cloudant.http;
 
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
 import com.cloudant.http.interceptors.HttpConnectionInterceptorException;
-import com.cloudant.http.interceptors.RequestLimitInterceptor;
 import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 
 import org.apache.commons.io.IOUtils;
@@ -264,9 +263,6 @@ public class HttpConnection {
      */
     public HttpConnection execute() throws IOException {
         boolean retry = true;
-
-        // Add a response interceptor for 429 backoff
-        responseInterceptors.add(new RequestLimitInterceptor());
 
         while (retry && numberOfRetries-- > 0) {
             connection = connectionFactory.openConnection(url);

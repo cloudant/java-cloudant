@@ -1,3 +1,11 @@
+# Unreleased
+- [IMPROVED] Made the 429 response code backoff optional and configurable. To enable the backoff add
+  an instance of a `Replay429Interceptor` with the desired number of retries and initial backoff:
+  `ClientBuilder.account("example").interceptors(new Replay429Interceptor(retries, initialBackoff))`
+  A default instance is available using 3 retries and starting with a 250 ms backoff:
+  `Replay429Interceptor.WITH_DEFAULTS`. To replicate the backoff of version 2.5.0 create an instance
+   using `new Replay429Interceptor(10, 250l)`.
+
 # 2.5.0 (2016-05-24)
 - [NEW] Handle HTTP status code `429 Too Many Requests` with blocking backoff and retries.
 - [NEW] Added `DesignDocumentManager.list()` to return all design documents defined in a database.
