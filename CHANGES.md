@@ -5,6 +5,7 @@
   A default instance is available using 3 retries and starting with a 250 ms backoff:
   `Replay429Interceptor.WITH_DEFAULTS`. To replicate the backoff of version 2.5.0 create an instance
    using `new Replay429Interceptor(10, 250l)`.
+- [FIX] Fixed places where streams where not closed and could cause connections to leak.
 
 # 2.5.0 (2016-05-24)
 - [NEW] Handle HTTP status code `429 Too Many Requests` with blocking backoff and retries.
