@@ -504,9 +504,9 @@ public class CouchDbClient {
                         ex = new PreconditionFailedException(response);
                         break;
                     case 429:
-                        // The RequestLimitInterceptor will check for 429 and retry with a doubling
-                        // duration wait. If the default 10 retries are exceeded before the request
-                        // succeeds we end up here and throw a TooManyRequestsException.
+                        // If a Replay429Interceptor is present it will check for 429 and retry at
+                        // intervals. If the retries do not succeed or no 429 replay was configured
+                        // we end up here and throw a TooManyRequestsException.
                         ex = new TooManyRequestsException(response);
                         break;
                     default:

@@ -12,7 +12,6 @@ package com.cloudant.http;
 
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
 import com.cloudant.http.interceptors.HttpConnectionInterceptorException;
-import com.cloudant.http.interceptors.RequestLimitInterceptor;
 import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 
 import org.apache.commons.io.IOUtils;
@@ -93,6 +92,9 @@ public class HttpConnection {
     public final URL url;
     private final String contentType;
 
+    // The context
+    private HttpConnectionInterceptorContext currentContext = null;
+
     // created in executeInternal
     private HttpURLConnection connection;
 
@@ -140,10 +142,10 @@ public class HttpConnection {
     }
 
     /**
-     * Sets the number of times this request can be retried.
+     * Sets the number of times this request can be attempted.
      * This method <strong>must</strong> be called before {@link #execute()}
      *
-     * @param numberOfRetries the number of times this request can be retried.
+     * @param numberOfRetries the number of times this request can be attempted.
      * @return an {@link HttpConnection} for method chaining
      */
     public HttpConnection setNumberOfRetries(int numberOfRetries) {
@@ -262,9 +264,6 @@ public class HttpConnection {
     public HttpConnection execute() throws IOException {
         boolean retry = true;
 
-        // Add a response interceptor for 429 backoff
-        responseInterceptors.add(new RequestLimitInterceptor());
-
         while (retry && numberOfRetries-- > 0) {
             connection = connectionFactory.openConnection(url);
 
@@ -299,8 +298,9 @@ public class HttpConnection {
                 }
             }
 
-            HttpConnectionInterceptorContext currentContext = new
-                    HttpConnectionInterceptorContext(this);
+            currentContext = (currentContext == null) ? new HttpConnectionInterceptorContext
+                    (this) : new HttpConnectionInterceptorContext(this, currentContext
+                    .interceptorStates);
 
             for (HttpConnectionRequestInterceptor requestInterceptor : requestInterceptors) {
                 currentContext = requestInterceptor.interceptRequest(currentContext);

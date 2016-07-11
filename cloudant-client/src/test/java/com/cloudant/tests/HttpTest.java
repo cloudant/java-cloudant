@@ -17,23 +17,22 @@ import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
 import com.cloudant.http.interceptors.CookieInterceptor;
-import com.cloudant.http.interceptors.RequestLimitInterceptor;
+import com.cloudant.http.interceptors.Replay429Interceptor;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
 import com.cloudant.tests.util.MockWebServerResources;
+import com.cloudant.tests.util.TestTimer;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.squareup.okhttp.mockwebserver.Dispatcher;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,7 +44,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
@@ -610,20 +608,6 @@ public class HttpTest {
         }
     }
 
-    private MockResponse response429 = new MockResponse().setResponseCode(429).setBody("{\"error" +
-            "\":\"too_many_requests\", \"reason\":\"example reason\"}\r\n");
-
-    /**
-     * For testing purposes reduce the default backoff time in the RequestLimitInterceptor
-     */
-    @BeforeClass
-    public static void reduceBackoffTime() throws Exception {
-        // Reflectively reduce the time limit for testing
-        Field f = RequestLimitInterceptor.class.getDeclaredField("initialSleep");
-        f.setAccessible(true);
-        f.set(null, 1); // Set the value to 1 ms
-    }
-
     /**
      * Test that a request is replayed in response to a 429.
      *
@@ -631,10 +615,11 @@ public class HttpTest {
      */
     @Test
     public void test429Backoff() throws Exception {
-        mockWebServer.enqueue(response429);
+        mockWebServer.enqueue(MockWebServerResources.get429());
         mockWebServer.enqueue(new MockResponse());
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .interceptors(Replay429Interceptor.WITH_DEFAULTS)
                 .build();
         c.executeRequest(Http.GET(c.getBaseUri()));
 
@@ -642,7 +627,7 @@ public class HttpTest {
     }
 
     /**
-     * Test that the maximum number of retries is reached and the backoff is of at least the
+     * Test that the default maximum number of retries is reached and the backoff is of at least the
      * expected duration.
      *
      * @throws Exception
@@ -651,32 +636,28 @@ public class HttpTest {
     public void test429BackoffMaxDefault() throws Exception {
 
         // Always respond 429 for this test
-        mockWebServer.setDispatcher(new Dispatcher() {
-            @Override
-            public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
-                return response429;
-            }
-        });
+        mockWebServer.setDispatcher(MockWebServerResources.ALL_429);
 
-
-        long startTime = System.currentTimeMillis();
+        TestTimer t = TestTimer.startTimer();
         try {
             CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                    .interceptors(Replay429Interceptor.WITH_DEFAULTS)
                     .build();
             c.executeRequest(Http.GET(c.getBaseUri()));
+            fail("There should be a TooManyRequestsException");
         } catch (TooManyRequestsException e) {
-            long duration = System.currentTimeMillis() - startTime;
-            // 9 backoff periods for 10 attempts: 1 + 2 + 4 + 8 + 16 + 32 + 64 + 128 + 256 = 511 ms
-            assertTrue("The duration should be at least 511 ms, but was " + duration, duration >=
-                    511);
-            assertEquals("There should be 10 request attempts", 10, mockWebServer
+            long duration = t.stopTimer(TimeUnit.MILLISECONDS);
+            // 3 backoff periods for 4 attempts: 250 + 500 + 1000 = 1750 ms
+            assertTrue("The duration should be at least 1750 ms, but was " + duration, duration >=
+                    1750);
+            assertEquals("There should be 4 request attempts", 4, mockWebServer
                     .getRequestCount());
         }
-
     }
 
     /**
-     * Test that the number of retries is configurable.
+     * Test that the configured maximum number of retries is reached and the backoff is of at least
+     * the expected duration.
      *
      * @throws Exception
      */
@@ -684,24 +665,44 @@ public class HttpTest {
     public void test429BackoffMaxConfigured() throws Exception {
 
         // Always respond 429 for this test
-        mockWebServer.setDispatcher(new Dispatcher() {
-            @Override
-            public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
-                return response429;
-            }
-        });
+        mockWebServer.setDispatcher(MockWebServerResources.ALL_429);
 
 
-        long startTime = System.currentTimeMillis();
+        TestTimer t = TestTimer.startTimer();
         try {
             CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                    .interceptors(new Replay429Interceptor(10, 1, true))
+                    .build();
+            c.executeRequest(Http.GET(c.getBaseUri()));
+            fail("There should be a TooManyRequestsException");
+        } catch (TooManyRequestsException e) {
+            long duration = t.stopTimer(TimeUnit.MILLISECONDS);
+            // 9 backoff periods for 10 attempts: 1 + 2 + 4 + 8 + 16 + 32 + 64 + 128 + 256 = 511 ms
+            assertTrue("The duration should be at least 511 ms, but was " + duration, duration >=
+                    511);
+            assertEquals("There should be 10 request attempts", 10, mockWebServer
+                    .getRequestCount());
+        }
+    }
+
+    /**
+     * Test that the outer number of configured retries takes precedence.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void test429BackoffMaxMoreThanRetriesAllowed() throws Exception {
+
+        // Always respond 429 for this test
+        mockWebServer.setDispatcher(MockWebServerResources.ALL_429);
+
+        try {
+            CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                    .interceptors(new Replay429Interceptor(10, 1, true))
                     .build();
             c.executeRequest(Http.GET(c.getBaseUri()).setNumberOfRetries(3));
+            fail("There should be a TooManyRequestsException");
         } catch (TooManyRequestsException e) {
-            long duration = System.currentTimeMillis() - startTime;
-            // 2 backoff periods for 3 attempts: 1 + 2 = 3 ms
-            assertTrue("The duration should be at least 3 ms, but was " + duration, duration >=
-                    3);
             assertEquals("There should be 3 request attempts", 3, mockWebServer
                     .getRequestCount());
         }
@@ -716,18 +717,71 @@ public class HttpTest {
     @Test
     public void test429BackoffRetryAfter() throws Exception {
 
-        mockWebServer.enqueue(response429.addHeader("Retry-After", "1"));
+        mockWebServer.enqueue(MockWebServerResources.get429().addHeader("Retry-After", "1"));
         mockWebServer.enqueue(new MockResponse());
 
-        long startTime = System.currentTimeMillis();
+        TestTimer t = TestTimer.startTimer();
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .interceptors(Replay429Interceptor.WITH_DEFAULTS)
                 .build();
         c.executeRequest(Http.GET(c.getBaseUri()));
 
-        long duration = System.currentTimeMillis() - startTime;
+        long duration = t.stopTimer(TimeUnit.MILLISECONDS);
         assertTrue("The duration should be at least 1000 ms, but was " + duration, duration >=
                 1000);
         assertEquals("There should be 2 request attempts", 2, mockWebServer
+                .getRequestCount());
+    }
+
+    @Test
+    public void test429IgnoreRetryAfter() throws Exception {
+        mockWebServer.enqueue(MockWebServerResources.get429().addHeader("Retry-After", "1"));
+        mockWebServer.enqueue(new MockResponse());
+
+        TestTimer t = TestTimer.startTimer();
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .interceptors(new Replay429Interceptor(1, 1, false))
+                .build();
+
+        c.executeRequest(Http.GET(c.getBaseUri()));
+
+        long duration = t.stopTimer(TimeUnit.MILLISECONDS);
+        assertTrue("The duration should be less than 1000 ms, but was " + duration, duration <
+                1000);
+        assertEquals("There should be 2 request attempts", 2, mockWebServer
+                .getRequestCount());
+    }
+
+    /**
+     * Test the global number of retries
+     * @throws Exception
+     */
+    @Test
+    public void testHttpConnectionRetries() throws Exception {
+        // Just return 200 OK
+        mockWebServer.setDispatcher(new MockWebServerResources.ConstantResponseDispatcher(200));
+
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .interceptors(new HttpConnectionResponseInterceptor() {
+                    @Override
+                    public HttpConnectionInterceptorContext interceptResponse
+                            (HttpConnectionInterceptorContext context) {
+                        // At least do something with the connection, otherwise we risk breaking it
+                        try{
+                            context.connection.getConnection().getResponseCode();
+                        } catch(IOException e ) {
+                            fail("IOException getting response code");
+                        }
+                        // Set to always replay
+                        context.replayRequest = true;
+                        return context;
+                    }
+                })
+                .build();
+
+        c.executeRequest(Http.GET(c.getBaseUri()).setNumberOfRetries(5));
+
+        assertEquals("There should be 5 request attempts", 5, mockWebServer
                 .getRequestCount());
     }
 }
