@@ -391,15 +391,7 @@ public class HttpConnection {
      * @throws IOException if there was a problem reading data from the server
      */
     public String responseAsString() throws IOException {
-        if (connection == null) {
-            throw new IOException("Attempted to read response from server before calling execute" +
-                    "()");
-        }
-        InputStream is = connection.getInputStream();
-        String string = IOUtils.toString(is);
-        is.close();
-        connection.disconnect();
-        return string;
+        return IOUtils.toString(responseAsBytes(), "UTF-8");
     }
 
     /**
@@ -414,20 +406,21 @@ public class HttpConnection {
      * @throws IOException if there was a problem reading data from the server
      */
     public byte[] responseAsBytes() throws IOException {
-        if (connection == null) {
-            throw new IOException("Attempted to read response from server before calling execute" +
-                    "()");
+        InputStream is = responseAsInputStream();
+        try {
+            return IOUtils.toByteArray(is);
+        } finally {
+            IOUtils.closeQuietly(is);
+            disconnect();
         }
-        InputStream is = connection.getInputStream();
-        byte[] bytes = IOUtils.toByteArray(is);
-        is.close();
-        connection.disconnect();
-        return bytes;
+
     }
 
     /**
      * <p>
-     * Return response body data from server as an InputStream.
+     * Return response body data from server as an InputStream. The InputStream must be closed
+     * after use to avoid leaking resources. Connection re-use may be improved if the entire stream
+     * has been read before closing.
      * </p>
      * <p>
      * <b>Important:</b> you must call <code>execute()</code> before calling this method.

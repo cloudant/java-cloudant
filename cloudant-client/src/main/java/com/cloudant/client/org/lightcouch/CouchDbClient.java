@@ -302,7 +302,8 @@ public class CouchDbClient {
     }
 
     /**
-     * Performs a HTTP GET request.
+     * <p>Performs a HTTP GET request.</p>
+     * <p>The stream <b>must</b> be closed after use.</p>
      *
      * @return Input stream with response
      */
@@ -327,7 +328,8 @@ public class CouchDbClient {
     }
 
     /**
-     * Performs a HTTP HEAD request.
+     * <p>Performs a HTTP HEAD request.</p>
+     * <p>The stream <b>must</b> be closed after use.</p>
      *
      * @return {@link Response}
      */
@@ -337,8 +339,9 @@ public class CouchDbClient {
     }
 
     /**
-     * Performs a HTTP PUT request, saves or updates a document.
-     * This defaults to "application/json" content type.
+     * <p>Performs a HTTP PUT request, saves or updates a document.
+     * This defaults to "application/json" content type.</p>
+     * <p>The stream <b>must</b> be closed after use.</p>
      *
      * @return Input stream with response
      */
@@ -347,7 +350,8 @@ public class CouchDbClient {
     }
 
     /**
-     * Performs a HTTP PUT request with content type, saves or updates a document.
+     * <p>Performs a HTTP PUT request with content type, saves or updates a document.</p>
+     * <p>The stream <b>must</b> be closed after use.</p>
      *
      * @return Input stream with response
      */
@@ -412,7 +416,8 @@ public class CouchDbClient {
     }
 
     /**
-     * Performs a HTTP POST request with JSON request body.
+     * <p>Performs a HTTP POST request with JSON request body.</p>
+     * <p>The stream <b>must</b> be closed after use.</p>
      *
      * @return Input stream with response
      */
@@ -549,7 +554,8 @@ public class CouchDbClient {
     }
 
     /**
-     * Execute the HttpConnection request and return the InputStream if there were no errors.
+     * <p>Execute the HttpConnection request and return the InputStream if there were no errors.</p>
+     * <p>The stream <b>must</b> be closed after use.</p>
      *
      * @param connection the request HttpConnection
      * @return InputStream from the HttpConnection response
