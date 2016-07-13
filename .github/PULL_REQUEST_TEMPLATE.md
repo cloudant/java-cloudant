@@ -18,10 +18,6 @@ strong typing of parameters.
 
 How to test your changes work, not required for documentation changes.
 
-## Reviewers
-
-Leave this section blank, its to allow us to easily see who is reviewing this pull request.
-
 ## Issues
 
 Links to the github issue(s) (if present) that this pull request is resolving.
