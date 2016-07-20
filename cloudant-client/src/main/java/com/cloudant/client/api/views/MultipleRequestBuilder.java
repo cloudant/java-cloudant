@@ -47,7 +47,8 @@ package com.cloudant.client.api.views;
  * @since 2.0.0
  */
 public interface MultipleRequestBuilder<K, V> extends RequestBuilder<MultipleRequestBuilder<K, V>>,
-        SettableViewParameters.Unpaginated<K, MultipleRequestBuilder<K, V>> {
+        SettableViewParameters.Unpaginated<K, MultipleRequestBuilder<K, V>>,
+        SettableViewParameters.Reduceable<K, MultipleRequestBuilder<K, V>> {
 
     /**
      * Adds a query request to this MultipleRequestBuilder.
