@@ -10,6 +10,8 @@
 - [FIX] `java.lang.StringIndexOutOfBoundsException` when trying to parse `Set-Cookie` headers.
 - [FIX] `NullPointerException` in `CookieInterceptor` when no body was present on response.
 - [UPGRADED] Upgraded GSON to 2.7
+- [IMPROVED] Added warning messages for JVM DNS cache configuration settings that could impede
+  client operation during cluster failover.
 
 # 2.5.1 (2016-07-19)
 - [IMPROVED] Made the 429 response code backoff optional and configurable. To enable the backoff add
