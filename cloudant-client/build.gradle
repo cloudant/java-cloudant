@@ -27,6 +27,7 @@ dependencies {
     //test dependencies
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'com.squareup.okhttp', name: 'mockwebserver', version: '2.7.5'
+    testCompile group: 'org.jmockit', name: 'jmockit', version: '1.25'
 }
 
 javadoc {
@@ -49,6 +50,17 @@ gradle.projectsEvaluated {
             String moduleVers = configurations.linkableJavadoc.resolvedConfiguration.firstLevelModuleDependencies.first().moduleVersion;
             options.linksOffline("http://static.javadoc.io/com.cloudant/$moduleName/$moduleVers","../$moduleName/build/docs/javadoc");
         }
+    }
+}
+
+tasks.withType(Test) {
+    def jMockit
+    doFirst {
+        // Do this when the task runs, not before because it will freeze the testCompile config.
+        jMockit = project.configurations.testCompile.find {
+            it.name.startsWith("jmockit-")
+        }
+        jvmArgs "-javaagent:${jMockit}"
     }
 }
 

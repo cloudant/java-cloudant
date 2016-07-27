@@ -18,6 +18,7 @@ import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
 import com.cloudant.http.interceptors.CookieInterceptor;
 import com.cloudant.http.interceptors.Replay429Interceptor;
+import com.cloudant.http.internal.ok.OkHttpClientHttpUrlConnectionFactory;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
@@ -33,11 +34,17 @@ import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.RuleChain;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import mockit.Mock;
+import mockit.MockUp;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -50,6 +57,7 @@ import java.nio.charset.Charset;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+@RunWith(Parameterized.class)
 public class HttpTest {
 
     private String data = "{\"hello\":\"world\"}";
@@ -60,6 +68,36 @@ public class HttpTest {
     public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
     @Rule
     public MockWebServer mockWebServer = new MockWebServer();
+
+    @Parameterized.Parameters(name = "Using okhttp: {0}")
+    public static Object[] okUsable() {
+        return new Object[]{true, false};
+    }
+
+    /**
+     * A parameter governing whether to allow okhttp or not. This lets us exercise both
+     * HttpURLConnection types in these tests.
+     */
+    @Parameterized.Parameter
+    public boolean okUsable;
+
+    static class OkFactoryBlocker extends MockUp<OkHttpClientHttpUrlConnectionFactory> {
+        @Mock
+        public static boolean isOkUsable() {
+            return false;
+        }
+    }
+
+    @Before
+    public void changeHttpConnectionFactory() throws Exception {
+        if (!okUsable) {
+            // New up the mock that will stop okhttp's factory being used
+            new OkFactoryBlocker();
+        }
+        // Verify that we are getting the behaviour we expect.
+        assertEquals("The OK usable value was not what was expected for the test parameter.",
+                okUsable, OkHttpClientHttpUrlConnectionFactory.isOkUsable());
+    }
 
     /*
      * Basic test that we can write a document body by POSTing to a known database
@@ -754,6 +792,7 @@ public class HttpTest {
 
     /**
      * Test the global number of retries
+     *
      * @throws Exception
      */
     @Test
@@ -767,9 +806,9 @@ public class HttpTest {
                     public HttpConnectionInterceptorContext interceptResponse
                             (HttpConnectionInterceptorContext context) {
                         // At least do something with the connection, otherwise we risk breaking it
-                        try{
+                        try {
                             context.connection.getConnection().getResponseCode();
-                        } catch(IOException e ) {
+                        } catch (IOException e) {
                             fail("IOException getting response code");
                         }
                         // Set to always replay
