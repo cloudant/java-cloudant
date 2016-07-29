@@ -12,6 +12,7 @@ import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
@@ -116,16 +117,20 @@ public class ResponseTest {
     }
 
     /**
-     * Test that an HTML error stream is correctly assigned to a CouchDbException error field.
+     * Test that an error stream is correctly assigned to a CouchDbException error field if it comes
+     * directly from the lb and not the service.
      * <P>
-     * This is a Cloudant service test, where a HTTP proxy may send an HTML error instead of JSON.
+     * This is a Cloudant service test, where a HTTP proxy may send an error.
      * We can provoke it into doing so by sending an invalid HTTP request - in this case an
      * invalid header field.
+     * Originally these errors were wrapped in HTML and so exercised a different path - they are now
+     * JSON body responses like most other Cloudant requests so should be on the normal exception
+     * handling path, but it is worth checking that we do work with these error types.
      * </P>
      */
     @Category(RequiresCloudant.class)
     @Test
-    public void testNonJsonErrorStream() {
+    public void testJsonErrorStreamFromLB() throws Exception {
         final AtomicBoolean badHeaderEnabled = new AtomicBoolean(false);
         CloudantClient c = CloudantClientHelper.getClientBuilder().interceptors(
                 new HttpConnectionRequestInterceptor() {
@@ -144,7 +149,8 @@ public class ResponseTest {
 
         try {
             // Make a good request, which will set up the session etc
-            c.executeRequest(Http.GET(c.getBaseUri()));
+            HttpConnection d = c.executeRequest(Http.GET(c.getBaseUri()));
+            assertTrue("The first request should succeed", d.getConnection().getResponseCode() / 100 == 2);
 
             // Enable the bad headers and expect the exception on the next request
             badHeaderEnabled.set(true);
@@ -152,8 +158,11 @@ public class ResponseTest {
             fail("A CouchDbException should be thrown");
         } catch (CouchDbException e) {
             //we expect a CouchDbException
+
+            assertEquals("The exception should be for a bad request", 400, e.getStatusCode());
+
             assertNotNull("The exception should have an error set", e.getError());
-            assertTrue("The exception error should contain html", e.getError().contains("<html>"));
+            assertEquals("The exception error should be bad request", "bad_request", e.getError());
         } finally {
             // Disable the bad header to allow a clean shutdown
             badHeaderEnabled.set(false);
