@@ -814,6 +814,35 @@ public class ViewsTest {
     }
 
     /**
+     * Validate that it is possible to POST multiple requests to a view query mixing reduced and not
+     * reduced queries and that the results of each request are as expected.
+     *
+     * @throws IOException
+     */
+    @Test
+    @Category(RequiresCloudant.class)
+    public void multiRequestMixedReduced() throws IOException {
+        init();
+        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "by_tag")
+                .newMultipleRequest(Key.Type.STRING, Object.class)
+                /* add includeDocs args after https://issues.apache.org/jira/browse/COUCHDB-3070 */
+                .reduce(false).keys("java")/*.includeDocs(true)*/.add()
+                .reduce(true)/*.includeDocs(false)*/.add()
+                .build();
+
+        List<ViewResponse<String, Object>> responses = multi.getViewResponses();
+        assertEquals("There should be 2 respones for 2 requests", 2, responses.size());
+
+        List<String> javaTagKeys = responses.get(0).getKeys();
+        assertEquals("There should be 1 java tag result", 1, javaTagKeys.size());
+        assertEquals("The key should be java", "java", javaTagKeys.get(0));
+
+        List<Object> allTagsReduced = responses.get(1).getValues();
+        assertEquals("There should be 1 reduced result", 1, allTagsReduced.size());
+        assertEquals("The result should be 4", 4, ((Number) allTagsReduced.get(0)).intValue());
+    }
+
+    /**
      * Assert that no additional pages are available on an unpaginated request even if additional
      * results are available.
      *
