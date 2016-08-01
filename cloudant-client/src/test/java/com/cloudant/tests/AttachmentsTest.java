@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2016 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -34,6 +34,7 @@ import com.cloudant.tests.util.DatabaseResource;
 import com.cloudant.tests.util.Utils;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -105,17 +106,15 @@ public class AttachmentsTest {
                 .attachmentUri(response.getId(), "foo.txt"));
         InputStream in = clientResource.get().executeRequest(conn).responseAsInputStream();
 
-        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
-        int n;
-        while ((n = in.read()) != -1) {
-            bytesOut.write(n);
+        try {
+
+            ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+            IOUtils.copy(in, bytesOut);
+            byte[] bytesFromDB = bytesOut.toByteArray();
+            assertArrayEquals(bytesToDB, bytesFromDB);
+        } finally {
+            in.close();
         }
-        bytesOut.flush();
-        in.close();
-
-        byte[] bytesFromDB = bytesOut.toByteArray();
-
-        assertArrayEquals(bytesToDB, bytesFromDB);
     }
 
     @Test
@@ -136,17 +135,14 @@ public class AttachmentsTest {
                 .attachmentUri(response.getId(), "foo.txt"));
         InputStream in = clientResource.get().executeRequest(conn).responseAsInputStream();
 
-        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
-        int n;
-        while ((n = in.read()) != -1) {
-            bytesOut.write(n);
+        try {
+            ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+            IOUtils.copy(in, bytesOut);
+            byte[] bytesFromDB = bytesOut.toByteArray();
+            assertArrayEquals(bytesToDB, bytesFromDB);
+        } finally {
+            in.close();
         }
-        bytesOut.flush();
-        in.close();
-
-        byte[] bytesFromDB = bytesOut.toByteArray();
-
-        assertArrayEquals(bytesToDB, bytesFromDB);
     }
 
     @Test
@@ -174,18 +170,14 @@ public class AttachmentsTest {
                 .attachmentUri(response.getId(), attResponse.getRev(), "foo.txt"));
         InputStream in = clientResource.get().executeRequest(conn).responseAsInputStream();
 
-        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
-        int n;
-        while ((n = in.read()) != -1) {
-            bytesOut.write(n);
+        try {
+            ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+            IOUtils.copy(in, bytesOut);
+            byte[] bytesFromDB = bytesOut.toByteArray();
+            assertArrayEquals(bytesToDB, bytesFromDB);
+        } finally {
+            in.close();
         }
-        bytesOut.flush();
-        in.close();
-
-        byte[] bytesFromDB = bytesOut.toByteArray();
-
-        assertArrayEquals(bytesToDB, bytesFromDB);
-
     }
 
     @Test
@@ -202,17 +194,14 @@ public class AttachmentsTest {
                 .attachmentUri(response.getId(), "foo.txt"));
         InputStream in = clientResource.get().executeRequest(conn).responseAsInputStream();
 
-        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
-        int n;
-        while ((n = in.read()) != -1) {
-            bytesOut.write(n);
+        try {
+            ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+            IOUtils.copy(in, bytesOut);
+            byte[] bytesFromDB = bytesOut.toByteArray();
+            assertArrayEquals(bytesToDB, bytesFromDB);
+        } finally {
+            in.close();
         }
-        bytesOut.flush();
-        in.close();
-
-        byte[] bytesFromDB = bytesOut.toByteArray();
-
-        assertArrayEquals(bytesToDB, bytesFromDB);
     }
 
     @Test
@@ -232,17 +221,14 @@ public class AttachmentsTest {
                 .attachmentUri(response.getId(), "foo.txt"));
         InputStream in = clientResource.get().executeRequest(conn).responseAsInputStream();
 
-        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
-        int n;
-        while ((n = in.read()) != -1) {
-            bytesOut.write(n);
+        try {
+            ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+            IOUtils.copy(in, bytesOut);
+            byte[] bytesFromDB = bytesOut.toByteArray();
+            assertArrayEquals(bytesToDB, bytesFromDB);
+        } finally {
+            in.close();
         }
-        bytesOut.flush();
-        in.close();
-
-        byte[] bytesFromDB = bytesOut.toByteArray();
-
-        assertArrayEquals(bytesToDB, bytesFromDB);
     }
 
     @Test(expected = IllegalArgumentException.class)

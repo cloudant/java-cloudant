@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 IBM Corp. All rights reserved.
+ * Copyright © 2016 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -84,7 +84,7 @@ public class LoggingTest {
     @Test
     public void httpLoggingEnabled() throws Exception {
         logger = setupLogger(HttpConnection.class, Level.ALL);
-        client.executeRequest(Http.GET(client.getBaseUri()));
+        client.executeRequest(Http.GET(client.getBaseUri())).responseAsString();
         assertTrue("There should be at least 1 log entry", handler.logEntries.size() > 0);
     }
 
@@ -100,7 +100,8 @@ public class LoggingTest {
         logger = setupLogger(HttpConnection.class, Level.FINE);
 
         // Make a request to testdb
-        client.executeRequest(Http.GET(new URL(client.getBaseUri().toString() + "/testdb")));
+        client.executeRequest(Http.GET(new URL(client.getBaseUri().toString() + "/testdb")))
+                .responseAsString();
 
         // Check there were two log messages one for request and one for response
         assertEquals("There should be 2 log messages", 2, handler.logEntries.size());
@@ -112,7 +113,7 @@ public class LoggingTest {
         int logsize = handler.logEntries.size();
 
         // Make a second request to a different URL and check that nothing else was logged
-        client.executeRequest(Http.GET(client.getBaseUri()));
+        client.executeRequest(Http.GET(client.getBaseUri())).responseAsString();
         assertEquals("There should have been no more log entries", logsize, handler.logEntries
                 .size());
     }
@@ -124,7 +125,7 @@ public class LoggingTest {
         logger = setupLogger(HttpConnection.class, Level.FINE);
 
         // Make a GET request
-        client.executeRequest(Http.GET(client.getBaseUri()));
+        client.executeRequest(Http.GET(client.getBaseUri())).responseAsString();
 
         // Check there were two log messages one for request and one for response
         assertEquals("There should be 2 log messages", 2, handler.logEntries.size());
@@ -136,7 +137,8 @@ public class LoggingTest {
         int logsize = handler.logEntries.size();
 
         // Make a PUT request to a different URL and check that nothing else was logged
-        client.executeRequest(Http.PUT(client.getBaseUri(), "text/plain").setRequestBody(""));
+        client.executeRequest(Http.PUT(client.getBaseUri(), "text/plain").setRequestBody(""))
+                .responseAsString();
         assertEquals("There should have been no more log entries", logsize, handler.logEntries
                 .size());
     }
@@ -147,7 +149,7 @@ public class LoggingTest {
         logger = setupLogger(HttpConnection.class, Level.FINE);
 
         // Make a GET request
-        client.executeRequest(Http.GET(client.getBaseUri()));
+        client.executeRequest(Http.GET(client.getBaseUri())).responseAsString();
 
         // Check there were two log messages one for request and one for response
         assertEquals("There should be 2 log messages", 2, handler.logEntries.size());
@@ -156,7 +158,8 @@ public class LoggingTest {
         assertHttpMessage("GET .* response 200 OK", 1);
 
         // Make a PUT request to a different URL and check that new messages are logged
-        client.executeRequest(Http.PUT(client.getBaseUri(), "text/plain").setRequestBody(""));
+        client.executeRequest(Http.PUT(client.getBaseUri(), "text/plain").setRequestBody(""))
+                .responseAsString();
 
         assertEquals("There should now be 4 log messages", 4, handler.logEntries.size());
         // Check the messages were the ones we expected
