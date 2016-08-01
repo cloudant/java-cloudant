@@ -1,6 +1,8 @@
 # Unreleased
 - [NEW] Enabled `reduce` and other reduce related parameters to be set when using
   `MultipleRequestBuilder`.
+- [FIX] Consumed response streams in `client.shutdown()` and `CookieInterceptor` to prevent
+  connection leaks.
 
 # 2.5.1 (2016-07-19)
 - [IMPROVED] Made the 429 response code backoff optional and configurable. To enable the backoff add
