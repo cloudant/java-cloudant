@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2016 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -103,38 +103,45 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
         try {
             boolean renewCookie = false;
             int statusCode = connection.getResponseCode();
-            switch (statusCode) {
-                case HttpURLConnection.HTTP_FORBIDDEN: //403
-                    //check if it was an expiry case
-                    InputStream errorStream = connection.getErrorStream();
-                    try {
-                        String errorString = IOUtils.toString(errorStream, "UTF-8");
-                        // Check using a regex to avoid dependency on a JSON library.
-                        // Note (?siu) flags used for . to also match line breaks and for unicode
-                        // case insensitivity.
-                        if (!errorString.matches("(?siu)" +
-                                ".*\\\"error\\\"\\s*:\\s*\\\"credentials_expired\\\".*")) {
-                            // Wasn't a credentials expired, throw exception
-                            HttpConnectionInterceptorException toThrow = new
-                                    HttpConnectionInterceptorException(errorString);
-                            // Set the flag for deserialization
-                            toThrow.deserialize = true;
-                            throw toThrow;
-                        } else {
-                            // Was expired - set boolean to renew cookie
+
+            if (statusCode == HttpURLConnection.HTTP_FORBIDDEN || statusCode == HttpURLConnection
+                    .HTTP_UNAUTHORIZED) {
+                InputStream errorStream = connection.getErrorStream();
+                try {
+                    switch (statusCode) {
+                        case HttpURLConnection.HTTP_FORBIDDEN: //403
+                            //check if it was an expiry case
+                            String errorString = IOUtils.toString(errorStream, "UTF-8");
+                            // Check using a regex to avoid dependency on a JSON library.
+                            // Note (?siu) flags used for . to also match line breaks and for
+                            // unicode
+                            // case insensitivity.
+                            if (!errorString.matches("(?siu)" +
+                                    ".*\\\"error\\\"\\s*:\\s*\\\"credentials_expired\\\".*")) {
+                                // Wasn't a credentials expired, throw exception
+                                HttpConnectionInterceptorException toThrow = new
+                                        HttpConnectionInterceptorException(errorString);
+                                // Set the flag for deserialization
+                                toThrow.deserialize = true;
+                                throw toThrow;
+                            } else {
+                                // Was expired - set boolean to renew cookie
+                                renewCookie = true;
+                            }
+                            break;
+                        case HttpURLConnection.HTTP_UNAUTHORIZED: //401
+                            IOUtils.toString(errorStream, "UTF-8");
+                            // We need to get a new cookie
                             renewCookie = true;
-                        }
-                    } finally {
-                        errorStream.close();
+                            break;
+                        default:
+                            break;
                     }
-                    break;
-                case HttpURLConnection.HTTP_UNAUTHORIZED: //401
-                    // We need to get a new cookie
-                    renewCookie = true;
-                    break;
-                default:
-                    break;
+                } finally {
+                    IOUtils.closeQuietly(errorStream);
+                }
             }
+
             if (renewCookie) {
                 cookie = getCookie(connection.getURL(), context);
                 // Don't resend request, failed to get cookie
@@ -181,23 +188,33 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
                     return null;
                 }
 
-            } else if (responseCode == 401) {
-                shouldAttemptCookieRequest = false;
-                logger.severe("Credentials are incorrect, cookie authentication will not be" +
-                        " attempted again by this interceptor object");
-            } else if (responseCode / 100 == 5) {
-                logger.log(Level.SEVERE,
-                        "Failed to get cookie from server, response code %s, cookie auth",
-                        responseCode);
             } else {
-                // catch any other response code
-                logger.log(Level.SEVERE,
-                        "Failed to get cookie from server, response code %s, " +
-                                "cookie authentication will not be attempted again",
-                        responseCode);
-                shouldAttemptCookieRequest = false;
+                InputStream errorStream = connection.getErrorStream();
+                try {
+                    // Consume the error stream to avoid leaking connections
+                    String error = IOUtils.toString(errorStream, "UTF-8");
+                    // Log the error stream content
+                    logger.fine(error);
+                } finally {
+                    IOUtils.closeQuietly(errorStream);
+                }
+                if (responseCode == 401) {
+                    shouldAttemptCookieRequest = false;
+                    logger.severe("Credentials are incorrect, cookie authentication will not be" +
+                            " attempted again by this interceptor object");
+                } else if (responseCode / 100 == 5) {
+                    logger.log(Level.SEVERE,
+                            "Failed to get cookie from server, response code %s, cookie auth",
+                            responseCode);
+                } else {
+                    // catch any other response code
+                    logger.log(Level.SEVERE,
+                            "Failed to get cookie from server, response code %s, " +
+                                    "cookie authentication will not be attempted again",
+                            responseCode);
+                    shouldAttemptCookieRequest = false;
+                }
             }
-
         } catch (MalformedURLException e) {
             logger.log(Level.SEVERE, "Failed to create URL for _session endpoint", e);
         } catch (UnsupportedEncodingException e) {

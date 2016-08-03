@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2016 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -58,7 +58,8 @@ public class HttpProxyTest {
                 .proxyPassword(mockProxyPass)
                 .build();
 
-        client.executeRequest(Http.GET(client.getBaseUri()));
+        String response = client.executeRequest(Http.GET(client.getBaseUri())).responseAsString();
+        assertTrue("There should be no response body on the mock response", response.isEmpty());
         //if it wasn't a 20x then an exception should have been thrown by now
 
         RecordedRequest request = server.takeRequest(10, TimeUnit.SECONDS);

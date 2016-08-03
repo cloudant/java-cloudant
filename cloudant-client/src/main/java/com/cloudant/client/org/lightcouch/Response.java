@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2016 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -26,6 +26,7 @@ package com.cloudant.client.org.lightcouch;
  * @since 0.0.2
  */
 public class Response {
+    private boolean ok;
     private String id;
     private String rev;
 
@@ -74,5 +75,9 @@ public class Response {
 
     void setStatusCode(int code) {
         this.code = code;
+    }
+
+    boolean isOk() {
+        return ok;
     }
 }

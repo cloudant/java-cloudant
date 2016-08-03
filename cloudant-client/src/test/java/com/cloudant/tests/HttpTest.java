@@ -1,3 +1,16 @@
+/*
+ * Copyright © 2016 IBM Corp. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions
+ * and limitations under the License.
+ */
 package com.cloudant.tests;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -49,6 +62,7 @@ import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 public class HttpTest {
 
@@ -74,10 +88,18 @@ public class HttpTest {
         assertEquals(data.getBytes().length, bis.available());
 
         conn.setRequestBody(bis);
-        conn.execute();
+        HttpConnection response = conn.execute();
+        // Consume response stream
+        String responseStr = response.responseAsString();
+        String okPattern = ".*\"ok\"\\s*:\\s*true.*";
+        assertTrue("There should be an ok response: " + responseStr, Pattern.compile(okPattern,
+                Pattern.DOTALL).matcher(responseStr).matches());
 
         // stream was read to end
         assertEquals(0, bis.available());
+
+        assertEquals("Should be a 2XX response code", 2, response.getConnection().getResponseCode
+                () / 100);
     }
 
     /*
@@ -95,8 +117,8 @@ public class HttpTest {
 
         conn.setRequestBody(bis);
         try {
-            conn.responseAsString();
-            fail("IOException not thrown as expected");
+            String response = conn.responseAsString();
+            fail("IOException not thrown as expected instead had response " + response);
         } catch (IOException ioe) {
             ; // "Attempted to read response from server before calling execute()"
         }
@@ -129,21 +151,24 @@ public class HttpTest {
         assertEquals(data.getBytes().length, bis.available());
 
         conn.setRequestBody(bis);
-        conn.execute();
+        HttpConnection responseConn = conn.execute();
 
         // stream was read to end
         assertEquals(0, bis.available());
-        assertEquals(2, conn.getConnection().getResponseCode() / 100);
+        assertEquals(2, responseConn.getConnection().getResponseCode() / 100);
 
         //check the json
         Gson gson = new Gson();
-        JsonObject response = gson.fromJson(new InputStreamReader(conn.getConnection()
-                .getInputStream()), JsonObject.class);
-
-        assertTrue(response.has("ok"));
-        assertTrue(response.get("ok").getAsBoolean());
-        assertTrue(response.has("id"));
-        assertTrue(response.has("rev"));
+        InputStream is = responseConn.responseAsInputStream();
+        try {
+            JsonObject response = gson.fromJson(new InputStreamReader(is), JsonObject.class);
+            assertTrue(response.has("ok"));
+            assertTrue(response.get("ok").getAsBoolean());
+            assertTrue(response.has("id"));
+            assertTrue(response.has("rev"));
+        } finally {
+            is.close();
+        }
     }
 
     /**
@@ -167,21 +192,24 @@ public class HttpTest {
         assertEquals(data.getBytes().length, bis.available());
 
         conn.setRequestBody(bis);
-        conn.execute();
+        HttpConnection responseConn = conn.execute();
 
         // stream was read to end
         assertEquals(0, bis.available());
-        assertEquals(2, conn.getConnection().getResponseCode() / 100);
+        assertEquals(2, responseConn.getConnection().getResponseCode() / 100);
 
         //check the json
         Gson gson = new Gson();
-        JsonObject response = gson.fromJson(new InputStreamReader(conn.getConnection()
-                .getInputStream()), JsonObject.class);
-
-        assertTrue(response.has("ok"));
-        assertTrue(response.get("ok").getAsBoolean());
-        assertTrue(response.has("id"));
-        assertTrue(response.has("rev"));
+        InputStream is = responseConn.responseAsInputStream();
+        try {
+            JsonObject response = gson.fromJson(new InputStreamReader(is), JsonObject.class);
+            assertTrue(response.has("ok"));
+            assertTrue(response.get("ok").getAsBoolean());
+            assertTrue(response.has("id"));
+            assertTrue(response.has("rev"));
+        } finally {
+            is.close();
+        }
     }
 
     /**
@@ -197,36 +225,30 @@ public class HttpTest {
         final String mockUser = "myStrangeUsername=&?";
         String mockPass = "?&=NotAsStrangeInAPassword";
 
-        MockWebServer server = new MockWebServer();
         //expect a cookie request then a GET
-        server.enqueue(MockWebServerResources.OK_COOKIE);
-        server.enqueue(new MockResponse());
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(new MockResponse());
 
-        server.start();
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .username(mockUser)
+                .password(mockPass)
+                .build();
+        //the GET request will try to get a session, then perform the GET
+        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        assertTrue("There should be no response body on the mock response", response.isEmpty());
 
-        try {
-            CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server)
-                    .username(mockUser)
-                    .password(mockPass)
-                    .build();
-            //the GET request will try to get a session, then perform the GET
-            c.executeRequest(Http.GET(c.getBaseUri()));
-
-            RecordedRequest r = server.takeRequest(10, TimeUnit.SECONDS);
-            String sessionRequestContent = r.getBody().readString(Charset.forName("UTF-8"));
-            assertNotNull("The _session request should have non-null content",
-                    sessionRequestContent);
-            //expecting name=...&password=...
-            String[] parts = Utils.splitAndAssert(sessionRequestContent, "&", 1);
-            String username = URLDecoder.decode(Utils.splitAndAssert(parts[0], "=", 1)[1], "UTF-8");
-            assertEquals("The username URL decoded username should match", mockUser,
-                    username);
-            String password = URLDecoder.decode(Utils.splitAndAssert(parts[1], "=", 1)[1], "UTF-8");
-            assertEquals("The username URL decoded password should match", mockPass,
-                    password);
-        } finally {
-            server.shutdown();
-        }
+        RecordedRequest r = mockWebServer.takeRequest(10, TimeUnit.SECONDS);
+        String sessionRequestContent = r.getBody().readString(Charset.forName("UTF-8"));
+        assertNotNull("The _session request should have non-null content",
+                sessionRequestContent);
+        //expecting name=...&password=...
+        String[] parts = Utils.splitAndAssert(sessionRequestContent, "&", 1);
+        String username = URLDecoder.decode(Utils.splitAndAssert(parts[0], "=", 1)[1], "UTF-8");
+        assertEquals("The username URL decoded username should match", mockUser,
+                username);
+        String password = URLDecoder.decode(Utils.splitAndAssert(parts[1], "=", 1)[1], "UTF-8");
+        assertEquals("The username URL decoded password should match", mockPass,
+                password);
     }
 
     /**
@@ -237,7 +259,7 @@ public class HttpTest {
      */
     @Test
     public void cookieRenewal() throws Exception {
-
+        final String hello = "{\"hello\":\"world\"}\r\n";
         final String renewalCookieValue =
                 "AuthSession=\"RenewCookie_a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz\";";
         // Request sequence
@@ -248,7 +270,7 @@ public class HttpTest {
         mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
         mockWebServer.enqueue(new MockResponse().setResponseCode(200).addHeader("Set-Cookie",
                 String.format(Locale.ENGLISH, "%s;", renewalCookieValue))
-                .setBody("{\"hello\":\"world\"}\r\n"));
+                .setBody(hello));
         mockWebServer.enqueue(new MockResponse());
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
@@ -257,8 +279,11 @@ public class HttpTest {
                 .build();
 
 
-        c.executeRequest(Http.GET(c.getBaseUri()));
-        c.executeRequest(Http.GET(c.getBaseUri()));
+        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        assertEquals("The expected response should be received", hello, response);
+        String secondResponse = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        assertTrue("There should be no response body on the mock response" + secondResponse,
+                secondResponse.isEmpty());
 
 
         // also assert that there were 3 calls
@@ -369,7 +394,8 @@ public class HttpTest {
         //the GET will result in a 403, which in a renewal case should mean another request to
         // _session followed by a replay of GET
         try {
-            c.executeRequest(Http.GET(c.getBaseUri()));
+            String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+            assertTrue("There should be no response body on the mock response", response.isEmpty());
             if (!error.equals("credentials_expired")) {
                 fail("A 403 not due to cookie expiry should result in a CouchDbException");
             }
@@ -503,6 +529,8 @@ public class HttpTest {
             }
         }).build().executeRequest(request);
 
+        String responseStr = response.responseAsString();
+        assertTrue("There should be no response body on the mock response", responseStr.isEmpty());
         assertEquals("The final response code should be 200", 200, response.getConnection()
                 .getResponseCode());
 
@@ -535,6 +563,8 @@ public class HttpTest {
         HttpConnection request = Http.POST(mockWebServer.url("/").url(), "application/json");
         request.setRequestBody("{\"some\": \"json\"}");
         HttpConnection response = c.executeRequest(request);
+        String responseStr = response.responseAsString();
+        assertTrue("There should be no response body on the mock response", responseStr.isEmpty());
         response.getConnection().getResponseCode();
     }
 
@@ -575,8 +605,11 @@ public class HttpTest {
         CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
                 .build();
         // POST some large random data
-        client.executeRequest(Http.POST(mockWebServer.url("/").url(), "text/plain")
-                .setRequestBody(new RandomInputStreamGenerator(chunks * chunkSize)));
+        String response = client.executeRequest(Http.POST(mockWebServer.url("/").url(),
+                "text/plain")
+                .setRequestBody(new RandomInputStreamGenerator(chunks * chunkSize)))
+                .responseAsString();
+        assertTrue("There should be no response body on the mock response", response.isEmpty());
         assertEquals("There should have been 1 request", 1, mockWebServer
                 .getRequestCount());
         RecordedRequest request = mockWebServer.takeRequest();
@@ -621,7 +654,8 @@ public class HttpTest {
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
                 .interceptors(Replay429Interceptor.WITH_DEFAULTS)
                 .build();
-        c.executeRequest(Http.GET(c.getBaseUri()));
+        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        assertTrue("There should be no response body on the mock response", response.isEmpty());
 
         assertEquals("There should be 2 requests", 2, mockWebServer.getRequestCount());
     }
@@ -643,8 +677,8 @@ public class HttpTest {
             CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
                     .interceptors(Replay429Interceptor.WITH_DEFAULTS)
                     .build();
-            c.executeRequest(Http.GET(c.getBaseUri()));
-            fail("There should be a TooManyRequestsException");
+            String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+            fail("There should be a TooManyRequestsException instead had response " + response);
         } catch (TooManyRequestsException e) {
             long duration = t.stopTimer(TimeUnit.MILLISECONDS);
             // 3 backoff periods for 4 attempts: 250 + 500 + 1000 = 1750 ms
@@ -673,8 +707,8 @@ public class HttpTest {
             CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
                     .interceptors(new Replay429Interceptor(10, 1, true))
                     .build();
-            c.executeRequest(Http.GET(c.getBaseUri()));
-            fail("There should be a TooManyRequestsException");
+            String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+            fail("There should be a TooManyRequestsException instead had response " + response);
         } catch (TooManyRequestsException e) {
             long duration = t.stopTimer(TimeUnit.MILLISECONDS);
             // 9 backoff periods for 10 attempts: 1 + 2 + 4 + 8 + 16 + 32 + 64 + 128 + 256 = 511 ms
@@ -700,8 +734,9 @@ public class HttpTest {
             CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
                     .interceptors(new Replay429Interceptor(10, 1, true))
                     .build();
-            c.executeRequest(Http.GET(c.getBaseUri()).setNumberOfRetries(3));
-            fail("There should be a TooManyRequestsException");
+            String response = c.executeRequest(Http.GET(c.getBaseUri()).setNumberOfRetries(3))
+                    .responseAsString();
+            fail("There should be a TooManyRequestsException instead had response " + response);
         } catch (TooManyRequestsException e) {
             assertEquals("There should be 3 request attempts", 3, mockWebServer
                     .getRequestCount());
@@ -724,7 +759,8 @@ public class HttpTest {
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
                 .interceptors(Replay429Interceptor.WITH_DEFAULTS)
                 .build();
-        c.executeRequest(Http.GET(c.getBaseUri()));
+        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        assertTrue("There should be no response body on the mock response", response.isEmpty());
 
         long duration = t.stopTimer(TimeUnit.MILLISECONDS);
         assertTrue("The duration should be at least 1000 ms, but was " + duration, duration >=
@@ -743,7 +779,8 @@ public class HttpTest {
                 .interceptors(new Replay429Interceptor(1, 1, false))
                 .build();
 
-        c.executeRequest(Http.GET(c.getBaseUri()));
+        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        assertTrue("There should be no response body on the mock response", response.isEmpty());
 
         long duration = t.stopTimer(TimeUnit.MILLISECONDS);
         assertTrue("The duration should be less than 1000 ms, but was " + duration, duration <
@@ -754,6 +791,7 @@ public class HttpTest {
 
     /**
      * Test the global number of retries
+     *
      * @throws Exception
      */
     @Test
@@ -767,9 +805,9 @@ public class HttpTest {
                     public HttpConnectionInterceptorContext interceptResponse
                             (HttpConnectionInterceptorContext context) {
                         // At least do something with the connection, otherwise we risk breaking it
-                        try{
+                        try {
                             context.connection.getConnection().getResponseCode();
-                        } catch(IOException e ) {
+                        } catch (IOException e) {
                             fail("IOException getting response code");
                         }
                         // Set to always replay
@@ -779,7 +817,9 @@ public class HttpTest {
                 })
                 .build();
 
-        c.executeRequest(Http.GET(c.getBaseUri()).setNumberOfRetries(5));
+        String response = c.executeRequest(Http.GET(c.getBaseUri()).setNumberOfRetries(5))
+                .responseAsString();
+        assertTrue("There should be no response body on the mock response", response.isEmpty());
 
         assertEquals("There should be 5 request attempts", 5, mockWebServer
                 .getRequestCount());

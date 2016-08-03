@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2016 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -136,7 +136,9 @@ public class CloudantClientTests {
             //instantiating the client performs a single post request
             CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(server)
                     .build();
-            client.executeRequest(createPost(client.getBaseUri(), null, "application/json"));
+            String response = client.executeRequest(createPost(client.getBaseUri(), null,
+                    "application/json")).responseAsString();
+            assertTrue("There should be no response body on the mock response", response.isEmpty());
 
             //assert that the request had the expected header
             String userAgentHeader = server.takeRequest(10, TimeUnit.SECONDS)

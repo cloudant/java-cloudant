@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2016 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getRespons
 import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.client.internal.URIBase;
 import com.cloudant.client.internal.util.DeserializationTypes;
+import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
 import com.cloudant.client.org.lightcouch.internal.GsonHelper;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
@@ -143,9 +144,11 @@ public class CouchDbClient {
      */
     public void shutdown() {
         // Delete the cookie _session if there is one
-        execute(Http.DELETE(new URIBase(clientUri).path("_session")
+        Response response = executeToResponse(Http.DELETE(new URIBase(clientUri).path("_session")
                 .build()));
-
+        if (!response.isOk()) {
+            log.warning("Error deleting session on client shutdown.");
+        }
         // The execute method handles non-2xx response codes by throwing a CouchDbException.
     }
 

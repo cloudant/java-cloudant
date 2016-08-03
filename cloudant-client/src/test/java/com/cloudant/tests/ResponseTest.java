@@ -1,3 +1,16 @@
+/*
+ * Copyright © 2016 IBM Corp. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions
+ * and limitations under the License.
+ */
 package com.cloudant.tests;
 
 import static org.junit.Assert.assertEquals;
@@ -150,12 +163,13 @@ public class ResponseTest {
         try {
             // Make a good request, which will set up the session etc
             HttpConnection d = c.executeRequest(Http.GET(c.getBaseUri()));
+            d.responseAsString();
             assertTrue("The first request should succeed", d.getConnection().getResponseCode() / 100 == 2);
 
             // Enable the bad headers and expect the exception on the next request
             badHeaderEnabled.set(true);
-            c.executeRequest(Http.GET(c.getBaseUri()));
-            fail("A CouchDbException should be thrown");
+            String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+            fail("A CouchDbException should be thrown, but had response " + response);
         } catch (CouchDbException e) {
             //we expect a CouchDbException
 
