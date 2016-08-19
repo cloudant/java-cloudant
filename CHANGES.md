@@ -3,6 +3,7 @@
   `MultipleRequestBuilder`.
 - [FIX] Consumed response streams in `client.shutdown()` and `CookieInterceptor` to prevent
   connection leaks.
+- [NEW] Added functionality to remove attachment from document by attachment name.
 
 # 2.5.1 (2016-07-19)
 - [IMPROVED] Made the 429 response code backoff optional and configurable. To enable the backoff add

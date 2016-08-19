@@ -348,6 +348,41 @@ public abstract class CouchDatabaseBase {
     }
 
     /**
+     * Removes an attachment from a document.
+     * <p>The object must have the correct <code>_id</code> and <code>_rev</code> and <code>attachmentName</code> values.
+     *
+     * @param object The document to remove attachment as object.
+     * @param attachmentName The attachment name to remove.
+     * @return {@link Response}
+     * @throws NoDocumentException If the document is not found in the database.
+     */
+    public Response removeAttachment(Object object, String attachmentName) {
+        assertNotEmpty(object, "object");
+        JsonObject jsonObject = getGson().toJsonTree(object).getAsJsonObject();
+        final String id = getAsString(jsonObject, "_id");
+        final String rev = getAsString(jsonObject, "_rev");
+        return removeAttachment(id, rev, attachmentName);
+    }
+
+    /**
+     * Removes an attachment from a document given both a document <code>_id</code> and
+     * <code>_rev</code> and <code>attachmentName</code> values.
+     *
+     * @param id  The document _id field.
+     * @param rev The document _rev field.
+     * @param attachmentName The document attachment field.
+     * @return {@link Response}
+     * @throws DocumentConflictException
+     */
+    public Response removeAttachment(String id, String rev, String attachmentName) {
+        assertNotEmpty(id, "id");
+        assertNotEmpty(rev, "rev");
+        assertNotEmpty(attachmentName, "attachmentName");
+        final URI uri = new DatabaseURIHelper(dbUri).attachmentUri(id, rev, attachmentName);
+        return couchDbClient.delete(uri);
+    }
+
+    /**
      * Invokes an Update Handler.
      * <pre>
      * Params params = new Params()
