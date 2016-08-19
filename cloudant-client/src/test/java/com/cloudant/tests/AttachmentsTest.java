@@ -14,11 +14,13 @@
  */
 package com.cloudant.tests;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Attachment;
@@ -251,5 +253,46 @@ public class AttachmentsTest {
         byte[] bytesToDB = "binary data".getBytes();
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
         Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", docId, "");
+    }
+
+    @Test
+    public void removeAttachment() {
+        String attachmentName = "txt_1.txt";
+        Attachment attachment1 = new Attachment("VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=",
+                "text/plain");
+
+        Bar bar = new Bar(); // Bar extends Document
+        bar.addAttachment(attachmentName, attachment1);
+
+        Response response = db.save(bar);
+
+        Bar bar2 = db.find(Bar.class, response.getId(), new Params().attachments());
+        String base64Data = bar2.getAttachments().get("txt_1.txt").getData();
+        assertNotNull(base64Data);
+
+        response = db.removeAttachment(bar2, attachmentName);
+
+        Bar bar3 = db.find(Bar.class, response.getId(), new Params().attachments());
+        assertNull(bar3.getAttachments());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void removeAttachmentNullIdNonNullRev() {
+        String attachmentName = "txt_1.txt";
+        Response response = db.removeAttachment(null, "1-abcdef", attachmentName);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void removeAttachmentNonNullIdNullRev() {
+        String docId = Utils.generateUUID();
+        String attachmentName = "txt_1.txt";
+        Response response = db.removeAttachment(docId, null, attachmentName);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void removeAttachmentNonNullIdNonNullRevNullAttachmentName() {
+        String docId = Utils.generateUUID();
+        String rev = "1-abcdef";
+        Response response = db.removeAttachment(docId, rev, null);
     }
 }
