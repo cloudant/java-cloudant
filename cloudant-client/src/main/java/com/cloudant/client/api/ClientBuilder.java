@@ -16,7 +16,9 @@ import com.cloudant.http.interceptors.SSLCustomizerInterceptor;
 import com.cloudant.http.interceptors.TimeoutCustomizationInterceptor;
 import com.google.gson.GsonBuilder;
 
+import java.net.Authenticator;
 import java.net.MalformedURLException;
+import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -232,10 +234,17 @@ public class ClientBuilder {
         props.setMaxConnections(maxConnections);
         props.setProxyURL(proxyURL);
         if (proxyUser != null) {
-            //if there was proxy auth information create an interceptor for it
-            props.addRequestInterceptors(new ProxyAuthInterceptor(proxyUser,
-                    proxyPassword));
-            logger.config("Added proxy auth interceptor");
+            //if there was proxy auth information set up proxy auth
+            if ("http".equals(url.getProtocol())) {
+                // If we are using http, create an interceptor to add the Proxy-Authorization header
+                props.addRequestInterceptors(new ProxyAuthInterceptor(proxyUser,
+                        proxyPassword));
+                logger.config("Added proxy auth interceptor");
+            } else {
+                // Set up an authenticator
+                props.setProxyAuthentication(new PasswordAuthentication(proxyUser,
+                        proxyPassword.toCharArray()));
+            }
         }
         if (isSSLAuthenticationDisabled) {
             props.addRequestInterceptors(SSLCustomizerInterceptor
@@ -276,7 +285,8 @@ public class ClientBuilder {
         // types before constructing the CloudantClient
         gsonBuilder.registerTypeAdapter(DeserializationTypes.SHARDS, new ShardDeserializer())
                 .registerTypeAdapter(DeserializationTypes.INDICES, new IndexDeserializer())
-                .registerTypeAdapter(DeserializationTypes.PERMISSIONS_MAP, new SecurityDeserializer())
+                .registerTypeAdapter(DeserializationTypes.PERMISSIONS_MAP, new
+                        SecurityDeserializer())
                 .registerTypeAdapter(Key.ComplexKey.class, new Key.ComplexKeyDeserializer());
 
         return new CloudantClient(props, gsonBuilder);
@@ -338,10 +348,18 @@ public class ClientBuilder {
     }
 
     /**
+     * <p>
      * Sets a proxy url for the client connection.
+     * </p>
+     * <p>
+     * Note that this method can only set the configuration for an unencrypted HTTP proxy.
+     * Even when using this type of proxy communication from the client to a https database server
+     * is encrypted via a SSL tunnel.
+     * </p>
      *
      * @param proxyURL the URL of the proxy server
      * @return this ClientBuilder object for setting additional options
+     * @see <a href="{@docroot}overview-summary.html#Proxies">Advanced configuration: Proxies</a>
      */
     public ClientBuilder proxyURL(URL proxyURL) {
         this.proxyURL = proxyURL;
@@ -349,10 +367,18 @@ public class ClientBuilder {
     }
 
     /**
+     * <p>
      * Sets an optional proxy username for the client connection.
+     * </p>
+     * <p>
+     * Note: Use {@link java.net.Authenticator#setDefault(Authenticator)} to configure proxy
+     * authentication when using the JVM default HttpURLConnection (i.e. not using the optional
+     * okhttp dependency) in combination with a HTTPS database server.
+     * </p>
      *
      * @param proxyUser username for the proxy server
      * @return this ClientBuilder object for setting additional options
+     * @see <a href="{@docroot}overview-summary.html#Proxies">Advanced configuration: Proxies</a>
      */
     public ClientBuilder proxyUser(String proxyUser) {
         this.proxyUser = proxyUser;
@@ -360,11 +386,19 @@ public class ClientBuilder {
     }
 
     /**
+     * <p>
      * Sets an optional proxy password for the proxy user specified by
      * {@link #proxyUser(String)}.
+     * </p>
+     * <p>
+     * Note: Use {@link java.net.Authenticator#setDefault(Authenticator)} to configure proxy
+     * authentication when using the JVM default HttpURLConnection (i.e. not using the optional
+     * okhttp dependency) in combination with a HTTPS database server.
+     * </p>
      *
      * @param proxyPassword password for the proxy server user
      * @return this ClientBuilder object for setting additional options
+     * @see <a href="{@docroot}overview-summary.html#Proxies">Advanced configuration: Proxies</a>
      */
     public ClientBuilder proxyPassword(String proxyPassword) {
         this.proxyPassword = proxyPassword;
