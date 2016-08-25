@@ -1010,6 +1010,61 @@ public class Database {
     }
 
     /**
+     * Removes an attachment from the specified document.
+     * <p>The object must have the correct {@code _id} and {@code _rev} values.</p>
+     * <P>Example usage:</P>
+     * <pre>
+     * {@code
+     * //get a Bar object from the database
+     * Bar bar = db.find(Bar.class, "exampleId");
+     * String attachmentName = "example.jpg";
+     * //now remove the remote Bar attachment
+     * Response response = db.removeAttachment(bar, attachmentName);
+     * }
+     * </pre>
+     *
+     * @param object the document to remove as an object
+     * @param attachmentName the attachment name to remove
+     * @return {@link com.cloudant.client.api.model.Response}
+     * @throws NoDocumentException If the document is not found in the database.
+     * @throws DocumentConflictException If a conflict is detected during the removal.
+     * @see <a target="_blank" href="https://docs.cloudant.com/attachments.html#delete">Documents -
+     * delete</a>
+     */
+    public com.cloudant.client.api.model.Response removeAttachment(Object object, String attachmentName) {
+        Response couchDbResponse = db.removeAttachment(object, attachmentName);
+        com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model
+                .Response(couchDbResponse);
+        return response;
+    }
+
+    /**
+     * Removes the attachment from a document the specified {@code _id} and {@code _rev} and {@code attachmentName}
+     * values.
+     * <P>Example usage:</P>
+     * <pre>
+     * {@code
+     * Response response = db.removeAttachment("exampleId", "1-12345exampleRev", "example.jpg");
+     * }
+     * </pre>
+     *
+     * @param id  the document _id field
+     * @param rev the document _rev field
+     * @param attachmentName the attachment name
+     * @return {@link com.cloudant.client.api.model.Response}
+     * @throws NoDocumentException If the document is not found in the database.
+     * @throws DocumentConflictException if the attachment cannot be removed because of a conflict
+     * @see <a target="_blank" href="https://docs.cloudant.com/attachments.html#delete">Documents -
+     * delete</a>
+     */
+    public com.cloudant.client.api.model.Response removeAttachment(String id, String rev, String attachmentName) {
+        Response couchDbResponse = db.removeAttachment(id, rev, attachmentName);
+        com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model
+                .Response(couchDbResponse);
+        return response;
+    }
+
+    /**
      * Invokes an Update Handler.
      * <P>Example usage:</P>
      * <pre>
