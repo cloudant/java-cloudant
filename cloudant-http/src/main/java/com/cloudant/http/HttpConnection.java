@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -479,6 +480,14 @@ public class HttpConnection {
          * @param proxyUrl the URL of the HTTP proxy to use for this connection
          */
         void setProxy(URL proxyUrl);
+
+        /**
+         * Set an authenticator to be used to provide credentials for the connection to the
+         * proxy server defined by the URL passed to {@link #setProxy(URL)}.
+         *
+         * @param proxyAuthentication the password authentication to use for the proxy connection
+         */
+        void setProxyAuthentication(PasswordAuthentication proxyAuthentication);
     }
 
     /**

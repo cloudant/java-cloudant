@@ -54,7 +54,10 @@ public class MockWebServerResources {
     private static String KEYSTORE_PASSWORD = "password";
     private static String KEY_PASSWORD = "password";
 
-    public static SSLSocketFactory getSSLSocketFactory() {
+    private static SSLContext sslContext = null;
+
+    public static SSLContext getSSLContext() {
+        if (sslContext != null) return sslContext;
         try {
             KeyStore keystore = KeyStore.getInstance("JKS");
             keystore.load(new FileInputStream(KEYSTORE_FILE), KEYSTORE_PASSWORD
@@ -62,13 +65,17 @@ public class MockWebServerResources {
             KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory
                     .getDefaultAlgorithm());
             kmf.init(keystore, KEY_PASSWORD.toCharArray());
-            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext = SSLContext.getInstance("TLS");
             sslContext.init(kmf.getKeyManagers(), null, null);
-            return sslContext.getSocketFactory();
+            return sslContext;
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error initializing test SSLSocketFactory", e);
             return null;
         }
+    }
+
+    public static SSLSocketFactory getSSLSocketFactory() {
+        return (getSSLContext() != null) ? getSSLContext().getSocketFactory() : null;
     }
 
     /**

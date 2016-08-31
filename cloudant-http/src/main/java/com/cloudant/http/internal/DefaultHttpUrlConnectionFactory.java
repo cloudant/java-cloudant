@@ -19,8 +19,10 @@ import com.cloudant.http.HttpConnection;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
+import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.net.URL;
+import java.util.Locale;
 import java.util.logging.Logger;
 
 public class DefaultHttpUrlConnectionFactory implements HttpConnection.HttpUrlConnectionFactory {
@@ -41,13 +43,21 @@ public class DefaultHttpUrlConnectionFactory implements HttpConnection.HttpUrlCo
 
     @Override
     public void setProxy(URL proxyUrl) {
-        if ("http".equals(proxyUrl.getProtocol()) || "https".equals(proxyUrl.getProtocol
-                ())) {
+        if ("http".equals(proxyUrl.getProtocol())) {
             proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyUrl.getHost(),
                     proxyUrl.getPort()));
             logger.config(String.format("Configured HTTP proxy url %s", proxyUrl));
         } else {
-            throw new IllegalArgumentException("Only HTTP type proxies are supported");
+            throw new IllegalArgumentException(String.format(Locale.ENGLISH, "The proxy URL %s " +
+                    "is invalid. Only HTTP type proxies are supported.", proxyUrl));
         }
+    }
+
+    @Override
+    public void setProxyAuthentication(final PasswordAuthentication proxyAuthentication) {
+        // Currently a no-op.
+        // HttpURLConnection doesn't allow the setting of an Authenticator per instance and it would
+        // be irresponsible to set the default Authenticator because it applies globally and we
+        // might disrupt other applications in the JVM.
     }
 }

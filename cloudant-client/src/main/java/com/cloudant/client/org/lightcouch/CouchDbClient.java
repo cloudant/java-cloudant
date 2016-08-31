@@ -113,6 +113,9 @@ public class CouchDbClient {
         //set the proxy if it has been configured
         if (props.getProxyURL() != null) {
             factory.setProxy(props.getProxyURL());
+            if (props.getProxyAuthentication() != null) {
+                factory.setProxyAuthentication(props.getProxyAuthentication());
+            }
         }
 
         this.requestInterceptors = new ArrayList<HttpConnectionRequestInterceptor>();

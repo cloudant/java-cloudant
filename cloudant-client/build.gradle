@@ -28,6 +28,7 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'com.squareup.okhttp', name: 'mockwebserver', version: '2.7.5'
     testCompile group: 'org.jmockit', name: 'jmockit', version: '1.25'
+    testCompile group: 'org.littleshoot', name: 'littleproxy', version: '1.1.0'
 }
 
 javadoc {

@@ -862,4 +862,21 @@ public class HttpTest {
         assertEquals("There should be 5 request attempts", 5, mockWebServer
                 .getRequestCount());
     }
+
+    /**
+     * Test that an IllegalArgumentException is thrown if an https proxy address is used. SSL proxies
+     * are not supported. HTTP proxies can tunnel SSL connections to HTTPS servers.
+     *
+     * @throws Exception
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void httpsProxyIllegalArgumentException() throws Exception {
+
+        // Get a client pointing to an https proxy
+        CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .proxyURL(new URL("https://192.0.2.0")).build();
+
+        String response = client.executeRequest(Http.GET(client.getBaseUri())).responseAsString();
+        fail("There should be an IllegalStateException for an https proxy.");
+    }
 }

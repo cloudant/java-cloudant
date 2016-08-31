@@ -66,6 +66,7 @@ There is no need to add a head/title as that is provided by Javadoc.
             <LI><a href="#J2EE">J2EE</a></LI>
             <LI><a href="#Logging">Logging</a></LI>
             <LI><a href="#Replays">Replays</a></LI>
+            <LI><a href="#Proxies">Proxies</a></LI>
         </OL>
     <LI><a href="#Project">Project</a></LI>
 </OL>
@@ -545,7 +546,7 @@ library to query a view.
 <OL>
     <LI>Configuring using a properties file (see also this heavily commented example
         <a href="{@docroot}logging.properties" target="_blank">logging.properties</a> file).
-    </P>
+        </P>
         <pre>
             {@code
             # "handlers" specifies a comma separated list of log Handler
@@ -631,6 +632,95 @@ library to query a view.
     response then the expected {@link com.cloudant.client.org.lightcouch.TooManyRequestsException}
     is thrown as would be the case if no interceptor was configured.
 </P>
+
+<h2 id="Proxies">Proxies</h2>
+
+<P>
+    This table provides a summary of the proxy configuration options.
+</P>
+<table border=true>
+    <tr>
+        <th>Server type</th>
+        <th rowspan="2">HTTP</th>
+        <th rowspan="2">HTTPS</th>
+    </tr>
+    <tr>
+        <th>Proxy type</th>
+    </tr>
+    <tr>
+        <th>HTTP (no authentication)</th>
+        <td>
+        <pre>
+        {@code
+          ClientBuilder.url("http://myserver.example")
+            .proxyURL(new URL("http://myproxy.example"))
+        }
+        </pre>
+        </td>
+        <td>
+      <pre>
+      {@code
+        ClientBuilder.url("https://myserver.example") // or .account("exampleAccount")
+          .proxyURL(new URL("http://myproxy.example"))
+      }
+      </pre>
+        </td>
+    </tr>
+    <tr>
+        <th>HTTP (authentication)</th>
+        <td>
+          <pre>
+          {@code
+            ClientBuilder.url("http://myserver.example")
+              .proxyURL(new URL("http://myproxy.example"))
+              .proxyUser("exampleProxyUser")
+              .proxyPassword("exampleProxyPass")
+          }
+          </pre>
+        </td>
+        <td>
+            <p>Default HttpURLConnection:</p>
+      <pre>
+      {@code
+        ClientBuilder.url("https://myserver.example") // or .account("exampleAccount")
+          .proxyURL(new URL("http://myproxy.example"))
+
+        // Configure the JVM Authenticator
+        // The library does not do this automatically because it applies JVM wide
+        Authenticator.setDefault(new Authenticator() {
+
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication("exampleProxyUser", "exampleProxyPassword".toCharArray());
+            }
+        });
+      }
+      </pre>
+            <p>Using okhttp:</p>
+      <pre>
+      {@code
+        ClientBuilder.url("https://myserver.example") // or .account("exampleAccount")
+          .proxyURL(new URL("http://myproxy.example"))
+          .proxyUser("exampleProxyUser")
+          .proxyPassword("exampleProxyPass")
+      }
+      </pre>
+        </td>
+    </tr>
+    <tr>
+        <th>HTTPS</th>
+        <td colspan="2">SSL proxies are not supported by the {@link java.net.Proxy}. This means that
+            <strong>proxy authentication always happens in the clear</strong>. Note that client
+            requests to a HTTPS server are always encrypted because a SSL tunnel is established
+            through a HTTP proxy.
+        </td>
+    </tr>
+    <tr>
+        <th>SOCKS</th>
+        <td colspan="2">SOCKS proxies are not supported internally by the {@code CloudantClient}. It
+            may be possible to use a JVM or system level proxy configuration, but this is untested.
+        </td>
+    </tr>
+</table>
 
 <h1 id="Project">Project</h1>
 

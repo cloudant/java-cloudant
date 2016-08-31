@@ -18,6 +18,7 @@ package com.cloudant.client.org.lightcouch;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
 
+import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,7 +37,9 @@ public class CouchDbProperties {
 
     //default to 6 connections
     private int maxConnections = 6;
+
     private URL proxyURL;
+    private PasswordAuthentication proxyAuthentication = null;
 
     private List<HttpConnectionRequestInterceptor> requestInterceptors = new ArrayList
             <HttpConnectionRequestInterceptor>();
@@ -86,6 +89,15 @@ public class CouchDbProperties {
     public CouchDbProperties addResponseInterceptors(HttpConnectionResponseInterceptor
                                                              responseInterceptors) {
         this.responseInterceptors.addAll(Arrays.asList(responseInterceptors));
+        return this;
+    }
+
+    public PasswordAuthentication getProxyAuthentication() {
+        return proxyAuthentication;
+    }
+
+    public CouchDbProperties setProxyAuthentication(PasswordAuthentication authentication) {
+        this.proxyAuthentication = authentication;
         return this;
     }
 }

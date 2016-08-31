@@ -16,8 +16,10 @@ package com.cloudant.http.interceptors;
 
 public class ProxyAuthInterceptor extends BasicAuthInterceptor {
 
+    public static final String PROXY_AUTH_HEADER = "Proxy-Authorization";
+
     public ProxyAuthInterceptor(String proxyUser, String proxyPassword) {
-        super(proxyUser + ":" + proxyPassword, "Proxy-Authorization");
+        super(proxyUser + ":" + proxyPassword, PROXY_AUTH_HEADER);
     }
 
 }
