@@ -13,10 +13,13 @@
  */
 package com.cloudant.tests;
 
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -43,6 +46,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.squareup.okhttp.mockwebserver.Dispatcher;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
@@ -64,6 +68,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
@@ -275,7 +280,7 @@ public class HttpTest {
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
         assertTrue("There should be no response body on the mock response", response.isEmpty());
 
-        RecordedRequest r = mockWebServer.takeRequest(10, TimeUnit.SECONDS);
+        RecordedRequest r = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
         String sessionRequestContent = r.getBody().readString(Charset.forName("UTF-8"));
         assertNotNull("The _session request should have non-null content",
                 sessionRequestContent);
@@ -298,16 +303,19 @@ public class HttpTest {
     @Test
     public void cookieRenewal() throws Exception {
         final String hello = "{\"hello\":\"world\"}\r\n";
-        final String renewalCookieValue =
-                "AuthSession=\"RenewCookie_a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz\";";
+        final String authSession = "AuthSession=";
+        final String renewalCookieToken =
+                "RenewCookie_a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz";
+        final String renewalCookieValue = authSession + renewalCookieToken;
+
         // Request sequence
         // _session request to get Cookie
         // GET request -> 200 with a Set-Cookie
-        // _session for new cookie
         // GET replay -> 200
         mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
         mockWebServer.enqueue(new MockResponse().setResponseCode(200).addHeader("Set-Cookie",
-                String.format(Locale.ENGLISH, "%s;", renewalCookieValue))
+                String.format(Locale.ENGLISH, "%s;", renewalCookieValue
+                        + MockWebServerResources.COOKIE_PROPS))
                 .setBody(hello));
         mockWebServer.enqueue(new MockResponse());
 
@@ -316,27 +324,34 @@ public class HttpTest {
                 .password("b")
                 .build();
 
-
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
         assertEquals("The expected response should be received", hello, response);
+
+        // assert that there were 2 calls
+        assertEquals("The server should have received 2 requests", 2, mockWebServer
+                .getRequestCount());
+
+        assertEquals("The request should have been for /_session", "/_session",
+                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath());
+        assertEquals("The request should have been for /", "/",
+                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath());
+
         String secondResponse = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
         assertTrue("There should be no response body on the mock response" + secondResponse,
                 secondResponse.isEmpty());
-
 
         // also assert that there were 3 calls
         assertEquals("The server should have received 3 requests", 3, mockWebServer
                 .getRequestCount());
 
-        mockWebServer.takeRequest(); // cookie
-        mockWebServer.takeRequest(); // actual get
-
         // this is the request that should have the new cookie.
-        RecordedRequest request = mockWebServer.takeRequest();
+        RecordedRequest request = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
+        assertEquals("The request should have been for path /", "/", request.getPath());
         String headerValue = request.getHeader("Cookie");
-        assertEquals
-                ("AuthSession=\"RenewCookie_a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz" +
-                        "\"", headerValue);
+        // The cookie may or may not have the session id quoted, so check both
+        assertThat("The Cookie header should contain the expected session value", headerValue,
+                anyOf(containsString(renewalCookieValue), containsString(authSession + "\"" +
+                        renewalCookieToken + "\"")));
     }
 
     /**
@@ -574,8 +589,8 @@ public class HttpTest {
 
         // We want the second request
         assertEquals("There should have been two requests", 2, mockWebServer.getRequestCount());
-        mockWebServer.takeRequest();
-        RecordedRequest rr = mockWebServer.takeRequest();
+        MockWebServerResources.takeRequestWithTimeout(mockWebServer);
+        RecordedRequest rr = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
         assertNotNull("The request should have been recorded", rr);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream((int) rr
                 .getBodySize());
@@ -623,7 +638,7 @@ public class HttpTest {
                 }).build();
         client.getAllDbs();
         assertEquals("There should have been 1 request", 1, mockWebServer.getRequestCount());
-        RecordedRequest request = mockWebServer.takeRequest();
+        RecordedRequest request = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
         assertNotNull("The recorded request should not be null", request);
         assertNotNull("The custom header should have been present", request.getHeader(headerName));
         assertEquals("The custom header should have the specified value", headerValue, request
@@ -650,7 +665,7 @@ public class HttpTest {
         assertTrue("There should be no response body on the mock response", response.isEmpty());
         assertEquals("There should have been 1 request", 1, mockWebServer
                 .getRequestCount());
-        RecordedRequest request = mockWebServer.takeRequest();
+        RecordedRequest request = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
         assertNotNull("The recorded request should not be null", request);
         assertNull("There should be no Content-Length header", request.getHeader("Content-Length"));
         assertEquals("The Transfer-Encoding should be chunked", "chunked", request.getHeader
@@ -864,8 +879,8 @@ public class HttpTest {
     }
 
     /**
-     * Test that an IllegalArgumentException is thrown if an https proxy address is used. SSL proxies
-     * are not supported. HTTP proxies can tunnel SSL connections to HTTPS servers.
+     * Test that an IllegalArgumentException is thrown if a https proxy address is used. SSL
+     * proxies are not supported. HTTP proxies can tunnel SSL connections to HTTPS servers.
      *
      * @throws Exception
      */
@@ -878,5 +893,107 @@ public class HttpTest {
 
         String response = client.executeRequest(Http.GET(client.getBaseUri())).responseAsString();
         fail("There should be an IllegalStateException for an https proxy.");
+    }
+
+    /**
+     * Test that the stored cookie is applied to requests for different URLs. Most of the other
+     * tests just check a single URL.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void cookieAppliedToDifferentURL() throws Exception {
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(new MockResponse().setBody("first"));
+        mockWebServer.enqueue(new MockResponse().setBody("second"));
+
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .username("a")
+                .password("b")
+                .build();
+
+
+        URI baseURI = c.getBaseUri();
+        URL first = new URL(baseURI.getScheme(), baseURI.getHost(), baseURI.getPort(), "/testdb");
+        String response = c.executeRequest(Http.GET(first)).responseAsString();
+        assertEquals("The correct response body should be present", "first", response);
+
+        // There should be a request for a cookie followed by a the real request
+        assertEquals("There should be 2 requests", 2, mockWebServer.getRequestCount());
+
+        assertEquals("The first request should have been for a cookie", "/_session",
+                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath());
+
+        RecordedRequest request = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
+        assertEquals("The second request should have been for /testdb", "/testdb",
+                request.getPath());
+        assertNotNull("There should be a cookie on the request", request.getHeader("Cookie"));
+
+        // Now make a request to another URL
+        URL second = new URL(baseURI.getScheme(), baseURI.getHost(), baseURI.getPort(),
+                "/_all_dbs");
+
+        response = c.executeRequest(Http.GET(second)).responseAsString();
+        assertEquals("The correct response body should be present", "second", response);
+
+        // There should now be an additional request
+        assertEquals("There should be 3 requests", 3, mockWebServer.getRequestCount());
+
+        request = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
+        assertEquals("The second request should have been for /_all_dbs", "/_all_dbs", request
+                .getPath());
+        String cookieHeader = request.getHeader("Cookie");
+        assertNotNull("There should be a cookie on the request", cookieHeader);
+        assertTrue("The cookie header " + cookieHeader + " should contain the expected value.",
+                request.getHeader("Cookie").contains(MockWebServerResources.EXPECTED_OK_COOKIE));
+    }
+
+    /**
+     * Test that cookie authentication is stopped if the credentials were bad.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void badCredsDisablesCookie() throws Exception {
+        mockWebServer.setDispatcher(new Dispatcher() {
+            private int counter = 0;
+
+            @Override
+            public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+                counter++;
+                // Return a 401 for the first _session request, after that return 200 OKs
+                if (counter == 1) {
+                    return new MockResponse().setResponseCode(401);
+                } else {
+                    return new MockResponse().setBody("TEST");
+                }
+            }
+        });
+
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .username("bad")
+                .password("worse")
+                .build();
+
+        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        assertEquals("The expected response body should be received", "TEST", response);
+
+        // There should only be two requests: an initial auth failure followed by an ok response.
+        // If the cookie interceptor keeps trying then there will be more _session requests.
+        assertEquals("There should be 2 requests", 2, mockWebServer.getRequestCount());
+
+        assertEquals("The first request should have been for a cookie", "/_session",
+                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath());
+        assertEquals("The second request should have been for /", "/",
+                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath());
+
+        response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        assertEquals("The expected response body should be received", "TEST", response);
+
+        // Make another request, the cookie interceptor should not try again so there should only be
+        // one more request.
+        assertEquals("There should be 3 requests", 3, mockWebServer.getRequestCount());
+        assertEquals("The third request should have been for /", "/",
+                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath());
     }
 }

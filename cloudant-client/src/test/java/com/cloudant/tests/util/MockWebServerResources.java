@@ -16,6 +16,7 @@ package com.cloudant.tests.util;
 
 import com.squareup.okhttp.mockwebserver.Dispatcher;
 import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
 import java.io.FileInputStream;
@@ -30,13 +31,26 @@ import javax.net.ssl.SSLSocketFactory;
 
 public class MockWebServerResources {
 
+    // Fields for a default timeout of 10 seconds to avoid tests running on too long if something
+    // isn't correct with the mock web server.
+    public static final long TIMEOUT = 10l;
+    public static final TimeUnit TIMEOUT_UNIT = TimeUnit.SECONDS;
+
+    public static final String EXPECTED_OK_COOKIE =
+            "AuthSession=\"a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz\"";
+    /*
+     * Note explicitly declares domain .local to workaround
+     * https://bugs.openjdk.java.net/browse/JDK-7169142
+     */
+    public static final String COOKIE_PROPS = "; Version=1; Path=/; HttpOnly; Domain=.local";
+
     /**
      * A mock cookie response that is OK
      */
     public static final MockResponse OK_COOKIE = new MockResponse()
             .setResponseCode(200)
             .addHeader("Set-Cookie",
-                    "AuthSession=\"a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz\";")
+                    EXPECTED_OK_COOKIE + COOKIE_PROPS)
             .setBody("{\"ok\":true,\"name\":\"mockUser\",\"roles\":[]}");
 
     public static final MockResponse JSON_OK = new MockResponse().setResponseCode(200).setBody
@@ -76,6 +90,19 @@ public class MockWebServerResources {
 
     public static SSLSocketFactory getSSLSocketFactory() {
         return (getSSLContext() != null) ? getSSLContext().getSocketFactory() : null;
+    }
+
+    /**
+     * Utility to call takeRequest on a MockWebServer, but using the default timeouts specified in
+     * this class to avoid waiting to infinity or a global test timeout.
+     *
+     * @param mws the mock web server to get the request from
+     * @return the recorded request
+     * @throws InterruptedException if the wait was interrupted
+     */
+    public static RecordedRequest takeRequestWithTimeout(MockWebServer mws) throws
+            InterruptedException {
+        return mws.takeRequest(TIMEOUT, TIMEOUT_UNIT);
     }
 
     /**
