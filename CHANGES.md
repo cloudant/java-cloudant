@@ -7,6 +7,7 @@
 - [FIX] Issue authenticating with a proxy server when connecting to a HTTPS database server.
 - [FIX] Throw an `IllegalArgumentException` if using an unsupported proxy type.
 - [IMPROVED] Documentation for connecting to and authenticating with proxy servers.
+- [FIX] `java.lang.StringIndexOutOfBoundsException` when trying to parse `Set-Cookie` headers.
 
 # 2.5.1 (2016-07-19)
 - [IMPROVED] Made the 429 response code backoff optional and configurable. To enable the backoff add
