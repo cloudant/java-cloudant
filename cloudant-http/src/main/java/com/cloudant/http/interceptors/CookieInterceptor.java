@@ -31,7 +31,6 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -145,41 +144,45 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
                 if (statusCode == HttpURLConnection.HTTP_FORBIDDEN || statusCode ==
                         HttpURLConnection.HTTP_UNAUTHORIZED) {
                     InputStream errorStream = connection.getErrorStream();
-                    try {
-                        // Get the string value of the error stream
-                        String errorString = IOUtils.toString(errorStream, "UTF-8");
-                        logger.log(Level.FINE, String.format(Locale.ENGLISH, "Intercepted " +
-                                "response %d %s", statusCode, errorString));
-                        switch (statusCode) {
-                            case HttpURLConnection.HTTP_FORBIDDEN: //403
-                                // Check if it was an expiry case
-                                // Check using a regex to avoid dependency on a JSON library.
-                                // Note (?siu) flags used for . to also match line breaks and for
-                                // unicode
-                                // case insensitivity.
-                                if (!errorString.matches("(?siu)" +
-                                        ".*\\\"error\\\"\\s*:\\s*\\\"credentials_expired\\\".*")) {
-                                    // Wasn't a credentials expired, throw exception
-                                    HttpConnectionInterceptorException toThrow = new
-                                            HttpConnectionInterceptorException(errorString);
-                                    // Set the flag for deserialization
-                                    toThrow.deserialize = true;
-                                    throw toThrow;
-                                } else {
-                                    // Was expired - set boolean to renew cookie
-                                    renewCookie = true;
-                                }
-                                break;
-                            case HttpURLConnection.HTTP_UNAUTHORIZED: //401
-                                // We need to get a new cookie
-                                renewCookie = true;
-                                break;
-                            default:
-                                break;
+                    String errorString = null;
+                    if (errorStream != null) {
+                        try {
+                            // Get the string value of the error stream
+                            errorString = IOUtils.toString(errorStream, "UTF-8");
+                        } finally {
+                            IOUtils.closeQuietly(errorStream);
                         }
-                    } finally {
-                        IOUtils.closeQuietly(errorStream);
                     }
+                    logger.log(Level.FINE, String.format(Locale.ENGLISH, "Intercepted " +
+                            "response %d %s", statusCode, errorString));
+                    switch (statusCode) {
+                        case HttpURLConnection.HTTP_FORBIDDEN: //403
+                            // Check if it was an expiry case
+                            // Check using a regex to avoid dependency on a JSON library.
+                            // Note (?siu) flags used for . to also match line breaks and for
+                            // unicode
+                            // case insensitivity.
+                            if (errorString != null && errorString.matches("(?siu)" +
+                                    ".*\\\"error\\\"\\s*:\\s*\\\"credentials_expired\\\".*")) {
+                                // Was expired - set boolean to renew cookie
+                                renewCookie = true;
+                            } else {
+                                // Wasn't a credentials expired, throw exception
+                                HttpConnectionInterceptorException toThrow = new
+                                        HttpConnectionInterceptorException(errorString);
+                                // Set the flag for deserialization
+                                toThrow.deserialize = errorString != null;
+                                throw toThrow;
+                            }
+                            break;
+                        case HttpURLConnection.HTTP_UNAUTHORIZED: //401
+                            // We need to get a new cookie
+                            renewCookie = true;
+                            break;
+                        default:
+                            break;
+                    }
+
                     if (renewCookie) {
                         logger.finest("Cookie was invalid attempt to get new cookie.");
                         boolean success = requestCookie(connection.getURL(), context);
