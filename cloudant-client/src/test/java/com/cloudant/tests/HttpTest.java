@@ -996,4 +996,53 @@ public class HttpTest {
         assertEquals("The third request should have been for /", "/",
                 MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath());
     }
+
+    /**
+     * Test that having no body and hence no error stream on a 403 response correctly results in the
+     * 403 causing a CouchDbException with no NPEs.
+     *
+     * @throws Exception
+     */
+    @Test(expected=CouchDbException.class)
+    public void noErrorStream403() throws Exception {
+
+        // Respond with a cookie init to the first request to _session
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        // Respond to the executeRequest GET of / with a 403 with no body
+        mockWebServer.enqueue(new MockResponse().setResponseCode(403));
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .username("a")
+                .password("b")
+                .build();
+
+        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        fail("There should be an exception, but received response " + response);
+    }
+
+    /**
+     * Test that having no body and hence no error stream on a 401 response correctly results in a
+     * 401 cookie renewal without a NPE.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void noErrorStream401() throws Exception {
+
+        // Respond with a cookie init to the first request to _session
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        // Respond to the executeRequest GET of / with a 401 with no body
+        mockWebServer.enqueue(new MockResponse().setResponseCode(401));
+        // 401 triggers a renewal so respond with a new cookie for renewal request to _session
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        // Finally respond 200 OK with body of "TEST" to the replay of GET to /
+        mockWebServer.enqueue(new MockResponse().setBody("TEST"));
+        
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .username("a")
+                .password("b")
+                .build();
+
+        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        assertEquals("The expected response body should be received", "TEST", response);
+    }
 }

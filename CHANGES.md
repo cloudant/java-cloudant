@@ -8,6 +8,7 @@
 - [FIX] Throw an `IllegalArgumentException` if using an unsupported proxy type.
 - [IMPROVED] Documentation for connecting to and authenticating with proxy servers.
 - [FIX] `java.lang.StringIndexOutOfBoundsException` when trying to parse `Set-Cookie` headers.
+- [FIX] `NullPointerException` in `CookieInterceptor` when no body was present on response.
 
 # 2.5.1 (2016-07-19)
 - [IMPROVED] Made the 429 response code backoff optional and configurable. To enable the backoff add
