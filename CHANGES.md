@@ -9,6 +9,7 @@
 - [IMPROVED] Documentation for connecting to and authenticating with proxy servers.
 - [FIX] `java.lang.StringIndexOutOfBoundsException` when trying to parse `Set-Cookie` headers.
 - [FIX] `NullPointerException` in `CookieInterceptor` when no body was present on response.
+- [UPGRADED] Upgraded GSON to 2.7
 
 # 2.5.1 (2016-07-19)
 - [IMPROVED] Made the 429 response code backoff optional and configurable. To enable the backoff add
@@ -57,7 +58,7 @@
 
 # 2.4.1 (2016-03-10)
 - [NEW] Documentation for logging in project javadoc `overview.html`.
-- [IMPROVED] Upgraded optional okhttp to 2.7.5.
+- [UPGRADED] Upgraded optional okhttp to 2.7.5.
 - [FIX] Issues with the changes feed, replication, or getting database info when using Cloudant Data
   Layer Local Edition because sequence IDs were incorrectly always treated as strings not JSON.
 - [FIX] Issue of `javax.net.ssl.SSLHandshakeException: Received fatal alert: handshake_failure` on
@@ -144,7 +145,7 @@
 
 # 1.2.2 (2015-10-01)
 - [CHANGED] Added default of 5 minutes for both connection and socket timeouts instead of waiting forever.
-- [IMPROVED] Upgraded Apache HttpClient from 4.3.3 to 4.3.6.
+- [UPGRADED] Upgraded Apache HttpClient from 4.3.3 to 4.3.6.
 
 # 1.2.1 (2015-09-14)
 - [FIXED] `org.apache.http.conn.UnsupportedSchemeException: http protocol is not supported`
