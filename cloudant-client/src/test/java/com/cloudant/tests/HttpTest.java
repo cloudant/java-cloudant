@@ -996,4 +996,44 @@ public class HttpTest {
         assertEquals("The third request should have been for /", "/",
                 MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath());
     }
+
+    /**
+     * Test that having no body and hence no error stream correctly results in the 403 causing
+     * a CouchDbException with no NPEs.
+     *
+     * @throws Exception
+     */
+    @Test(expected=CouchDbException.class)
+    public void noErrorStream403() throws Exception {
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(new MockResponse().setResponseCode(403));
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .username("a")
+                .password("b")
+                .build();
+
+        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        fail("There should be an exception, but received response " + response);
+    }
+
+    /**
+     * Test that having no body and hence no error stream correctly results in a 401 cookie renewal.
+     * Without a NPE.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void noErrorStream401() throws Exception {
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(new MockResponse().setResponseCode(401));
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(new MockResponse().setBody("TEST"));
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .username("a")
+                .password("b")
+                .build();
+
+        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        assertEquals("The expected response body should be received", "TEST", response);
+    }
 }
