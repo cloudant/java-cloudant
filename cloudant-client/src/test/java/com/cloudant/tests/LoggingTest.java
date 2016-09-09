@@ -16,6 +16,7 @@ package com.cloudant.tests;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
@@ -32,8 +33,15 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.StrictExpectations;
+import mockit.Verifications;
+
 import java.io.ByteArrayInputStream;
 import java.net.URL;
+import java.security.Security;
+import java.security.SecurityPermission;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Handler;
@@ -51,7 +59,7 @@ public class LoggingTest {
     public static MockWebServer mockWebServer = new MockWebServer();
 
     private static CloudantClient client;
-    private Logger logger;
+    private volatile Logger logger;
     private VerificationLogHandler handler;
 
     @BeforeClass
@@ -178,6 +186,158 @@ public class LoggingTest {
         assertLogMessage("Connect timeout: .*", 2);
         assertLogMessage("Read timeout: .*", 3);
         assertLogMessage("Using default GSON builder", 4);
+    }
+
+    /**
+     * A basic DNS log test that can be called with different values.
+     *
+     * @param cacheValue the value to set for the cache lifetime
+     *
+     * @throws Exception if the test fails or errors
+     */
+    private void basicDnsLogTest(String cacheValue) throws Exception {
+        logger = setupLogger(ClientBuilder.class, Level.WARNING);
+        String previous = Security.getProperty("networkaddress.cache.ttl");
+        try {
+            Security.setProperty("networkaddress.cache.ttl", cacheValue);
+            CloudantClientHelper.getClientBuilder().build();
+        } finally {
+            // No way to unset a property, just reset to previous value
+            // or set to 30 if it was null
+            Security.setProperty("networkaddress.cache.ttl", (previous == null) ? "30" : previous);
+        }
+    }
+
+    /**
+     * Test that no warning is logged if the DNS lifetime is less than 30 s
+     *
+     * @throws Exception
+     */
+    @Test
+    public void dnsNoWarningLessThan30() throws Exception {
+        basicDnsLogTest("29");
+        // Assert no warning was received
+        assertEquals("There should be no log entry", 0, handler.logEntries.size());
+    }
+
+    /**
+     * Test that no warning is logged if DNS caching is disabled
+     *
+     * @throws Exception
+     */
+    @Test
+    public void dnsNoWarning0() throws Exception {
+        basicDnsLogTest("0");
+        // Assert no warning was received
+        assertEquals("There should be no log entry", 0, handler.logEntries.size());
+    }
+
+    /**
+     * Test that a warning is logged if DNS caching is set to cache forever
+     *
+     * @throws Exception
+     */
+    @Test
+    public void dnsWarningForever() throws Exception {
+        basicDnsLogTest("-1");
+        // Assert a warning was received
+        assertEquals("There should be 1 log entry", 1, handler.logEntries.size());
+        // Assert that it matches the expected pattern
+        assertLogMessage("DNS cache lifetime may be too long\\. .*", 0);
+    }
+
+    /**
+     * Test that no warning is logged if the DNS lifetime is 30 s
+     *
+     * @throws Exception
+     */
+    @Test
+    public void dnsNoWarning30() throws Exception {
+        basicDnsLogTest("30");
+        // Assert no warning was received
+        assertEquals("There should be no log entry", 0, handler.logEntries.size());
+    }
+
+
+    /**
+     * Test that a warning is logged if the DNS lifetime is longer than 30 s
+     *
+     * @throws Exception
+     */
+    @Test
+    public void dnsWarning31() throws Exception {
+        basicDnsLogTest("31");
+        // Assert a warning was received
+        assertEquals("There should be 1 log entry", 1, handler.logEntries.size());
+        // Assert that it matches the expected pattern
+        assertLogMessage("DNS cache lifetime may be too long\\. .*", 0);
+    }
+
+    /**
+     * Test that a warning is logged if the DNS lifetime cannot be checked because of security
+     * permissions.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void dnsWarningPermissionDenied(@Mocked final SecurityManager mockSecurityManager)
+            throws Exception {
+
+        // Record the mock expectations
+        new Expectations() {
+            {
+                mockSecurityManager.checkPermission(new SecurityPermission("getProperty" +
+                        ".networkaddress.cache.ttl"));
+                result = new SecurityException("Test exception to deny property access.");
+                times = 1;
+            }
+        };
+        logger = setupLogger(ClientBuilder.class, Level.WARNING);
+        try {
+            System.setSecurityManager(mockSecurityManager);
+            CloudantClientHelper.getClientBuilder().build();
+        } finally {
+            // Unset the mock security manager
+            System.setSecurityManager(null);
+        }
+        // Assert a warning was received
+        assertEquals("There should be 1 log entry", 1, handler.logEntries.size());
+        // Assert that it matches the expected pattern
+        assertLogMessage("Permission denied to check Java DNS cache TTL\\. .*", 0);
+    }
+
+    /**
+     * Test that a warning is logged if a security manager is in use and the DNS cache lifetime
+     * property is unset.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void dnsWarningDefaultWithSecurityManager(@Mocked final SecurityManager
+                                                             mockSecurityManager) throws Exception {
+        // Record the mock expectations
+        new Expectations() {
+            {
+                mockSecurityManager.checkPermission(new SecurityPermission("getProperty" +
+                        ".networkaddress.cache.ttl"));
+                minTimes = 2; // Once to set, once to get, and once to reset
+                maxTimes = 3; // Possible third call to reset the value, depending on test ordering
+            }
+        };
+        try {
+            System.setSecurityManager(mockSecurityManager);
+            // We can't set null as a value and there are no APIs for clearing a value. Another test
+            // may already have changed the value so we just set it to something invalid "a" to get
+            // a default value.
+            basicDnsLogTest("a");
+        } finally {
+            // Unset the mock security manager
+            System.setSecurityManager(null);
+        }
+        // Assert a warning was received
+        assertEquals("There should be 1 log entry", 1, handler.logEntries.size());
+        // Assert that it matches the expected pattern
+        assertLogMessage("DNS cache lifetime may be too long\\. .*", 0);
     }
 
     /**

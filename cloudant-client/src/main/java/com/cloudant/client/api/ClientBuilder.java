@@ -20,6 +20,7 @@ import java.net.Authenticator;
 import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
 import java.net.URL;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -223,10 +224,47 @@ public class ClientBuilder {
             }
         }
 
-
-        //If setter methods for read and connection timeout are not called, default values are used.
-        logger.config(String.format("Connect timeout: %s %s", connectTimeout, connectTimeoutUnit));
+        //If setter methods for read and connection timeout are not called, default values
+        // are used.
+        logger.config(String.format("Connect timeout: %s %s", connectTimeout,
+                connectTimeoutUnit));
         logger.config(String.format("Read timeout: %s %s", readTimeout, readTimeoutUnit));
+
+        // Log a warning if the DNS cache time is too long
+        try {
+            boolean shouldLogValueWarning = false;
+            boolean isUsingDefaultTTLValue = true;
+            String ttlString = Security.getProperty("networkaddress.cache.ttl");
+            // Was able to access the property
+            if (ttlString != null) {
+                try {
+                    int ttl = Integer.parseInt(ttlString);
+                    isUsingDefaultTTLValue = false;
+                    logger.finest("networkaddress.cache.ttl was " + ttl);
+                    if (ttl > 30 || ttl < 0) {
+                        shouldLogValueWarning = true;
+                    }
+                } catch (NumberFormatException nfe) {
+                    // Suppress the exception, this will result in the default being used
+                    logger.finest("networkaddress.cache.ttl was not an int.");
+                }
+            }
+
+            if (isUsingDefaultTTLValue && System.getSecurityManager() != null) {
+                //If we're using a default value and there is a SecurityManager we need to warn
+                shouldLogValueWarning = true;
+            }
+
+            if (shouldLogValueWarning) {
+                logger.warning("DNS cache lifetime may be too long. DNS cache lifetimes in excess" +
+                        " of 30 seconds may impede client operation during cluster failover.");
+            }
+        } catch (SecurityException e) {
+            // Couldn't access the property; log a warning
+            logger.warning("Permission denied to check Java DNS cache TTL. If the cache " +
+                    "lifetime is too long cluster failover will be impeded.");
+        }
+
         props.addRequestInterceptors(new TimeoutCustomizationInterceptor(connectTimeout,
                 connectTimeoutUnit, readTimeout, readTimeoutUnit));
 
