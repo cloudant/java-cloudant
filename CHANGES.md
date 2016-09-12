@@ -1,4 +1,4 @@
-# Unreleased
+# 2.6.0 (2016-09-12)
 - [NEW] Enabled `reduce` and other reduce related parameters to be set when using
   `MultipleRequestBuilder`.
 - [FIX] Consumed response streams in `client.shutdown()` and `CookieInterceptor` to prevent
