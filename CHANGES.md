@@ -1,3 +1,7 @@
+# Unreleased
+- [FIX] `NoClassDefFoundError: com.squareup.okhttp.Authenticator` for version 2.6.0 if the optional
+  okhttp dependency was not included.
+
 # 2.6.0 (2016-09-12)
 - [NEW] Enabled `reduce` and other reduce related parameters to be set when using
   `MultipleRequestBuilder`.
