@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2016 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,20 +14,15 @@
 
 package com.cloudant.http.internal.ok;
 
-import com.cloudant.http.interceptors.ProxyAuthInterceptor;
 import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
-import com.squareup.okhttp.Authenticator;
 import com.squareup.okhttp.ConnectionSpec;
 import com.squareup.okhttp.Credentials;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.OkUrlFactory;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.PasswordAuthentication;
-import java.net.Proxy;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.logging.Logger;
@@ -93,32 +88,6 @@ public class OkHttpClientHttpUrlConnectionFactory extends DefaultHttpUrlConnecti
 
     public OkHttpClient getOkHttpClient() {
         return client;
-    }
-
-    private static class ProxyAuthenticator implements Authenticator {
-
-        private final String creds;
-
-        ProxyAuthenticator(String creds) {
-            this.creds = creds;
-        }
-
-        @Override
-        public Request authenticate(Proxy proxy, Response response) throws IOException {
-            // Don't interfere with normal auth, this is just for proxies.
-            return null;
-        }
-
-        @Override
-        public Request authenticateProxy(Proxy proxy, Response response) throws IOException {
-            if (creds.equals(response.request().header("Proxy-Authorization"))) {
-                // If the proxy creds have already been tried then give up
-                return null;
-            } else {
-                return response.request().newBuilder().addHeader(ProxyAuthInterceptor
-                        .PROXY_AUTH_HEADER, creds).build();
-            }
-        }
     }
 
 }
