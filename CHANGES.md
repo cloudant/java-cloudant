@@ -1,4 +1,4 @@
-# Unreleased
+# 2.6.1 (2016-09-15)
 - [FIX] `NoClassDefFoundError: com.squareup.okhttp.Authenticator` for version 2.6.0 if the optional
   okhttp dependency was not included.
 
