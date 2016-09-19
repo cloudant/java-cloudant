@@ -38,23 +38,6 @@ public class OkHttpClientHttpUrlConnectionFactory extends DefaultHttpUrlConnecti
     private final OkHttpClient client;
     private final OkUrlFactory factory;
 
-    private final static boolean okUsable;
-
-    static {
-        Class<?> okFactoryClass;
-        try {
-            okFactoryClass = Class.forName("com.squareup.okhttp.OkUrlFactory");
-        } catch (Throwable t) {
-            okFactoryClass = null;
-        }
-        okUsable = (okFactoryClass != null);
-    }
-
-    public static boolean isOkUsable() {
-        return okUsable;
-    }
-
-
     public OkHttpClientHttpUrlConnectionFactory() {
         client = new OkHttpClient();
         client.setConnectionSpecs(Arrays.asList(
@@ -81,7 +64,7 @@ public class OkHttpClientHttpUrlConnectionFactory extends DefaultHttpUrlConnecti
     }
 
     @Override
-    public void setProxyAuthentication(final PasswordAuthentication proxyAuthentication) {
+    public void setProxyAuthentication(PasswordAuthentication proxyAuthentication) {
         client.setAuthenticator(new ProxyAuthenticator(Credentials.basic(proxyAuthentication
                 .getUserName(), new String(proxyAuthentication.getPassword()))));
     }

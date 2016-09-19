@@ -54,7 +54,7 @@ public class DefaultHttpUrlConnectionFactory implements HttpConnection.HttpUrlCo
     }
 
     @Override
-    public void setProxyAuthentication(final PasswordAuthentication proxyAuthentication) {
+    public void setProxyAuthentication(PasswordAuthentication proxyAuthentication) {
         // Currently a no-op.
         // HttpURLConnection doesn't allow the setting of an Authenticator per instance and it would
         // be irresponsible to set the default Authenticator because it applies globally and we

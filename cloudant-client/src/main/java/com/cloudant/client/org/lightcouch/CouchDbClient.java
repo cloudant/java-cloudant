@@ -24,7 +24,6 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getRespons
 import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.client.internal.URIBase;
 import com.cloudant.client.internal.util.DeserializationTypes;
-import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
 import com.cloudant.client.org.lightcouch.internal.GsonHelper;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
@@ -32,6 +31,7 @@ import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.cloudant.http.interceptors.HttpConnectionInterceptorException;
 import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
+import com.cloudant.http.internal.ok.OkHelper;
 import com.cloudant.http.internal.ok.OkHttpClientHttpUrlConnectionFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -92,7 +92,7 @@ public class CouchDbClient {
 
         // If OkHttp is available then use it for connection pooling, otherwise default to the
         // JVM built-in pooling for HttpUrlConnection
-        if (OkHttpClientHttpUrlConnectionFactory.isOkUsable()) {
+        if (OkHelper.isOkUsable()) {
             log.config("Using OkHttp");
             OkHttpClientHttpUrlConnectionFactory factory = new
                     OkHttpClientHttpUrlConnectionFactory();

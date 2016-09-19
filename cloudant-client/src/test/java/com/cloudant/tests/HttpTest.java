@@ -34,7 +34,7 @@ import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
 import com.cloudant.http.interceptors.CookieInterceptor;
 import com.cloudant.http.interceptors.Replay429Interceptor;
-import com.cloudant.http.internal.ok.OkHttpClientHttpUrlConnectionFactory;
+import com.cloudant.http.internal.ok.OkHelper;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
@@ -65,11 +65,13 @@ import mockit.MockUp;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.Locale;
@@ -100,7 +102,7 @@ public class HttpTest {
     @Parameterized.Parameter
     public boolean okUsable;
 
-    static class OkFactoryBlocker extends MockUp<OkHttpClientHttpUrlConnectionFactory> {
+    static class OkHelperMock extends MockUp<OkHelper> {
         @Mock
         public static boolean isOkUsable() {
             return false;
@@ -111,11 +113,11 @@ public class HttpTest {
     public void changeHttpConnectionFactory() throws Exception {
         if (!okUsable) {
             // New up the mock that will stop okhttp's factory being used
-            new OkFactoryBlocker();
+            new OkHelperMock();
         }
         // Verify that we are getting the behaviour we expect.
         assertEquals("The OK usable value was not what was expected for the test parameter.",
-                okUsable, OkHttpClientHttpUrlConnectionFactory.isOkUsable());
+                okUsable, OkHelper.isOkUsable());
     }
 
     /*
@@ -1003,7 +1005,7 @@ public class HttpTest {
      *
      * @throws Exception
      */
-    @Test(expected=CouchDbException.class)
+    @Test(expected = CouchDbException.class)
     public void noErrorStream403() throws Exception {
 
         // Respond with a cookie init to the first request to _session
@@ -1036,7 +1038,7 @@ public class HttpTest {
         mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
         // Finally respond 200 OK with body of "TEST" to the replay of GET to /
         mockWebServer.enqueue(new MockResponse().setBody("TEST"));
-        
+
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
                 .username("a")
                 .password("b")
@@ -1044,5 +1046,43 @@ public class HttpTest {
 
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
         assertEquals("The expected response body should be received", "TEST", response);
+    }
+
+    /**
+     * Tests that loading the OkHelper will not try to use any classes from outside the
+     * cloudant-http built classes. Specifically it won't cause any okhttp classes to try to be
+     * loaded outside of the controlled check for the presence of okhttp.
+     *
+     * @throws ClassNotFoundException if the load tries to use any classes it shouldn't
+     * @throws Exception              if there is another issue in the test
+     */
+    @Test
+    public void okUsableClassLoad() throws ClassNotFoundException, Exception {
+        // Point to the built classes, it's a bit awkward but we need to load the class cleanly
+        File f = new File("../cloudant-http/build/classes/main/");
+        ClassLoader loader = new CloudantHttpIsolationClassLoader(new URL[]{f.toURI().toURL()});
+        Class<?> okHelperClass = Class.forName("com.cloudant.http.internal.ok.OkHelper"
+                , true, loader);
+        assertEquals("The isOkUsable value should be correct", okUsable, okHelperClass.getMethod
+                ("isOkUsable").invoke(null));
+    }
+
+    /**
+     * A simple classloader that has a null parent classloader when testing okUsable false. This
+     * isolates classes loaded with this classloader from the test classpath and hence any
+     * attempt to load a class from the okhttp library will result in a NoClassDefFound.
+     */
+    public class CloudantHttpIsolationClassLoader extends URLClassLoader {
+
+        public CloudantHttpIsolationClassLoader(URL[] urls) {
+            // If we are testing okhttp then allow the parent classloader, otherwise use null
+            // to isolate okhttp classes from the test load
+            super(urls, okUsable ? CloudantHttpIsolationClassLoader.class.getClassLoader() : null);
+        }
+
+        @Override
+        protected Class<?> findClass(String name) throws ClassNotFoundException {
+            return super.findClass(name);
+        }
     }
 }
