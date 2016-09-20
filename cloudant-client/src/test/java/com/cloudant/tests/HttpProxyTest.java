@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.http.Http;
-import com.cloudant.http.internal.ok.OkHttpClientHttpUrlConnectionFactory;
+import com.cloudant.http.internal.ok.OkHelper;
 import com.cloudant.tests.util.MockWebServerResources;
 import com.squareup.okhttp.mockwebserver.Dispatcher;
 import com.squareup.okhttp.mockwebserver.MockResponse;
@@ -89,11 +89,11 @@ public class HttpProxyTest {
     public void changeHttpConnectionFactory() throws Exception {
         if (!okUsable) {
             // New up the mock that will stop okhttp's factory being used
-            new HttpTest.OkFactoryBlocker();
+            new HttpTest.OkHelperMock();
         }
         // Verify that we are getting the behaviour we expect.
         assertEquals("The OK usable value was not what was expected for the test parameter.",
-                okUsable, OkHttpClientHttpUrlConnectionFactory.isOkUsable());
+                okUsable, OkHelper.isOkUsable());
     }
 
     @Parameterized.Parameter(1)
