@@ -1126,4 +1126,22 @@ public class ViewsTest {
         assertTrue("There request URL should match the pattern " + p.toString(), p.matcher
                 (request.getPath()).matches());
     }
+
+    /**
+     * <p>
+     * Test added for https://github.com/cloudant/java-cloudant/issues/297
+     * </p>
+     * <p>
+     * When _all_docs is used an array of rows is returned containing an entry for each key
+     * specified. If the document doesn't exist an "error" : "not_found" entry is present in the row
+     * instead of the expected "value" property. Trying to use the value results in a NPE.
+     * </p>
+     *
+     * @throws Exception
+     */
+    @Test
+    public void getIdsAndRevsForTwoNonExistentKeysWithAllDocs() throws Exception {
+        db.getAllDocsRequestBuilder().keys(new String[]{"a", "b"}).build().getResponse()
+                .getIdsAndRevs();
+    }
 }
