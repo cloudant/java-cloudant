@@ -1,3 +1,7 @@
+# Unreleased
+- [FIX] `NullPointerException` when calling `AllDocsResponse.getIdsAndRevs` for a request with
+  multiple non-existent keys (IDs).
+
 # 2.6.2 (2016-09-20)
 - [FIX] `NoClassDefFoundError: com.squareup.okhttp.Authenticator` for version 2.6.1 if the optional
   okhttp dependency was not included.

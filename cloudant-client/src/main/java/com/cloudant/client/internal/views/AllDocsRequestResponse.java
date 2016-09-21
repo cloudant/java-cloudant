@@ -54,7 +54,10 @@ public class AllDocsRequestResponse implements AllDocsRequest, AllDocsResponse {
     public Map<String, String> getIdsAndRevs() {
         Map<String, String> docIdsAndRevs = new HashMap<String, String>();
         for (ViewResponse.Row<String, Revision> row : response.getRows()) {
-            docIdsAndRevs.put(row.getKey(), row.getValue().get());
+            Revision rev = row.getValue();
+            if (rev != null) {
+                docIdsAndRevs.put(row.getKey(), rev.get());
+            }
         }
         return docIdsAndRevs;
     }
