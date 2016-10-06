@@ -200,7 +200,9 @@ public class ClientBuilder {
                     + urlHost
                     + ":"
                     + urlPort;
+            //add url path if it exist in source url
             if(!urlPath.trim().equals("")) {
+                //removing last slash if it exist in source url
                 urlPath = urlPath.substring(urlPath.length() - 1).equals("/") ?
                         urlPath.substring(0, urlPath.length() - 1) : urlPath;
                 tmpUrl += urlPath;
