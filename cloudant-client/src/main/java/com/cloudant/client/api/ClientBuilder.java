@@ -201,6 +201,8 @@ public class ClientBuilder {
                     + ":"
                     + urlPort;
             if(!urlPath.trim().equals("")) {
+                urlPath = urlPath.substring(urlPath.length() - 1).equals("/") ?
+                        urlPath.substring(0, urlPath.length() - 1) : urlPath;
                 tmpUrl += urlPath;
             }
             this.url = new URL(tmpUrl);
