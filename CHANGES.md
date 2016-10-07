@@ -1,9 +1,9 @@
 # Unreleased
 - [FIX] `NullPointerException` when calling `AllDocsResponse.getIdsAndRevs` for a request with
   multiple non-existent keys (IDs).
-- [IMPROVED] Changed `ClientBuilder.ClientBuilder(URL url)` logic to allow cloudant working with URL
-  with not empty path part. Like this: <https://testproxy.samplehost.net:443/cloudant/mydb>. It allow
-  connect to Cloudant by gateways (the IBM DataPower Gateway for example).
+- [IMPROVED] Preserved path elements from `URL`s used to construct a `ClientBuilder`. 
+This allows, for example, a `CloudantClient`connection to use a gateway with a `URL` like
+ `https://testproxy.example.net:443/cloudant/mydb`.
 
 # 2.6.2 (2016-09-20)
 - [FIX] `NoClassDefFoundError: com.squareup.okhttp.Authenticator` for version 2.6.1 if the optional
