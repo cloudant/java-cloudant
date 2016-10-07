@@ -38,6 +38,7 @@ import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.MockWebServerResources;
 import com.cloudant.tests.util.TestLog;
 import com.cloudant.tests.util.Utils;
+import com.squareup.okhttp.mockwebserver.Dispatcher;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
@@ -377,5 +378,37 @@ public class CloudantClientTests {
 
         // Test passes if there are no exceptions
         client.getAllDbs();
+    }
+    
+    @Test
+    public void gatewayStyleURL() throws Exception {
+
+        final String gatewayPath = "/gateway";
+
+        MockWebServer server = new MockWebServer();
+        // Set a dispatcher that returns 200 if the requests have the correct path /gateway/_all_dbs
+        // Otherwise return 400.
+        server.setDispatcher(new Dispatcher() {
+            @Override
+            public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+                if (request.getPath().equals(gatewayPath + "/_all_dbs")) {
+                    return new MockResponse();
+                } else {
+                    return new MockResponse().setResponseCode(400);
+                }
+            }
+        });
+
+        // Build a client with a URL that includes a path
+        CloudantClient c = ClientBuilder.url(new URL(server.url(gatewayPath).toString())).build();
+        // If the request path is wrong this call will return 400 and throw an exception failing the
+        // test.
+        c.getAllDbs();
+
+        // Build a client with a URL that includes a path with a trailing /
+        c = ClientBuilder.url(new URL(server.url(gatewayPath + "/").toString())).build();
+        // If the request path is wrong this call will return 400 and throw an exception failing the
+        // test.
+        c.getAllDbs();
     }
 }
