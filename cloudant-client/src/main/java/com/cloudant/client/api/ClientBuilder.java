@@ -178,7 +178,6 @@ public class ClientBuilder {
         logger.config("URL: " + url);
         String urlProtocol = url.getProtocol();
         String urlHost = url.getHost();
-
         //Check if port exists
         int urlPort = url.getPort();
         if (urlPort < 0) {
@@ -193,14 +192,19 @@ public class ClientBuilder {
                     .getUserInfo()
                     .indexOf(":") + 1);
         }
+        
+        // Check if a path exists and sanitize it by removing whitespace and any trailing /
+        String urlPath = url.getPath().trim();
+        urlPath = urlPath.endsWith("/") ? urlPath.substring(0, urlPath.length() - 1) : urlPath;
 
         try {
-            //Remove user credentials from url
+            // Reconstruct URL without user credentials
             this.url = new URL(urlProtocol
                     + "://"
                     + urlHost
                     + ":"
-                    + urlPort);
+                    + urlPort
+                    + urlPath);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
