@@ -26,6 +26,7 @@ import com.cloudant.http.Http;
 import com.google.gson.Gson;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -256,15 +257,17 @@ public class DesignDocumentManager {
         assertNotEmpty(file, "Design js file");
         DesignDocument designDocument;
         Gson gson = new Gson();
+        InputStreamReader reader = null;
         try {
+            reader = new InputStreamReader(new FileInputStream(file),"UTF-8");
             //Deserialize JS file contents into DesignDocument object
-            designDocument = gson.fromJson(new InputStreamReader(new FileInputStream(file),
-                    "UTF-8"), DesignDocument.class);
-
+            designDocument = gson.fromJson(reader, DesignDocument.class);
             return designDocument;
         } catch (UnsupportedEncodingException e) {
             //UTF-8 should be supported on all JVMs
             throw new RuntimeException(e);
+        } finally {
+            IOUtils.closeQuietly(reader);
         }
     }
 
