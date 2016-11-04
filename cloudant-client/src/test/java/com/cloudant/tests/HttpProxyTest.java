@@ -112,6 +112,8 @@ public class HttpProxyTest {
     String mockProxyUser = "alpha";
     String mockProxyPass = "alphaPass";
 
+    String defaultDisabledList = "";
+
     /**
      * Enables https on the mock web server receiving our requests if useHttpsServer is true.
      *
@@ -196,10 +198,16 @@ public class HttpProxyTest {
         // If we are not using okhttp and we have an https server and a proxy that needs auth then
         // we need to set the default Authenticator
         if (useProxyAuth && useHttpsServer && !okUsable) {
+            // Allow https tunnelling through http proxy
+            defaultDisabledList = System.getProperty("jdk.http.auth.tunneling.disabledSchemes", "");
             Authenticator.setDefault(new Authenticator() {
                 @Override
                 protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(mockProxyUser, mockProxyPass.toCharArray());
+                    if (getRequestorType() == RequestorType.PROXY) {
+                        return new PasswordAuthentication(mockProxyUser, mockProxyPass.toCharArray());
+                    } else {
+                        return null;
+                    }
                 }
             });
         }
@@ -217,6 +225,8 @@ public class HttpProxyTest {
         if (useProxyAuth && useHttpsServer && !okUsable) {
             Authenticator.setDefault(null);
         }
+        // Reset the disabled schemes property
+        System.setProperty("jdk.http.auth.tunneling.disabledSchemes", defaultDisabledList);
     }
 
     /**
