@@ -112,6 +112,13 @@ public class HttpProxyTest {
     String mockProxyUser = "alpha";
     String mockProxyPass = "alphaPass";
 
+    // Unfortunately getting the System property jdk.http.auth.tunneling.disabledSchemes doesn't
+    // actually give us the default value (it returns null so the property being unset enables some
+    // default behaviour). It is not possible to unset the value after we have set it so the best we
+    // can do is set it back to a value we think is appropirate. According to release notes for the
+    // fix for CVE-2016-5597 the Basic scheme is disabled so we'll reset to that value.
+    private final String defaultDisabledList = "Basic";
+
     /**
      * Enables https on the mock web server receiving our requests if useHttpsServer is true.
      *
@@ -196,10 +203,16 @@ public class HttpProxyTest {
         // If we are not using okhttp and we have an https server and a proxy that needs auth then
         // we need to set the default Authenticator
         if (useProxyAuth && useHttpsServer && !okUsable) {
+            // Allow https tunnelling through http proxy for the duration of the test
+            System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "");
             Authenticator.setDefault(new Authenticator() {
                 @Override
                 protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(mockProxyUser, mockProxyPass.toCharArray());
+                    if (getRequestorType() == RequestorType.PROXY) {
+                        return new PasswordAuthentication(mockProxyUser, mockProxyPass.toCharArray());
+                    } else {
+                        return null;
+                    }
                 }
             });
         }
@@ -216,6 +229,8 @@ public class HttpProxyTest {
         // we need to set the default Authenticator
         if (useProxyAuth && useHttpsServer && !okUsable) {
             Authenticator.setDefault(null);
+            // Reset the disabled schemes property
+            System.setProperty("jdk.http.auth.tunneling.disabledSchemes", defaultDisabledList);
         }
     }
 

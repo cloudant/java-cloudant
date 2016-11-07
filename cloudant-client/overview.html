@@ -685,12 +685,22 @@ library to query a view.
         ClientBuilder.url("https://myserver.example") // or .account("exampleAccount")
           .proxyURL(new URL("http://myproxy.example"))
 
-        // Configure the JVM Authenticator
-        // The library does not do this automatically because it applies JVM wide
+        // Configure the JVM Authenticator:
+        // The library does not do this automatically because it applies JVM wide.
+        // This is an example Authenticator. You should ensure that your Authenticator class does
+        // not provide any other credentials to your proxy as they will be in the clear. For newer
+        // JVM versions you may need to set the property jdk.http.auth.tunneling.disabledSchemes
+        // to an appropriate value to allow proxy Basic authentication with HTTPS tunneling.
+        // See CVE-2016-5597 and the documentation for jdk.http.auth.tunneling.disabledSchemes for
+        // more information.
         Authenticator.setDefault(new Authenticator() {
 
             protected PasswordAuthentication getPasswordAuthentication() {
+              if (getRequestorType() == RequestorType.PROXY) {
                 return new PasswordAuthentication("exampleProxyUser", "exampleProxyPassword".toCharArray());
+              } else {
+                  return null;
+              }
             }
         });
       }
