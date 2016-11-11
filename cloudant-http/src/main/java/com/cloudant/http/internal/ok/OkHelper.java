@@ -26,7 +26,7 @@ public class OkHelper {
     static {
         Class<?> okFactoryClass;
         try {
-            okFactoryClass = Class.forName("com.squareup.okhttp.OkUrlFactory");
+            okFactoryClass = Class.forName("okhttp3.OkUrlFactory");
         } catch (Throwable t) {
             okFactoryClass = null;
         }

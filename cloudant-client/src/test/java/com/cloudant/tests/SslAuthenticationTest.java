@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2016 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -23,19 +23,22 @@ import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.MockWebServerResources;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
+import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runners.Parameterized;
+
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSocketFactory;
 
-public class SslAuthenticationTest {
+public class SslAuthenticationTest extends HttpFactoryParameterizedTest {
 
     @ClassRule
     public static CloudantClientResource dbClientResource = new CloudantClientResource();
@@ -43,6 +46,11 @@ public class SslAuthenticationTest {
 
     @Rule
     public MockWebServer server = new MockWebServer();
+
+    @Parameterized.Parameters(name = "Using okhttp: {0}")
+    public static Object[] okUsable() {
+        return new Object[]{true, false};
+    }
 
     @Before
     public void getMockWebServer() {

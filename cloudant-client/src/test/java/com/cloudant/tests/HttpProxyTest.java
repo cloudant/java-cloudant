@@ -14,31 +14,30 @@
 
 package com.cloudant.tests;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.http.Http;
-import com.cloudant.http.internal.ok.OkHelper;
 import com.cloudant.tests.util.MockWebServerResources;
-import com.squareup.okhttp.mockwebserver.Dispatcher;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
-import com.squareup.okhttp.mockwebserver.RecordedRequest;
+import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.littleshoot.proxy.HttpProxyServer;
 import org.littleshoot.proxy.HttpProxyServerBootstrap;
 import org.littleshoot.proxy.ProxyAuthenticator;
 import org.littleshoot.proxy.SslEngineSource;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
+
+import okhttp3.mockwebserver.Dispatcher;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 
 import java.net.Authenticator;
 import java.net.InetSocketAddress;
@@ -51,8 +50,7 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLEngine;
 
 
-@RunWith(Parameterized.class)
-public class HttpProxyTest {
+public class HttpProxyTest extends HttpFactoryParameterizedTest {
 
     @Parameterized.Parameters(name = "okhttp: {0}; secure proxy: {1}; https server: {2}; proxy " +
             "auth: {3}")
@@ -78,23 +76,7 @@ public class HttpProxyTest {
         return combos;
     }
 
-    /**
-     * A parameter governing whether to allow okhttp or not. This lets us exercise both
-     * HttpURLConnection types in these tests.
-     */
-    @Parameterized.Parameter(0)
-    public boolean okUsable;
-
-    @Before
-    public void changeHttpConnectionFactory() throws Exception {
-        if (!okUsable) {
-            // New up the mock that will stop okhttp's factory being used
-            new HttpTest.OkHelperMock();
-        }
-        // Verify that we are getting the behaviour we expect.
-        assertEquals("The OK usable value was not what was expected for the test parameter.",
-                okUsable, OkHelper.isOkUsable());
-    }
+    // Note Parameter(0) okUsable is inherited
 
     @Parameterized.Parameter(1)
     public boolean secureProxy;

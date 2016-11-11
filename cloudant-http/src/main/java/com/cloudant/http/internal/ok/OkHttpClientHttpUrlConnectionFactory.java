@@ -15,10 +15,11 @@
 package com.cloudant.http.internal.ok;
 
 import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
-import com.squareup.okhttp.ConnectionSpec;
-import com.squareup.okhttp.Credentials;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.OkUrlFactory;
+
+import okhttp3.ConnectionSpec;
+import okhttp3.Credentials;
+import okhttp3.OkHttpClient;
+import okhttp3.OkUrlFactory;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -35,12 +36,11 @@ public class OkHttpClientHttpUrlConnectionFactory extends DefaultHttpUrlConnecti
     private static final Logger logger = Logger.getLogger(OkHttpClientHttpUrlConnectionFactory
             .class.getName());
 
-    private final OkHttpClient client;
-    private final OkUrlFactory factory;
+    private final OkHttpClient.Builder clientBuilder = new OkHttpClient().newBuilder();
+    private OkUrlFactory factory = null;
 
     public OkHttpClientHttpUrlConnectionFactory() {
-        client = new OkHttpClient();
-        client.setConnectionSpecs(Arrays.asList(
+        clientBuilder.connectionSpecs(Arrays.asList(
                 new ConnectionSpec[]{
                         ConnectionSpec.CLEARTEXT, // for http
                         new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
@@ -48,29 +48,32 @@ public class OkHttpClientHttpUrlConnectionFactory extends DefaultHttpUrlConnecti
                                 .allEnabledCipherSuites()
                                 .build() // for https
                 }));
-        factory = new OkUrlFactory(client);
     }
 
     @Override
     public HttpURLConnection openConnection(URL url) throws IOException {
+        if (factory == null) {
+            factory = new OkUrlFactory(clientBuilder.build());
+        }
         return factory.open(url);
     }
 
     @Override
     public void setProxy(URL proxyUrl) {
         super.setProxy(proxyUrl);
-        client.setProxy(proxy);
+        clientBuilder.proxy(proxy).build();
         logger.config(String.format("Configured HTTP proxy url %s", proxyUrl));
+    }
+
+    public OkHttpClient.Builder getOkHttpClientBuilder() {
+        return clientBuilder;
     }
 
     @Override
     public void setProxyAuthentication(PasswordAuthentication proxyAuthentication) {
-        client.setAuthenticator(new ProxyAuthenticator(Credentials.basic(proxyAuthentication
-                .getUserName(), new String(proxyAuthentication.getPassword()))));
-    }
-
-    public OkHttpClient getOkHttpClient() {
-        return client;
+        clientBuilder.proxyAuthenticator(new ProxyAuthenticator(Credentials.basic
+                (proxyAuthentication.getUserName(), new String(proxyAuthentication.getPassword())
+                )));
     }
 
 }

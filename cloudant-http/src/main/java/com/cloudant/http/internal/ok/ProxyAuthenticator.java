@@ -15,12 +15,13 @@
 package com.cloudant.http.internal.ok;
 
 import com.cloudant.http.interceptors.ProxyAuthInterceptor;
-import com.squareup.okhttp.Authenticator;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
+
+import okhttp3.Authenticator;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.Route;
 
 import java.io.IOException;
-import java.net.Proxy;
 
 class ProxyAuthenticator implements Authenticator {
 
@@ -31,19 +32,18 @@ class ProxyAuthenticator implements Authenticator {
     }
 
     @Override
-    public Request authenticate(Proxy proxy, Response response) throws IOException {
-        // Don't interfere with normal auth, this is just for proxies.
-        return null;
-    }
-
-    @Override
-    public Request authenticateProxy(Proxy proxy, Response response) throws IOException {
-        if (creds.equals(response.request().header("Proxy-Authorization"))) {
-            // If the proxy creds have already been tried then give up
-            return null;
+    public Request authenticate(Route route, Response response) throws IOException {
+        if (route.proxy() != null) {
+            if (creds.equals(response.request().header("Proxy-Authorization"))) {
+                // If the proxy creds have already been tried then give up
+                return null;
+            } else {
+                return response.request().newBuilder().addHeader(ProxyAuthInterceptor
+                        .PROXY_AUTH_HEADER, creds).build();
+            }
         } else {
-            return response.request().newBuilder().addHeader(ProxyAuthInterceptor
-                    .PROXY_AUTH_HEADER, creds).build();
+            // Don't interfere with normal Auth, this is just for proxies
+            return null;
         }
     }
 }

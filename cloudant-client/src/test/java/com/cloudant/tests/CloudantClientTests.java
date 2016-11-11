@@ -38,15 +38,16 @@ import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.MockWebServerResources;
 import com.cloudant.tests.util.TestLog;
 import com.cloudant.tests.util.Utils;
-import com.squareup.okhttp.mockwebserver.Dispatcher;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
-import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import okhttp3.mockwebserver.Dispatcher;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -115,7 +116,6 @@ public class CloudantClientTests {
     @Test
     public void testUserAgentHeaderString() {
         String userAgentHeader = new LibraryVersion().getUserAgentString();
-        System.out.println(userAgentHeader);
         assertTrue("The value of the User-Agent header: " + userAgentHeader + " should match the " +
                         "format: " + userAgentFormat,
                 userAgentHeader.matches(userAgentRegex));
@@ -379,7 +379,7 @@ public class CloudantClientTests {
         // Test passes if there are no exceptions
         client.getAllDbs();
     }
-    
+
     @Test
     public void gatewayStyleURL() throws Exception {
 

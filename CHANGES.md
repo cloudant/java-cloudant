@@ -1,4 +1,5 @@
 # Unreleased
+- [UPGRADED] Optional okhttp dependency to version 3.4.2.
 - [FIX] `NullPointerException` when calling `AllDocsResponse.getIdsAndRevs` for a request with
   multiple non-existent keys (IDs).
 - [IMPROVED] Preserved path elements from `URL`s used to construct a `ClientBuilder`.
