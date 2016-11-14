@@ -10,4 +10,4 @@ services:
 
 before_install:
   - export TERM=dumb
-  - curl -v http://localhost:5984/
+  - while [ $? -ne 0 ]; do sleep 1 && curl -v http://localhost:5984; done
