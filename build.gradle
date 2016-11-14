@@ -21,7 +21,7 @@ subprojects {
     version = '2.6.3-SNAPSHOT'
 
     // Note the gradle subproject names (e.g. cloudant-client, cloudant-http) are the maven
-    // artifactIds - the maven pom project name entry and User-Agent name in client.properties are
+    // artifactIds - the maven pom project name entry and User-Agent name in com.cloudant.client.properties are
     // defined by this clientName.
     ext.clientName = 'java-cloudant'
 

@@ -28,6 +28,7 @@ import com.cloudant.http.interceptors.CookieInterceptor;
 import com.cloudant.http.interceptors.ProxyAuthInterceptor;
 import com.cloudant.http.interceptors.SSLCustomizerInterceptor;
 import com.cloudant.http.interceptors.TimeoutCustomizationInterceptor;
+import com.cloudant.http.internal.interceptors.UserAgentInterceptor;
 import com.google.gson.GsonBuilder;
 
 import java.net.Authenticator;
@@ -105,6 +106,11 @@ import javax.net.ssl.SSLSocketFactory;
  * @since 2.0.0
  */
 public class ClientBuilder {
+
+
+    private static final UserAgentInterceptor USER_AGENT_INTERCEPTOR =
+            new UserAgentInterceptor(ClientBuilder.class.getClassLoader(),
+                    "META-INF/com.cloudant.client.properties");
 
     /**
      * Default max of 6 connections
@@ -222,6 +228,9 @@ public class ClientBuilder {
 
         //Build properties and couchdb client
         CouchDbProperties props = new CouchDbProperties(url);
+
+        props.addRequestInterceptors(USER_AGENT_INTERCEPTOR);
+
 
         //Create cookie interceptor
         if (this.username != null && this.password != null) {
