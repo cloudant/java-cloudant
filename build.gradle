@@ -45,6 +45,11 @@ subprojects {
     // "-bootclasspath pathToJREMatchingSourceLevel/jre/lib/rt.jar"
     compileJava.options.compilerArgs << "-Xlint:-options"
 
+    // Always UTF-8
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+
     tasks.withType(Test) {
         // Pick up properties named test.* from command line, gradle.properties first
         System.properties.each { prop ->
@@ -52,6 +57,9 @@ subprojects {
                 systemProperty prop.key, prop.value
             }
         }
+        // This property cannot be set dynamically on OpenJDK so set it here
+        // to allow SSL tunnelling through HTTP proxy for testing
+        systemProperties.put("jdk.http.auth.tunneling.disabledSchemes", "")
         testLogging {
             // Get full exceptions for test failures
             exceptionFormat = 'full'
@@ -69,6 +77,7 @@ subprojects {
     }
 
     javadoc {
+        options.encoding 'UTF-8'
         options.setMemberLevel JavadocMemberLevel.PROTECTED
         // Add a logging listener to check for javadoc warnings and fail the build if there are any
         boolean hasJavaDocWarnings = false;
