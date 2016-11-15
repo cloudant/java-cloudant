@@ -28,7 +28,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -76,18 +78,56 @@ public class HttpConnection {
     private static final String USER_AGENT;
 
     static {
-        String ua = "java-cloudant-http/unknown";
+        // defaults if we can't load values from resources
+        String ua = "java-cloudant-http";
+        String version = "unknown";
         try {
-            Class clazz = Class.forName("com.cloudant.library.LibraryVersion");
-            Version version = (Version) clazz.newInstance();
-            ua = version.getUserAgentString();
+            final URL url = HttpConnection.class.getClassLoader()
+                    .getResource("META-INF/client.properties");
+            final Properties properties = new Properties();
+            InputStream propStream = null;
+            try {
+                properties.load((propStream = url.openStream()));
+                ua = properties.getProperty("user.agent.name", ua);
+                version = properties.getProperty("user.agent.version", version);
+            } catch (Exception ex) {
+                //swallow exception and keep using default values
+            } finally {
+                if (propStream != null) {
+                    try {
+                        propStream.close();
+                    } catch (IOException e) {
+                        //can't do anything else
+                    }
+                }
+            }
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Could not determine version string using default" +
+            logger.log(Level.WARNING, "Could not determine version string, using default" +
                     " user-agent", e);
         }
-        USER_AGENT = ua;
-    }
 
+        if (System.getProperty("java.runtime.name", "").toLowerCase(Locale.ENGLISH).
+                contains("android runtime")) {
+            String androidVersion = "unknown version";
+            try {
+                Class c = Class.forName("android.os.Build$VERSION");
+                String codename = (String) c.getField("CODENAME").get(null);
+                int sdkInt = c.getField("SDK_INT").getInt(null);
+                androidVersion = String.format("%s/%d", codename, sdkInt);
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Could not determine Android version", e);
+            }
+            USER_AGENT = String.format("%s/Android %s", ua, androidVersion);
+        } else {
+            USER_AGENT = String.format("%s/%s/%s/%s/%s/%s",
+                    ua,
+                    version,
+                    System.getProperty("java.version"),
+                    System.getProperty("java.vendor"),
+                    System.getProperty("os.name"),
+                    System.getProperty("os.arch"));
+        }
+    }
 
     private final String requestMethod;
     public final URL url;
