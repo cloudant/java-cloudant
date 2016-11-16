@@ -15,6 +15,7 @@ package com.cloudant.tests;
 
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -23,7 +24,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
+import com.cloudant.client.api.Database;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.TooManyRequestsException;
 import com.cloudant.http.Http;
@@ -154,7 +157,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
     @Category(RequiresCloudant.class)
     public void testCookieAuthWithoutRetry() throws IOException {
         CookieInterceptor interceptor = new CookieInterceptor(CloudantClientHelper.COUCH_USERNAME,
-                CloudantClientHelper.COUCH_PASSWORD);
+                CloudantClientHelper.COUCH_PASSWORD, clientResource.get().getBaseUri().toString());
 
         HttpConnection conn = new HttpConnection("POST", dbResource.get().getDBUri().toURL(),
                 "application/json");
@@ -184,6 +187,22 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         } finally {
             is.close();
         }
+    }
+
+    @Test
+    public void testCookieAuthWithPath() throws Exception {
+        MockWebServer mockWebServer = new MockWebServer();
+        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(MockWebServerResources.JSON_OK);
+        CloudantClient client = ClientBuilder.url(mockWebServer.url("/pathex").url())
+                .username("user")
+                .password("password")
+                .build();
+        //send single request
+        client.database("test", true);
+        assertThat("_session is the second element of the path",
+                mockWebServer.takeRequest().getPath(),
+                is("/pathex/_session"));
     }
 
     /**

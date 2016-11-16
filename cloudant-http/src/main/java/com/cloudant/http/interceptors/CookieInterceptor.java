@@ -59,22 +59,28 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
     private final byte[] sessionRequestBody;
     private final CookieManager cookieManager = new CookieManager();
     private final AtomicBoolean shouldAttemptCookieRequest = new AtomicBoolean(true);
+    private final URL sessionURL;
 
     /**
      * Constructs a cookie interceptor.
-     *
      * @param username The username to use when getting the cookie
      * @param password The password to use when getting the cookie
+     * @param baseURL  The base URL to use when constructing an `_session` request.
      */
-    public CookieInterceptor(String username, String password) {
+    public CookieInterceptor(String username, String password, String baseURL) {
 
         try {
+            this.sessionURL = new URL(String.format("%s/_session", baseURL));
             username = URLEncoder.encode(username, "UTF-8");
             password = URLEncoder.encode(password, "UTF-8");
             this.sessionRequestBody = String.format("name=%s&password=%s", username, password)
                     .getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
             //all JVMs should support UTF-8, so this should not happen
+            throw new RuntimeException(e);
+        } catch (MalformedURLException e) {
+            // this should be a valid URL since the builder is passing it in
+            logger.log(Level.SEVERE, "Failed to create URL for _session endpoint", e);
             throw new RuntimeException(e);
         }
     }
@@ -88,7 +94,7 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
         // First time we will have no cookies
         if (cookieManager.getCookieStore().getCookies().isEmpty() && shouldAttemptCookieRequest
                 .get()) {
-            if (!requestCookie(connection.getURL(), context)) {
+            if (!requestCookie(context)) {
                 // Requesting a cookie failed, set a flag if we failed so we won't try again
                 shouldAttemptCookieRequest.set(false);
             }
@@ -185,7 +191,7 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
 
                     if (renewCookie) {
                         logger.finest("Cookie was invalid attempt to get new cookie.");
-                        boolean success = requestCookie(connection.getURL(), context);
+                        boolean success = requestCookie(context);
                         if (success) {
                             // New cookie obtained, replay the request
                             context.replayRequest = true;
@@ -207,13 +213,8 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
 
     }
 
-    private boolean requestCookie(URL url, HttpConnectionInterceptorContext context) {
+    private boolean requestCookie(HttpConnectionInterceptorContext context) {
         try {
-            URL sessionURL = new URL(String.format("%s://%s:%d/_session",
-                    url.getProtocol(),
-                    url.getHost(),
-                    url.getPort()));
-
             HttpConnection conn = Http.POST(sessionURL, "application/x-www-form-urlencoded");
             conn.setRequestBody(sessionRequestBody);
 
@@ -250,24 +251,16 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
                 if (responseCode == 401) {
                     logger.severe("Credentials are incorrect, cookie authentication will not be" +
                             " attempted again by this interceptor object");
-                } else if (responseCode / 100 == 5) {
-                    logger.log(Level.SEVERE,
-                            "Failed to get cookie from server, response code %s, cookie auth",
-                            responseCode);
                 } else {
                     // catch any other response code
                     logger.log(Level.SEVERE,
-                            "Failed to get cookie from server, response code %s, " +
+                            "Failed to get cookie from server, response code {0}, " +
                                     "cookie authentication will not be attempted again",
                             responseCode);
                 }
             }
-        } catch (MalformedURLException e) {
-            logger.log(Level.SEVERE, "Failed to create URL for _session endpoint", e);
-        } catch (UnsupportedEncodingException e) {
-            logger.log(Level.SEVERE, "Failed to encode cookieRequest body", e);
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to read cookie response error stream", e);
+        }  catch (IOException e) {
+            logger.log(Level.SEVERE, "Failed to read cookie response", e);
         }
         return false;
     }
