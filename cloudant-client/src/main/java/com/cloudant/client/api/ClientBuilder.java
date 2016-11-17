@@ -228,7 +228,7 @@ public class ClientBuilder {
             //make interceptor if both username and password are not null
 
             //Create cookie interceptor and set in HttpConnection interceptors
-            CookieInterceptor cookieInterceptor = new CookieInterceptor(username, password);
+            CookieInterceptor cookieInterceptor = new CookieInterceptor(username, password, this.url.toString());
 
             props.addRequestInterceptors(cookieInterceptor);
             props.addResponseInterceptors(cookieInterceptor);
