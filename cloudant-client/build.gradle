@@ -126,7 +126,7 @@ class ClientProperties extends DefaultTask {
 
 //generate a client props file, make the jar task depend on this
 task generateClientPropertiesFile(type: ClientProperties) {
-    clientPropsPath = new File(buildDir, "tmp/client.properties")
+    clientPropsPath = new File(buildDir, "tmp/com.cloudant.client.properties")
     outputs.upToDateWhen {
         if (clientPropsPath.exists()) {
             it.load()

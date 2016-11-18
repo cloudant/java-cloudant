@@ -1,4 +1,4 @@
-//  Copyright (c) 2015 IBM Cloudant. All rights reserved.
+//  Copyright (c) 2015, 2016 IBM Corp. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -72,22 +72,6 @@ import java.util.logging.Logger;
 public class HttpConnection {
 
     private static final Logger logger = Logger.getLogger(HttpConnection.class.getCanonicalName());
-
-    private static final String USER_AGENT;
-
-    static {
-        String ua = "java-cloudant-http/unknown";
-        try {
-            Class clazz = Class.forName("com.cloudant.library.LibraryVersion");
-            Version version = (Version) clazz.newInstance();
-            ua = version.getUserAgentString();
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Could not determine version string using default" +
-                    " user-agent", e);
-        }
-        USER_AGENT = ua;
-    }
-
 
     private final String requestMethod;
     public final URL url;
@@ -267,8 +251,6 @@ public class HttpConnection {
 
         while (retry && numberOfRetries-- > 0) {
             connection = connectionFactory.openConnection(url);
-
-            connection.setRequestProperty("User-Agent", USER_AGENT);
 
             if (url.getUserInfo() != null) {
                 // Insert at position 0 in case another interceptor wants to overwrite the BasicAuth
