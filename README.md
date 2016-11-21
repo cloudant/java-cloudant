@@ -22,14 +22,14 @@ This is the official Cloudant library for Java.
 Gradle:
 ```groovy
 dependencies {
-    compile group: 'com.cloudant', name: 'cloudant-client', version: '2.6.2'
+    compile group: 'com.cloudant', name: 'cloudant-client', version: '2.7.0'
 }
 ```
 
 Gradle with [optional `okhttp-urlconnection` dependency](#optional-okhttp-dependency):
 ```groovy
 dependencies {
-    compile group: 'com.cloudant', name: 'cloudant-client', version: '2.6.2'
+    compile group: 'com.cloudant', name: 'cloudant-client', version: '2.7.0'
     compile group: 'com.squareup.okhttp3', name: 'okhttp-urlconnection', version: '3.4.2'
 }
 ```
@@ -39,7 +39,7 @@ Maven:
 <dependency>
   <groupId>com.cloudant</groupId>
   <artifactId>cloudant-client</artifactId>
-  <version>2.6.2</version>
+  <version>2.7.0</version>
 </dependency>
 ~~~
 
@@ -49,7 +49,7 @@ Maven with [optional `okhttp-urlconnection` dependency](#optional-okhttp-depende
 <dependency>
   <groupId>com.cloudant</groupId>
   <artifactId>cloudant-client</artifactId>
-  <version>2.6.2</version>
+  <version>2.7.0</version>
 </dependency>
 
 <dependency>
@@ -166,7 +166,7 @@ The preferred approach for using java-cloudant in other projects is to use the G
 
 ### License
 
-Copyright 2014-2015 Cloudant, an IBM company.
+Copyright © 2014, 2016 IBM Corp. All rights reserved.
 
 Licensed under the apache license, version 2.0 (the "license"); you may not use this file except in compliance with the license.  you may obtain a copy of the license at
 
