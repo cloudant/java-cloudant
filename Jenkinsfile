@@ -50,7 +50,7 @@ stage('Publish') {
             checkout scm // re-checkout to be able to git tag
             unstash name: 'built'
             // read the version name and determine if it is a release build
-            version = new File('VERSION').text.trim()
+            version = readFile('VERSION').trim()
             isReleaseVersion = !version.toUpperCase(Locale.ENGLISH).contains("SNAPSHOT")
 
             // Upload using the ossrh creds (upload destination logic is in build.gradle)
