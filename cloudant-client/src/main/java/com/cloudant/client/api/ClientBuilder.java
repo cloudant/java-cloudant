@@ -16,6 +16,7 @@ package com.cloudant.client.api;
 
 import com.cloudant.client.api.views.Key;
 import com.cloudant.client.internal.util.DeserializationTypes;
+import com.cloudant.client.internal.util.CloudFoundryServices;
 import com.cloudant.client.internal.util.IndexDeserializer;
 import com.cloudant.client.internal.util.SecurityDeserializer;
 import com.cloudant.client.internal.util.ShardDeserializer;
@@ -29,7 +30,9 @@ import com.cloudant.http.interceptors.ProxyAuthInterceptor;
 import com.cloudant.http.interceptors.SSLCustomizerInterceptor;
 import com.cloudant.http.interceptors.TimeoutCustomizationInterceptor;
 import com.cloudant.http.internal.interceptors.UserAgentInterceptor;
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
 
 import java.net.Authenticator;
 import java.net.MalformedURLException;
@@ -607,4 +610,81 @@ public class ClientBuilder {
         return this;
     }
 
+    /**
+     * Sets Cloudant client credentials by inspecting the VCAP_SERVICES Cloud Foundry environment
+     * variable. The VCAP_SERVICES variable contains connection information to access a Bluemix
+     * service instance.
+     * <P>
+     * Note: Only a single Cloudant service must exist in VCAP_SERVICES. If there are multiple bound
+     * Cloudant service instances then use {@link #bluemix(String)} to select an instance by name.
+     * </P>
+     *
+     * @return a new ClientBuilder for the account
+     */
+    public static ClientBuilder bluemix() {
+        return ClientBuilder.bluemix(null);
+    }
+
+    /**
+     * Sets Cloudant client credentials by inspecting the VCAP_SERVICES Cloud Foundry environment
+     * variable. The VCAP_SERVICES variable contains connection information to access a Bluemix
+     * service instance.
+     * <P>
+     * Note: Specifying a service name is only required when multiple Cloudant services are
+     * available. If there is only a single bound Cloudant service instance then {@link #bluemix()}
+     * can also be used.
+     * </P>
+     *
+     * @param serviceName name of Bluemix service instance or {@code null} to try to use the only
+     *                    available Cloudant service
+     * @return a new ClientBuilder for the account
+     *
+     * @throws IllegalArgumentException if the Cloudant service instance is not available
+     * @throws IllegalStateException    if the VCAP_SERVICES environment variable is invalid or missing
+     */
+    public static ClientBuilder bluemix(String serviceName) {
+        Gson gson = new GsonBuilder().create();
+
+        String vcap_env = System.getenv("VCAP_SERVICES");
+        if (vcap_env == null) {
+            throw new IllegalStateException("VCAP_SERVICES is not present.");
+        }
+
+        CloudFoundryServices services;
+        try {
+            services = gson.fromJson(vcap_env, CloudFoundryServices.class);
+        } catch (JsonParseException e){
+            throw new IllegalStateException("VCAP_SERVICES is not valid JSON.", e);
+        }
+
+        if (services.cloudantNoSQLDB == null || services.cloudantNoSQLDB.size() == 0) {
+            throw new IllegalStateException("No Cloudant services present.");
+        }
+
+        if (serviceName == null) {
+            if (services.cloudantNoSQLDB.size() == 1) {
+                CloudFoundryServices.CloudFoundryService service = services.cloudantNoSQLDB.get(0);
+                if (service.credentials == null || service.credentials.url == null) {
+                    throw new IllegalStateException("Invalid VCAP_SERVICES services.");
+                }
+                return ClientBuilder.url(service.credentials.url);
+            } else {
+                throw new IllegalArgumentException("Multiple Cloudant services present. " +
+                        "A service name must be specified.");
+            }
+        }
+
+        for (CloudFoundryServices.CloudFoundryService service : services.cloudantNoSQLDB) {
+            if (serviceName.equals(service.name)) {
+                if (service.credentials == null || service.credentials.url == null) {
+                    throw new IllegalStateException("Invalid VCAP_SERVICES services.");
+                }
+                return ClientBuilder.url(service.credentials.url);
+            }
+        }
+
+        throw new IllegalArgumentException(
+                String.format("Cloudant service matching name %s not found.", serviceName)
+        );
+    }
 }

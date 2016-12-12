@@ -1,3 +1,7 @@
+# unreleased
+- [NEW] Added `bluemix` method to the client builder allowing service credentials to be passed using
+  the CloudFoundry VCAP_SERVICES environment variable.
+
 # 2.7.0 (2016-11-21)
 - [UPGRADED] Optional okhttp dependency to version 3.4.2.
 - [FIXED] `NullPointerException` when calling `AllDocsResponse.getIdsAndRevs` for a request with
