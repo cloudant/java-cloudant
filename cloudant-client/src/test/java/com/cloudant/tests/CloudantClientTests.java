@@ -29,6 +29,7 @@ import com.cloudant.client.api.model.Task;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.client.org.lightcouch.PreconditionFailedException;
+import com.cloudant.http.Http;
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
 import com.cloudant.http.internal.interceptors.UserAgentInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
@@ -41,6 +42,7 @@ import com.cloudant.tests.util.Utils;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -60,8 +62,11 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLEncoder;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.net.ServerSocketFactory;
 
@@ -73,6 +78,9 @@ public class CloudantClientTests {
     @ClassRule
     public static CloudantClientResource clientResource = new CloudantClientResource();
     private CloudantClient account = clientResource.get();
+
+    @Rule
+    public MockWebServer server = new MockWebServer();
 
     @Test
     @Category(RequiresCloudantService.class)
@@ -126,8 +134,10 @@ public class CloudantClientTests {
     @Test
     public void testUserAgentHeaderString() throws Exception {
 
-        // This doesn't read the a properties file, since the tests do not run from the published jars.
-        String userAgentHeader = new UserAgentInterceptor(UserAgentInterceptor.class.getClassLoader(),
+        // This doesn't read the a properties file, since the tests do not run from the published
+        // jars.
+        String userAgentHeader = new UserAgentInterceptor(UserAgentInterceptor.class
+                .getClassLoader(),
                 "META-INF/com.cloudant.client.properties").getUserAgent();
         assertTrue("The value of the User-Agent header: " + userAgentHeader + " should match the " +
                         "format: " + userAgentFormat,
@@ -136,16 +146,19 @@ public class CloudantClientTests {
 
     @Test
     public void testUserAgentHeaderStringFromFile() throws Exception {
-        // This doesn't read the a properties file, since the tests do not run from the published jars.
+        // This doesn't read the a properties file, since the tests do not run from the published
+        // jars.
         // Point to the built classes, it's a bit awkward but we need to load the class cleanly
         File f = new File("../cloudant-http/build/classes/main/");
-        String userAgentHeader = new UserAgentInterceptor(new URLClassLoader(new URL[]{f.toURI().toURL()}){
+        String userAgentHeader = new UserAgentInterceptor(new URLClassLoader(new URL[]{f.toURI()
+                .toURL()}) {
 
             @Override
             public InputStream getResourceAsStream(String name) {
-                if (name.equals("META-INF/com.cloudant.client.properties")){
+                if (name.equals("META-INF/com.cloudant.client.properties")) {
                     try {
-                        return new ByteArrayInputStream("user.agent.name=java-cloudant\nuser.agent.version=1.6.1".getBytes("UTF-8"));
+                        return new ByteArrayInputStream(("user.agent.name=java-cloudant\nuser" +
+                                ".agent.version=1.6.1").getBytes("UTF-8"));
                     } catch (UnsupportedEncodingException e) {
                         throw new RuntimeException(e);
                     }
@@ -165,30 +178,24 @@ public class CloudantClientTests {
     @Test
     public void testUserAgentHeaderIsAddedToRequest() throws Exception {
 
-        MockWebServer server = new MockWebServer();
-        server.start();
         //send back an OK 200
         server.enqueue(new MockResponse());
-        try {
 
-            //instantiating the client performs a single post request
-            CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(server)
-                    .build();
-            String response = client.executeRequest(createPost(client.getBaseUri(), null,
-                    "application/json")).responseAsString();
-            assertTrue("There should be no response body on the mock response", response.isEmpty());
+        //instantiating the client performs a single post request
+        CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(server)
+                .build();
+        String response = client.executeRequest(createPost(client.getBaseUri(), null,
+                "application/json")).responseAsString();
+        assertTrue("There should be no response body on the mock response", response.isEmpty());
 
-            //assert that the request had the expected header
-            String userAgentHeader = server.takeRequest(10, TimeUnit.SECONDS)
-                    .getHeader("User-Agent");
-            assertNotNull("The User-Agent header should be present on the request",
-                    userAgentHeader);
-            assertTrue("The value of the User-Agent header " + userAgentHeader + " on the request" +
-                            " should match the format " + userAgentFormat,
-                    userAgentHeader.matches(userAgentUnknownRegex));
-        } finally {
-            server.shutdown();
-        }
+        //assert that the request had the expected header
+        String userAgentHeader = server.takeRequest(10, TimeUnit.SECONDS)
+                .getHeader("User-Agent");
+        assertNotNull("The User-Agent header should be present on the request",
+                userAgentHeader);
+        assertTrue("The value of the User-Agent header " + userAgentHeader + " on the request" +
+                        " should match the format " + userAgentFormat,
+                userAgentHeader.matches(userAgentUnknownRegex));
     }
 
     /**
@@ -309,29 +316,23 @@ public class CloudantClientTests {
         final Long READ_TIMEOUT = 250l;
 
         //start a simple http server
-        MockWebServer server = new MockWebServer();
         server.setDispatcher(new MockWebServerResources.SleepingDispatcher(READ_TIMEOUT * 2,
                 TimeUnit.MILLISECONDS));
 
+
         try {
-            server.start();
+            CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server)
+                    .readTimeout(READ_TIMEOUT, TimeUnit.MILLISECONDS).build();
 
-            try {
-                CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server)
-                        .readTimeout(READ_TIMEOUT, TimeUnit.MILLISECONDS).build();
-
-                //do a call that expects a response
-                c.getAllDbs();
-            } catch (CouchDbException e) {
-                //unwrap the CouchDbException
-                if (e.getCause() != null) {
-                    throw e.getCause();
-                } else {
-                    throw e;
-                }
+            //do a call that expects a response
+            c.getAllDbs();
+        } catch (CouchDbException e) {
+            //unwrap the CouchDbException
+            if (e.getCause() != null) {
+                throw e.getCause();
+            } else {
+                throw e;
             }
-        } finally {
-            server.shutdown();
         }
     }
 
@@ -364,23 +365,70 @@ public class CloudantClientTests {
      */
     @Test
     public void testUserInfoInUrl() throws Exception {
-        ClientBuilder b = ClientBuilder.url(new URL("https://user:password@192.0.2.0"));
+        urlCheck("user", "password");
+    }
 
-        //reflectively check (not nice, but better than having a bug)
-        Field user = b.getClass().getDeclaredField("username");
-        user.setAccessible(true);
-        assertEquals("The username should match the one provided in the URL", "user", user.get(b));
-        Field pass = b.getClass().getDeclaredField("password");
-        pass.setAccessible(true);
-        assertEquals("The password should match the one provided in the URL", "password", pass
-                .get(b));
+    // A String of all the URI reserved and "unsafe" characters, plus © and an emoji. Encodes to:
+    // %21*%27%28%29%3B%3A%40%26%3D%2B%24%2C%2F%3F%23%5B%5D+%22%25
+    // -.%3C%3E%5C%5E_%60%7B%7C%7D%7E%C2%A9%F0%9F%94%92
+    private static String SPECIALS = "!*'();:@&=+$,/?#[] \"%-.<>\\^_`{|}~©\uD83D\uDD12";
 
+    /**
+     * Test that user info provided in a url is correctly removed and made into user name and
+     * password fields when the user info includes URL encoded characters.
+     */
+    @Test
+    public void testUserInfoInUrlWithSpecials() throws Exception {
+        String user = URLEncoder.encode("user" + SPECIALS, "UTF-8");
+        String pw = URLEncoder.encode("password" + SPECIALS, "UTF-8");
+        urlCheck(user, pw);
+    }
+
+    /**
+     * Test that user info provided via the username and password methods including URL special
+     * characters is encoded correctly.
+     */
+    @Test
+    public void testUserInfoWithSpecials() throws Exception {
+        String user = "user" + SPECIALS;
+        String pw = "password" + SPECIALS;
+        credentialsCheck(CloudantClientHelper.newMockWebServerClientBuilder(server).username
+                (user).password(pw), URLEncoder.encode(user, "UTF-8"), URLEncoder.encode(pw,
+                "UTF-8"));
+    }
+
+    private static Pattern CREDENTIALS = Pattern.compile("name=([^&]+)&password=(.+)");
+
+    private void urlCheck(String encodedUser, String encodedPassword) throws Exception {
+        ClientBuilder b = ClientBuilder.url(server.url("").newBuilder().encodedUsername
+                (encodedUser).encodedPassword(encodedPassword).build().url());
+        credentialsCheck(b, encodedUser, encodedPassword);
+    }
+
+    private void credentialsCheck(ClientBuilder b, String encodedUser, String encodedPassword)
+            throws Exception {
         CloudantClient c = b.build();
 
-        assertFalse("The URL should not contain the username", c.getBaseUri().toString().contains
-                ("user"));
-        assertFalse("The URL should not contain the password", c.getBaseUri().toString().contains
-                ("password"));
+        server.enqueue(MockWebServerResources.OK_COOKIE);
+        server.enqueue(MockWebServerResources.JSON_OK);
+
+        c.executeRequest(Http.GET(c.getBaseUri()));
+
+
+        // One request to _session then one to get info
+        assertEquals("There should be two requests", 2, server.getRequestCount());
+
+        // Get the _session request
+        RecordedRequest request = server.takeRequest();
+        String body = request.getBody().readUtf8();
+        // body should be of form:
+        // name=YourUserName&password=YourPassword
+        Matcher m = CREDENTIALS.matcher(body);
+        assertTrue("The _session request should match the regex", m.matches());
+        assertEquals("There should be a username group and a password group in the creds", 2, m
+                .groupCount());
+        assertEquals("The username should match", encodedUser, m.group(1));
+        assertEquals("The password should match", encodedPassword, m.group(2));
 
         //ensure that building a URL from it does not throw any exceptions
         new URL(c.getBaseUri().toString());
@@ -388,7 +436,6 @@ public class CloudantClientTests {
 
     @Test
     public void sessionDeleteOnShutdown() throws Exception {
-        MockWebServer server = new MockWebServer();
         // Mock a 200 OK for the _session DELETE request
         server.enqueue(new MockResponse().setResponseCode(200).setBody("{\"ok\":\"true\"}"));
 
@@ -422,7 +469,6 @@ public class CloudantClientTests {
 
         final String gatewayPath = "/gateway";
 
-        MockWebServer server = new MockWebServer();
         // Set a dispatcher that returns 200 if the requests have the correct path /gateway/_all_dbs
         // Otherwise return 400.
         server.setDispatcher(new Dispatcher() {

@@ -34,10 +34,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 
+import java.io.UnsupportedEncodingException;
 import java.net.Authenticator;
 import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.security.Security;
 import java.util.ArrayList;
 import java.util.List;
@@ -194,12 +196,17 @@ public class ClientBuilder {
         }
         if (url.getUserInfo() != null) {
             //Get username and password and replace credential variables
-            this.username = url.getUserInfo().substring(0, url
-                    .getUserInfo()
-                    .indexOf(":"));
-            this.password = url.getUserInfo().substring(url
-                    .getUserInfo()
-                    .indexOf(":") + 1);
+            try {
+                this.username = URLDecoder.decode(url.getUserInfo().substring(0, url
+                        .getUserInfo()
+                        .indexOf(":")), "UTF-8");
+                this.password = URLDecoder.decode(url.getUserInfo().substring(url
+                        .getUserInfo()
+                        .indexOf(":") + 1), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                // Should never happen UTF-8 is required in JVM
+                throw new RuntimeException(e);
+            }
         }
         
         // Check if a path exists and sanitize it by removing whitespace and any trailing /

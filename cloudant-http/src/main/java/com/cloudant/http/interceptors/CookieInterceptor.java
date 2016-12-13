@@ -62,9 +62,11 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
     private final URL sessionURL;
 
     /**
-     * Constructs a cookie interceptor.
-     * @param username The username to use when getting the cookie
-     * @param password The password to use when getting the cookie
+     * Constructs a cookie interceptor. Credentials should be supplied not URL encoded, this class
+     * will perform the necessary URL encoding.
+     *
+     * @param username The username to use when getting the cookie (not URL encoded)
+     * @param password The password to use when getting the cookie (not URL encoded)
      * @param baseURL  The base URL to use when constructing an `_session` request.
      */
     public CookieInterceptor(String username, String password, String baseURL) {
