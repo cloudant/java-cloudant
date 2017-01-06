@@ -61,6 +61,13 @@ import javax.net.ssl.SSLSocketFactory;
  * }
  * </pre>
  *
+ * <h2>Create a new CloudantClient instance for a Cloudant Bluemix instance</h2>
+ * <pre>
+ * {@code
+ * CloudantClient client = ClientBuilder.bluemix(System.getenv("VCAP_SERVICES")).build();
+ * }
+ * </pre>
+ *
  * <h2>Create a new CloudantClient instance for a Cloudant Local</h2>
  * <pre>
  * {@code
@@ -618,80 +625,90 @@ public class ClientBuilder {
     }
 
     /**
-     * Sets Cloudant client credentials by inspecting the VCAP_SERVICES Cloud Foundry environment
-     * variable. The VCAP_SERVICES variable contains connection information to access a Bluemix
-     * service instance.
-     * <P>
-     * Note: Only a single Cloudant service must exist in VCAP_SERVICES. If there are multiple bound
-     * Cloudant service instances then use {@link #bluemix(String)} to select an instance by name.
-     * </P>
+     * This is the same as calling {@link #bluemix(String, String)} with {@code instanceName} set to
+     * {@code null}.
      *
+     * @param vcapServices service information JSON string, for example the contents of
+     *                     {@code VCAP_SERVICES} environment variable
      * @return a new ClientBuilder for the account
+     *
+     * @throws IllegalArgumentException see {@link #bluemix(String, String)} for conditions that
+     * cause {@code IllegalArgumentException} to be thrown.
      */
-    public static ClientBuilder bluemix() {
-        return ClientBuilder.bluemix(null);
+    public static ClientBuilder bluemix(String vcapServices) {
+        return ClientBuilder.bluemix(vcapServices, null);
     }
 
     /**
-     * Sets Cloudant client credentials by inspecting the VCAP_SERVICES Cloud Foundry environment
-     * variable. The VCAP_SERVICES variable contains connection information to access a Bluemix
-     * service instance.
+     * Sets Cloudant client credentials by inspecting a service information JSON string. This object
+     * takes the form of a {@code VCAP_SERVICES} environment variable which is a JSON object that
+     * contains information that you can use to interact with a service instance in Bluemix.
      * <P>
-     * Note: Specifying a service name is only required when multiple Cloudant services are
-     * available. If there is only a single bound Cloudant service instance then {@link #bluemix()}
-     * can also be used.
+     * Note: Specifying an instance name is only required when multiple Cloudant service instances
+     * are present. If there is only a single Cloudant service instance then
+     * {@link #bluemix(String)} can also be used.
      * </P>
      *
-     * @param serviceName name of Bluemix service instance or {@code null} to try to use the only
+     * @param vcapServices service information JSON string, for example the contents of
+     *                     {@code VCAP_SERVICES} environment variable
+     * @param instanceName name of Bluemix service instance or {@code null} to try to use the only
      *                    available Cloudant service
      * @return a new ClientBuilder for the account
      *
-     * @throws IllegalArgumentException if the Cloudant service instance is not available
-     * @throws IllegalStateException    if the VCAP_SERVICES environment variable is invalid or missing
+     * @throws IllegalArgumentException if any of the following conditions are true:
+     * <ul>
+     *     <li>The {@code vcapServices} is {@code null}.</li>
+     *     <li>The {@code vcapServices} is not valid.</li>
+     *     <li>An instance with a name matching {@code instanceName} could not be found in
+     *     {@code vcapServices}.
+     *     <li>The {@code instanceName} is {@code null} and multiple Cloudant service instances
+     *     exist in {@code vcapServices}.</li>
+     * </ul>
      */
-    public static ClientBuilder bluemix(String serviceName) {
+    public static ClientBuilder bluemix(String vcapServices, String instanceName) {
         Gson gson = new GsonBuilder().create();
 
-        String vcap_env = System.getenv("VCAP_SERVICES");
-        if (vcap_env == null) {
-            throw new IllegalStateException("VCAP_SERVICES is not present.");
+        if (vcapServices == null) {
+            throw new IllegalArgumentException("The vcapServices JSON information was null.");
         }
 
         CloudFoundryServices services;
         try {
-            services = gson.fromJson(vcap_env, CloudFoundryServices.class);
+            services = gson.fromJson(vcapServices, CloudFoundryServices.class);
         } catch (JsonParseException e){
-            throw new IllegalStateException("VCAP_SERVICES is not valid JSON.", e);
+            throw new IllegalArgumentException("The vcapServices was not valid JSON.", e);
         }
 
         if (services.cloudantNoSQLDB == null || services.cloudantNoSQLDB.size() == 0) {
-            throw new IllegalStateException("No Cloudant services present.");
+            throw new IllegalArgumentException("No Cloudant services information present.");
         }
 
-        if (serviceName == null) {
+        if (instanceName == null) {
             if (services.cloudantNoSQLDB.size() == 1) {
                 CloudFoundryServices.CloudFoundryService service = services.cloudantNoSQLDB.get(0);
                 if (service.credentials == null || service.credentials.url == null) {
-                    throw new IllegalStateException("Invalid VCAP_SERVICES services.");
+                    throw new IllegalArgumentException(
+                            "The Cloudant service instance information was invalid.");
                 }
                 return ClientBuilder.url(service.credentials.url);
             } else {
-                throw new IllegalArgumentException("Multiple Cloudant services present. " +
-                        "A service name must be specified.");
+                throw new IllegalArgumentException("Multiple Cloudant service instances present. " +
+                        "A service instance name must be specified.");
             }
         }
 
         for (CloudFoundryServices.CloudFoundryService service : services.cloudantNoSQLDB) {
-            if (serviceName.equals(service.name)) {
+            if (instanceName.equals(service.name)) {
                 if (service.credentials == null || service.credentials.url == null) {
-                    throw new IllegalStateException("Invalid VCAP_SERVICES services.");
+                    throw new IllegalArgumentException(
+                            "The Cloudant service instance information was invalid.");
                 }
                 return ClientBuilder.url(service.credentials.url);
             }
         }
 
         throw new IllegalArgumentException(
-                String.format("Cloudant service matching name %s not found.", serviceName)
+                String.format("Cloudant service instance matching name %s was not found.", instanceName)
         );
     }
 }
