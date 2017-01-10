@@ -88,18 +88,20 @@ public class DesignDocumentManager {
 
     /**
      * Synchronizes a design document to the Database.
-     * <p>This method will first try to find a document in the database with the same id
+     * <p>This method will first try to find a document in the database with the same {@code _id}
      * as the given document, if it is not found then the given document will be saved to the
-     * database.
-     * </p>
+     * database.</p>
      * <p>If the document was found in the database, it will be compared with the given document
-     * using {@code equals()}. If both documents are not equal, then the given document will be
-     * saved to the database and updates the existing document.
-     * </p>
-     * <p>
-     * If the design document's ID is not prefixed with _design, then the _design prefix will be
-     * added.
-     * </p>
+     * using {@link com.cloudant.client.api.model.DesignDocument#equals(Object)}. Both the
+     * {@code _rev} value and content must match for the given documents to be considered equal.
+     * This method will <strong>not</strong> update the revision of the local design document.</p>
+     * <ul>
+     * <li>If the documents are <i>equal</i> then no action is taken.</li>
+     * <li>If the documents are <i>not equal</i> then the given document will be saved to the
+     * database therefore updating the existing document.</li>
+     * </ul>
+     * <p>If the design document's {@code _id} is not prefixed with {@code _design/}, then the
+     * {@code _design/} prefix will be added.</p>
      *
      * @param document the design document to synchronize
      * @return {@link Response} as a result of a document save or update, or returns {@code null}
