@@ -22,6 +22,7 @@ dependencies {
 
 javadoc {
     include("**/http/*")
+    include("**/http/interceptors/*")
     exclude("**/http/Version.java")
 }
 
