@@ -49,6 +49,17 @@ public class BasicAuthInterceptor implements HttpConnectionRequestInterceptor {
         this.authHeader = authHeader;
     }
 
+    /**
+     * Returns a {@link BasicAuthInterceptor} configured using the username and password provided.
+     *
+     * @param username the username to use
+     * @param password the password to use
+     * @return configured {@code BasicAuthInterceptor}
+     */
+    public static BasicAuthInterceptor createFromCredentials(String username, String password) {
+        return new BasicAuthInterceptor(username + ":" + password);
+    }
+
     @Override
     public HttpConnectionInterceptorContext interceptRequest(HttpConnectionInterceptorContext
                                                                      context) {
