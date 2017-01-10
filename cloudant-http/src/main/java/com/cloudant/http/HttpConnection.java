@@ -11,7 +11,7 @@
 package com.cloudant.http;
 
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
-import com.cloudant.http.interceptors.HttpConnectionInterceptorException;
+import com.cloudant.http.internal.interceptors.HttpConnectionInterceptorException;
 import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 
 import org.apache.commons.io.IOUtils;
