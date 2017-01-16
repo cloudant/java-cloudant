@@ -464,6 +464,27 @@ public class CloudantClientTests {
         client.getAllDbs();
     }
 
+    /**
+     * Test that configuring the Basic Authentication interceptor from credentials and adding to
+     * the CloudantClient works.
+     */
+    @Test
+    public void testBasicAuthFromCredentials() throws Exception {
+        BasicAuthInterceptor interceptor =
+                BasicAuthInterceptor.createFromCredentials("username", "password");
+
+        // send back a mock OK 200
+        server.enqueue(new MockResponse());
+
+        CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(server)
+                .interceptors(interceptor).build();
+
+        client.getAllDbs();
+
+        // expected 'username:password'
+        assertEquals("Basic dXNlcm5hbWU6cGFzc3dvcmQ=", server.takeRequest().getHeader("Authorization"));
+    }
+
     @Test
     public void gatewayStyleURL() throws Exception {
 

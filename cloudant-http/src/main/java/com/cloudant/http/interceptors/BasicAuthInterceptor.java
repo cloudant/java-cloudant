@@ -24,11 +24,22 @@ import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Adds basic authentication support to HTTP requests by adding an Authorization header.
+ *
+ * Direct use of this class is rarely required as the client will construct one as needed.
+ *
+ */
 public class BasicAuthInterceptor implements HttpConnectionRequestInterceptor {
 
     protected final String authHeader;
     protected final String encodedAuth;
 
+    /**
+     * Constructs a {@code BasicAuthInterceptor} using userinfo details.
+     *
+     * @param userinfo the username and password separated by a single colon (":") character
+     */
     public BasicAuthInterceptor(String userinfo) {
         this(userinfo, "Authorization");
     }
@@ -36,6 +47,17 @@ public class BasicAuthInterceptor implements HttpConnectionRequestInterceptor {
     protected BasicAuthInterceptor(String userinfo, String authHeader) {
         this.encodedAuth = encodedCreds(userinfo);
         this.authHeader = authHeader;
+    }
+
+    /**
+     * Returns a {@link BasicAuthInterceptor} configured using the username and password provided.
+     *
+     * @param username the username to use
+     * @param password the password to use
+     * @return configured {@code BasicAuthInterceptor}
+     */
+    public static BasicAuthInterceptor createFromCredentials(String username, String password) {
+        return new BasicAuthInterceptor(username + ":" + password);
     }
 
     @Override
