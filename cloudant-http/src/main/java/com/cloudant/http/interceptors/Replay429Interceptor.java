@@ -16,6 +16,7 @@ package com.cloudant.http.interceptors;
 
 import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
+import com.cloudant.http.internal.interceptors.HttpConnectionInterceptorException;
 
 import org.apache.commons.io.IOUtils;
 

@@ -14,7 +14,7 @@
 
 package com.cloudant.http.internal.ok;
 
-import com.cloudant.http.interceptors.ProxyAuthInterceptor;
+import com.cloudant.http.internal.interceptors.ProxyAuthInterceptor;
 
 import okhttp3.Authenticator;
 import okhttp3.Request;

@@ -29,7 +29,7 @@ import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
-import com.cloudant.http.interceptors.HttpConnectionInterceptorException;
+import com.cloudant.http.internal.interceptors.HttpConnectionInterceptorException;
 import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 import com.cloudant.http.internal.ok.OkHelper;
 import com.cloudant.http.internal.ok.OkHttpClientHttpUrlConnectionFactory;

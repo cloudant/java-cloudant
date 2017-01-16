@@ -23,7 +23,7 @@ For example because it requires an API change
     -->
     <Match>
         <Bug code="PZLA" pattern="PZLA_PREFER_ZERO_LENGTH_ARRAYS"/>
-        <Class name="com.cloudant.http.interceptors.SSLCustomizerInterceptor$1"/>
+        <Class name="com.cloudant.http.internal.interceptors.SSLCustomizerInterceptor$1"/>
         <Method name="getAcceptedIssuers"/>
     </Match>
 
