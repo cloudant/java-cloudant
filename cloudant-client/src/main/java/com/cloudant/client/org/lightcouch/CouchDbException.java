@@ -39,6 +39,7 @@ public class CouchDbException extends RuntimeException {
     }
 
     private int statusCode;
+    private String url = null;
     protected String error = null;
     protected String reason = null;
 
@@ -74,9 +75,23 @@ public class CouchDbException extends RuntimeException {
 
     @Override
     public String getMessage() {
-        //improve the message with status code, error and reason if we have them
-        return ((getStatusCode() > 0) ? getStatusCode() + " " : "") + super.getMessage()
-                + ((error != null) ? ": " + getError() : "")
-                + ((reason != null) ? ": " + getReason() : "");
+        String msg = super.getMessage();
+        // trim trailing full stop
+        msg = (msg.endsWith(".")) ? msg.substring(0, msg.length() - 1) : msg;
+
+        // include the status code, URL, error and reason (if available)
+        return ((getStatusCode() > 0) ? getStatusCode() + " " : "") + msg
+                + ((url != null) ? " at " + url : "") + "."
+                + ((error != null) ? " Error: " + getError() + ".": "")
+                + ((reason != null) ? " Reason: " + getReason() + ".": "");
+    }
+
+    /**
+     * Set the URL that resulted in this exception being thrown.
+     *
+     * @param url the {@link String} representation of a URL
+     */
+    public void setUrl(String url) {
+        this.url = url;
     }
 }
