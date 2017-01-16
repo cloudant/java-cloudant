@@ -944,6 +944,33 @@ public class Database {
     }
 
     /**
+     * Reads an attachment from the database.
+     *
+     * The stream must be closed after usage, otherwise http connection leaks will occur.
+     *
+     * @param docId the document id
+     * @param attachmentName the attachment name
+     * @return the attachment in the form of an {@code InputStream}.
+     */
+    public InputStream getAttachment(String docId, String attachmentName) {
+        return getAttachment(docId, attachmentName, null);
+    }
+
+    /**
+     * Reads an attachment from the database.
+     *
+     * The stream must be closed after usage, otherwise http connection leaks will occur.
+     *
+     * @param docId the document id
+     * @param attachmentName the attachment name
+     * @param revId the document revision id or {@code null}
+     * @return the attachment in the form of an {@code InputStream}.
+     */
+    public InputStream getAttachment(String docId, String attachmentName, String revId) {
+        return db.getAttachment(docId, attachmentName, revId);
+    }
+
+    /**
      * Creates an attachment from the specified InputStream and a new document with a generated
      * document ID.
      * <P>Example usage:</P>

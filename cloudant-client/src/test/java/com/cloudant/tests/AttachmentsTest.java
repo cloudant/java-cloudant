@@ -28,8 +28,6 @@ import com.cloudant.client.api.model.Document;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.internal.DatabaseURIHelper;
-import com.cloudant.http.Http;
-import com.cloudant.http.HttpConnection;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
@@ -96,7 +94,7 @@ public class AttachmentsTest {
     }
 
     @Test
-    public void attachmentStandalone() throws IOException, URISyntaxException {
+    public void getAttachmentStandaloneWithoutRev() throws IOException, URISyntaxException {
         byte[] bytesToDB = "binary data".getBytes();
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
         Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain");
@@ -104,9 +102,30 @@ public class AttachmentsTest {
         Document doc = db.find(Document.class, response.getId());
         assertTrue(doc.getAttachments().containsKey("foo.txt"));
 
-        HttpConnection conn = Http.GET(new DatabaseURIHelper(db.getDBUri())
-                .attachmentUri(response.getId(), "foo.txt"));
-        InputStream in = clientResource.get().executeRequest(conn).responseAsInputStream();
+        InputStream in = db.getAttachment(response.getId(), "foo.txt");
+
+        try {
+
+            ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+            IOUtils.copy(in, bytesOut);
+            byte[] bytesFromDB = bytesOut.toByteArray();
+            assertArrayEquals(bytesToDB, bytesFromDB);
+        } finally {
+            in.close();
+        }
+    }
+
+    @Test
+    public void getAttachmentStandaloneWithRev() throws IOException, URISyntaxException {
+        byte[] bytesToDB = "binary data".getBytes();
+        ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+        Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain");
+
+        Document doc = db.find(Document.class, response.getId());
+        assertTrue(doc.getAttachments().containsKey("foo.txt"));
+
+        InputStream in = db.getAttachment(
+                response.getId(), "foo.txt", response.getRev());
 
         try {
 
@@ -133,9 +152,7 @@ public class AttachmentsTest {
         Document doc = db.find(Document.class, response.getId(), response.getRev());
         assertTrue(doc.getAttachments().containsKey("foo.txt"));
 
-        HttpConnection conn = Http.GET(new DatabaseURIHelper(db.getDBUri())
-                .attachmentUri(response.getId(), "foo.txt"));
-        InputStream in = clientResource.get().executeRequest(conn).responseAsInputStream();
+        InputStream in = db.getAttachment(response.getId(), "foo.txt");
 
         try {
             ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
@@ -168,9 +185,7 @@ public class AttachmentsTest {
         Document doc = db.find(Document.class, response.getId(), attResponse.getRev());
         assertTrue(doc.getAttachments().containsKey("foo.txt"));
 
-        HttpConnection conn = Http.GET(new DatabaseURIHelper(db.getDBUri())
-                .attachmentUri(response.getId(), attResponse.getRev(), "foo.txt"));
-        InputStream in = clientResource.get().executeRequest(conn).responseAsInputStream();
+        InputStream in = db.getAttachment(response.getId(), "foo.txt");
 
         try {
             ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
@@ -192,9 +207,7 @@ public class AttachmentsTest {
         Document doc = db.find(Document.class, response.getId());
         assertTrue(doc.getAttachments().containsKey("foo.txt"));
 
-        HttpConnection conn = Http.GET(new DatabaseURIHelper(db.getDBUri())
-                .attachmentUri(response.getId(), "foo.txt"));
-        InputStream in = clientResource.get().executeRequest(conn).responseAsInputStream();
+        InputStream in = db.getAttachment(response.getId(), "foo.txt");
 
         try {
             ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
@@ -216,12 +229,7 @@ public class AttachmentsTest {
 
         assertEquals("The saved document ID should match", docId, response.getId());
 
-        Document doc = db.find(Document.class, response.getId());
-        assertTrue(doc.getAttachments().containsKey("foo.txt"));
-
-        HttpConnection conn = Http.GET(new DatabaseURIHelper(db.getDBUri())
-                .attachmentUri(response.getId(), "foo.txt"));
-        InputStream in = clientResource.get().executeRequest(conn).responseAsInputStream();
+        InputStream in = db.getAttachment(docId, "foo.txt");
 
         try {
             ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
