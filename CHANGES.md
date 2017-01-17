@@ -1,4 +1,5 @@
 # Unreleased
+- [FIXED] Issue with "+" (plus) not being regarded as a reserved character in URI path components.
 - [FIXED] Issue with double encoding of restricted URL characters in credentials when using
    `ClientBuilder.url()`.
 - [NEW] Added `bluemix` method to the client builder allowing service credentials to be passed using
