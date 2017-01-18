@@ -53,7 +53,17 @@ stage('QA') {
                 node("couchdb1.6") {
                     unstash name: 'built'
                     try {
-                        sh 'sudo /usr/local/bin/wrapdocker \n docker pull couchdb:latest \n docker run -d -p 5984:5984 --name couchdb couchdb\n ./gradlew test'
+                        sh 'sudo /usr/local/bin/wrapdocker \n docker pull couchdb:1.6.1 \n docker run -d -p 5984:5984 --name couchdb couchdb:1.6.1\n ./gradlew test'
+                    } finally {
+                        junit '**/build/test-results/*.xml'
+                    }
+                }
+            },
+            couchdb2: {
+                node("couchdb1.6") {
+                    unstash name: 'built'
+                    try {
+                        sh 'sudo /usr/local/bin/wrapdocker \n docker pull klaemo/couchdb:2.0.0 \n docker run -d -p 5984:5984 --name couchdb klaemo/couchdb:2.0.0\n ./gradlew test'
                     } finally {
                         junit '**/build/test-results/*.xml'
                     }
