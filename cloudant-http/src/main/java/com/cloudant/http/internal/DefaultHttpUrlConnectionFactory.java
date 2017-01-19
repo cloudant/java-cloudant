@@ -60,4 +60,9 @@ public class DefaultHttpUrlConnectionFactory implements HttpConnection.HttpUrlCo
         // be irresponsible to set the default Authenticator because it applies globally and we
         // might disrupt other applications in the JVM.
     }
+
+    @Override
+    public void shutdown() {
+        // No - op
+    }
 }

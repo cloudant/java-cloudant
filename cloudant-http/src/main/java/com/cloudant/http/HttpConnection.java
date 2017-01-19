@@ -470,6 +470,11 @@ public class HttpConnection {
          * @param proxyAuthentication the password authentication to use for the proxy connection
          */
         void setProxyAuthentication(PasswordAuthentication proxyAuthentication);
+
+        /**
+         * Give the connection provider an opportunity to clean up
+         */
+        void shutdown();
     }
 
     /**
