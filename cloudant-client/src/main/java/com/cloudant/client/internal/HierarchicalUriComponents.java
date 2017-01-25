@@ -118,12 +118,30 @@ public class HierarchicalUriComponents {
         PATH {
             @Override
             public boolean isAllowed(int c) {
+                if ('+' == c) {
+                    // CouchDB breaks RFC 3986 compliance by regarding the plus sign ("+") as a
+                    // reserved character in the URI path component (see
+                    // https://issues.apache.org/jira/browse/COUCHDB-1580). In order to conform with
+                    // the CouchDB API, isAllowed("+") must return false.
+                    return false;
+                }
+
+                // These are the RFC 3986 allowed characters for a path.
                 return isPchar(c) || '/' == c;
             }
         },
         PATH_SEGMENT {
             @Override
             public boolean isAllowed(int c) {
+                if ('+' == c) {
+                    // CouchDB breaks RFC 3986 compliance by regarding the plus sign ("+") as a
+                    // reserved character in the URI path component (see
+                    // https://issues.apache.org/jira/browse/COUCHDB-1580). In order to conform with
+                    // the CouchDB API, isAllowed("+") must return false.
+                    return false;
+                }
+
+                // These are the RFC 3986 allowed characters for a path segment.
                 return isPchar(c);
             }
         },
