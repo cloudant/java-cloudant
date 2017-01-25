@@ -299,6 +299,39 @@ public abstract class CouchDatabaseBase {
     }
 
     /**
+     * Reads an attachment from the database.
+     *
+     * The stream must be closed after usage, otherwise http connection leaks will occur.
+     *
+     * @param docId the document id
+     * @param attachmentName the attachment name
+     * @param revId the document revision id or {@code null}
+     * @return the attachment in the form of an {@code InputStream}.
+     */
+    public InputStream getAttachment(String docId, String attachmentName, String revId) {
+        final URI uri = new DatabaseURIHelper(dbUri).attachmentUri(docId, revId, attachmentName);
+        return getAttachment(uri);
+    }
+
+    /**
+     * Reads an attachment from the database.
+     *
+     * The stream must be closed after usage, otherwise http connection leaks will occur.
+     *
+     * @param uri the attachment URI
+     * @return the attachment in the form of an {@code InputStream}.
+     */
+    private InputStream getAttachment(URI uri) {
+        HttpConnection connection = Http.GET(uri);
+        couchDbClient.execute(connection);
+        try {
+            return connection.responseAsInputStream();
+        } catch (IOException e) {
+            throw new CouchDbException("Error retrieving response input stream.", e);
+        }
+    }
+
+    /**
      * Saves an attachment to a new document with a generated <tt>UUID</tt> as the document id.
      * <p>To retrieve an attachment, see {@link #find(String)}.
      *
