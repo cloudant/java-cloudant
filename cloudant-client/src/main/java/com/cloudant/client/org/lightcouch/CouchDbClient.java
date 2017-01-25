@@ -554,10 +554,13 @@ public class CouchDbClient {
                         close(es);
                     }
                 }
+                ex.setUrl(connection.url.toString());
                 throw ex;
             }
         } catch (IOException ioe) {
-            throw new CouchDbException("Error retrieving server response", ioe);
+            CouchDbException ex = new CouchDbException("Error retrieving server response", ioe);
+            ex.setUrl(connection.url.toString());
+            throw ex;
         }
     }
 
