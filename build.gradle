@@ -18,7 +18,7 @@ subprojects {
     apply plugin: 'signing'
 
     group = 'com.cloudant'
-    version = new File('VERSION').text.trim()
+    version = new File(rootDir, 'VERSION').text.trim()
 
     // Note the gradle subproject names (e.g. cloudant-client, cloudant-http) are the maven
     // artifactIds - the maven pom project name entry and User-Agent name in com.cloudant.client.properties are
