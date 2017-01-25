@@ -106,27 +106,6 @@ public class MockWebServerResources {
     }
 
     /**
-     * A dispatcher that sleeps for the time specified at construction on each request before
-     * responding. Useful for getting a SocketTimeoutException.
-     */
-    public static class SleepingDispatcher extends Dispatcher {
-
-        private final long sleepTime;
-        private final TimeUnit unit;
-
-        public SleepingDispatcher(long sleepTime, TimeUnit unit) {
-            this.sleepTime = sleepTime;
-            this.unit = unit;
-        }
-
-        @Override
-        public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
-            unit.sleep(sleepTime);
-            return new MockResponse();
-        }
-    }
-
-    /**
      * A dispatcher that repeatedly returns the same status code for all requests.
      */
     public static class ConstantResponseDispatcher extends Dispatcher {

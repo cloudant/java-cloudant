@@ -16,7 +16,6 @@ package com.cloudant.tests;
 
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -50,13 +49,14 @@ import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import okhttp3.mockwebserver.SocketPolicy;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Field;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
@@ -70,6 +70,9 @@ import java.util.regex.Pattern;
 
 import javax.net.ServerSocketFactory;
 
+/**
+ * Note some tests in this class use Java 1.7 features
+ */
 public class CloudantClientTests {
 
     @ClassRule
@@ -272,18 +275,23 @@ public class CloudantClientTests {
      */
     @Test(expected = SocketTimeoutException.class)
     public void connectionTimeout() throws Throwable {
+        // Do this test on the loopback
+        InetAddress loopback = InetAddress.getLoopbackAddress();
+        ServerSocket serverSocket = ServerSocketFactory.getDefault().createServerSocket(0, 1,
+                loopback);
 
-        ServerSocket serverSocket = ServerSocketFactory.getDefault().createServerSocket(0, 1);
-
+        int port = serverSocket.getLocalPort();
         //block the single connection to our server
-        Socket socket = new Socket();
-        socket.connect(serverSocket.getLocalSocketAddress());
+        Socket socket = new Socket(loopback.getHostAddress(), port);
 
         //now try to connect, but should timeout because there is no connection available
         try {
-            CloudantClient c = ClientBuilder.url(new URL("http://127.0.0.1:" + serverSocket
-                    .getLocalPort()))
-                    .connectTimeout(100, TimeUnit.MILLISECONDS).build();
+            CloudantClient c = ClientBuilder.url(new URL("http", loopback.getHostAddress(), port,
+                    "")).connectTimeout(100, TimeUnit.MILLISECONDS)
+                    // Unfortunately openjdk doesn't honour the connect timeout so we set the read
+                    // timeout as well so that the test doesn't take too long on that platform
+                    .readTimeout(250, TimeUnit.MILLISECONDS)
+                    .build();
 
             // Make a request
             c.getAllDbs();
@@ -300,29 +308,24 @@ public class CloudantClientTests {
             }
         } finally {
             //make sure we close the sockets
-            IOUtils.closeQuietly(serverSocket);
             IOUtils.closeQuietly(socket);
+            IOUtils.closeQuietly(serverSocket);
         }
     }
 
     /**
      * Checks that the read timeout works. The test sets a read timeout of 0.25 s and the mock
-     * server thread sleeps for twice the duration of the read timeout. If things are working
+     * server thread never sends a response. If things are working
      * correctly then the client should see a SocketTimeoutException for the read.
      */
     @Test(expected = SocketTimeoutException.class)
     public void readTimeout() throws Throwable {
-
-        final Long READ_TIMEOUT = 250l;
-
-        //start a simple http server
-        server.setDispatcher(new MockWebServerResources.SleepingDispatcher(READ_TIMEOUT * 2,
-                TimeUnit.MILLISECONDS));
-
+        // Don't respond so the read will timeout
+        server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE));
 
         try {
             CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server)
-                    .readTimeout(READ_TIMEOUT, TimeUnit.MILLISECONDS).build();
+                    .readTimeout(25, TimeUnit.MILLISECONDS).build();
 
             //do a call that expects a response
             c.getAllDbs();
