@@ -313,6 +313,15 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
         return result;
     }
 
+    /**
+     * Compares this design document to the specified object. The result is {@code true} if and only
+     * if the argument is not {@code null} and is a {@link DesignDocument} with the same
+     * {@code _id}, {@code _rev}, and document contents.
+     *
+     * @param o The object to compare this design document to
+     * @return {@code true} if the given object represents a design document equivalent to this
+     * design document, {@code false} otherwise
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
