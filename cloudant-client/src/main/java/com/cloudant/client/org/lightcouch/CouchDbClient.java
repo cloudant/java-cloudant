@@ -155,6 +155,8 @@ public class CouchDbClient {
             log.warning("Error deleting session on client shutdown.");
         }
         // The execute method handles non-2xx response codes by throwing a CouchDbException.
+
+        factory.shutdown();
     }
 
     /**

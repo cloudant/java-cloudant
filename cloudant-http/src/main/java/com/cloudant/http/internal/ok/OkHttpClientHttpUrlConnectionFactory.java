@@ -26,6 +26,7 @@ import java.net.HttpURLConnection;
 import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -76,4 +77,15 @@ public class OkHttpClientHttpUrlConnectionFactory extends DefaultHttpUrlConnecti
                 )));
     }
 
+    @Override
+    public void shutdown() {
+        try {
+            factory.client().dispatcher().executorService().shutdown();
+            factory.client().dispatcher().executorService().awaitTermination(5, TimeUnit.MINUTES);
+            // Evict all the connections
+            factory.client().connectionPool().evictAll();
+        } catch (InterruptedException e) {
+            // Oh well; we were only trying to aggressively shutdown
+        }
+    }
 }
