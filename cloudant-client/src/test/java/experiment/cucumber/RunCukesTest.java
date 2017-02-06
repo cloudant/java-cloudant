@@ -12,4 +12,5 @@ import cucumber.api.junit.Cucumber;
 @RunWith(Cucumber.class)
 @CucumberOptions(features = "cloudant-client/src/test/resources")
 public class RunCukesTest {
+
 }
