@@ -1,12 +1,12 @@
-# Unreleased
-- [FIXED] Add URL to `CouchDbException` exception message (where applicable) for easier debugging.
-- [NEW] Add additional method to `GET` standalone attachments.
-- [FIXED] Issue with "+" (plus) not being regarded as a reserved character in URI path components.
-- [IMPROVED] Faster shutdown when using the optional OkHttp client.
-- [FIXED] Issue with double encoding of restricted URL characters in credentials when using
-   `ClientBuilder.url()`.
+# 2.8.0 (2016-02-15)
 - [NEW] Added `bluemix` method to the client builder allowing service credentials to be passed using
   the CloudFoundry VCAP_SERVICES environment variable.
+- [NEW] Add additional method to `GET` standalone attachments.
+- [IMPROVED] Faster shutdown when using the optional OkHttp client.
+- [IMPROVED] Add URL to `CouchDbException` exception message (where applicable) for easier debugging.
+- [FIXED] Issue with "+" (plus) not being regarded as a reserved character in URI path components.
+- [FIXED] Issue with double encoding of restricted URL characters in credentials when using
+   `ClientBuilder.url()`.
 
 # 2.7.0 (2016-11-21)
 - [UPGRADED] Optional okhttp dependency to version 3.4.2.
