@@ -1,4 +1,4 @@
-# 2.8.0 (2016-02-15)
+# 2.8.0 (2017-02-15)
 - [NEW] Added `bluemix` method to the client builder allowing service credentials to be passed using
   the CloudFoundry VCAP_SERVICES environment variable.
 - [NEW] Add additional method to `GET` standalone attachments.
