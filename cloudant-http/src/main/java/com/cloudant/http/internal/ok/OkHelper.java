@@ -14,6 +14,8 @@
 
 package com.cloudant.http.internal.ok;
 
+import java.util.logging.Logger;
+
 /**
  * This class should only reflectively try to load the OkUrlFactory and then provide a boolean
  * answer to {@link #isOkUsable()}. Addition of other methods is not advised as it may cause loading
@@ -21,13 +23,15 @@ package com.cloudant.http.internal.ok;
  */
 public class OkHelper {
 
+    private static final Logger log = Logger.getLogger(OkHelper.class.getCanonicalName());
     private final static boolean okUsable;
-
+    
     static {
         Class<?> okFactoryClass;
         try {
             okFactoryClass = Class.forName("okhttp3.OkUrlFactory");
         } catch (Throwable t) {
+            log.fine("Failed to load okhttp: " + t.getMessage());
             okFactoryClass = null;
         }
         okUsable = (okFactoryClass != null);
