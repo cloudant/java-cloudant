@@ -21,11 +21,14 @@ import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
+import com.cloudant.client.org.lightcouch.CouchDbException;
+import com.cloudant.client.org.lightcouch.PreconditionFailedException;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.Utils;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -37,6 +40,15 @@ import java.util.Map;
 public class ReplicatorTest extends ReplicateBaseTest {
 
     private String repDocId;
+
+    @BeforeClass
+    public static void createReplicatorDB() {
+        try {
+            clientResource.get().createDB("_replicator");
+        } catch (PreconditionFailedException e){
+            // 412 - We can swallow this.
+        }
+    }
 
     @Before
     public void generateReplicatorDocId() {

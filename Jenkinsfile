@@ -24,23 +24,51 @@ stage('Build') {
 }
 
 stage('QA') {
-    node {
-        unstash name: 'built'
-        // findBugs
-        try {
-            sh './gradlew -Dfindbugs.xml.report=true findbugsMain'
-        } finally {
-            step([$class: 'FindBugsPublisher', pattern: '**/build/reports/findbugs/*.xml'])
-        }
-        // tests
-        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'clientlibs-test', usernameVariable: 'DB_USER', passwordVariable: 'DB_PASSWORD']]) {
-            try {
-                sh './gradlew -Dtest.with.specified.couch=true -Dtest.couch.username=$DB_USER -Dtest.couch.password=$DB_PASSWORD -Dtest.couch.host=clientlibs-test.cloudant.com -Dtest.couch.port=443 -Dtest.couch.http=https -Dtest.couch.ignore.compaction=true -Dtest.couch.auth.headers=true cloudantServiceTest'
-            } finally {
-                junit '**/build/test-results/*.xml'
-            }
-        }
-    }
+    parallel(
+            findBugs: {
+                node {
+                    unstash name: 'built'
+                    // findBugs
+                    try {
+                        sh './gradlew -Dfindbugs.xml.report=true findbugsMain'
+                    } finally {
+                        step([$class: 'FindBugsPublisher', pattern: '**/build/reports/findbugs/*.xml'])
+                    }
+                }
+            },
+            cloudant: {
+                node {
+                    unstash name: 'built'
+                    // tests
+                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'clientlibs-test', usernameVariable: 'DB_USER', passwordVariable: 'DB_PASSWORD']]) {
+                        try {
+                            sh './gradlew -Dtest.with.specified.couch=true -Dtest.couch.username=$DB_USER -Dtest.couch.password=$DB_PASSWORD -Dtest.couch.host=clientlibs-test.cloudant.com -Dtest.couch.port=443 -Dtest.couch.http=https -Dtest.couch.ignore.compaction=true -Dtest.couch.auth.headers=true cloudantServiceTest'
+                        } finally {
+                            junit '**/build/test-results/*.xml'
+                        }
+                    }
+                }
+            },
+            couchdb1dot6: {
+                node("couchdb1.6") {
+                    unstash name: 'built'
+                    try {
+                        sh 'sudo /usr/local/bin/wrapdocker \n docker pull couchdb:1.6.1 \n docker run -d -p 5984:5984 --name couchdb couchdb:1.6.1\n ./gradlew test'
+                    } finally {
+                        junit '**/build/test-results/*.xml'
+                    }
+                }
+            },
+            couchdb2: {
+                node("couchdb1.6") {
+                    unstash name: 'built'
+                    try {
+                        sh 'sudo /usr/local/bin/wrapdocker \n docker pull klaemo/couchdb:2.0.0 \n docker run -d -p 5984:5984 --name couchdb klaemo/couchdb:2.0.0\n ./gradlew test'
+                    } finally {
+                        junit '**/build/test-results/*.xml'
+                    }
+                }
+            })
 }
 
 // Publish the master branch
