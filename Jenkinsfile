@@ -1,7 +1,7 @@
 #!groovy
 
 /*
- * Copyright © 2016 IBM Corp. All rights reserved.
+ * Copyright © 2016, 2017 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,6 +14,30 @@
  * and limitations under the License.
  */
 
+def runTests(testEnv, isServiceTests) {
+    node {
+        if (isServiceTests) {
+            testEnv.add('GRADLE_TARGET=cloudantServiceTest')
+        } else {
+            testEnv.add('GRADLE_TARGET=test')
+        }
+
+        // Unstash the built content
+        unstash name: 'built'
+
+        //Set up the environment and run the tests
+        withEnv(testEnv) {
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.CREDS_ID, usernameVariable: 'DB_USER', passwordVariable: 'DB_PASSWORD']]) {
+                try {
+                    sh './gradlew -Dtest.couch.username=$DB_USER -Dtest.couch.password=$DB_PASSWORD -Dtest.couch.host=$DB_HOST -Dtest.couch.port=$DB_PORT -Dtest.couch.http=$DB_HTTP $GRADLE_TARGET'
+                } finally {
+                    junit '**/build/test-results/*.xml'
+                }
+            }
+        }
+    }
+}
+
 stage('Build') {
     // Checkout, build and assemble the source and doc
     node {
@@ -24,23 +48,49 @@ stage('Build') {
 }
 
 stage('QA') {
-    node {
-        unstash name: 'built'
-        // findBugs
-        try {
-            sh './gradlew -Dfindbugs.xml.report=true findbugsMain'
-        } finally {
-            step([$class: 'FindBugsPublisher', pattern: '**/build/reports/findbugs/*.xml'])
-        }
-        // tests
-        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'clientlibs-test', usernameVariable: 'DB_USER', passwordVariable: 'DB_PASSWORD']]) {
-            try {
-                sh './gradlew -Dtest.with.specified.couch=true -Dtest.couch.username=$DB_USER -Dtest.couch.password=$DB_PASSWORD -Dtest.couch.host=clientlibs-test.cloudant.com -Dtest.couch.port=443 -Dtest.couch.http=https -Dtest.couch.ignore.compaction=true -Dtest.couch.auth.headers=true cloudantServiceTest'
-            } finally {
-                junit '**/build/test-results/*.xml'
+    // Define the matrix environments
+    def CLOUDANT_ENV = ['DB_HTTP=https', 'DB_HOST=clientlibs-test.cloudant.com', 'DB_PORT=443', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=clientlibs-test']
+    def COUCH1_6_ENV = ['DB_HTTP=http', 'DB_HOST=cloudantsync002.bristol.uk.ibm.com', 'DB_PORT=5984', 'DB_IGNORE_COMPACTION=false', 'CREDS_ID=couchdb']
+    def COUCH2_0_ENV = ['DB_HTTP=http', 'DB_HOST=cloudantsync002.bristol.uk.ibm.com', 'DB_PORT=5985', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=couchdb']
+    def CLOUDANT_LOCAL_ENV = ['DB_HTTP=http', 'DB_HOST=cloudantsync002.bristol.uk.ibm.com', 'DB_PORT=8081', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=couchdb']
+
+    // Standard builds do Findbugs and test against Cloudant
+    def axes = [
+            Findbugs:
+                    {
+                        node {
+                            unstash name: 'built'
+                            // findBugs
+                            try {
+                                sh './gradlew -Dfindbugs.xml.report=true findbugsMain'
+                            } finally {
+                                step([$class: 'FindBugsPublisher', pattern: '**/build/reports/findbugs/*.xml'])
+                            }
+                        }
+                    },
+            Cloudant: {
+                runTests(CLOUDANT_ENV, true)
             }
-        }
+    ]
+
+    // For the master branch, add additional axes to the coverage matrix for Couch 1.6, 2.0
+    // and Cloudant Local
+    if (env.BRANCH_NAME == "master") {
+        axes.putAll(
+                Couch1_6: {
+                    runTests(COUCH1_6_ENV, false)
+                },
+                Couch2_0: {
+                    runTests(COUCH2_0_ENV, false)
+                },
+                CloudantLocal: {
+                    runTests(CLOUDANT_LOCAL_ENV, false)
+                }
+        )
     }
+
+    // Run the required axes in parallel
+    parallel(axes)
 }
 
 // Publish the master branch
