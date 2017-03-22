@@ -289,7 +289,26 @@ public class Database {
         createIndex(indexDefn.toString());
     }
 
-    /* TODO doc */
+    /**
+     * <p>
+     * Create a new text index
+     * </p>
+     * <p>
+     * Example usage of creating an index:
+     * </p>
+     * <pre>
+     * {@code
+     * db.createTextIndex("Movie_name", "Movie_name", "standard", new TextIndexField[]{
+     *     new TextIndexField("Movie_name", "string")});
+     * }
+     * </pre>
+     * @param indexName     optional name of the index (if not provided one will be generated)
+     * @param designDocName optional name of the design doc in which the index will be created
+     * @param analyzer      optional text <a target="_blank"
+     *                      href="https://console.ng.bluemix.net/docs/services/Cloudant/api/search.html#analyzers">
+     *                      analyzer</a>
+     * @param fields        array of fields in the index
+     */
     public void createTextIndex(String indexName, String designDocName, String analyzer,
                             TextIndexField[] fields) {
         JsonObject indexDefn = getTextIndexDefinition(indexName, designDocName, "text", analyzer, fields);
