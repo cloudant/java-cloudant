@@ -107,7 +107,9 @@ public class IndexTests {
             while (flds.hasNext()) {
                 IndexField fld = flds.next();
                 assertNotNull(fld.getName());
-                assertNotNull(fld.getOrder());
+                if (i.getType().equals("json")) {
+                    assertNotNull(fld.getOrder());
+                }
             }
 
         }

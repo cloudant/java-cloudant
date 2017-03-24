@@ -14,6 +14,8 @@
 
 package com.cloudant.client.api.model;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Encapsulates a Cloudant IndexField definition
  *
@@ -23,7 +25,12 @@ package com.cloudant.client.api.model;
 public class IndexField {
 
     /**
-     * Ascending or descending sort order
+     * <p>
+     * JSON indexes: Ascending or descending sort order
+     * </p>
+     * <p>
+     * Text indexes: field type (boolean, string, or number)
+     * </p>
      */
     public enum SortOrder {
         /**
@@ -33,7 +40,11 @@ public class IndexField {
         /**
          * descending
          */
-        desc
+        desc,
+        @SerializedName("boolean")
+        bool,
+        string,
+        number
     }
 
     private String name;
@@ -48,7 +59,7 @@ public class IndexField {
     }
 
     /**
-     * @return the order
+     * @return the order (JSON indexes), or type (text indexes)
      */
     public SortOrder getOrder() {
         return order;
