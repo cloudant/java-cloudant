@@ -283,9 +283,10 @@ public class Database {
      * @param indexType     optional, type of index (only "json" as of now)
      * @param fields        array of fields in the index
      */
+    // NB: `indexType` is ignored, but is in the argument list to not break API compatibility
     public void createIndex(String indexName, String designDocName, String indexType,
                             IndexField[] fields) {
-        JsonObject indexDefn = getIndexDefinition(indexName, designDocName, indexType, fields);
+        JsonObject indexDefn = getIndexDefinition(indexName, designDocName, fields);
         createIndex(indexDefn.toString());
     }
 
@@ -1189,7 +1190,7 @@ public class Database {
     /**
      * Form a create index json from parameters
      */
-    private JsonObject getIndexDefinition(String indexName, String designDocName, String analyzer, IndexField[] fields) {
+    private JsonObject getIndexDefinition(String indexName, String designDocName, IndexField[] fields) {
         assertNotEmpty(fields, "index fields");
         JsonObject indexObject = new JsonObject();
         if (!(indexName == null || indexName.isEmpty())) {
