@@ -365,7 +365,9 @@ public class Search {
      * @return this for additional parameter setting or to query
      * @see <a target="_blank" href="https://docs.cloudant.com/search.html#faceting">drilldown
      * query parameter</a>
+     * @deprecated Use {@link #drillDown(String, String...)}
      */
+    @Deprecated
     public Search drillDown(String fieldName, String fieldValue) {
         assertNotEmpty(fieldName, "fieldName");
         assertNotEmpty(fieldValue, "fieldValue");
@@ -378,6 +380,26 @@ public class Search {
         return this;
     }
 
+    /**
+     * @param fieldName   the name of the field
+     * @param fieldValues field values to add
+     * @return this for additional parameter setting or to query
+     * @see <a target="_blank" href="https://docs.cloudant.com/search.html#faceting">drilldown
+     * query parameter</a>
+     */
+    public Search drillDown(String fieldName, String... fieldValues) {
+        assertNotEmpty(fieldName, "fieldName");
+        assertNotEmpty(fieldValues, "fieldValues");
+        JsonArray drillDownArray = new JsonArray();
+        JsonPrimitive fieldNamePrimitive = new JsonPrimitive(fieldName);
+        drillDownArray.add(fieldNamePrimitive);
+        for (String fieldValue : fieldValues) {
+            JsonPrimitive fieldValuePrimitive = new JsonPrimitive(fieldValue);
+            drillDownArray.add(fieldValuePrimitive);
+        }
+        databaseHelper.query("drilldown", drillDownArray, false);
+        return this;
+    }
 
     /**
      * @param stale Accept values: ok

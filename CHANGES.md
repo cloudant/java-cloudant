@@ -1,3 +1,9 @@
+# UNRELEASED
+- [NEW] Add faceted search variable argument to `drillDown` method allowing multiple drill down
+  values to be specified for a single field name.
+- [DEPRECATED] The `drillDown(String, String)` method. Use new `drillDown(String, String...)` which
+  allows multiple drill down values.
+
 # 2.8.0 (2017-02-15)
 - [NEW] Added `bluemix` method to the client builder allowing service credentials to be passed using
   the CloudFoundry VCAP_SERVICES environment variable.

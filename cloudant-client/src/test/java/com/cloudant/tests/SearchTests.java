@@ -16,6 +16,7 @@ package com.cloudant.tests;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -37,6 +38,8 @@ import org.junit.rules.RuleChain;
 
 import java.io.File;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -199,6 +202,24 @@ public class SearchTests {
         assertEquals(new Long(0), rslt.getRanges().get("min_length").get("small"));
         assertEquals(new Long(0), rslt.getRanges().get("min_length").get("medium"));
         assertEquals(new Long(0), rslt.getRanges().get("min_length").get("large"));
+    }
+
+    @Test
+    public void multiValueDrillDownTest() {
+        // do a faceted search for multi-value drilldown
+        Search srch = db.search("views101/animals");
+        SearchResult<Animal> rslt = srch.includeDocs(true)
+                .drillDown("diet", "carnivore", "omnivore")
+                .querySearchResult("class:mammal", Animal.class);
+        assertNotNull(rslt);
+        assertEquals(4, rslt.getTotalRows());
+
+        List<String> ids = new ArrayList<String>();
+        for (SearchResultRow row : rslt.getRows()) {
+            ids.add(row.getId());
+        }
+        List<String> expectedIds = Arrays.asList("panda", "aardvark", "badger", "lemur");
+        assertTrue(ids.containsAll(expectedIds));
     }
 
     @Test
