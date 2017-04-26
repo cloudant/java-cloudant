@@ -29,6 +29,7 @@ import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.model.Shard;
+import com.cloudant.client.api.model.TextIndexField;
 import com.cloudant.client.api.views.AllDocsRequestBuilder;
 import com.cloudant.client.api.views.ViewRequestBuilder;
 import com.cloudant.client.internal.DatabaseURIHelper;
@@ -282,9 +283,36 @@ public class Database {
      * @param indexType     optional, type of index (only "json" as of now)
      * @param fields        array of fields in the index
      */
+    // NB: `indexType` is ignored, but is in the argument list to not break API compatibility
     public void createIndex(String indexName, String designDocName, String indexType,
                             IndexField[] fields) {
-        JsonObject indexDefn = getIndexDefinition(indexName, designDocName, indexType, fields);
+        JsonObject indexDefn = getIndexDefinition(indexName, designDocName, fields);
+        createIndex(indexDefn.toString());
+    }
+
+    /**
+     * <p>
+     * Create a new text index
+     * </p>
+     * <p>
+     * Example usage of creating an index:
+     * </p>
+     * <pre>
+     * {@code
+     * db.createTextIndex("Movie_name", "Movie_name", "standard", new TextIndexField[]{
+     *     new TextIndexField("Movie_name", "string")});
+     * }
+     * </pre>
+     * @param indexName     optional name of the index (if not provided one will be generated)
+     * @param designDocName optional name of the design doc in which the index will be created
+     * @param analyzer      optional text <a target="_blank"
+     *                      href="https://console.ng.bluemix.net/docs/services/Cloudant/api/search.html#analyzers">
+     *                      analyzer</a>
+     * @param fields        array of fields in the index
+     */
+    public void createTextIndex(String indexName, String designDocName, String analyzer,
+                            TextIndexField[] fields) {
+        JsonObject indexDefn = getTextIndexDefinition(indexName, designDocName, "text", analyzer, fields);
         createIndex(indexDefn.toString());
     }
 
@@ -1162,8 +1190,36 @@ public class Database {
     /**
      * Form a create index json from parameters
      */
-    private JsonObject getIndexDefinition(String indexName, String designDocName,
-                                          String indexType, IndexField[] fields) {
+    private JsonObject getIndexDefinition(String indexName, String designDocName, IndexField[] fields) {
+        assertNotEmpty(fields, "index fields");
+        JsonObject indexObject = new JsonObject();
+        if (!(indexName == null || indexName.isEmpty())) {
+            indexObject.addProperty("name", indexName);
+        }
+        if (!(designDocName == null || designDocName.isEmpty())) {
+            indexObject.addProperty("ddoc", designDocName);
+        }
+        indexObject.addProperty("type", "json");
+
+        JsonArray fieldsArray = new JsonArray();
+        for (int i = 0; i < fields.length; i++) {
+            JsonObject fieldObject = new JsonObject();
+            fieldObject.addProperty(fields[i].getName(), fields[i].getOrder().toString());
+            fieldsArray.add(fieldObject);
+        }
+        JsonObject arrayOfFields = new JsonObject();
+        arrayOfFields.add("fields", fieldsArray);
+        indexObject.add("index", arrayOfFields);
+
+        return indexObject;
+    }
+
+
+    /**
+     * Form a create index json from parameters
+     */
+    private JsonObject getTextIndexDefinition(String indexName, String designDocName,
+                                          String indexType, String analyzer, TextIndexField[] fields) {
         assertNotEmpty(fields, "index fields");
         JsonObject indexObject = new JsonObject();
         if (!(indexName == null || indexName.isEmpty())) {
@@ -1180,10 +1236,17 @@ public class Database {
         JsonArray fieldsArray = new JsonArray();
         for (int i = 0; i < fields.length; i++) {
             JsonObject fieldObject = new JsonObject();
-            fieldObject.addProperty(fields[i].getName(), fields[i].getOrder().toString());
+            fieldObject.addProperty("name", fields[i].getName());
+            fieldObject.addProperty("type", fields[i].getType());
             fieldsArray.add(fieldObject);
         }
         JsonObject arrayOfFields = new JsonObject();
+        if (!(analyzer == null || analyzer.isEmpty())) {
+            JsonObject defaultField = new JsonObject();
+            arrayOfFields.add("default_field", defaultField);
+            defaultField.addProperty("enabled", true);
+            defaultField.addProperty("analyzer", analyzer);
+        }
         arrayOfFields.add("fields", fieldsArray);
         indexObject.add("index", arrayOfFields);
 

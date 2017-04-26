@@ -25,6 +25,7 @@ import com.cloudant.client.api.model.FindByIndexOptions;
 import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.IndexField.SortOrder;
+import com.cloudant.client.api.model.TextIndexField;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
@@ -83,6 +84,7 @@ public class IndexTests {
                         new IndexField("Movie_year", SortOrder.asc)});
         db.createIndex("Movie_year", "Movie_year", null,
                 new IndexField[]{new IndexField("Movie_year", SortOrder.asc)});
+        db.createTextIndex("Text_index_standard", "Text_index_standard", "standard", new TextIndexField[]{new TextIndexField("Movie_name", "string")});
 
         //Create selector object: {"Movie_year": { "$gt": 1960}, "Person_name": "Alec Guinness"}
         Map<String, Object> year = new HashMap<String, Object>();
@@ -105,7 +107,9 @@ public class IndexTests {
             while (flds.hasNext()) {
                 IndexField fld = flds.next();
                 assertNotNull(fld.getName());
-                assertNotNull(fld.getOrder());
+                if (i.getType().equals("json")) {
+                    assertNotNull(fld.getOrder());
+                }
             }
 
         }
@@ -353,6 +357,22 @@ public class IndexTests {
                 "Person_name").useIndex("Movie_year");
         assertUseIndexString(getUseIndexFromRequest(options));
     }
+
+    @Test
+    public void testTextIndex() {
+        List<Movie> movies = db.findByIndex("\"selector\": { \"$text\": \"Simpsons\"}",
+                Movie.class,
+                new FindByIndexOptions()
+                        .fields("Movie_name").fields("Movie_year"));
+        assertNotNull(movies);
+        assert (movies.size() > 0);
+        for (Movie m : movies) {
+            assertNotNull(m.getMovie_name());
+            assertNotNull(m.getMovie_year());
+        }
+    }
+
+
 
     /**
      * Uses a mock web server to record a _find request using the specified options
