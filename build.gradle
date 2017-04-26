@@ -36,6 +36,13 @@ subprojects {
         mavenCentral()
     }
 
+    dependencies {
+
+        testCompile group: 'info.cukes', name: 'cucumber-picocontainer', version: '1.2.5'
+        testCompile group: 'info.cukes', name: 'cucumber-java', version: '1.2.5'
+        testCompile group: 'info.cukes', name: 'cucumber-junit', version: '1.2.5'
+    }
+
     // Include variable debug info in the compiled classes
     compileJava.options.debugOptions.debugLevel = "source,lines,vars"
     // Fail on javac warnings
