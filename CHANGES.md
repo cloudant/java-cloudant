@@ -1,4 +1,4 @@
-# UNRELEASED
+# 2.9.0 (2017-04-26)
 - [NEW] Add faceted search variable argument to `drillDown` method allowing multiple drill down
   values to be specified for a single field name.
 - [DEPRECATED] The `drillDown(String, String)` method. Use new `drillDown(String, String...)` which
