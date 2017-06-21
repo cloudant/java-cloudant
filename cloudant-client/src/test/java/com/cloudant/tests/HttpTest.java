@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 IBM Corp. All rights reserved.
+ * Copyright © 2017 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -13,6 +13,15 @@
  */
 package com.cloudant.tests;
 
+import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE;
+import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE_2;
+import static com.cloudant.tests.util.MockWebServerResources.IAM_TOKEN;
+import static com.cloudant.tests.util.MockWebServerResources.IAM_TOKEN_2;
+import static com.cloudant.tests.util.MockWebServerResources.OK_IAM_COOKIE;
+import static com.cloudant.tests.util.MockWebServerResources.OK_IAM_COOKIE_2;
+import static com.cloudant.tests.util.MockWebServerResources.iamSession;
+import static com.cloudant.tests.util.MockWebServerResources.iamSessionUnquoted;
+import static com.cloudant.tests.util.MockWebServerResources.setCookie;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.core.Is.is;
@@ -935,7 +944,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         String cookieHeader = request.getHeader("Cookie");
         assertNotNull("There should be a cookie on the request", cookieHeader);
         assertTrue("The cookie header " + cookieHeader + " should contain the expected value.",
-                request.getHeader("Cookie").contains(MockWebServerResources.EXPECTED_OK_COOKIE));
+                request.getHeader("Cookie").contains(EXPECTED_OK_COOKIE));
     }
 
     /**
@@ -1073,4 +1082,17 @@ public class HttpTest extends HttpFactoryParameterizedTest {
             return super.findClass(name);
         }
     }
+
+    // helper - assert that _n_ requests were made on the mock server and return them in an array
+    public static RecordedRequest[] takeN(MockWebServer server, int n) throws Exception {
+        assertEquals(String.format(Locale.ENGLISH, "The server should have %d received requests", n), n,
+                server.getRequestCount());
+        RecordedRequest[] recordedRequests = new RecordedRequest[n];
+        for (int i=0; i<n; i++) {
+            recordedRequests[i] = MockWebServerResources.takeRequestWithTimeout(server);
+        }
+        return recordedRequests;
+    }
+
+
 }
