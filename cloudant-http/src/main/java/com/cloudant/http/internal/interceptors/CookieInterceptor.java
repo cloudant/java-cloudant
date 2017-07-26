@@ -51,15 +51,7 @@ import java.util.logging.Logger;
  * If the request to get the cookie for use in future request fails with a 401 status code
  * (or any status that indicates client error) cookie authentication will not be attempted again.
  */
-public class CookieInterceptor implements HttpConnectionRequestInterceptor,
-        HttpConnectionResponseInterceptor {
-
-    private final static Logger logger = Logger.getLogger(CookieInterceptor.class
-            .getCanonicalName());
-    private final byte[] sessionRequestBody;
-    private final CookieManager cookieManager = new CookieManager();
-    private final AtomicBoolean shouldAttemptCookieRequest = new AtomicBoolean(true);
-    private final URL sessionURL;
+public class CookieInterceptor extends CookieInterceptorBase {
 
     /**
      * Constructs a cookie interceptor. Credentials should be supplied not URL encoded, this class
@@ -70,70 +62,16 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
      * @param baseURL  The base URL to use when constructing an `_session` request.
      */
     public CookieInterceptor(String username, String password, String baseURL) {
-
+        super("application/x-www-form-urlencoded", baseURL, "/_session");
         try {
-            this.sessionURL = new URL(String.format("%s/_session", baseURL));
-            username = URLEncoder.encode(username, "UTF-8");
-            password = URLEncoder.encode(password, "UTF-8");
-            this.sessionRequestBody = String.format("name=%s&password=%s", username, password)
-                    .getBytes("UTF-8");
+            this.sessionRequestBody = String.format("name=%s&password=%s", URLEncoder.encode(username, "UTF-8"), URLEncoder.encode(password, "UTF-8"))
+                    .getBytes("UTF-8"); ;
         } catch (UnsupportedEncodingException e) {
             //all JVMs should support UTF-8, so this should not happen
             throw new RuntimeException(e);
-        } catch (MalformedURLException e) {
-            // this should be a valid URL since the builder is passing it in
-            logger.log(Level.SEVERE, "Failed to create URL for _session endpoint", e);
-            throw new RuntimeException(e);
         }
     }
 
-    @Override
-    public HttpConnectionInterceptorContext interceptRequest(HttpConnectionInterceptorContext
-                                                                     context) {
-
-        HttpURLConnection connection = context.connection.getConnection();
-
-        // First time we will have no cookies
-        if (cookieManager.getCookieStore().getCookies().isEmpty() && shouldAttemptCookieRequest
-                .get()) {
-            if (!requestCookie(context)) {
-                // Requesting a cookie failed, set a flag if we failed so we won't try again
-                shouldAttemptCookieRequest.set(false);
-            }
-        }
-
-        if (shouldAttemptCookieRequest.get()) {
-
-            // Debug logging
-            if (logger.isLoggable(Level.FINEST)) {
-                logger.finest("Attempt to add cookie to request.");
-                logger.finest("Cookies are stored for URIs: " + cookieManager.getCookieStore()
-                        .getURIs());
-            }
-
-            // Apply any saved cookies to the request
-            try {
-                Map<String, List<String>> requestCookieHeaders = cookieManager.get(connection
-                        .getURL().toURI(), connection.getRequestProperties());
-                for (Map.Entry<String, List<String>> requestCookieHeader :
-                        requestCookieHeaders.entrySet()) {
-                    List<String> cookies = requestCookieHeader.getValue();
-                    if (cookies != null && !cookies.isEmpty()) {
-                        connection.setRequestProperty(requestCookieHeader.getKey(),
-                                listToSemicolonSeparatedString(cookies));
-                    } else {
-                        logger.finest("No cookie values to set.");
-                    }
-                }
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Failed to read request properties", e);
-            } catch (URISyntaxException e) {
-                logger.log(Level.SEVERE, "Failed to convert request URL to URI for cookie " +
-                        "retrieval.");
-            }
-        }
-        return context;
-    }
 
     @Override
     public HttpConnectionInterceptorContext interceptResponse(HttpConnectionInterceptorContext
@@ -192,7 +130,7 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
                     }
 
                     if (renewCookie) {
-                        logger.finest("Cookie was invalid attempt to get new cookie.");
+                        logger.finest("Cookie was invalid. Will attempt to get new cookie.");
                         boolean success = requestCookie(context);
                         if (success) {
                             // New cookie obtained, replay the request
@@ -213,107 +151,6 @@ public class CookieInterceptor implements HttpConnectionRequestInterceptor,
         }
         return context;
 
-    }
-
-    private boolean requestCookie(HttpConnectionInterceptorContext context) {
-        try {
-            HttpConnection conn = Http.POST(sessionURL, "application/x-www-form-urlencoded");
-            conn.setRequestBody(sessionRequestBody);
-
-            //when we request the session we need all interceptors except this one
-
-            conn.requestInterceptors.addAll(context.connection.requestInterceptors);
-            conn.requestInterceptors.remove(this);
-            conn.responseInterceptors.addAll(context.connection.responseInterceptors);
-            conn.responseInterceptors.remove(this);
-
-
-            HttpURLConnection connection = conn.execute().getConnection();
-            int responseCode = connection.getResponseCode();
-
-            if (responseCode / 100 == 2) {
-
-                if (sessionHasStarted(connection.getInputStream())) {
-                    return storeCookiesFromResponse(connection);
-                } else {
-                    return false;
-                }
-            } else {
-                InputStream errorStream = connection.getErrorStream();
-                try {
-                    if (errorStream != null) {
-                        // Consume the error stream to avoid leaking connections
-                        String error = IOUtils.toString(errorStream, "UTF-8");
-                        // Log the error stream content
-                        logger.fine(error);
-                    }
-                } finally {
-                    IOUtils.closeQuietly(errorStream);
-                }
-                if (responseCode == 401) {
-                    logger.severe("Credentials are incorrect, cookie authentication will not be" +
-                            " attempted again by this interceptor object");
-                } else {
-                    // catch any other response code
-                    logger.log(Level.SEVERE,
-                            "Failed to get cookie from server, response code {0}, " +
-                                    "cookie authentication will not be attempted again",
-                            responseCode);
-                }
-            }
-        }  catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to read cookie response", e);
-        }
-        return false;
-    }
-
-    private boolean sessionHasStarted(InputStream responseStream) throws IOException {
-        try {
-            // Get the response body as a string
-            String response = IOUtils.toString(responseStream, "UTF-8");
-
-            // Only check for ok:true, https://issues.apache.org/jira/browse/COUCHDB-1356
-            // means we cannot check that the name returned is the one we sent.
-
-            // Check the response body for "ok" : true using a regex because we don't want a JSON
-            // library dependency for something so simple in a shared HTTP artifact used in both
-            // java-cloudant and sync-android. Note (?siu) flags used for . to also match line
-            // breaks and for unicode case insensitivity.
-
-            return response.matches("(?s)(?i)(?u).*\\\"ok\\\"\\s*:\\s*true.*");
-        } finally {
-            IOUtils.closeQuietly(responseStream);
-        }
-
-    }
-
-    private boolean storeCookiesFromResponse(HttpURLConnection connection) {
-
-        // Store any cookies from the response in the CookieManager
-        try {
-            logger.finest("Storing cookie.");
-            cookieManager.put(connection.getURL().toURI(), connection.getHeaderFields());
-            return true;
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to read cookie response header", e);
-            return false;
-        } catch (URISyntaxException e) {
-            logger.log(Level.SEVERE, "Failed to convert request URL to URI for cookie storage.");
-            return false;
-        }
-    }
-
-    private String listToSemicolonSeparatedString(List<String> cookieStrings) {
-        // RFC 6265 says multiple cookie pairs should be "; " separated
-        StringBuilder builder = new StringBuilder();
-        int index = 0; // Count from 0 since we will increment before comparing to size
-        for (String cookieString : cookieStrings) {
-            builder.append(cookieString);
-            if (++index != cookieStrings.size()) {
-                builder.append("; ");
-            }
-        }
-        return builder.toString();
     }
 
 }

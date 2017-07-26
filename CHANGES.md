@@ -1,3 +1,6 @@
+# 2.10.0 (Unreleased)
+- [NEW] Add IAM cookie authentication method.
+
 # 2.9.0 (2017-04-26)
 - [NEW] Add faceted search variable argument to `drillDown` method allowing multiple drill down
   values to be specified for a single field name.
