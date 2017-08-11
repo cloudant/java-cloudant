@@ -176,9 +176,14 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 ### Issues
 
-If you are a Cloudant customer please contact Cloudant support for help with any issues.
-
-It is also possible to open issues [here in github](../../issues).
+Before opening a new issue please consider the following:
+* Only the latest release is supported. If at all possible please try to reproduce the issue using
+the latest version.
+* Please check the [existing issues](https://github.com/cloudant/java-cloudant/issues)
+to see if the problem has already been reported. Note that the default search
+includes only open issues, but it may already have been closed.
+* Cloudant customers should contact Cloudant support for urgent issues.
+* When opening a new issue [here in github](../../issues) please complete the template fully.
 
 ## Caching, Encryption, and Compression
 
