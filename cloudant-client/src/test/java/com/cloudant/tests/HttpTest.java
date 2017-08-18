@@ -14,14 +14,6 @@
 package com.cloudant.tests;
 
 import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE;
-import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE_2;
-import static com.cloudant.tests.util.MockWebServerResources.IAM_TOKEN;
-import static com.cloudant.tests.util.MockWebServerResources.IAM_TOKEN_2;
-import static com.cloudant.tests.util.MockWebServerResources.OK_IAM_COOKIE;
-import static com.cloudant.tests.util.MockWebServerResources.OK_IAM_COOKIE_2;
-import static com.cloudant.tests.util.MockWebServerResources.iamSession;
-import static com.cloudant.tests.util.MockWebServerResources.iamSessionUnquoted;
-import static com.cloudant.tests.util.MockWebServerResources.setCookie;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.core.Is.is;
@@ -43,13 +35,13 @@ import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
-import com.cloudant.http.internal.interceptors.CookieInterceptor;
 import com.cloudant.http.interceptors.Replay429Interceptor;
+import com.cloudant.http.internal.interceptors.CookieInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
-import com.cloudant.tests.util.MockWebServerResources;
 import com.cloudant.tests.util.HttpFactoryParameterizedTest;
+import com.cloudant.tests.util.MockWebServerResources;
 import com.cloudant.tests.util.TestTimer;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.Gson;
@@ -302,10 +294,8 @@ public class HttpTest extends HttpFactoryParameterizedTest {
     @Test
     public void cookieRenewal() throws Exception {
         final String hello = "{\"hello\":\"world\"}\r\n";
-        final String authSession = "AuthSession=";
         final String renewalCookieToken =
                 "RenewCookie_a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz";
-        final String renewalCookieValue = authSession + renewalCookieToken;
 
         // Request sequence
         // _session request to get Cookie
@@ -313,8 +303,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         // GET replay -> 200
         mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
         mockWebServer.enqueue(new MockResponse().setResponseCode(200).addHeader("Set-Cookie",
-                String.format(Locale.ENGLISH, "%s;", renewalCookieValue
-                        + MockWebServerResources.COOKIE_PROPS))
+                MockWebServerResources.authSessionCookie(renewalCookieToken, null))
                 .setBody(hello));
         mockWebServer.enqueue(new MockResponse());
 
@@ -349,8 +338,9 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         String headerValue = request.getHeader("Cookie");
         // The cookie may or may not have the session id quoted, so check both
         assertThat("The Cookie header should contain the expected session value", headerValue,
-                anyOf(containsString(renewalCookieValue), containsString(authSession + "\"" +
-                        renewalCookieToken + "\"")));
+                anyOf(containsString(MockWebServerResources.authSession(renewalCookieToken)),
+                        containsString(MockWebServerResources.authSessionUnquoted
+                                (renewalCookieToken))));
     }
 
     /**

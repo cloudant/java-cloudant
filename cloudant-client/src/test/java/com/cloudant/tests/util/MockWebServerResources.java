@@ -14,6 +14,7 @@
 
 package com.cloudant.tests.util;
 
+import okhttp3.Cookie;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -42,63 +43,85 @@ public class MockWebServerResources {
     public static final String EXPECTED_OK_COOKIE_2 =
             "dG9tYmxlbmNoOjU5NTM0QzgyOhqHa60IlqPmGR8vTVIK-tzhopMR";
 
-    public static final String IAM_TOKEN =   "{\"access_token\":\"eyJraWQiOiIyMDE3MDQwMi0wMDowMDowMCIsImFsZyI6IlJTMjU2In0.eyJpYW1faWQiOiJJQk1pZC0yNzAwMDdHRjBEIiwiaWQiOiJJQk1pZC0yNzAwMDdHRjBEIiwicmVhbG1pZCI6IklCTWlkIiwiaWRlbnRpZmllciI6IjI3MDAwN0dGMEQiLCJnaXZlbl9uYW1lIjoiVG9tIiwiZmFtaWx5X25hbWUiOiJCbGVuY2giLCJuYW1lIjoiVG9tIEJsZW5jaCIsImVtYWlsIjoidGJsZW5jaEB1ay5pYm0uY29tIiwic3ViIjoidGJsZW5jaEB1ay5pYm0uY29tIiwiYWNjb3VudCI6eyJic3MiOiI1ZTM1ZTZhMjlmYjJlZWNhNDAwYWU0YzNlMWZhY2Y2MSJ9LCJpYXQiOjE1MDA0NjcxMDIsImV4cCI6MTUwMDQ3MDcwMiwiaXNzIjoiaHR0cHM6Ly9pYW0ubmcuYmx1ZW1peC5uZXQvb2lkYy90b2tlbiIsImdyYW50X3R5cGUiOiJ1cm46aWJtOnBhcmFtczpvYXV0aDpncmFudC10eXBlOmFwaWtleSIsInNjb3BlIjoib3BlbmlkIiwiY2xpZW50X2lkIjoiZGVmYXVsdCJ9.XAPdb5K4n2nYih-JWTWBGoKkxTXM31c1BB1g-Ciauc2LxuoNXVTyz_mNqf1zQL07FUde1Cb_dwrbotjickNcxVPost6byQztfc0mRF1x2S6VR8tn7SGiRmXBjLofkTh1JQq-jutp2MS315XbTG6K6m16uYzL9qfMnRvQHxsZWErzfPiJx-Trg_j7OX-qNFjdNUGnRpU7FmULy0r7RxLd8mhG-M1yxVzRBAZzvM63s0XXfMnk1oLi-BuUUTqVOdrM0KyYMWfD0Q72PTo4Exa17V-R_73Nq8VPCwpOvZcwKRA2sPTVgTMzU34max8b5kpTzVGJ6SXSItTVOUdAygZBng\",\"refresh_token\":\"MO61FKNvVRWkSa4vmBZqYv_Jt1kkGMUc-XzTcNnR-GnIhVKXHUWxJVV3RddE8Kqh3X_TZRmyK8UySIWKxoJ2t6obUSUalPm90SBpTdoXtaljpNyormqCCYPROnk6JBym72ikSJqKHHEZVQkT0B5ggZCwPMnKagFj0ufs-VIhCF97xhDxDKcIPMWG02xxPuESaSTJJug7e_dUDoak_ZXm9xxBmOTRKwOxn5sTKthNyvVpEYPE7jIHeiRdVDOWhN5LomgCn3TqFCLpMErnqwgNYbyCBd9rNm-alYKDb6Jle4njuIBpXxQPb4euDwLd1osApaSME3nEarFWqRBzhjoqCe1Kv564s_rY7qzD1nHGvKOdpSa0ZkMcfJ0LbXSQPs7gBTSVrBFZqwlg-2F-U3Cto62-9qRR_cEu_K9ZyVwL4jWgOlngKmxV6Ku4L5mHp4KgEJSnY_78_V2nm64E--i2ZA1FhiKwIVHDOivVNhggE9oabxg54vd63glp4GfpNnmZsMOUYG9blJJpH4fDX4Ifjbw-iNBD7S2LRpP8b8vG9pb4WioGzN43lE5CysveKYWrQEZpThznxXlw1snDu_A48JiL3Lrvo1LobLhF3zFV-kQ=\",\"token_type\":\"Bearer\",\"expires_in\":3600,\"expiration\":1500470702}";
-    public static final String IAM_TOKEN_2 = "{\"access_token\":\"eyJraWQiOiIyMDE3MDQwMi0wMDowMDowMCIsImFsZyI6IlJTMjU2In0.eyJpYW1faWQiOiJJQk1pZC0yNzAwMDdHRjBEIiwiaWQiOiJJQk1pZC0yNzAwMDdHRjBEIiwicmVhbG1pZCI6IklCTWlkIiwiaWRlbnRpZmllciI6IjI3MDAwN0dGMEQiLCJnaXZlbl9uYW1lIjoiVG9tIiwiZmFtaWx5X25hbWUiOiJCbGVuY2giLCJuYW1lIjoiVG9tIEJsZW5jaCIsImVtYWlsIjoidGJsZW5jaEB1ay5pYm0uY29tIiwic3ViIjoidGJsZW5jaEB1ay5pYm0uY29tIiwiYWNjb3VudCI6eyJic3MiOiI1ZTM1ZTZhMjlmYjJlZWNhNDAwYWU0YzNlMWZhY2Y2MSJ9LCJpYXQiOjE1MDA0NjcxMTEsImV4cCI6MTUwMDQ3MDcxMSwiaXNzIjoiaHR0cHM6Ly9pYW0ubmcuYmx1ZW1peC5uZXQvb2lkYy90b2tlbiIsImdyYW50X3R5cGUiOiJ1cm46aWJtOnBhcmFtczpvYXV0aDpncmFudC10eXBlOmFwaWtleSIsInNjb3BlIjoib3BlbmlkIiwiY2xpZW50X2lkIjoiZGVmYXVsdCJ9.wJ5Glsvee3xRbfxr847pNgVj-U_ZLLzOiScHcjkrHk0jQdg8D4KurAV1QGa_MwWzd_QxS55lNqCzi6HV1p3kSyjcdJSGe-l-B3_xjw-7Q3BMoPjcO-X1mNYsKQyCtSAJsuByCYQVPoNKuBifsQcds65mKh87gUtc00vP5J-vzdYpzkrjncFO3lzJJwYSnbqFaAPtNnEYwEEIpS0n9H4mgHiLqletzYs9acggssxZpUl2wdkUaQ_diuTJg-u2o6Oy3aVJCWV78DIc3NVwgQCuJ40as6QpFPWluXJmfgdW5lFkQ_etieI9JDgXk_HQUpYcj0Droec6wTXEGUYWjukhsw\",\"refresh_token\":\"M0oCn5XLXUWAFUSqC7FRv1d83-SOfPvYmKKRdZpT33C81KsTaZx3Y3jMXRGkR1sIAohEm-gkpwGQcm1I_lfs5zlqwaKlsLOv4jvjvjiaPFwoU7QP62bHWGsq0j-RNN-_kHXsp3G1R7AtndZL0XQ4se4Jlgt68Cw3_YyEcxS6E65iTv1hZ9lg1EjJqzFLd4ArQVT6gFCpSaRaH2ilie4hat5ZFI2JALHPzVnBlRBqeIUferQOL6Yw2b_Z9TvYa6AaqOsQzI5ma2yIQTw6tzjrc5xXqnqnkH566pNlY8pKvETvCsdLgEclMoa8zoe9SAXDFEIl7svNMRG9FsoR7G4rwojs2BawDPPwkEcm6aC1K5azX23GbnekhvNfXloASWc2ETerN2RxYRZNnFnO4f0enCNReMhoPCUBObgO6iq0a56VslRTT-BHYBCax_YklBz9acbhJnF-C9PWjyrYwZHFajMhpFjOmY3hlrQXVXtjOqKs5WbMhpQ8BWN5KBUDYY7F7OMvv4bYTF7kfu5Uc_ge9_Nj4EGvPwA6vehvZjSj-0td6D32p2zMDmu_yoTLRpv6N7u5BRA5_PmhH_hsffXSKX5fDNL_CqGaNvcI5tVBry8=\",\"token_type\":\"Bearer\",\"expires_in\":3600,\"expiration\":1500470711}";
+    public static final String IAM_TOKEN =
+            "{\"access_token\":\"eyJraWQiOiIyMDE3MDQwMi0wMDowMDowMCIsImFsZyI6IlJTMjU2In0.eyJpYW1faWQiOiJJQk1pZC0yNzAwMDdHRjBEIiwiaWQiOiJJQk1pZC0yNzAwMDdHRjBEIiwicmVhbG1pZCI6IklCTWlkIiwiaWRlbnRpZmllciI6IjI3MDAwN0dGMEQiLCJnaXZlbl9uYW1lIjoiVG9tIiwiZmFtaWx5X25hbWUiOiJCbGVuY2giLCJuYW1lIjoiVG9tIEJsZW5jaCIsImVtYWlsIjoidGJsZW5jaEB1ay5pYm0uY29tIiwic3ViIjoidGJsZW5jaEB1ay5pYm0uY29tIiwiYWNjb3VudCI6eyJic3MiOiI1ZTM1ZTZhMjlmYjJlZWNhNDAwYWU0YzNlMWZhY2Y2MSJ9LCJpYXQiOjE1MDA0NjcxMDIsImV4cCI6MTUwMDQ3MDcwMiwiaXNzIjoiaHR0cHM6Ly9pYW0ubmcuYmx1ZW1peC5uZXQvb2lkYy90b2tlbiIsImdyYW50X3R5cGUiOiJ1cm46aWJtOnBhcmFtczpvYXV0aDpncmFudC10eXBlOmFwaWtleSIsInNjb3BlIjoib3BlbmlkIiwiY2xpZW50X2lkIjoiZGVmYXVsdCJ9.XAPdb5K4n2nYih-JWTWBGoKkxTXM31c1BB1g-Ciauc2LxuoNXVTyz_mNqf1zQL07FUde1Cb_dwrbotjickNcxVPost6byQztfc0mRF1x2S6VR8tn7SGiRmXBjLofkTh1JQq-jutp2MS315XbTG6K6m16uYzL9qfMnRvQHxsZWErzfPiJx-Trg_j7OX-qNFjdNUGnRpU7FmULy0r7RxLd8mhG-M1yxVzRBAZzvM63s0XXfMnk1oLi-BuUUTqVOdrM0KyYMWfD0Q72PTo4Exa17V-R_73Nq8VPCwpOvZcwKRA2sPTVgTMzU34max8b5kpTzVGJ6SXSItTVOUdAygZBng\",\"refresh_token\":\"MO61FKNvVRWkSa4vmBZqYv_Jt1kkGMUc-XzTcNnR-GnIhVKXHUWxJVV3RddE8Kqh3X_TZRmyK8UySIWKxoJ2t6obUSUalPm90SBpTdoXtaljpNyormqCCYPROnk6JBym72ikSJqKHHEZVQkT0B5ggZCwPMnKagFj0ufs-VIhCF97xhDxDKcIPMWG02xxPuESaSTJJug7e_dUDoak_ZXm9xxBmOTRKwOxn5sTKthNyvVpEYPE7jIHeiRdVDOWhN5LomgCn3TqFCLpMErnqwgNYbyCBd9rNm-alYKDb6Jle4njuIBpXxQPb4euDwLd1osApaSME3nEarFWqRBzhjoqCe1Kv564s_rY7qzD1nHGvKOdpSa0ZkMcfJ0LbXSQPs7gBTSVrBFZqwlg-2F-U3Cto62-9qRR_cEu_K9ZyVwL4jWgOlngKmxV6Ku4L5mHp4KgEJSnY_78_V2nm64E--i2ZA1FhiKwIVHDOivVNhggE9oabxg54vd63glp4GfpNnmZsMOUYG9blJJpH4fDX4Ifjbw-iNBD7S2LRpP8b8vG9pb4WioGzN43lE5CysveKYWrQEZpThznxXlw1snDu_A48JiL3Lrvo1LobLhF3zFV-kQ=\",\"token_type\":\"Bearer\",\"expires_in\":3600,\"expiration\":1500470702}";
+    public static final String IAM_TOKEN_2 =
+            "{\"access_token\":\"eyJraWQiOiIyMDE3MDQwMi0wMDowMDowMCIsImFsZyI6IlJTMjU2In0.eyJpYW1faWQiOiJJQk1pZC0yNzAwMDdHRjBEIiwiaWQiOiJJQk1pZC0yNzAwMDdHRjBEIiwicmVhbG1pZCI6IklCTWlkIiwiaWRlbnRpZmllciI6IjI3MDAwN0dGMEQiLCJnaXZlbl9uYW1lIjoiVG9tIiwiZmFtaWx5X25hbWUiOiJCbGVuY2giLCJuYW1lIjoiVG9tIEJsZW5jaCIsImVtYWlsIjoidGJsZW5jaEB1ay5pYm0uY29tIiwic3ViIjoidGJsZW5jaEB1ay5pYm0uY29tIiwiYWNjb3VudCI6eyJic3MiOiI1ZTM1ZTZhMjlmYjJlZWNhNDAwYWU0YzNlMWZhY2Y2MSJ9LCJpYXQiOjE1MDA0NjcxMTEsImV4cCI6MTUwMDQ3MDcxMSwiaXNzIjoiaHR0cHM6Ly9pYW0ubmcuYmx1ZW1peC5uZXQvb2lkYy90b2tlbiIsImdyYW50X3R5cGUiOiJ1cm46aWJtOnBhcmFtczpvYXV0aDpncmFudC10eXBlOmFwaWtleSIsInNjb3BlIjoib3BlbmlkIiwiY2xpZW50X2lkIjoiZGVmYXVsdCJ9.wJ5Glsvee3xRbfxr847pNgVj-U_ZLLzOiScHcjkrHk0jQdg8D4KurAV1QGa_MwWzd_QxS55lNqCzi6HV1p3kSyjcdJSGe-l-B3_xjw-7Q3BMoPjcO-X1mNYsKQyCtSAJsuByCYQVPoNKuBifsQcds65mKh87gUtc00vP5J-vzdYpzkrjncFO3lzJJwYSnbqFaAPtNnEYwEEIpS0n9H4mgHiLqletzYs9acggssxZpUl2wdkUaQ_diuTJg-u2o6Oy3aVJCWV78DIc3NVwgQCuJ40as6QpFPWluXJmfgdW5lFkQ_etieI9JDgXk_HQUpYcj0Droec6wTXEGUYWjukhsw\",\"refresh_token\":\"M0oCn5XLXUWAFUSqC7FRv1d83-SOfPvYmKKRdZpT33C81KsTaZx3Y3jMXRGkR1sIAohEm-gkpwGQcm1I_lfs5zlqwaKlsLOv4jvjvjiaPFwoU7QP62bHWGsq0j-RNN-_kHXsp3G1R7AtndZL0XQ4se4Jlgt68Cw3_YyEcxS6E65iTv1hZ9lg1EjJqzFLd4ArQVT6gFCpSaRaH2ilie4hat5ZFI2JALHPzVnBlRBqeIUferQOL6Yw2b_Z9TvYa6AaqOsQzI5ma2yIQTw6tzjrc5xXqnqnkH566pNlY8pKvETvCsdLgEclMoa8zoe9SAXDFEIl7svNMRG9FsoR7G4rwojs2BawDPPwkEcm6aC1K5azX23GbnekhvNfXloASWc2ETerN2RxYRZNnFnO4f0enCNReMhoPCUBObgO6iq0a56VslRTT-BHYBCax_YklBz9acbhJnF-C9PWjyrYwZHFajMhpFjOmY3hlrQXVXtjOqKs5WbMhpQ8BWN5KBUDYY7F7OMvv4bYTF7kfu5Uc_ge9_Nj4EGvPwA6vehvZjSj-0td6D32p2zMDmu_yoTLRpv6N7u5BRA5_PmhH_hsffXSKX5fDNL_CqGaNvcI5tVBry8=\",\"token_type\":\"Bearer\",\"expires_in\":3600,\"expiration\":1500470711}";
+
+    // helpers for making Cookie responses
+    public static final String AUTH_COOKIE_NAME = "AuthSession";
+    public static final String IAM_COOKIE_NAME = "IAMSession";
+
+    private static String quoteValue(String value) {
+        return "\"" + value + "\"";
+    }
+
+    public static String authSession(String value) {
+        return authSessionUnquoted(quoteValue(value));
+    }
+
+    public static String authSessionUnquoted(String value) {
+        return String.format(Locale.ENGLISH, "%s=%s", AUTH_COOKIE_NAME, value);
+    }
+
+    public static String iamSession(String value) {
+        return iamSessionUnquoted(quoteValue(value));
+    }
+
+    public static String iamSessionUnquoted(String value) {
+        return String.format(Locale.ENGLISH, "%s=%s", IAM_COOKIE_NAME, value);
+    }
 
     // helper for asserts etc
-    public static String authSession(String cookie) {
-        return String.format(Locale.ENGLISH, "AuthSession=\"%s\"", cookie);
+    public static String authSessionCookie(String value, Long expiry) {
+        return setCookie(AUTH_COOKIE_NAME, value, expiry);
     }
 
-    public static String authSessionUnquoted(String cookie) {
-        return String.format(Locale.ENGLISH, "AuthSession=%s", cookie);
+    public static String iamSessionCookie(String value, Long expiry) {
+        return setCookie(IAM_COOKIE_NAME, value, expiry);
     }
 
-    public static String iamSession(String cookie) {
-        return String.format(Locale.ENGLISH, "IAMSession=\"%s\"", cookie);
+    private static String setCookie(String name, String value, Long expiry) {
+        Cookie.Builder cookieBuilder = new Cookie.Builder()
+                // Explicitly declare the localhost domain to workaround
+                // https://bugs.openjdk.java.net/browse/JDK-7169142
+                .domain("localhost.local")
+                .httpOnly()
+                .path("/")
+                .name(name)
+                .value(value);
+        if (expiry != null && expiry > 0) {
+            cookieBuilder.expiresAt(expiry);
+        }
+
+        return cookieBuilder.build().toString();
     }
 
-    public static String iamSessionUnquoted(String cookie) {
-        return String.format(Locale.ENGLISH, "IAMSession=%s", cookie);
-    }
-
-    // helper for asserts etc
-    public static String setCookie(String cookie) {
-        return String.format(Locale.ENGLISH, "%s%s", cookie, COOKIE_PROPS);
-    }
-
-    /*
-     * Note explicitly declares domain .local to workaround
-     * https://bugs.openjdk.java.net/browse/JDK-7169142
-     */
-    public static final String COOKIE_PROPS = "; Version=1; Path=/; HttpOnly; Domain=.local";
+    public static final String MOCK_COOKIE_RESPONSE_BODY =
+            "{\"ok\":true,\"name\":\"mockUser\",\"roles\":[]}";
 
     /**
      * A mock cookie response that is OK
      */
     public static final MockResponse OK_COOKIE = new MockResponse()
             .setResponseCode(200)
-            .addHeader("Set-Cookie",
-                    setCookie(authSession(EXPECTED_OK_COOKIE)))
-            .setBody("{\"ok\":true,\"name\":\"mockUser\",\"roles\":[]}");
+            .addHeader("Set-Cookie", authSessionCookie(EXPECTED_OK_COOKIE, null))
+            .setBody(MOCK_COOKIE_RESPONSE_BODY);
 
     public static final MockResponse OK_COOKIE_2 = new MockResponse()
             .setResponseCode(200)
-            .addHeader("Set-Cookie",
-                    setCookie(authSession(EXPECTED_OK_COOKIE_2)))
-            .setBody("{\"ok\":true,\"name\":\"mockUser\",\"roles\":[]}");
+            .addHeader("Set-Cookie", authSessionCookie(EXPECTED_OK_COOKIE_2, null))
+            .setBody(MOCK_COOKIE_RESPONSE_BODY);
 
     public static final MockResponse OK_IAM_COOKIE = new MockResponse()
             .setResponseCode(200)
-            .addHeader("Set-Cookie",
-                    setCookie(iamSession(EXPECTED_OK_COOKIE)))
-            .setBody("{\"ok\":true,\"name\":\"mockUser\",\"roles\":[]}");
+            .addHeader("Set-Cookie", iamSessionCookie(EXPECTED_OK_COOKIE, null))
+            .setBody(MOCK_COOKIE_RESPONSE_BODY);
 
     public static final MockResponse OK_IAM_COOKIE_2 = new MockResponse()
             .setResponseCode(200)
-            .addHeader("Set-Cookie",
-                    setCookie(iamSession(EXPECTED_OK_COOKIE_2)))
-            .setBody("{\"ok\":true,\"name\":\"mockUser\",\"roles\":[]}");
+            .addHeader("Set-Cookie", iamSessionCookie(EXPECTED_OK_COOKIE_2, null))
+            .setBody(MOCK_COOKIE_RESPONSE_BODY);
 
 
     public static final MockResponse JSON_OK = new MockResponse().setResponseCode(200).setBody
@@ -119,7 +142,9 @@ public class MockWebServerResources {
     private static SSLContext sslContext = null;
 
     public static SSLContext getSSLContext() {
-        if (sslContext != null) return sslContext;
+        if (sslContext != null) {
+            return sslContext;
+        }
         try {
             KeyStore keystore = KeyStore.getInstance("JKS");
             keystore.load(new FileInputStream(KEYSTORE_FILE), KEYSTORE_PASSWORD

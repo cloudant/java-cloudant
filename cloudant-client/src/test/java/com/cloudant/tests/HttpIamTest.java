@@ -23,7 +23,6 @@ import static com.cloudant.tests.util.MockWebServerResources.OK_IAM_COOKIE;
 import static com.cloudant.tests.util.MockWebServerResources.OK_IAM_COOKIE_2;
 import static com.cloudant.tests.util.MockWebServerResources.iamSession;
 import static com.cloudant.tests.util.MockWebServerResources.iamSessionUnquoted;
-import static com.cloudant.tests.util.MockWebServerResources.setCookie;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
@@ -35,7 +34,6 @@ import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.http.Http;
 
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 

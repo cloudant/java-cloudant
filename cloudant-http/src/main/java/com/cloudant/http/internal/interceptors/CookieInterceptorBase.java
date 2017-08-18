@@ -30,7 +30,6 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
@@ -54,6 +53,8 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
     CookieInterceptorBase(String sessionRequestMimeType, String baseUrl, String endpoint) {
         this.sessionRequestMimeType = sessionRequestMimeType;
         try {
+            baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length()-1): baseUrl;
+            endpoint = endpoint.startsWith("/") ? endpoint : "/" + endpoint;
             this.sessionURL = new URL(String.format("%s%s", baseUrl, endpoint));
         } catch (MalformedURLException e) {
             // this should be a valid URL since the builder is passing it in
