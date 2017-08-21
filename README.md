@@ -88,6 +88,17 @@ CloudantClient client = ClientBuilder.account("example")
 //              .password("examplePassword")
 //              .build();
 
+// Note: there are some convenience methods for IBM Bluemix
+//
+// To use the URL and credentials provided in VCAP metadata:
+// ClientBuilder.bluemix(String vcapMetadata)
+//              .build();
+//
+// To use an IAM API key:
+// ClientBuilder.url("examplebluemixaccount.cloudant.com")
+//              .iamApiKey("exampleApiKey")
+//              .build();
+
 // Show the server version
 System.out.println("Server Version: " + client.serverVersion());
 
