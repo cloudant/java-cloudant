@@ -2,6 +2,7 @@
 - [NEW] Add IAM cookie authentication method.
 - [IMPROVED] Clarified documentation for search indexes.
 - [FIXED] Connection leaks in some session renewal error scenarios.
+- [UPGRADED] Optional OkHttp dependency to version 3.8.1.
 
 # 2.9.0 (2017-04-26)
 - [NEW] Add faceted search variable argument to `drillDown` method allowing multiple drill down
