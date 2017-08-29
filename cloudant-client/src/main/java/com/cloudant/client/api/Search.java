@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright (c) 2015, 2017 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -46,9 +46,12 @@ import java.util.logging.Logger;
 
 /**
  * This class provides access to the Cloudant <tt>Search</tt> APIs.
+ * <p><b>Note</b>: The design document name and search index name are required.
+ * Do not include the {@code _design} prefix from the {@code _id} of the design document.
  * <p>Usage Example:</p>
  * <pre>
  * {@code
+ *  // Search query using design document _id '_design/views101' and search index 'animals'
  *  List<Bird> birds = db.search("views101/animals")
  * 	.limit(10)
  * 	.includeDocs(true)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 IBM Corp. All rights reserved.
+ * Copyright (c) 2016, 2017 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -441,7 +441,18 @@ public class Database {
     /**
      * Provides access to Cloudant <tt>Search</tt> APIs.
      *
-     * @param searchIndexId the name of the index to search
+     * <p>Example usage:</p>
+     * <pre>
+     * {@code
+     *  // Search query using design document _id '_design/views101' and search index 'animals'
+     *  List<Bird> birds = db.search("views101/animals")
+     * 	.limit(10)
+     * 	.includeDocs(true)
+     * 	.query("class:bird", Bird.class);
+     * 	}
+     * </pre>
+     *
+     * @param searchIndexId the design document with the name of the index to search
      * @return Search object for searching the index
      * @see <a target="_blank" href="https://docs.cloudant.com/search.html">Search</a>
      */
