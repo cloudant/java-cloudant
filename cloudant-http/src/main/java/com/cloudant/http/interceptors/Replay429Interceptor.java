@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 IBM Corp. All rights reserved.
+ * Copyright © 2016, 2017 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -16,12 +16,10 @@ package com.cloudant.http.interceptors;
 
 import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
+import com.cloudant.http.internal.Utils;
 import com.cloudant.http.internal.interceptors.HttpConnectionInterceptorException;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -137,17 +135,8 @@ public class Replay429Interceptor implements HttpConnectionResponseInterceptor {
                     }
                 }
                 // Read the reasons and log a warning
-                InputStream errorStream = urlConnection.getErrorStream();
-                try {
-                    String errorString = IOUtils.toString(errorStream, "UTF-8");
-                    logger.warning(errorString + " will retry in " +
-                            sleepTime + " ms");
-
-                } finally {
-                    errorStream.close();
-                }
-
-
+                String errorString = Utils.collectAndCloseStream(urlConnection.getErrorStream());
+                logger.warning(errorString + " will retry in " + sleepTime + " ms");
                 logger.fine("Too many requests backing off for " + sleepTime + " ms.");
 
                 // Sleep the thread for the appropriate backoff time

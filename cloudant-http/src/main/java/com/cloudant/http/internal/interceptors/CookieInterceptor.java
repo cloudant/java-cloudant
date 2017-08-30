@@ -14,29 +14,17 @@
 
 package com.cloudant.http.internal.interceptors;
 
-import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionInterceptorContext;
-import com.cloudant.http.HttpConnectionRequestInterceptor;
-import com.cloudant.http.HttpConnectionResponseInterceptor;
-
-import org.apache.commons.io.IOUtils;
+import com.cloudant.http.internal.Utils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.CookieManager;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.URLEncoder;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Adds cookie authentication support to http requests.
@@ -89,18 +77,15 @@ public class CookieInterceptor extends CookieInterceptorBase {
 
                 if (statusCode == HttpURLConnection.HTTP_FORBIDDEN || statusCode ==
                         HttpURLConnection.HTTP_UNAUTHORIZED) {
+                    // Get the string value of the error stream
                     InputStream errorStream = connection.getErrorStream();
                     String errorString = null;
                     if (errorStream != null) {
-                        try {
-                            // Get the string value of the error stream
-                            errorString = IOUtils.toString(errorStream, "UTF-8");
-                        } finally {
-                            IOUtils.closeQuietly(errorStream);
-                        }
+                        errorString = Utils.collectAndCloseStream(connection
+                                .getErrorStream());
+                        logger.log(Level.FINE, String.format(Locale.ENGLISH, "Intercepted " +
+                                "response %d %s", statusCode, errorString));
                     }
-                    logger.log(Level.FINE, String.format(Locale.ENGLISH, "Intercepted " +
-                            "response %d %s", statusCode, errorString));
                     switch (statusCode) {
                         case HttpURLConnection.HTTP_FORBIDDEN: //403
                             // Check if it was an expiry case
