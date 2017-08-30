@@ -17,14 +17,17 @@ package com.cloudant.tests;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
+import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 import com.cloudant.http.internal.interceptors.CookieInterceptor;
 import com.cloudant.http.internal.interceptors.IamCookieInterceptor;
+import com.cloudant.http.internal.ok.OkHttpClientHttpUrlConnectionFactory;
 import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 import com.cloudant.tests.util.MockWebServerResources;
 
@@ -39,6 +42,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest {
 
@@ -108,9 +112,17 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
     private void executeTest(Long expiryTime, String cookieValue) throws Exception {
         queueResponses(expiryTime, cookieValue);
         HttpConnection conn = Http.GET(mockWebServer.url("/").url());
+        conn.connectionFactory = (okUsable) ? new OkHttpClientHttpUrlConnectionFactory() :
+                new DefaultHttpUrlConnectionFactory();
         conn.requestInterceptors.add(rqInterceptor);
         conn.responseInterceptors.add(rpInterceptor);
-        conn.execute();
+        conn = conn.execute();
+
+        // Consume response stream and assert ok: true
+        String responseStr = conn.responseAsString();
+        String okPattern = ".*\"ok\"\\s*:\\s*true.*";
+        assertTrue("There should be an ok response: " + responseStr, Pattern.compile(okPattern,
+                Pattern.DOTALL).matcher(responseStr).matches());
 
         // Assert the _session request
         RecordedRequest sessionRequest = mockWebServer.takeRequest(MockWebServerResources

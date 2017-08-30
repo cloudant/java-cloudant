@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2016 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2017 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -29,6 +29,7 @@ import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.client.org.lightcouch.PreconditionFailedException;
 import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
 import com.cloudant.http.internal.interceptors.UserAgentInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
@@ -415,8 +416,10 @@ public class CloudantClientTests {
         server.enqueue(MockWebServerResources.OK_COOKIE);
         server.enqueue(MockWebServerResources.JSON_OK);
 
-        c.executeRequest(Http.GET(c.getBaseUri()));
-
+        HttpConnection conn = c.executeRequest(Http.GET(c.getBaseUri()));
+        // Consume response stream and assert ok: true
+        String responseStr = conn.responseAsString();
+        assertNotNull(responseStr);
 
         // One request to _session then one to get info
         assertEquals("There should be two requests", 2, server.getRequestCount());

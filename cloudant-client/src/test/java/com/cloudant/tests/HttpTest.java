@@ -50,6 +50,7 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -562,6 +563,9 @@ public class HttpTest extends HttpFactoryParameterizedTest {
                 try {
                     if (444 == context.connection.getConnection().getResponseCode()) {
                         context.replayRequest = true;
+                        // Close the error stream
+                        InputStream errors = context.connection.getConnection().getErrorStream();
+                        if (errors != null) IOUtils.closeQuietly(errors);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
