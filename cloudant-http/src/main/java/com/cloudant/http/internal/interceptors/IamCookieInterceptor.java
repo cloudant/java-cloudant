@@ -30,20 +30,23 @@ import java.util.concurrent.atomic.AtomicReference;
 public class IamCookieInterceptor extends CookieInterceptorBase {
 
     // for refreshing the bearer token from IAM
-    private byte[] iamSessionRequestBody;
+    private byte[] iamTokenRequestBody;
 
     // where the IAM server endpoint lives
-    private final URL iamSessionUrl;
+    private final URL iamServerUrl;
 
-    public IamCookieInterceptor(String apiKey, URL iamSessionUrl, String baseUrl) {
+    public IamCookieInterceptor(String apiKey, URL iamServerUrl, String baseUrl) {
 
+        // Configure this interceptor to get _iam_session cookies
         super("application/json", baseUrl, "/_iam_session");
-        this.iamSessionUrl = iamSessionUrl;
-        String sessionRequestBody = String.format(Locale.ENGLISH,
+
+        // Configure the IAM token request content
+        this.iamServerUrl = iamServerUrl;
+        String tokenRequestBody = String.format(Locale.ENGLISH,
                 "grant_type=urn:ibm:params:oauth:grant-type:apikey&response_type=cloud_iam&apikey" +
                         "=%s", apiKey);
         try {
-            this.iamSessionRequestBody = sessionRequestBody.getBytes("UTF-8");
+            this.iamTokenRequestBody = tokenRequestBody.getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
             //all JVMs should support UTF-8, so this should not happen
             throw new RuntimeException(e);
@@ -69,7 +72,7 @@ public class IamCookieInterceptor extends CookieInterceptorBase {
     // get bearer token returned by IAM in JSON format
     private String getBearerToken(HttpConnectionInterceptorContext context) {
         final AtomicReference<String> iamTokenResponse = new AtomicReference<String>();
-        boolean result = super.requestCookie(context, iamSessionUrl, iamSessionRequestBody,
+        boolean result = super.requestCookie(context, iamServerUrl, iamTokenRequestBody,
                 "application/x-www-form-urlencoded", "application/json",
                 new StoreBearerCallable(iamTokenResponse));
         if (result) {

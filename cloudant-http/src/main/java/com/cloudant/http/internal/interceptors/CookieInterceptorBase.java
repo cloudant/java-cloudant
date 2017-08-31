@@ -19,8 +19,7 @@ import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
-
-import org.apache.commons.io.IOUtils;
+import com.cloudant.http.internal.Utils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -125,6 +124,9 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
                     boolean success = requestCookie(context);
                     if (success) {
                         context.replayRequest = true;
+                        // Consume the error stream to avoid leaking connections
+                        Utils.consumeAndCloseStream(connection.getErrorStream());
+                        logger.log(Level.FINEST, "Consumed error response");
                     } else {
                         context.replayRequest = false; // Don't replay
                         shouldAttemptCookieRequest.set(false); // Set the flag to stop trying
@@ -138,7 +140,6 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
             logger.log(Level.SEVERE, "Error reading response code or body from request", e);
         }
         return context;
-
     }
 
     // helper for requestCookie
@@ -171,17 +172,11 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
             if (responseCode / 100 == 2) {
                 return onResponseOk.call(connection);
             } else {
-                InputStream errorStream = connection.getConnection().getErrorStream();
-                try {
-                    if (errorStream != null) {
-                        // Consume the error stream to avoid leaking connections
-                        String error = IOUtils.toString(errorStream, "UTF-8");
-                        // Log the error stream content
-                        logger.fine(error);
-                    }
-                } finally {
-                    IOUtils.closeQuietly(errorStream);
-                }
+                // Consume the error stream to avoid leaking connections
+                String error = Utils.collectAndCloseStream(connection.getConnection()
+                        .getErrorStream());
+                // Log the error stream content
+                logger.fine(error);
                 if (responseCode == 401) {
                     logger.log(Level.SEVERE, "Credentials are incorrect for server {0}, cookie " +
                             "authentication will not be attempted again by this interceptor " +
@@ -211,6 +206,10 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
                         if (sessionHasStarted(connection.responseAsInputStream())) {
                             return storeCookiesFromResponse(connection.getConnection());
                         } else {
+                            // If the session did not start, consume the error stream to avoid
+                            // leaking connections.
+                            Utils.consumeAndCloseStream(connection.getConnection().getErrorStream
+                                    ());
                             return false;
                         }
                     }
@@ -219,23 +218,18 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
     }
 
     private boolean sessionHasStarted(InputStream responseStream) throws IOException {
-        try {
-            // Get the response body as a string
-            String response = IOUtils.toString(responseStream, "UTF-8");
+        // Get the response body as a string
+        String response = Utils.collectAndCloseStream(responseStream);
 
-            // Only check for ok:true, https://issues.apache.org/jira/browse/COUCHDB-1356
-            // means we cannot check that the name returned is the one we sent.
+        // Only check for ok:true, https://issues.apache.org/jira/browse/COUCHDB-1356
+        // means we cannot check that the name returned is the one we sent.
 
-            // Check the response body for "ok" : true using a regex because we don't want a JSON
-            // library dependency for something so simple in a shared HTTP artifact used in both
-            // java-cloudant and sync-android. Note (?siu) flags used for . to also match line
-            // breaks and for unicode case insensitivity.
+        // Check the response body for "ok" : true using a regex because we don't want a JSON
+        // library dependency for something so simple in a shared HTTP artifact used in both
+        // java-cloudant and sync-android. Note (?siu) flags used for . to also match line
+        // breaks and for unicode case insensitivity.
 
-            return response.matches("(?s)(?i)(?u).*\\\"ok\\\"\\s*:\\s*true.*");
-        } finally {
-            IOUtils.closeQuietly(responseStream);
-        }
-
+        return response.matches("(?s)(?i)(?u).*\\\"ok\\\"\\s*:\\s*true.*");
     }
 
     protected boolean storeCookiesFromResponse(HttpURLConnection connection) {

@@ -1,4 +1,4 @@
-//  Copyright (c) 2015, 2016 IBM Corp. All rights reserved.
+//  Copyright © 2015, 2017 IBM Corp. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -11,8 +11,9 @@
 package com.cloudant.http;
 
 import com.cloudant.http.interceptors.BasicAuthInterceptor;
-import com.cloudant.http.internal.interceptors.HttpConnectionInterceptorException;
 import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
+import com.cloudant.http.internal.Utils;
+import com.cloudant.http.internal.interceptors.HttpConnectionInterceptorException;
 
 import org.apache.commons.io.IOUtils;
 
@@ -318,8 +319,8 @@ public class HttpConnection {
                     IOUtils.copyLarge(is, os, new byte[16 * 1024]);
                     os.flush();
                 } finally {
-                    IOUtils.closeQuietly(is);
-                    IOUtils.closeQuietly(os);
+                    Utils.close(is);
+                    Utils.close(os);
                 }
             }
 
@@ -353,6 +354,13 @@ public class HttpConnection {
 
             // retry flag is set from the final step in the response interceptRequest pipeline
             retry = currentContext.replayRequest;
+
+            // If we're going to retry we should consume any existing error streams to avoid
+            // leaking connections. Consuming the stream is preferable to just closing it as it
+            // makes the connection eligible for re-use.
+            if (retry && numberOfRetries > 0) {
+                Utils.consumeAndCloseStream(connection.getErrorStream());
+            }
 
             if (numberOfRetries == 0) {
                 logger.info("Maximum number of retries reached");
@@ -393,7 +401,7 @@ public class HttpConnection {
         try {
             return IOUtils.toByteArray(is);
         } finally {
-            IOUtils.closeQuietly(is);
+            Utils.close(is);
             disconnect();
         }
 

@@ -34,6 +34,7 @@ import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.http.Http;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -45,6 +46,7 @@ import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 
 import java.nio.charset.Charset;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by tomblench on 30/06/2017.
@@ -62,33 +64,58 @@ public class HttpIamTest {
     final static String iamApiKey = "iam";
     final static String iamTokenEndpoint = "/oidc/token";
 
+    private static final AtomicReference<String> mockIamTokenEndpointUrl = new AtomicReference<String>();
+
+    @BeforeClass
+    public static void setupSystemPropertyMock() {
+        new SystemMock();
+    }
+
     /**
      * Mock System.getProperty to fake the value of the IAM server
      *
      * Do this instead of setting the property in the real System because it pollutes the JVM
      */
-    class SystemMock extends MockUp<System> {
+    static class SystemMock extends MockUp<System> {
+
+        volatile boolean useMock = true;
 
         @Mock
-        public String getProperty(Invocation inv, String key) {
-            if (key.equals("com.cloudant.client.iamserver")) {
-                return mockIamServer.url(iamTokenEndpoint).toString();
+        public synchronized String getProperty(Invocation inv, String key) {
+            if (useMock) {
+                if (key.equals("com.cloudant.client.iamserver")) {
+                    return mockIamTokenEndpointUrl.get();
+                }
+                    return inv.proceed(key);
+            } else {
+                return System.getProperty(key);
             }
-            return inv.proceed(key);
         }
 
         @Mock
-        public String getProperty(Invocation inv, String key, String def) {
-            if (key.equals("com.cloudant.client.iamserver")) {
-                return mockIamServer.url(iamTokenEndpoint).toString();
+        public synchronized String getProperty(Invocation inv, String key, String def) {
+            if (useMock) {
+                if (key.equals("com.cloudant.client.iamserver")) {
+                    return mockIamTokenEndpointUrl.get();
+                }
+                return inv.proceed(key, def);
+            } else {
+                return System.getProperty(key, def);
             }
-            return inv.proceed(key, def);
+        }
+
+        @Override
+        synchronized protected void onTearDown() {
+            // The mock is tearing down, set the flag which will re-direct to System.getProperty
+            // instead of proceeding with the invocation.
+            useMock = false;
+            super.onTearDown();
         }
     }
 
     @Before
-    public void setupSystemMock() {
-        new SystemMock();
+    public void setIAMMockEndpoint() {
+        mockIamTokenEndpointUrl.set(mockIamServer.url(iamTokenEndpoint).toString());
     }
 
     /**
