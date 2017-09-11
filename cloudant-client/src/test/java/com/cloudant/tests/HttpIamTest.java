@@ -33,6 +33,7 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.http.Http;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -64,58 +65,10 @@ public class HttpIamTest {
     final static String iamApiKey = "iam";
     final static String iamTokenEndpoint = "/oidc/token";
 
-    private static final AtomicReference<String> mockIamTokenEndpointUrl = new AtomicReference<String>();
-
-    @BeforeClass
-    public static void setupSystemPropertyMock() {
-        new SystemMock();
-    }
-
-    /**
-     * Mock System.getProperty to fake the value of the IAM server
-     *
-     * Do this instead of setting the property in the real System because it pollutes the JVM
-     */
-    static class SystemMock extends MockUp<System> {
-
-        volatile boolean useMock = true;
-
-        @Mock
-        public synchronized String getProperty(Invocation inv, String key) {
-            if (useMock) {
-                if (key.equals("com.cloudant.client.iamserver")) {
-                    return mockIamTokenEndpointUrl.get();
-                }
-                    return inv.proceed(key);
-            } else {
-                return System.getProperty(key);
-            }
-        }
-
-        @Mock
-        public synchronized String getProperty(Invocation inv, String key, String def) {
-            if (useMock) {
-                if (key.equals("com.cloudant.client.iamserver")) {
-                    return mockIamTokenEndpointUrl.get();
-                }
-                return inv.proceed(key, def);
-            } else {
-                return System.getProperty(key, def);
-            }
-        }
-
-        @Override
-        synchronized protected void onTearDown() {
-            // The mock is tearing down, set the flag which will re-direct to System.getProperty
-            // instead of proceeding with the invocation.
-            useMock = false;
-            super.onTearDown();
-        }
-    }
-
     @Before
     public void setIAMMockEndpoint() {
-        mockIamTokenEndpointUrl.set(mockIamServer.url(iamTokenEndpoint).toString());
+        IamSystemPropertyMock iamSystemPropertyMock =
+                new IamSystemPropertyMock(mockIamServer.url(iamTokenEndpoint).toString());
     }
 
     /**
@@ -138,6 +91,60 @@ public class HttpIamTest {
         mockIamServer.enqueue(new MockResponse().setResponseCode(200).setBody(IAM_TOKEN));
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .iamApiKey(iamApiKey)
+                .build();
+
+        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        assertEquals("The expected response should be received", hello, response);
+
+        // cloudant mock server
+        // assert that there were 2 calls
+        RecordedRequest[] recordedRequests = takeN(mockWebServer, 2);
+
+        assertEquals("The request should have been for /_iam_session", "/_iam_session",
+                recordedRequests[0].getPath());
+        assertThat("The request body should contain the IAM token",
+                recordedRequests[0].getBody().readString(Charset.forName("UTF-8")),
+                containsString(IAM_TOKEN));
+        // the request should have the cookie header
+        assertEquals("The request should have been for /", "/",
+                recordedRequests[1].getPath());
+        // The cookie may or may not have the session id quoted, so check both
+        assertThat("The Cookie header should contain the expected session value",
+                recordedRequests[1].getHeader("Cookie"),
+                anyOf(containsString(iamSession(EXPECTED_OK_COOKIE)),
+                        containsString(iamSessionUnquoted(EXPECTED_OK_COOKIE))));
+
+        // asserts on the IAM server
+        // assert that there was 1 call
+        RecordedRequest[] recordedIamRequests = takeN(mockIamServer, 1);
+        assertEquals("The request should have been for /oidc/token", iamTokenEndpoint,
+                recordedIamRequests[0].getPath());
+        assertThat("The request body should contain the IAM API key",
+                recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
+                containsString("apikey="+iamApiKey));
+    }
+
+    /**
+     * Assert that the IAM API key is preferred to username/password if both are supplied.
+     * As above test but with different builder arguments.
+     * @throws Exception
+     */
+    @Test
+    public void iamApiKeyPreferredToUsernamePassword() throws Exception {
+
+        // Request sequence
+        // _iam_session request to get Cookie
+        // GET request -> 200 with a Set-Cookie
+        mockWebServer.enqueue(OK_IAM_COOKIE);
+        mockWebServer.enqueue(new MockResponse().setResponseCode(200)
+                .setBody(hello));
+
+        mockIamServer.enqueue(new MockResponse().setResponseCode(200).setBody(IAM_TOKEN));
+
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .username("username")
+                .password("password")
                 .iamApiKey(iamApiKey)
                 .build();
 

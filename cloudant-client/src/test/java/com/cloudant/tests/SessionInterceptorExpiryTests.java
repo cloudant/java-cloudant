@@ -31,6 +31,7 @@ import com.cloudant.http.internal.ok.OkHttpClientHttpUrlConnectionFactory;
 import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 import com.cloudant.tests.util.MockWebServerResources;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -78,8 +79,9 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
             rqInterceptor = ci;
             rpInterceptor = ci;
         } else if (sessionPath.equals("/_iam_session")) {
-            IamCookieInterceptor ici = new IamCookieInterceptor("apikey", mockIamServer.url
-                    ("/oidc/token").url(), baseUrl);
+                IamSystemPropertyMock iamSystemPropertyMock =
+                        new IamSystemPropertyMock(mockIamServer.url("/oidc/token").toString());
+            IamCookieInterceptor ici = new IamCookieInterceptor("apikey", baseUrl);
             rqInterceptor = ici;
             rpInterceptor = ici;
         } else {

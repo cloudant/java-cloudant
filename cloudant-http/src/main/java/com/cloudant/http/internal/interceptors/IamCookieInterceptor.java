@@ -19,6 +19,7 @@ import com.cloudant.http.HttpConnectionInterceptorContext;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,13 +36,20 @@ public class IamCookieInterceptor extends CookieInterceptorBase {
     // where the IAM server endpoint lives
     private final URL iamServerUrl;
 
-    public IamCookieInterceptor(String apiKey, URL iamServerUrl, String baseUrl) {
+    public IamCookieInterceptor(String apiKey, String baseUrl) {
 
         // Configure this interceptor to get _iam_session cookies
         super("application/json", baseUrl, "/_iam_session");
 
+        // Read iamServer from system property, or set default
+        try {
+            this.iamServerUrl = new URL(System.getProperty("com.cloudant.client.iamserver",
+                    "https://iam.bluemix.net/oidc/token"));
+        } catch (MalformedURLException mue) {
+            throw new RuntimeException("IAM server property was not a valid URL", mue);
+        }
+
         // Configure the IAM token request content
-        this.iamServerUrl = iamServerUrl;
         String tokenRequestBody = String.format(Locale.ENGLISH,
                 "grant_type=urn:ibm:params:oauth:grant-type:apikey&response_type=cloud_iam&apikey" +
                         "=%s", apiKey);
