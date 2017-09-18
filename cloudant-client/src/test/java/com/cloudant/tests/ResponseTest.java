@@ -151,7 +151,8 @@ public class ResponseTest {
                     public HttpConnectionInterceptorContext interceptRequest
                             (HttpConnectionInterceptorContext context) {
                         if (badHeaderEnabled.get()) {
-                            String badHeaderCharacters = "() <> @ , ; \\ / [] ? =";
+                            // Note space is also a bad char, but OkHttp prohibits them
+                            String badHeaderCharacters = "()<>@,;\\/[]?=";
                             //set a header using characters that are not permitted
                             context.connection.requestProperties.put(badHeaderCharacters,
                                     badHeaderCharacters);
