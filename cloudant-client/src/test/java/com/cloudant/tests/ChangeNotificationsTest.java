@@ -17,6 +17,7 @@ package com.cloudant.tests;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -42,6 +43,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -88,6 +90,41 @@ public class ChangeNotificationsTest {
     }
 
     @Test
+    public void changes_normalFeed_withSeqInterval() {
+        for(int i = 0; i < 100; i++) {
+            db.save(new Foo());
+        }
+
+        ChangesResult changes = db.changes()
+                .includeDocs(true)
+                .sequenceInterval(10)
+                .getChanges();
+
+        List<ChangesResult.Row> rows = changes.getResults();
+
+        int seqCount = 0;
+        for (Row row : rows) {
+            List<ChangesResult.Row.Rev> revs = row.getChanges();
+            String docId = row.getId();
+            JsonObject doc = row.getDoc();
+            String seq = row.getSeq();
+            if(!seq.equals("null")) {
+                seqCount++;
+            }
+
+            assertNotNull(revs);
+            assertNotNull(docId);
+            assertNotNull(doc);
+        }
+        // first change always contains a seq
+        assertNotNull(rows.get(0).getSeq());
+        assertEquals(10, seqCount);
+
+
+        assertThat(rows.size(), is(100));
+    }
+
+    @Test
     public void changes_continuousFeed() {
         db.save(new Foo());
 
@@ -111,6 +148,45 @@ public class ChangeNotificationsTest {
             assertNotNull(feedObject);
 
             changes.stop();
+        }
+    }
+
+    @Test
+    public void changes_continuousFeed_withSeqInterval() {
+        //db.save(new Foo());
+
+        DbInfo dbInfo = db.info();
+        String since = dbInfo.getUpdateSeq();
+
+        Changes changes = db.changes()
+                .includeDocs(true)
+                .since(since)
+                .heartBeat(30000)
+                .sequenceInterval(2)
+                .continuousChanges();
+
+        Response firstDocResp = db.save(new Foo());
+        Response secondDocResp = db.save(new Foo());
+        List<Response> responses = new ArrayList<Response>();
+        responses.add(firstDocResp);
+        responses.add(secondDocResp);
+
+        int docCount = 0;
+        while (changes.hasNext()) {
+            ChangesResult.Row feed = changes.next();
+            final JsonObject feedObject = feed.getDoc();
+            final String docId = feed.getId();
+
+            assertEquals(responses.get(docCount).getId(), docId);
+            assertNotNull(feedObject);
+
+            if(docCount == 1) {
+                assertEquals("null", feed.getSeq());
+                changes.stop();
+            } else {
+                assertNotNull(feed.getSeq());
+            }
+            docCount++;
         }
     }
 

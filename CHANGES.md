@@ -1,5 +1,6 @@
 # 2.10.0 (Unreleased)
 - [NEW] Add IAM cookie authentication method.
+- [NEW] Added sequence interval option to Changes API.
 - [IMPROVED] Clarified documentation for search indexes.
 - [FIXED] Connection leaks in some session renewal error scenarios.
 - [UPGRADED] Optional OkHttp dependency to version 3.8.1.

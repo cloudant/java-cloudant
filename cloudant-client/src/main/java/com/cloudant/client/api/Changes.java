@@ -256,6 +256,19 @@ public class Changes {
         return this;
     }
 
+    /**
+     * Specify that sequence information only be generated every N changes.
+     * Larger values can improve changes throughput with CouchDB 2.0 and later.
+     * Note: `last_seq` is always populated regardless.
+     * @param seqInterval the number of changes between generating sequence information
+     * @return this Changes instance
+     * @since 2.10.0
+     */
+    public Changes sequenceInterval(int seqInterval) {
+        this.databaseHelper.query("seq_interval", seqInterval);
+        return this;
+    }
+
     // Helper
 
     /**
