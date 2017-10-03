@@ -162,7 +162,6 @@ public class ClientBuilder {
     private long readTimeout = DEFAULT_READ_TIMEOUT;
     private TimeUnit readTimeoutUnit = TimeUnit.MINUTES;
     private String iamApiKey;
-    private URL iamServer;
 
     /**
      * Constructs a new ClientBuilder for building a CloudantClient instance to connect to the
@@ -254,17 +253,9 @@ public class ClientBuilder {
 
         if (this.iamApiKey != null) {
 
-            // read iamServer from system property
-            try {
-                this.iamServer = new URL(System.getProperty("com.cloudant.client.iamserver",
-                        "https://iam.bluemix.net/oidc/token"));
-            } catch (MalformedURLException mue) {
-                throw new CouchDbException("IAM server property was not a valid URL", mue);
-            }
-
             // Create IAM cookie interceptor and set in HttpConnection interceptors
             IamCookieInterceptor cookieInterceptor = new IamCookieInterceptor(this.iamApiKey,
-                    this.iamServer, this.url.toString());
+                    this.url.toString());
 
             props.addRequestInterceptors(cookieInterceptor);
             props.addResponseInterceptors(cookieInterceptor);
