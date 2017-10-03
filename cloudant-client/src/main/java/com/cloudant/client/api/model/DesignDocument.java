@@ -444,24 +444,29 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
         }
 
         /**
+         * <p>
          * Set the name of a database to copy the reduced view results into.
-         * <P>
-         * For more information, including an explanation of the potential performance impact of
-         * this option see the <a target="_blank"
-         * href="https://docs.cloudant.com/creating_views.html#dbcopy">
-         * Cloudant dbcopy documentation
-         * </a>.
-         * </P>
+         * </p>
+         * <p>
+         * Use of the {@code dbcopy} feature is deprecated and is strongly discouraged.
+         * For more information, see the <a target="_blank" href=
+         * "https://console.bluemix.net/docs//services/Cloudant/release_info/deprecations.html#-dbcopy-">
+         * Bluemix documentation</a> for this feature.
+         * </p>
          *
          * @param databaseName of the database to store reduced view results in
+         * @see #getDbCopy()
          */
+        @Deprecated
         public void setDbCopy(String databaseName) {
             this.dbcopy = databaseName;
         }
 
         /**
          * @return the database name where reduced view results will be stored, or null if unset
+         * @see #setDbCopy(String)
          */
+        @Deprecated
         public String getDbCopy() {
             return dbcopy;
         }
