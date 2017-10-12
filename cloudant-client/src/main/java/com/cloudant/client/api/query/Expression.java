@@ -86,7 +86,7 @@ public class Expression implements OperationOrExpression {
         return new Expression(lhs, "$regex", rhs);
     }
 
-    public static Expression all(String lhs, String... rhs) {
+    public static Expression all(String lhs, Object... rhs) {
         if (rhs.length == 1) {
             throw new IllegalArgumentException("rhs must have more than 1 elements");
         }
