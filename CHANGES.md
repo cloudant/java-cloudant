@@ -1,4 +1,10 @@
 # UNRELEASED
+- [NEW] Index creation APIs and builders including support for text indexes.
+- [DEPRECATED] Old index creation and listing APIs:
+    - `com.cloudant.client.api.model.Index`
+    - `com.cloudant.client.api.model.IndexField`
+    - `com.cloudant.client.api.Database.createIndex(java.lang.String, java.lang.String, java.lang.String, com.cloudant.client.api.model.IndexField[])`
+    - `com.cloudant.client.api.Database.listIndices`
 
 # 2.11.0 (2017-11-21)
 - [NEW] Added an extra bluemix method to the client builder allowing a custom service name to be
@@ -12,7 +18,7 @@
 - [IMPROVED] Updated documentation by replacing deprecated Cloudant links with the latest bluemix.net
   links.
 - [IMPROVED] Clarified documentation for search indexes.
-- [IMPROVED] Added `Row#getError` and `AllDocsResponse#getErrors` for returning any error messages 
+- [IMPROVED] Added `Row#getError` and `AllDocsResponse#getErrors` for returning any error messages
   from a `view` or `_all_docs` request.
 - [FIXED] Connection leaks in some session renewal error scenarios.
 - [FIXED] IllegalStateException now correctly thrown for additional case of calling

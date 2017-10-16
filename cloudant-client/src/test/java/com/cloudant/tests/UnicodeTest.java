@@ -17,8 +17,9 @@ package com.cloudant.tests;
 import static org.junit.Assert.assertEquals;
 
 import com.cloudant.client.api.Database;
-import com.cloudant.client.api.model.Index;
-import com.cloudant.client.api.model.IndexField;
+import com.cloudant.client.api.query.Field;
+import com.cloudant.client.api.query.Index;
+import com.cloudant.client.api.query.JsonIndex;
 import com.cloudant.client.api.views.Key;
 import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.http.Http;
@@ -339,13 +340,14 @@ public class UnicodeTest {
     @Test
     @Category(RequiresCloudant.class)
     public void testUnicodeInObject() throws Exception {
-        db.createIndex(
-                "myview", "mydesigndoc", "json",
-                new IndexField[]{
-                        new IndexField("foo", IndexField.SortOrder.asc)
-                });
+        db.createIndex(JsonIndex.builder()
+                .name("myview")
+                .designDocument("mydesigndoc")
+                .asc("foo")
+                .definition());
+
         // Show the indices.
-        for (Index index : db.listIndices()) {
+        for (Index<Field> index : db.listIndexes().allIndexes()) {
             TEST_LOG.logger.info(index.toString());
         }
         // Create an object.
