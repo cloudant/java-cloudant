@@ -21,6 +21,7 @@ public class Expression implements OperationOrExpression {
     private String lhs;
     private String op;
     private Object[] rhs;
+    private boolean single;
 
     public Expression(String lhs, String op, Object... rhs) {
         this.lhs = lhs;
@@ -56,22 +57,24 @@ public class Expression implements OperationOrExpression {
         return new Expression(lhs, "$exists", rhs);
     }
 
-    public static Expression type(String lhs, String rhs) {
-        return new Expression(lhs, "$type", rhs);
+    public static Expression type(String lhs, Type rhs) {
+        return new Expression(lhs, "$type", rhs.toString());
     }
 
     public static Expression in(String lhs, Object... rhs) {
+        Expression ex = new Expression(lhs, "$in", rhs);
         if (rhs.length == 1) {
-            throw new IllegalArgumentException("rhs must have more than 1 elements");
+            ex.single = true;
         }
-        return new Expression(lhs, "$in", rhs);
+        return ex;
     }
 
     public static Expression nin(String lhs, Object... rhs) {
+        Expression ex = new Expression(lhs, "$nin", rhs);
         if (rhs.length == 1) {
-            throw new IllegalArgumentException("rhs must have more than 1 elements");
+            ex.single = true;
         }
-        return new Expression(lhs, "$nin", rhs);
+        return ex;
     }
 
     public static Expression size(String lhs, Long rhs) {
@@ -87,16 +90,17 @@ public class Expression implements OperationOrExpression {
     }
 
     public static Expression all(String lhs, Object... rhs) {
+        Expression ex = new Expression(lhs, "$all", rhs);
         if (rhs.length == 1) {
-            throw new IllegalArgumentException("rhs must have more than 1 elements");
+            ex.single = true;
         }
-        return new Expression(lhs, "$all", rhs);
+        return ex;
     }
 
     @Override
     public String toString() {
         // lhs op rhs format
-        return String.format("\"%s\": {\"%s\": %s}", this.lhs, this.op, quote(this.rhs));
+        return String.format("\"%s\": {\"%s\": %s}", this.lhs, this.op, quote(this.rhs, this.single));
     }
 
 }

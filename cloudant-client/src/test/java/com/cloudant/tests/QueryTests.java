@@ -31,6 +31,8 @@ import static com.cloudant.client.api.query.PredicatedOperation.elemMatch;
 
 import com.cloudant.client.api.query.PredicateExpression;
 import com.cloudant.client.api.query.QueryBuilder;
+import com.cloudant.client.api.query.Type;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -74,6 +76,16 @@ public class QueryTests {
                 in("year", 1984, 1991)
         ));
         Assert.assertEquals("{\"selector\": {\"$and\": [{\"$text\": {\"$eq\": \"Schwarzenegger\"}}, {\"year\": {\"$in\": [1984, 1991]}}]}}", qb.build());
+    }
+
+    // "$and operator used with full text indexing"
+    @Test
+    public void basicSelector5_single() {
+        QueryBuilder qb = new QueryBuilder(and(
+                eq("$text", "Schwarzenegger"),
+                in("year", 1984)
+        ));
+        Assert.assertEquals("{\"selector\": {\"$and\": [{\"$text\": {\"$eq\": \"Schwarzenegger\"}}, {\"year\": {\"$in\": [1984]}}]}}", qb.build());
     }
 
     // "$or operator used with full text indexing"
@@ -131,6 +143,13 @@ public class QueryTests {
         Assert.assertEquals("{\"selector\": {\"genre\": {\"$all\": [\"Comedy\", \"Short\"]}}}", qb.build());
     }
 
+    // "$all operator used with full text indexing"
+    @Test
+    public void basicSelector10_single() {
+        QueryBuilder qb = new QueryBuilder(all("genre", "Comedy"));
+        Assert.assertEquals("{\"selector\": {\"genre\": {\"$all\": [\"Comedy\"]}}}", qb.build());
+    }
+
     // "elemMatch operator used with full text indexing"
     @Test
     public void basicSelector11() {
@@ -156,7 +175,7 @@ public class QueryTests {
     // "$type operator used with full text indexing"
     @Test
     public void basicSelector14() {
-        QueryBuilder qb = new QueryBuilder(type("year", "number"));
+        QueryBuilder qb = new QueryBuilder(type("year", Type.NUMBER));
         Assert.assertEquals("{\"selector\": {\"year\": {\"$type\": \"number\"}}}", qb.build());
     }
 
@@ -167,12 +186,27 @@ public class QueryTests {
         Assert.assertEquals("{\"selector\": {\"year\": {\"$in\": [2010, 2015]}}}", qb.build());
     }
 
+    // "$in operator used with full text indexing"
+    @Test
+    public void basicSelector15_single() {
+        QueryBuilder qb = new QueryBuilder(in("year", 2010));
+        Assert.assertEquals("{\"selector\": {\"year\": {\"$in\": [2010]}}}", qb.build());
+    }
+
     // "$nin operator used with full text indexing"
     @Test
     public void basicSelector16() {
         QueryBuilder qb = new QueryBuilder(and(gt("year", 2009),
             nin("year", 2010, 2015)));
         Assert.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$gt\": 2009}}, {\"year\": {\"$nin\": [2010, 2015]}}]}}", qb.build());
+    }
+
+    // "$nin operator used with full text indexing"
+    @Test
+    public void basicSelector16_single() {
+        QueryBuilder qb = new QueryBuilder(and(gt("year", 2009),
+                nin("year", 2010)));
+        Assert.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$gt\": 2009}}, {\"year\": {\"$nin\": [2010]}}]}}", qb.build());
     }
 
     @Test

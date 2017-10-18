@@ -29,7 +29,12 @@ public class Helpers {
     }
 
     public static String quote(Object[] os) {
-        if (os.length == 1) {
+        return quote(os, false);
+    }
+
+
+    public static String quote(Object[] os, boolean single) {
+        if (!single && os.length == 1) {
             return quote(os[0]);
         }
         return quoteInternal(os, ", ", "", "", "[", "]");
