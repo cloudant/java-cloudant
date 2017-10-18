@@ -18,8 +18,8 @@ import static com.cloudant.client.internal.query.Helpers.quote;
 // predicate expression, such as "$eq" 5
 public class PredicateExpression implements OperationOrExpression {
 
-    private String op;
-    private Object[] rhs;
+    private final String op;
+    private final Object[] rhs;
 
     private PredicateExpression(String op, Object... rhs) {
         this.op = op;

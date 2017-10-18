@@ -19,7 +19,7 @@ import java.util.LinkedList;
 
 public class QueryBuilder {
 
-    private OperationOrExpression selector;
+    private final OperationOrExpression selector;
     private String[] fields;
     private String[][] sort;
     private Long limit;

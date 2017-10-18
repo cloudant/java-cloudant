@@ -18,9 +18,9 @@ import static com.cloudant.client.internal.query.Helpers.quote;
 // expression, such as "widget_count" "$eq" 5
 public class Expression implements OperationOrExpression {
 
-    private String lhs;
-    private String op;
-    private Object[] rhs;
+    private final String lhs;
+    private final String op;
+    private final Object[] rhs;
     private boolean single;
 
     private Expression(String lhs, String op, Object... rhs) {

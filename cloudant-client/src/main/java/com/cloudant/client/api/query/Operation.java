@@ -19,8 +19,8 @@ import static com.cloudant.client.internal.query.Helpers.quoteCurly;
 // on the rhs
 public class Operation implements OperationOrExpression {
 
-    private String op;
-    private OperationOrExpression[] rhs;
+    private final String op;
+    private final OperationOrExpression[] rhs;
 
     private Operation(String op, OperationOrExpression... rhs) {
         this.op = op;
