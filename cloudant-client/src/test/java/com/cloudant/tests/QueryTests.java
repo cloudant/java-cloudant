@@ -195,4 +195,36 @@ public class QueryTests {
         Assert.assertEquals("{\"selector\": {\"$or\": [{\"$and\": [{\"Actor\": {\"$eq\": \"Schwarzenegger\"}}, {\"Year\": {\"$eq\": 2012}}]}, {\"$and\": [{\"Actor\": {\"$eq\": \"de Vito\"}}, {\"Year\": {\"$eq\": 2001}}]}]}}", qb.build());
     }
 
+    // "Selector basics"
+    @Test
+    public void basicSelector1WithFields() {
+        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier")).fields("_id", "_rev", "year", "title");
+        Assert.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +
+                "\"fields\": [\"_id\", \"_rev\", \"year\", \"title\"]}", qb.build());
+    }
+
+    // "Selector basics"
+    @Test
+    public void basicSelector1WithSort() {
+        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier")).sort(new String[]{"year", "asc"}, new String[]{"director", "desc"});
+        Assert.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +
+                "\"sort\": [{\"year\", \"asc\"}, {\"director\", \"desc\"}]}", qb.build());
+    }
+
+    // "Selector basics"
+    @Test
+    public void basicSelector1WithAllOptions() {
+        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier")).
+                fields("_id", "_rev", "year", "title").
+                sort(new String[]{"year", "asc"}, new String[]{"director", "desc"}).
+                limit(10).
+                skip(0);
+        Assert.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +
+                        "\"fields\": [\"_id\", \"_rev\", \"year\", \"title\"], " +
+                "\"sort\": [{\"year\", \"asc\"}, {\"director\", \"desc\"}], \"limit\": 10, " +
+                "\"skip\": 0}", qb.build());
+    }
+
+
+
 }

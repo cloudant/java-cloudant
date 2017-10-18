@@ -35,6 +35,13 @@ public class Helpers {
         return quoteInternal(os, ", ", "", "", "[", "]");
     }
 
+    public static String quoteNoSquare(Object[] os) {
+        if (os.length == 1) {
+            return quote(os[0]);
+        }
+        return quoteInternal(os, ", ", "", "", "", "");
+    }
+
     public static String quoteCurly(Object[] os) {
         if (os.length == 1) {
             // the operation "not" only takes one argument, so we don't need to make an array
