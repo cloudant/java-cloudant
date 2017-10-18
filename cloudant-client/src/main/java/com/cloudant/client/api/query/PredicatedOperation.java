@@ -22,7 +22,7 @@ public class PredicatedOperation implements OperationOrExpression {
     private String op;
     private PredicateExpression[] rhs;
 
-    public PredicatedOperation(String lhs, String op, PredicateExpression... rhs) {
+    private PredicatedOperation(String lhs, String op, PredicateExpression... rhs) {
         this.lhs = lhs;
         this.op = op;
         this.rhs = rhs;

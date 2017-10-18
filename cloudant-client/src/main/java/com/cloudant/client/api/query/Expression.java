@@ -23,7 +23,7 @@ public class Expression implements OperationOrExpression {
     private Object[] rhs;
     private boolean single;
 
-    public Expression(String lhs, String op, Object... rhs) {
+    private Expression(String lhs, String op, Object... rhs) {
         this.lhs = lhs;
         this.op = op;
         this.rhs = rhs;

@@ -19,11 +19,11 @@ import java.util.LinkedList;
 
 public class QueryBuilder {
 
-    OperationOrExpression selector;
-    String[] fields;
-    String[][] sort;
-    Long limit;
-    Long skip;
+    private OperationOrExpression selector;
+    private String[] fields;
+    private String[][] sort;
+    private Long limit;
+    private Long skip;
 
     public QueryBuilder(OperationOrExpression selector) {
         this.selector = selector;
@@ -80,7 +80,7 @@ public class QueryBuilder {
     }
 
     // sorts are a bit more awkward and need a helper...
-    private String quoteSort(String[][] sort) {
+    private static String quoteSort(String[][] sort) {
         LinkedList<String> sorts = new LinkedList<String>();
         for (String[] pair : sort) {
             sorts.add(String.format("{%s}", Helpers.quoteNoSquare(pair)));

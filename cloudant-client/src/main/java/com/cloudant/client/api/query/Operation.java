@@ -22,7 +22,7 @@ public class Operation implements OperationOrExpression {
     private String op;
     private OperationOrExpression[] rhs;
 
-    public Operation(String op, OperationOrExpression... rhs) {
+    private Operation(String op, OperationOrExpression... rhs) {
         this.op = op;
         this.rhs = rhs;
     }
