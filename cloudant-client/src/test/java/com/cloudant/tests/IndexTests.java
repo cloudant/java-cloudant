@@ -22,9 +22,9 @@ import static org.junit.Assert.assertTrue;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.FindByIndexOptions;
-import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
-import com.cloudant.client.api.model.IndexField.SortOrder;
+import com.cloudant.client.api.query.JsonIndex;
+import com.cloudant.client.api.query.Sort;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
@@ -47,7 +47,6 @@ import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -77,12 +76,15 @@ public class IndexTests {
         r.trigger();
 
         //Create indexes
-        db.createIndex("Person_name", "Person_name", null,
-                new IndexField[]{
-                        new IndexField("Person_name", SortOrder.asc),
-                        new IndexField("Movie_year", SortOrder.asc)});
-        db.createIndex("Movie_year", "Movie_year", null,
-                new IndexField[]{new IndexField("Movie_year", SortOrder.asc)});
+        db.createIndex(new JsonIndex.Builder().name("Person_name")
+                .designDocument("Person_name")
+                .fields(new JsonIndex.Field("Person_name", Sort.Order.ASC),
+                        new JsonIndex.Field("Movie_year", Sort.Order.ASC))
+                .definition());
+        db.createIndex(new JsonIndex.Builder().name("Movie_year")
+                .designDocument("Movie_year")
+                .fields(new JsonIndex.Field("Movie_year"))
+                .definition());
 
         //Create selector object: {"Movie_year": { "$gt": 1960}, "Person_name": "Alec Guinness"}
         Map<String, Object> year = new HashMap<String, Object>();
@@ -94,20 +96,18 @@ public class IndexTests {
 
     @Test
     public void testNotNullIndexNamesAndFields() {
-        List<Index> indices = db.listIndices();
+        List<JsonIndex> indices = db.listIndexes().jsonIndexes();
         assertNotNull(indices);
         assert (indices.size() > 0);
-        for (Index i : indices) {
+        for (JsonIndex i : indices) {
             assertNotNull(i.getName());
             assertNotNull(i.getFields());
-            Iterator<IndexField> flds = i.getFields();
-            assert (flds.hasNext());
-            while (flds.hasNext()) {
-                IndexField fld = flds.next();
-                assertNotNull(fld.getName());
-                assertNotNull(fld.getOrder());
+            List<JsonIndex.Field> flds = i.getFields();
+            assertTrue("The fields should not be empty", flds.size() > 0);
+            for (JsonIndex.Field field : flds) {
+                assertNotNull("The field name should not be null", field.getName());
+                assertNotNull("The sort order should not be null", field.getOrder());
             }
-
         }
     }
 
@@ -117,7 +117,7 @@ public class IndexTests {
                         "\"Person_name\": \"Alec Guinness\" }",
                 Movie.class,
                 new FindByIndexOptions()
-                        .sort(new IndexField("Movie_year", SortOrder.desc))
+                        .sort(new IndexField("Movie_year", IndexField.SortOrder.desc))
                         .fields("Movie_name").fields("Movie_year"));
         assertNotNull(movies);
         assert (movies.size() > 0);
@@ -144,7 +144,7 @@ public class IndexTests {
                         "\"Person_name\": \"Alec Guinness\" } }",
                 Movie.class,
                 new FindByIndexOptions()
-                        .sort(new IndexField("Movie_year", SortOrder.desc))
+                        .sort(new IndexField("Movie_year", IndexField.SortOrder.desc))
                         .fields("Movie_name").fields("Movie_year"));
         assertNotNull(movies);
         assert (movies.size() > 0);
@@ -168,7 +168,7 @@ public class IndexTests {
         List<Movie> movies = db.findByIndex(selectorObj.toString(),
                 Movie.class,
                 new FindByIndexOptions()
-                        .sort(new IndexField("Movie_year", SortOrder.desc))
+                        .sort(new IndexField("Movie_year", IndexField.SortOrder.desc))
                         .fields("Movie_name").fields("Movie_year"));
         assertNotNull(movies);
         assert (movies.size() > 0);
@@ -183,7 +183,7 @@ public class IndexTests {
         List<Movie> movies = db.findByIndex("    \"selector\"   :      {    \"Movie_year\"    :  " +
                         "{\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\" }     ", Movie.class,
                 new FindByIndexOptions()
-                        .sort(new IndexField("Movie_year", SortOrder.desc))
+                        .sort(new IndexField("Movie_year", IndexField.SortOrder.desc))
                         .fields("Movie_name").fields("Movie_year"));
         assertNotNull(movies);
         assert (movies.size() > 0);
@@ -199,7 +199,7 @@ public class IndexTests {
                         "\"Person_name\": \"Alec Guinness\" }",
                 Movie.class,
                 new FindByIndexOptions()
-                        .sort(new IndexField("Movie_year", SortOrder.desc))
+                        .sort(new IndexField("Movie_year", IndexField.SortOrder.desc))
                         .fields("Movie_name").fields("Movie_year")
                         .limit(1)
                         .skip(1)
@@ -217,7 +217,7 @@ public class IndexTests {
         List<Movie> movies = db.findByIndex(new GsonBuilder().create().toJson(selector),
                 Movie.class,
                 new FindByIndexOptions()
-                        .sort(new IndexField("Movie_year", SortOrder.desc))
+                        .sort(new IndexField("Movie_year", IndexField.SortOrder.desc))
                         .fields("Movie_name").fields("Movie_year")
                         .limit(1)
                         .skip(1)
@@ -241,7 +241,7 @@ public class IndexTests {
         List<Movie> movies = db.findByIndex(new GsonBuilder().create().toJson(selector),
                 Movie.class,
                 new FindByIndexOptions()
-                        .sort(new IndexField("Movie_year", SortOrder.desc))
+                        .sort(new IndexField("Movie_year", IndexField.SortOrder.desc))
                         .fields("Movie_name").fields("Movie_year")
                         .limit(1)
                         .skip(1)
@@ -264,7 +264,7 @@ public class IndexTests {
         //check find by using index design doc and index name
         List<Movie> movies = db.findByIndex(new GsonBuilder().create().toJson(selector),
                 Movie.class,
-                new FindByIndexOptions().sort(new IndexField("Movie_year", SortOrder.desc))
+                new FindByIndexOptions().sort(new IndexField("Movie_year", IndexField.SortOrder.desc))
                 .fields("Movie_name").fields("Movie_year")
                 .limit(1)
                 .skip(1)
