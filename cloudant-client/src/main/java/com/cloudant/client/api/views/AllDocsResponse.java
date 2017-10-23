@@ -60,4 +60,14 @@ public interface AllDocsResponse {
      */
     List<String> getDocIds();
 
+    /**
+     * Gets a map of the document id and error message if an error exists for any result
+     * in the _all_docs request.
+     * For example, if a doc id does not exist the error message will show "not_found".
+     *
+     * @return a map with an entry for key of the doc id and value of error
+     * @since 2.10.0
+     */
+    Map<String, String> getErrors();
+
 }

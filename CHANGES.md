@@ -2,6 +2,8 @@
 - [NEW] Add IAM cookie authentication method.
 - [IMPROVED] Updated documentation by replacing deprecated Cloudant links with the latest Bluemix links.
 - [IMPROVED] Clarified documentation for search indexes.
+- [IMPROVED] Added `Row#getError` and `AllDocsResponse#getErrors` for returning any error messages 
+  from a `view` or `_all_docs` request.
 - [FIXED] Connection leaks in some session renewal error scenarios.
 - [FIXED] IllegalStateException now correctly thrown for additional case of calling
   `MultipleRequestBuilder#build()` before `add()` was called.

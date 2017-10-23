@@ -111,6 +111,14 @@ public interface ViewResponse<K, V> extends Iterable<ViewResponse<K, V>> {
          * @since 2.0.0
          */
         <D> D getDocumentAsType(Class<D> docType);
+
+        /**
+         * Gets the error message if an error exists.
+         *
+         * @return the error message for this row or null if there is no error
+         * @since 2.10.0
+         */
+        String getError();
     }
 
     /**

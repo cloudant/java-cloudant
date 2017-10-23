@@ -58,11 +58,23 @@ public class RowImpl<K, V> implements ViewResponse.Row<K, V> {
 
     @Override
     public Document getDocument() {
-        return gson.fromJson(row.get("doc"), Document.class);
+        return getDocumentAsType(Document.class);
     }
 
     public <D> D getDocumentAsType(Class<D> docType) {
-        return gson.fromJson(row.get("doc"), docType);
+        D doc = null;
+        if(row.has("doc")) {
+            doc = gson.fromJson(row.get("doc"), docType);
+        }
+        return doc;
     }
 
+    @Override
+    public String getError() {
+        String error = null;
+        if(row.has("key") && row.has("error")) {
+            error = row.get("error").getAsString();
+        }
+        return error;
+    }
 }

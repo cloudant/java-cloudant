@@ -72,6 +72,17 @@ public class AllDocsRequestResponse implements AllDocsRequest, AllDocsResponse {
         return response.getKeys();
     }
 
+    @Override
+    public Map<String, String> getErrors() {
+        Map<String, String> errors = new HashMap<String, String>();
+        for (ViewResponse.Row<String, Revision> row : response.getRows()) {
+            if(row.getError() != null) {
+                errors.put(row.getKey(), row.getError());
+            }
+        }
+        return errors;
+    }
+
     /*
          * Object representation of rev field from a JSON object.
          * <P>
