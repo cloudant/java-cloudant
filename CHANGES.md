@@ -1,9 +1,15 @@
 # 2.10.0 (Unreleased)
 - [NEW] Add IAM cookie authentication method.
+- [NEW] Index creation APIs and builders including support for text indexes.
 - [IMPROVED] Clarified documentation for search indexes.
 - [FIXED] Connection leaks in some session renewal error scenarios.
 - [UPGRADED] Optional OkHttp dependency to version 3.8.1.
 - [DEPRECATED] The `dbCopy` setter and getter on the `MapReduce` class.
+- [DEPRECATED] Old index creation and listing APIs:
+    - `com.cloudant.client.api.model.Index`
+    - `com.cloudant.client.api.model.IndexField`
+    - `com.cloudant.client.api.Database.createIndex(java.lang.String, java.lang.String, java.lang.String, com.cloudant.client.api.model.IndexField[])`
+    - `com.cloudant.client.api.Database.listIndices`
 
 # 2.9.0 (2017-04-26)
 - [NEW] Add faceted search variable argument to `drillDown` method allowing multiple drill down
