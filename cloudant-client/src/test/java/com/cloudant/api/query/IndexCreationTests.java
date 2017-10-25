@@ -41,7 +41,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createJsonIndex() throws Exception {
-        createIndexTest(new JsonIndex.Builder()
+        createIndexTest(JsonIndex.builder()
                         .fields(new JsonIndex.Field("a"))
                         .definition(),
                 "{type: \"json\", index: {fields: [\"a\"]}}");
@@ -49,7 +49,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createJsonIndexSpecifyFieldOrder() throws Exception {
-        createIndexTest(new JsonIndex.Builder()
+        createIndexTest(JsonIndex.builder()
                         .fields(
                                 new JsonIndex.Field("a", Sort.Order.ASC),
                                 new JsonIndex.Field("d", Sort.Order.DESC))
@@ -59,7 +59,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createNamedJsonIndex() throws Exception {
-        createIndexTest(new JsonIndex.Builder()
+        createIndexTest(JsonIndex.builder()
                         .name("testindex")
                         .fields(new JsonIndex.Field("a"))
                         .definition(),
@@ -68,7 +68,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createJsonIndexInDesignDoc() throws Exception {
-        createIndexTest(new JsonIndex.Builder()
+        createIndexTest(JsonIndex.builder()
                         .designDocument("testddoc")
                         .fields(new JsonIndex.Field("a"))
                         .definition(),
@@ -77,7 +77,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createJsonIndexAllOptions() throws Exception {
-        createIndexTest(new JsonIndex.Builder()
+        createIndexTest(JsonIndex.builder()
                         .designDocument("testddoc")
                         .name("testindex")
                         .fields(new JsonIndex.Field("a", Sort.Order.ASC),
@@ -89,7 +89,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createJsonIndexPartialSelectorOnly() throws Exception {
-        createIndexTest(new JsonIndex.Builder()
+        createIndexTest(JsonIndex.builder()
                         .fields(new JsonIndex.Field("a"))
                         .partialFilterSelector(selectorContent)
                         .definition(),
@@ -98,7 +98,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createJsonIndexPartialSelectorPair() throws Exception {
-        createIndexTest(new JsonIndex.Builder()
+        createIndexTest(JsonIndex.builder()
                         .fields(new JsonIndex.Field("a"))
                         .partialFilterSelector(selectorPair)
                         .definition(),
@@ -107,7 +107,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createJsonIndexPartialSelectorObject() throws Exception {
-        createIndexTest(new JsonIndex.Builder()
+        createIndexTest(JsonIndex.builder()
                         .fields(new JsonIndex.Field("a"))
                         .partialFilterSelector(selector)
                         .definition(),
@@ -116,14 +116,14 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createTextIndex() throws Exception {
-        createIndexTest(new TextIndex.Builder()
+        createIndexTest(TextIndex.builder()
                         .definition(),
                 "{type: \"text\", index: {}}");
     }
 
     @Test
     public void createNamedTextIndex() throws Exception {
-        createIndexTest(new TextIndex.Builder()
+        createIndexTest(TextIndex.builder()
                         .name("testindex")
                         .definition(),
                 "{type: \"text\", name: \"testindex\", index: {}}");
@@ -131,7 +131,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createTextIndexInDesignDoc() throws Exception {
-        createIndexTest(new TextIndex.Builder()
+        createIndexTest(TextIndex.builder()
                 .designDocument("testddoc")
                         .definition(),
                 "{type: \"text\", ddoc: \"testddoc\", index: {}}");
@@ -139,7 +139,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createTextIndexWithFields() throws Exception {
-        createIndexTest(new TextIndex.Builder()
+        createIndexTest(TextIndex.builder()
                         .fields(new TextIndex.Field("s", TextIndex.Field.Type.STRING),
                                 new TextIndex.Field("b", TextIndex.Field.Type.BOOLEAN),
                                 new TextIndex.Field("n", TextIndex.Field.Type.NUMBER))
@@ -150,7 +150,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createTextIndexWithDefaultField() throws Exception {
-        createIndexTest(new TextIndex.Builder()
+        createIndexTest(TextIndex.builder()
                         .defaultField(true, "german")
                         .definition(),
                 "{type: \"text\", index: { default_field: {enabled: true, analyzer: \"german\"}}}");
@@ -158,7 +158,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createTextIndexWithStringAnalyzer() throws Exception {
-        createIndexTest(new TextIndex.Builder()
+        createIndexTest(TextIndex.builder()
                         .analyzer("keyword")
                         .definition(),
                 "{type: \"text\", index: {analyzer: \"keyword\"}}");
@@ -171,7 +171,7 @@ public class IndexCreationTests extends MockedServerTest {
                 "\"fields\": {" +
                 "\"spanish\": \"spanish\"," +
                 "\"german\": \"german\"}}";
-        createIndexTest(new TextIndex.Builder()
+        createIndexTest(TextIndex.builder()
                         .analyzer(a)
                         .definition(),
                 "{type: \"text\", index: {analyzer: " + a + "}}");
@@ -179,7 +179,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createTextIndexPartialSelectorOnly() throws Exception {
-        createIndexTest(new TextIndex.Builder()
+        createIndexTest(TextIndex.builder()
                         .partialFilterSelector(selectorContent)
                         .definition(),
                 "{type: \"text\", index: " + selector + "}");
@@ -187,7 +187,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createTextIndexPartialSelectorPair() throws Exception {
-        createIndexTest(new TextIndex.Builder()
+        createIndexTest(TextIndex.builder()
                         .partialFilterSelector(selectorPair)
                         .definition(),
                 "{type: \"text\", index: " + selector + "}");
@@ -195,7 +195,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createTextIndexPartialSelectorObject() throws Exception {
-        createIndexTest(new TextIndex.Builder()
+        createIndexTest(TextIndex.builder()
                         .partialFilterSelector(selector)
                         .definition(),
                 "{type: \"text\", index: " + selector + "}");
@@ -203,7 +203,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createTextIndexWithIndexArrayLengths() throws Exception {
-        createIndexTest(new TextIndex.Builder()
+        createIndexTest(TextIndex.builder()
                         .indexArrayLengths(false)
                         .definition(),
                 "{type: \"text\", index: {index_array_lengths: false}}");
@@ -211,7 +211,7 @@ public class IndexCreationTests extends MockedServerTest {
 
     @Test
     public void createTextIndexWithAllOptions() throws Exception {
-        createIndexTest(new TextIndex.Builder()
+        createIndexTest(TextIndex.builder()
                         .name("testindex")
                         .designDocument("testddoc")
                         .fields(new TextIndex.Field("s", TextIndex.Field.Type.STRING),

@@ -68,7 +68,7 @@ public class IndexLifecycleTest {
         // Create a JSON index
         jFields.add(new JsonIndex.Field("testDefaultAsc"));
         jFields.add(new JsonIndex.Field("testAsc", Sort.Order.ASC));
-        db.createIndex(new JsonIndex.Builder()
+        db.createIndex(JsonIndex.builder()
                 .designDocument("indexlifecycle")
                 .name("testjson")
                 .fields(jFields.toArray(new JsonIndex.Field[2]))
@@ -79,7 +79,7 @@ public class IndexLifecycleTest {
         tFields.add(new TextIndex.Field("testString", TextIndex.Field.Type.STRING));
         tFields.add(new TextIndex.Field("testNumber", TextIndex.Field.Type.NUMBER));
         tFields.add(new TextIndex.Field("testBoolean", TextIndex.Field.Type.BOOLEAN));
-        db.createIndex(new TextIndex.Builder()
+        db.createIndex(TextIndex.builder()
                 .designDocument("indexlifecycle")
                 .name("testtext")
                 .fields(tFields.toArray(new TextIndex.Field[3]))
