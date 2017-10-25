@@ -76,12 +76,12 @@ public class IndexTests {
         r.trigger();
 
         //Create indexes
-        db.createIndex(new JsonIndex.Builder().name("Person_name")
+        db.createIndex(JsonIndex.builder().name("Person_name")
                 .designDocument("Person_name")
                 .fields(new JsonIndex.Field("Person_name", Sort.Order.ASC),
                         new JsonIndex.Field("Movie_year", Sort.Order.ASC))
                 .definition());
-        db.createIndex(new JsonIndex.Builder().name("Movie_year")
+        db.createIndex(JsonIndex.builder().name("Movie_year")
                 .designDocument("Movie_year")
                 .fields(new JsonIndex.Field("Movie_year"))
                 .definition());

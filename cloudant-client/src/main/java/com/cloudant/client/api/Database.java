@@ -305,7 +305,7 @@ public class Database {
                 jFields[i] = new JsonIndex.Field(f.getName(), order);
                 i++;
             }
-            createIndex(new JsonIndex.Builder().fields(jFields).definition());
+            createIndex(JsonIndex.builder().fields(jFields).definition());
         } else {
             throw new CouchDbException("Unsupported index type " + indexType);
         }
