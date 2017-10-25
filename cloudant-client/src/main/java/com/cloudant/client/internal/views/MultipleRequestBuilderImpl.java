@@ -21,7 +21,7 @@ public class MultipleRequestBuilderImpl<K, V> extends
         CommonViewRequestBuilder<K, V, MultipleRequestBuilder<K, V>> implements
         MultipleRequestBuilder<K, V> {
 
-    private boolean isBuildable = false;
+    private boolean isBuildable;
 
     private final ViewMultipleRequester<K, V> multiViewRequester;
 
@@ -32,26 +32,35 @@ public class MultipleRequestBuilderImpl<K, V> extends
     private MultipleRequestBuilderImpl(ViewQueryParameters<K, V> params, ViewMultipleRequester<K, V>
             multiViewRequester) {
         super(params);
-        this.multiViewRequester = (multiViewRequester == null) ? new ViewMultipleRequester<K, V>
-                () : multiViewRequester;
-        //one at least one request has been added, then it is buildable
-        isBuildable = true;
+        if (multiViewRequester == null) {
+            this.multiViewRequester = new ViewMultipleRequester<K, V>();
+            // This is a new instance, isBuildable needs to be false until add is called.
+            isBuildable = false;
+        } else {
+            this.multiViewRequester = multiViewRequester;
+            // An existing multiViewRequester is only called from add()
+            // so we can set isBuildable true
+            isBuildable = true;
+        }
     }
 
     @Override
     public MultipleRequestBuilder<K, V> returnThis() {
-        //parameters have been set, not buildable until add() is called
-        isBuildable = false;
+        // This method is called by the builder whenever parameters are set.
+        // Sets isBuildable to false since parameters have been added, but add() has not yet been
+        // called.
+        this.isBuildable = false;
         return this;
     }
 
+    @Override
     public MultipleRequestBuilder<K, V> add() {
         multiViewRequester.add(this.viewQueryParameters);
         return new MultipleRequestBuilderImpl<K, V>(new
-                ViewQueryParameters<K, V>(viewQueryParameters),
-                multiViewRequester);
+                ViewQueryParameters<K, V>(viewQueryParameters), multiViewRequester);
     }
 
+    @Override
     public ViewMultipleRequest<K, V> build() {
         if (isBuildable) {
             return multiViewRequester;

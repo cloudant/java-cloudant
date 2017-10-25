@@ -2,6 +2,8 @@
 - [NEW] Add IAM cookie authentication method.
 - [IMPROVED] Clarified documentation for search indexes.
 - [FIXED] Connection leaks in some session renewal error scenarios.
+- [FIXED] IllegalStateException now correctly thrown for additional case of calling
+  `MultipleRequestBuilder#build()` before `add()` was called.
 - [UPGRADED] Optional OkHttp dependency to version 3.8.1.
 - [DEPRECATED] The `dbCopy` setter and getter on the `MapReduce` class.
 

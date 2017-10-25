@@ -801,17 +801,97 @@ public class ViewsTest {
     }
 
     /**
+     * Validate that a request without parameters can be built after calling add().
+     */
+    @Test
+    public void multiRequestBuildSingle() {
+        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "foo")
+                .newMultipleRequest(Key.Type.STRING, Object.class)
+                .add()
+                .build();
+    }
+
+    /**
+     * Validate that a multi request with parameters can be built after calling add().
+     */
+    @Test
+    public void multiRequestBuildParametersSingle() {
+        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "foo")
+                .newMultipleRequest(Key.Type.STRING, Object.class)
+                .keys("key-1").add()
+                .build();
+    }
+
+    /**
+     * Validate that a multi request with parameters can be built after calling add().
+     */
+    @Test
+    public void multiRequestBuildParametersMulti() {
+        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "foo")
+                .newMultipleRequest(Key.Type.STRING, Object.class)
+                .keys("key-1").add()
+                .keys("key-2").add()
+                .build();
+    }
+
+    /**
+     * Validate that a multi request with parameters can be built after calling add().
+     */
+    @Test
+    public void multiRequestBuildParametersFirst() {
+        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "foo")
+                .newMultipleRequest(Key.Type.STRING, Object.class)
+                .keys("key-1").add()
+                .add()
+                .build();
+    }
+
+    /**
+     * Validate that a multi request with parameters can be built after calling add().
+     */
+    @Test
+    public void multiRequestBuildParametersSecond() {
+        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "foo")
+                .newMultipleRequest(Key.Type.STRING, Object.class)
+                .add()
+                .keys("key-2").add()
+                .build();
+    }
+
+    /**
      * Validate that an IllegalStateException is thrown if an attempt is made to build a multi
-     * request without calling add() before build().
-     *
-     * @throws IOException
+     * request without calling add() before build() with two requests.
      */
     @Test(expected = IllegalStateException.class)
-    public void multiRequestBuildOnlyAfterAdd() throws IOException {
+    public void multiRequestBuildOnlyAfterAdd() {
         ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "foo")
                 .newMultipleRequest(Key.Type.STRING, Object.class)
                 .keys("key-1").add()
                 .keys("key-2").build();
+    }
+
+    /**
+     * Validate that an IllegalStateException is thrown if an attempt is made to build a multi
+     * request without calling add() before build() with a single request with parameters.
+     */
+    @Test(expected = IllegalStateException.class)
+    public void multiRequestBuildOnlyAfterAddSingle() {
+        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "foo")
+                .newMultipleRequest(Key.Type.STRING, Object.class)
+                .keys("key-1")
+                .build();
+    }
+
+    /**
+     * Validate that an IllegalStateException is thrown if an attempt is made to build a multi
+     * request without calling add() before build() with a single request with no view request
+     * parameter calls.
+     */
+    @Test(expected = IllegalStateException.class)
+    public void multiRequestBuildOnlyAfterAddNoParams() {
+        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "foo")
+                .newMultipleRequest(Key.Type.STRING, Object.class)
+                .build();
     }
 
     /**
