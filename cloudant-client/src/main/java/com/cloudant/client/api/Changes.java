@@ -73,8 +73,8 @@ import java.net.URI;
  *
  * @author Ganesh K Choudhary
  * @see ChangesResult
- * @see <a target="_blank" href="https://docs.cloudant.com/database.html#get-changes">Databases -
- * get changes</a>
+ * @see <a href="https://console.bluemix.net/docs/services/Cloudant/api/database.html#get-changes"
+ * target="_blank">Databases - get changes</a>
  * @since 0.0.1
  */
 public class Changes {

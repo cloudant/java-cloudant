@@ -57,10 +57,8 @@ import java.util.List;
  *
  * }
  * </pre>
- * <a target="_blank"
- * href="https://docs.cloudant.com/creating_views.html#sending-several-queries-to-a-view">
- * Cloudant API reference
- * </a>
+ * <a href="https://console.bluemix.net/docs/services/Cloudant/api/using_views.html#sending-several-queries-to-a-view"
+ * target="_blank">Cloudant API reference</a>
  *
  * @param <K> the type of key emitted by the view, fixed by the
  *            {@link com.cloudant.client.api.views.Key.Type} supplied to the

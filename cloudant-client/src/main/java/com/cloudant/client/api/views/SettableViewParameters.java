@@ -18,7 +18,7 @@ package com.cloudant.client.api.views;
  * Describes the parameters that can be set when building view requests.
  *
  * <P>
- * <a target="_blank" href="https://docs.cloudant.com/creating_views.html#using-views">
+ * <a target="_blank" href="https://console.bluemix.net/docs/services/Cloudant/api/using_views.html#using-views">
  * Cloudant API reference
  * </a>
  * </P>
@@ -96,7 +96,7 @@ public interface SettableViewParameters {
          * <P>
          * Note that using include_docs=true might have
          * <a target="_blank"
-         * href="https://docs.cloudant.com/creating_views.html#multi-document-fetching">
+         * href="https://console.bluemix.net/docs/services/Cloudant/api/using_views.html#multi-document-fetching">
          * performance implications.</a>
          * </P>
          *

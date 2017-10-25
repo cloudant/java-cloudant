@@ -148,7 +148,8 @@ There is no need to add a head/title as that is provided by Javadoc.
     Using the {@link com.cloudant.client.api.ClientBuilder#username(String)} and
     {@link com.cloudant.client.api.ClientBuilder#password(String)}
     options uses
-    <a href="https://docs.cloudant.com/authentication.html#cookie-authentication" target="_blank">
+    <a href="https://console.bluemix.net/docs/services/Cloudant/api/authentication.html
+    #cookie-authentication" target="_blank">
         cookie authentication</a> for the CloudantClient connection. The supplied credentials are
     used to request a session with the server and the session is renewed automatically if the cookie
     expires. If the credentials become invalid then a new instance of a CloudantClient needs to be
@@ -276,8 +277,8 @@ There is no need to add a head/title as that is provided by Javadoc.
 
 <h2 id="Attachments">Attachments</h2>
 
-See the <a href="https://docs.cloudant.com/attachments.html" target="_blank">Cloudant documentation
-</a> for more information about attachments.
+See the <a href="https://console.bluemix.net/docs/services/Cloudant/api/attachments.html
+#attachments" target="_blank">Cloudant documentation</a> for more information about attachments.
 
 <h3 id="Standalone Attachments">Standalone Attachments</h3>
 
@@ -300,7 +301,8 @@ See the <a href="https://docs.cloudant.com/attachments.html" target="_blank">Clo
 <h3 id="Inline Attachments">Inline Attachments</h3>
 
 <P>
-    <a href="https://docs.cloudant.com/attachments.html#inline" target="_blank">Inline attachments
+    <a href="https://console.bluemix.net/docs/services/Cloudant/api/attachments.html#inline"
+       target="_blank">Inline attachments
     </a> enclose the attachment data, Base64 encoded, within the document body. The
     {@link com.cloudant.client.api.model.Attachment} class represents an inline attachment.
     Classes that extend {@link com.cloudant.client.api.model.Document} automatically inherit
@@ -331,7 +333,8 @@ See the <a href="https://docs.cloudant.com/attachments.html" target="_blank">Clo
     Design documents are used to define server side operations, including querying the database
     using map-reduce views, <a href="#Cloudant Search">Cloudant Search</a>, and
     <a href="#Cloudant Query">Cloudant Query</a>. The results can be retrieved by the client. It is
-    recommend to read the <a href="https://docs.cloudant.com/design_documents.html" target="_blank">
+    recommend to read the <a href="https://console.bluemix.net/docs/services/Cloudant/api/
+    design_documents.html#design-documents" target="_blank">
     Cloudant design document documentation</a> before working with design documents to gain an
     understanding of the available parameters and functions.
 </P>
@@ -380,8 +383,9 @@ See the <a href="https://docs.cloudant.com/attachments.html" target="_blank">Clo
 <h2 id="Using Views">Using Views</h2>
 
 For background information about views please refer to the
-<a href="https://docs.cloudant.com/creating_views.html" target="_blank">Cloudant views documentation
-</a>. Refer to the <a href="{@docroot}com/cloudant/client/api/views/package-summary.html">
+<a href="https://console.bluemix.net/docs/services/Cloudant/api/using_views.html#using-views"
+   target="_blank">Cloudant views documentation </a>. Refer to the
+<a href="{@docroot}com/cloudant/client/api/views/package-summary.html">
     com.cloudant.client.api.views package</a> for information about and examples of using this
 library to query a view.
 
@@ -389,8 +393,8 @@ library to query a view.
 
 <P>
     This feature interfaces with Cloudant's query functionality. See the
-    <a href="https://docs.cloudant.com/cloudant_query.html" target="_blank">Cloudant Query
-        documentation</a> for details.
+    <a href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#query"
+       target="_blank">Cloudant Query documentation</a> for details.
 </P>
 <UL>
     <LI>To see all the indexes in a database use:
@@ -411,7 +415,8 @@ library to query a view.
 
 <P>
     This feature interfaces with Cloudant's full text search functionality. See the
-    <a href="https://docs.cloudant.com/search.html" target="_blank">Cloudant Search documentation
+    <a href="https://console.bluemix.net/docs/services/Cloudant/api/search.html#search"
+       target="_blank">Cloudant Search documentation
     </a> for details. Searches are based on index functions in design documents.
 </P>
 

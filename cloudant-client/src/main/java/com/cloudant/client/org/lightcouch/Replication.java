@@ -60,10 +60,8 @@ import java.util.logging.Logger;
  * @author Ahmed Yehia
  * @see ReplicationResult
  * @see com.cloudant.client.api.model.ReplicationResult.ReplicationHistory
- * @see <a target="_blank"
- * href="https://docs.cloudant.com/replication.html#the-/_replicate-endpoint">
- * Replication - _replicate
- * </a>
+ * @see <a href="https://console.bluemix.net/docs/services/Cloudant/api/advanced_replication.html#the-_replicate-endpoint"
+ * target="_blank">Replication - the _replicate endpoint</a>
  * @since 0.0.2
  */
 public class Replication {

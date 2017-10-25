@@ -171,7 +171,8 @@ public class CloudantClient {
      * Get the list of active tasks from the server.
      *
      * @return List of tasks
-     * @see <a target="_blank" href="https://docs.cloudant.com/active_tasks.html">Active tasks</a>
+     * @see <a href="https://console.bluemix.net/docs/services/Cloudant/api/active_tasks.html">
+     *     Active tasks</a>
      */
     public List<Task> getActiveTasks() {
         InputStream response = null;
@@ -188,8 +189,9 @@ public class CloudantClient {
      * Get the list of all nodes and the list of active nodes in the cluster.
      *
      * @return Membership object encapsulating lists of all nodes and the cluster nodes
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/advanced.html#get-/_membership">_membership</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/advanced.html#-get-_membership-">
+     * _membership</a>
      */
     public Membership getMembership() {
         URI uri = new URIBase(getBaseUri()).path("_membership").build();
@@ -210,8 +212,9 @@ public class CloudantClient {
      * @param name   name of database to access
      * @param create flag indicating whether to create the database if it does not exist
      * @return Database object
-     * @see <a target="_blank" href="https://docs.cloudant.com/database.html#read">Databases -
-     * read</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/database.html"
+     * target="_blank">Databases</a>
      */
     public Database database(String name, boolean create) {
         return new Database(this, couchDbClient.database(name, create));
@@ -221,9 +224,9 @@ public class CloudantClient {
      * Request to delete the database with the specified name.
      *
      * @param dbName the database name
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/database.html#deleting-a-database">Databases - delete
-     * </a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/database.html#deleting-a-database">
+     * Databases - delete</a>
      */
     public void deleteDB(String dbName) {
         couchDbClient.deleteDB(dbName);
@@ -236,8 +239,9 @@ public class CloudantClient {
      * @throws com.cloudant.client.org.lightcouch.PreconditionFailedException if a database with
      *                                                                        the same name
      *                                                                        already exists
-     * @see <a target="_blank" href="https://docs.cloudant.com/database.html#create">Databases -
-     * create</a>
+     * @see <a target="_blank"
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/database.html#create">
+     * Databases - create</a>
      */
     public void createDB(String dbName) {
         couchDbClient.createDB(dbName);
@@ -254,8 +258,9 @@ public class CloudantClient {
      * List all the databases on the server for the Cloudant account.
      *
      * @return List of the names of all the databases
-     * @see <a target="_blank" href="https://docs.cloudant.com/database.html#get-databases">
-     * Databases - get databases</a>
+     * @see <a target="_blank"
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/database.html#get-a-list-of-all-databases-in-the-account">
+     * Databases - get list of databases</a>
      */
     public List<String> getAllDbs() {
         return couchDbClient.getAllDbs();
@@ -265,8 +270,9 @@ public class CloudantClient {
      * Get the reported server version from the welcome message metadata.
      *
      * @return Cloudant server version.
-     * @see <a target="_blank" href="https://docs.cloudant.com/advanced.html#get-/">Welcome
-     * message</a>
+     * @see <a target="_blank"
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/advanced.html#-get-">
+     * GET meta information about the cluster</a>
      */
     public String serverVersion() {
         return couchDbClient.serverVersion();
@@ -278,9 +284,8 @@ public class CloudantClient {
      * @return Replication object for configuration and triggering
      * @see com.cloudant.client.api.Replication
      * @see <a target="_blank"
-     * href="https://docs.cloudant.com/replication.html#the-/_replicate-endpoint">
-     * Replication - _replicate
-     * </a>
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/advanced_replication.html#the-_replicate-endpoint">
+     * Replication - the _replicate endpoint</a>
      */
     public com.cloudant.client.api.Replication replication() {
         Replication couchDbReplication = couchDbClient.replication();
@@ -295,9 +300,8 @@ public class CloudantClient {
      * @return Replicator object for interacting with the _replicator DB
      * @see com.cloudant.client.api.Replicator
      * @see <a target="_blank"
-     * href="https://docs.cloudant.com/replication.html#the-/_replicator-database">
-     * Replication - _replicator
-     * </a>
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/replication.html#the-_replicator-database">
+     * Replication - the _replicator database</a>
      */
     public com.cloudant.client.api.Replicator replicator() {
         Replicator couchDbReplicator = couchDbClient.replicator();
@@ -347,7 +351,9 @@ public class CloudantClient {
      *
      * @param count the number of UUIDs
      * @return a List of UUID Strings
-     * @see <a target="_blank" href="https://docs.cloudant.com/advanced.html#get-/_uuids">_uuids</a>
+     * @see <a target="_blank"
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/advanced.html#-get-_uuids-">
+     * _uuids</a>
      */
     public List<String> uuids(long count) {
         return couchDbClient.uuids(count);
