@@ -47,7 +47,8 @@ public class ListableIndex extends InternalIndex<ListableIndex.Definition, Field
     static class Adapter implements JsonDeserializer<Definition> {
 
         @Override
-        public Definition deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        public Definition deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext
+                context) throws JsonParseException {
             Definition def = new Definition();
             JsonObject d = json.getAsJsonObject();
             JsonArray fields = d.getAsJsonArray("fields");
@@ -61,5 +62,20 @@ public class ListableIndex extends InternalIndex<ListableIndex.Definition, Field
             def.fields = namedFields;
             return def;
         }
+    }
+
+    public String toString() {
+        StringBuilder index = new StringBuilder();
+        index.append("ddoc: ");
+        index.append(getDesignDocumentID());
+        index.append(", name: ");
+        index.append(getName());
+        index.append(", type: ");
+        index.append(getType());
+        index.append(", fields: ");
+        index.append(getFields().toString());
+        index.append(", partial_filter_selector: ");
+        index.append(getPartialFilterSelector());
+        return index.toString();
     }
 }

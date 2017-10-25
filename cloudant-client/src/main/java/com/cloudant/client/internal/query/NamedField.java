@@ -50,4 +50,9 @@ public class NamedField implements com.cloudant.client.api.query.Field {
     public int hashCode() {
         return name != null ? name.hashCode() : 0;
     }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }
