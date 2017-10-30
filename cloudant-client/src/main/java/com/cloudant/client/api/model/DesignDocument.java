@@ -99,8 +99,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      *
      * @return a map of view name to {@link MapReduce}
      * from the view
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#views">Views</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#views"
+     * target="_blank">Views</a>
      */
     public Map<String, MapReduce> getViews() {
         return views;
@@ -111,9 +112,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * validate_doc_update} property.
      *
      * @return string of validate_doc_update function
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#update-validators">Update validators
-     * </a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#update-validators"
+     * target="_blank">Update validators</a>
      */
     public String getValidateDocUpdate() {
         return validateDocUpdate;
@@ -123,8 +124,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * Get the array of URL rewriting rules set in the design document's {@code rewrites} property.
      *
      * @return array of JSON objects each representing a rewrite rule
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#rewrite-rules">Rewrite rules</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#rewrite-rules"
+     * target="_blank">Rewrite rules</a>
      */
     public JsonArray getRewrites() {
         return rewrites;
@@ -141,8 +143,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * Get a JSON object containing all the indexes defined in the design document.
      *
      * @return the JSON object stored in the design document's {@code indexes} property
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#indexes">Indexes</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#indexes"
+     * target="_blank">Indexes</a>
      */
     public JsonObject getIndexes() {
         return indexes;
@@ -152,8 +155,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * Get the changes feed filter functions defined in this design document.
      *
      * @return map of filter name to function string
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#filter-functions">Filter functions</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#filter-functions"
+     * target="_blank">Filter functions</a>
      */
     public Map<String, String> getFilters() {
         return filters;
@@ -163,8 +167,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * Get the show functions defined in this design document.
      *
      * @return map of show function name to function string
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#show-functions">Show functions</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#show-functions"
+     * target="_blank">Show functions</a>
      */
     public Map<String, String> getShows() {
         return shows;
@@ -174,8 +179,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * Get the list functions defined in this design document.
      *
      * @return map of list function name to function string
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#list-functions">List functions</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#list-functions"
+     * target="_blank">List functions</a>
      */
     public Map<String, String> getLists() {
         return lists;
@@ -185,8 +191,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * Get the update handlers defined in this design document.
      *
      * @return map of update handler name to function string
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#update-handlers">Update handlers</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#update-handlers"
+     * target="_blank">Update handlers</a>
      */
     public Map<String, String> getUpdates() {
         return updates;
@@ -205,8 +212,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * Set the views defined in this design document's view property.
      *
      * @param views map of view name to MapReduce class
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#views">Views</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#views"
+     * target="_blank">Views</a>
      */
     public void setViews(Map<String, MapReduce> views) {
         this.views = views;
@@ -216,9 +224,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * Set the javascript function for the design document's {@code validate_doc_update} property.
      *
      * @param validateDocUpdate string defining validate_doc_update function
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#update-validators">Update validators
-     * </a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#update-validators"
+     * target="_blank">Update validators</a>
      */
     public void setValidateDocUpdate(String validateDocUpdate) {
         this.validateDocUpdate = validateDocUpdate;
@@ -228,8 +236,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * Set the array of URL rewriting rules set in the design document's {@code rewrites} property.
      *
      * @param rewrites array of JsonObjects each representing a rewrite rule
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#rewrite-rules">Rewrite rules</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#rewrite-rules"
+     * target="_blank">Rewrite rules</a>
      */
     public void setRewrites(JsonArray rewrites) {
         this.rewrites = rewrites;
@@ -246,8 +255,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * Set a JSON object defining the indexes of this design document.
      *
      * @param indexes JsonObject defining the indexes
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#indexes">Indexes</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#indexes"
+     * target="_blank">Indexes</a>
      */
     public void setIndexes(JsonObject indexes) {
         this.indexes = indexes;
@@ -257,8 +267,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * Define the changes feed filter functions set in this design document.
      *
      * @param filters map of filter name to function string
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#filter-functions">Filter functions</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#filter-functions"
+     * target="_blank">Filter functions</a>
      */
     public void setFilters(Map<String, String> filters) {
         this.filters = filters;
@@ -268,8 +279,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * Set the show functions defined in this design document.
      *
      * @param shows map of show function name to function string
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#show-functions">Show functions</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#show-functions"
+     * target="_blank">Show functions</a>
      */
     public void setShows(Map<String, String> shows) {
         this.shows = shows;
@@ -279,8 +291,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * Set the list functions defined in this design document.
      *
      * @param lists map of list function name to function string
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#list-functions">List functions</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#list-functions"
+     * target="_blank">List functions</a>
      */
     public void setLists(Map<String, String> lists) {
         this.lists = lists;
@@ -290,8 +303,9 @@ public class DesignDocument extends com.cloudant.client.org.lightcouch.Document 
      * Set the update handlers defined in this design document.
      *
      * @param updates map of update handler name to function string
-     * @see <a target="_blank"
-     * href="https://docs.cloudant.com/design_documents.html#update-handlers">Update handlers</a>
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/design_documents.html#update-handlers"
+     * target="_blank">Update handlers</a>
      */
     public void setUpdates(Map<String, String> updates) {
         this.updates = updates;

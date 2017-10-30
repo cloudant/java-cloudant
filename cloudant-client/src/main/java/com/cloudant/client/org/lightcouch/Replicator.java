@@ -79,10 +79,8 @@ import java.util.Map;
  *
  * @author Ahmed Yehia
  * @see ReplicatorDocument
- * @see <a target="_blank"
- * href="https://docs.cloudant.com/replication.html#the-/_replicator-database">
- * Replication - _replicator
- * </a>
+ * @see <a href="https://console.bluemix.net/docs/services/Cloudant/api/replication.html#the-_replicator-database"
+ * target="_blank">Replication - the _replicator database</a>
  * @since 0.0.2
  */
 public class Replicator {

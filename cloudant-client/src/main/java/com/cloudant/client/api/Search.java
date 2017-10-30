@@ -279,8 +279,9 @@ public class Search {
      *
      * @param sortJson JSON string specifying the sort order
      * @return this for additional parameter setting or to query
-     * @see <a target="_blank" href="http://docs.cloudant.com/api/search.html">sort query
-     * parameter format</a>
+     * @see <a target="_blank"
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/search.html#query-syntax">
+     * Search query syntax</a>
      */
     public Search sort(String sortJson) {
         assertNotEmpty(sortJson, "sort");
@@ -322,8 +323,9 @@ public class Search {
      *
      * @param groupsortJson JSON string specifying the group sort
      * @return this for additional parameter setting or to query
-     * @see <a target="_blank" href="http://docs.cloudant.com/api/search.html">sort query
-     * parameter format</a>
+     * @see <a target="_blank"
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/search.html#query-syntax">
+     * Search query syntax</a>
      */
     public Search groupSort(String groupsortJson) {
         assertNotEmpty(groupsortJson, "groupsortJson");
@@ -336,8 +338,9 @@ public class Search {
      *
      * @param rangesJson JSON string specifying the ranges
      * @return this for additional parameter setting or to query
-     * @see <a target="_blank" href="http://docs.cloudant.com/api/search.html">ranges query
-     * argument format</a>
+     * @see <a target="_blank"
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/search.html#query-syntax">
+     * Search query syntax</a>
      */
     public Search ranges(String rangesJson) {
         assertNotEmpty(rangesJson, "rangesJson");
@@ -366,8 +369,9 @@ public class Search {
      * @param fieldName  the name of the field
      * @param fieldValue the value of the field
      * @return this for additional parameter setting or to query
-     * @see <a target="_blank" href="https://docs.cloudant.com/search.html#faceting">drilldown
-     * query parameter</a>
+     * @see <a target="_blank"
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/search.html#faceting">
+     * drilldown query parameter</a>
      * @deprecated Use {@link #drillDown(String, String...)}
      */
     @Deprecated
@@ -387,8 +391,8 @@ public class Search {
      * @param fieldName   the name of the field
      * @param fieldValues field values to add
      * @return this for additional parameter setting or to query
-     * @see <a target="_blank" href="https://docs.cloudant.com/search.html#faceting">drilldown
-     * query parameter</a>
+     * @see <a href="https://console.bluemix.net/docs/services/Cloudant/api/search.html#faceting"
+     * target="_blank">drilldown query parameter</a>
      */
     public Search drillDown(String fieldName, String... fieldValues) {
         assertNotEmpty(fieldName, "fieldName");

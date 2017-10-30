@@ -79,7 +79,7 @@ public class Key {
         /**
          * Type constant for
          * <a target="_blank"
-         * href="https://docs.cloudant.com/creating_views.html#map-function-examples">
+         * href="https://console.bluemix.net/docs/services/Cloudant/api/creating_views.html#map-function-examples">
          * complex keys.</a>
          *
          * @since 2.0.0

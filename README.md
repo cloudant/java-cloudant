@@ -164,8 +164,8 @@ do not overlook the package overviews.
 
 ## Related documentation
 * [API reference (javadoc)](http://www.javadoc.io/doc/com.cloudant/cloudant-client/)
-* [Cloudant docs](http://docs.cloudant.com/)
-* [Cloudant for developers](https://cloudant.com/for-developers/)
+* [Cloudant docs](https://console.bluemix.net/docs/services/Cloudant/cloudant.html#overview)
+* [Cloudant Learning Center](https://developer.ibm.com/clouddataservices/cloudant-learning-center/)
 
 ## Development
 
@@ -199,7 +199,7 @@ includes only open issues, but it may already have been closed.
 ## Caching, Encryption, and Compression
 
 Caching data at the client, when it is appropriate for the application, can often improve performance considerably. In some cases, it may also be desirable to encrypt or compress data at the client.
-There is no built-in support for caching, encryption or compression at the client in java-cloudant. Other Java libraries that are [not officially supported by Cloudant](https://docs.cloudant.com/libraries.html#-client-libraries), but can provide these capabilities are:
+There is no built-in support for caching, encryption or compression at the client in java-cloudant. Other Java libraries that are [not officially supported by Cloudant](https://console.bluemix.net/docs/services/Cloudant/libraries/index.html#client-libraries), but can provide these capabilities are:
 
 * [java-cloudant-cache](https://github.com/cloudant-labs/java-cloudant-cache) can be used to provide caching integrated with the API of java-cloudant.
 

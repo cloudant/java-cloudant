@@ -14,7 +14,9 @@
 
 /**
  * This package provides access to the
- * <a target="_blank" href="https://docs.cloudant.com/creating_views.html">view API</a>.
+ * <a target="_blank"
+ * href="https://console.bluemix.net/docs/services/Cloudant/api/creating_views.html#views-mapreduce-">
+ * view API</a>.
  *
  * <H1>Overview</H1>
  * <P>
