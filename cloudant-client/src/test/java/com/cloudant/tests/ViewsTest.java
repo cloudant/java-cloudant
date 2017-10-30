@@ -26,6 +26,8 @@ import static org.junit.Assert.fail;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
+import com.cloudant.client.api.model.Document;
+import com.cloudant.client.api.views.AllDocsResponse;
 import com.cloudant.client.api.views.Key;
 import com.cloudant.client.api.views.SettableViewParameters;
 import com.cloudant.client.api.views.UnpaginatedRequestBuilder;
@@ -117,6 +119,22 @@ public class ViewsTest {
                 Object.class).includeDocs(true).keys("key-1", "key-2").build().getResponse()
                 .getDocsAs(Foo.class);
         assertThat(foos.size(), is(2));
+    }
+
+    @Test
+    public void byNonExistentAndExistingKey() throws Exception {
+        init();
+        List<ViewResponse.Row<String, Object>> foos = db.getViewRequestBuilder("example", "foo")
+                .newRequest(Key.Type.STRING, Object.class).includeDocs(true).keys("key-1", "non-existent")
+                .build().getResponse().getRows();
+        assertThat(foos.size(), is(1));
+        for (ViewResponse.Row row: foos) {
+            if (row.getError() == null) {
+                assertThat(row.getKey().toString(), is("key-1"));
+            } else {
+                assertNotNull(row.getDocument());
+            }
+        }
     }
 
     @Test
@@ -654,6 +672,74 @@ public class ViewsTest {
         List<String> allDocIds = db.getAllDocsRequestBuilder().keys(id1, id2).build().getResponse()
                 .getDocIds();
         assertThat(allDocIds.size(), is(2));
+    }
+
+    @Test
+    public void allDocsWithOneNonExistingKey() throws Exception {
+        init();
+        String id1 = db.save(new Foo()).getId();
+        String id2 = "non-existing-doc";
+        //create 3 and 4, but we don't care about the IDs
+        db.save(new Foo()).getId();
+        db.save(new Foo()).getId();
+
+        AllDocsResponse response = db.getAllDocsRequestBuilder()
+                .keys(id1, id2)
+                .includeDocs(true)
+                .build()
+                .getResponse();
+
+        Map<String, String> errors = response.getErrors();
+        Map<String, String> idsAndRevs = response.getIdsAndRevs();
+        assertThat(idsAndRevs.size(), is(1));
+        for (Map.Entry<String, String> doc : idsAndRevs.entrySet()) {
+            assertNotNull("The document _rev value should not be null", doc.getValue());
+        }
+
+        assertThat(errors.size(), is(1));
+        for (Map.Entry<String, String> error : errors.entrySet()) {
+            assertThat(error.getKey(), is("non-existing-doc"));
+            assertThat(error.getValue(), is("not_found"));
+        }
+    }
+
+    @Test
+    public void allDocsWithOnlyNonExistingKeys() throws Exception {
+        init();
+        String id1 = "non-existing-doc";
+        String id2 = "another-non-existing-doc";
+
+        AllDocsResponse response = db.getAllDocsRequestBuilder()
+                .keys(id1, id2)
+                .includeDocs(true)
+                .build()
+                .getResponse();
+
+        Map<String, String> errors = response.getErrors();
+        Map<String, String> idsAndRevs = response.getIdsAndRevs();
+        assertThat(idsAndRevs.size(), is(0));
+
+        assertThat(errors.size(), is(2));
+        for (Map.Entry<String, String> error : errors.entrySet()) {
+            assertThat(error.getValue(), is("not_found"));
+        }
+    }
+
+    @Test
+    public void allDocsEmptyListWithNonExistingKeys() throws Exception {
+        init();
+        String id1 = "non-existing-doc";
+        String id2 = "another-non-existing-doc";
+
+        List<Document> response = db.getAllDocsRequestBuilder()
+                .keys(id1, id2)
+                .includeDocs(true)
+                .build()
+                .getResponse()
+                .getDocs();
+
+        assertNotNull(response);
+        assertThat(response.size(), is(0));
     }
 
     /**

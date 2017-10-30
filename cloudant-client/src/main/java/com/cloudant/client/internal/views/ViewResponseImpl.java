@@ -163,7 +163,10 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
             if (docs == null) {
                 docs = new ArrayList<Document>();
                 for (Row row : getRows()) {
-                    docs.add(row.getDocument());
+                    Document doc = row.getDocument();
+                    if(doc != null) {
+                        docs.add(doc);
+                    }
                 }
             }
             return docs;
