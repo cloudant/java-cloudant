@@ -1,6 +1,8 @@
-# 2.10.0 (Unreleased)
-- [NEW] Add IAM cookie authentication method.
-- [IMPROVED] Updated documentation by replacing deprecated Cloudant links with the latest Bluemix links.
+# 2.10.0 (2017-11-07)
+- [NEW] Added API for upcoming IBM Cloud Identity and Access Management support for Cloudant on IBM
+  Cloud. Note: IAM API key support is not yet enabled in the service.
+- [IMPROVED] Updated documentation by replacing deprecated Cloudant links with the latest bluemix.net
+  links.
 - [IMPROVED] Clarified documentation for search indexes.
 - [IMPROVED] Added `Row#getError` and `AllDocsResponse#getErrors` for returning any error messages 
   from a `view` or `_all_docs` request.
