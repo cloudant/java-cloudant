@@ -965,7 +965,7 @@ public class Database {
     public List<com.cloudant.client.api.model.Response> bulk(List<?> objects) {
         List<Response> couchDbResponseList = db.bulk(objects, false);
         List<com.cloudant.client.api.model.Response> cloudantResponseList = new ArrayList<com
-                .cloudant.client.api.model.Response>();
+                .cloudant.client.api.model.Response>(couchDbResponseList.size());
         for (Response couchDbResponse : couchDbResponseList) {
             com.cloudant.client.api.model.Response response = new com.cloudant.client.api.model
                     .Response(couchDbResponse);
