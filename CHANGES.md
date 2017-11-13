@@ -1,3 +1,7 @@
+# 2.11.0 (Unreleased)
+- [FIXED] An issue where `Changes.hasNext()` never returns on receipt
+  of `last_seq` for continuous changes feeds.
+
 # 2.10.0 (2017-11-07)
 - [NEW] Added API for upcoming IBM Cloud Identity and Access Management support for Cloudant on IBM
   Cloud. Note: IAM API key support is not yet enabled in the service.
