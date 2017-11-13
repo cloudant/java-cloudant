@@ -278,6 +278,7 @@ public class Changes {
             return true;
         }
         // we were stopped, end of changes feed
+        terminate();
         return false;
     }
 
