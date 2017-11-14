@@ -33,9 +33,13 @@ public class CloudFoundryServiceTest {
         private List<HashMap<String, Object>> cloudantServices;
 
         VCAPGenerator() {
+            this("cloudantNoSQLDB");
+        }
+
+        VCAPGenerator(String serviceName) {
             vcap = new HashMap<String, Object>();
             cloudantServices = new ArrayList<HashMap<String, Object>>();
-            vcap.put("cloudantNoSQLDB", cloudantServices);
+            vcap.put(serviceName, cloudantServices);
         }
 
         private void addService(String name, String url, String username, String password) {
@@ -74,6 +78,34 @@ public class CloudFoundryServiceTest {
         public String toJson() {
             return new GsonBuilder().create().toJson(vcap);
         }
+    }
+
+    @Test
+    public void vcapValidServiceNameSpecified() {
+        String serviceName = "serviceFoo";
+        VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator(serviceName);
+        vcap.createNewService("test_bluemix_service_1",
+                CloudantClientHelper.SERVER_URI_WITH_USER_INFO,
+                CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
+        ClientBuilder.bluemix(vcap.toJson(), serviceName, "test_bluemix_service_1").build().serverVersion();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void vcapMissingServiceNameSpecified() {
+        VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
+        vcap.createNewService("test_bluemix_service_1",
+                CloudantClientHelper.SERVER_URI_WITH_USER_INFO,
+                CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
+        ClientBuilder.bluemix(vcap.toJson(), "missingService", "test_bluemix_service_1").build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void vcapNullServiceNameSpecified() {
+        VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
+        vcap.createNewService("test_bluemix_service_1",
+                CloudantClientHelper.SERVER_URI_WITH_USER_INFO,
+                CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
+        ClientBuilder.bluemix(vcap.toJson(), null, "test_bluemix_service_1").build();
     }
 
     @Test
