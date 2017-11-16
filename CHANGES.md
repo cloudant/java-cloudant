@@ -1,4 +1,4 @@
-# 2.11.0 (Unreleased)
+# (Unreleased)
 - [FIXED] An issue where `Changes.hasNext()` never returns on receipt
   of `last_seq` for continuous changes feeds.
 

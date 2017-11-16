@@ -186,6 +186,7 @@ public class ChangeNotificationsTest {
         // check against regression where hasNext() will hang
         while(c.hasNext()) {
             nChanges++;
+            c.next();
         }
         RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
         assertNotNull("There should be a changes request", request);
