@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright (c) 2015 2016 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2017 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -25,6 +25,7 @@ import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
 import com.google.gson.Gson;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -262,29 +263,32 @@ public class Changes {
      * Reads and sets the next feed in the stream.
      */
     private boolean readNextRow() {
-        boolean hasNext = false;
-        try {
-            if (!stop) {
-                while (true) {
-                    String row = getReader().readLine();
-                    if (row != null && row.isEmpty()) {
-                        continue;
-                    }
-                    if (row != null && !row.startsWith("{\"last_seq\":")) {
-                        setNextRow(gson.fromJson(row, ChangesResult.Row.class));
-                        hasNext = true;
-                        break;
-                    }
-                }
+        while (!stop) {
+            String row = getLineWrapped();
+            // end of stream - null indicates end of stream before we see last_seq which shouldn't
+            // be possible but we should handle it
+            if (row == null || row.startsWith("{\"last_seq\":")) {
+                terminate();
+                return false;
+            } else if (row.isEmpty()) {
+                // heartbeat
+                continue;
             }
-        } catch (Exception e) {
-            terminate();
-            throw new CouchDbException("Error reading continuous stream.", e);
+            setNextRow(gson.fromJson(row, ChangesResult.Row.class));
+            return true;
         }
-        if (!hasNext) {
+        // we were stopped, end of changes feed
+        terminate();
+        return false;
+    }
+
+    private String getLineWrapped() {
+        try {
+            return getReader().readLine();
+        } catch (IOException ioe) {
             terminate();
+            throw new CouchDbException("Error reading continuous stream.", ioe);
         }
-        return hasNext;
     }
 
     private BufferedReader getReader() {
