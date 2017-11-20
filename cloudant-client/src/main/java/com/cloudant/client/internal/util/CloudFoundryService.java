@@ -15,18 +15,12 @@
 package com.cloudant.client.internal.util;
 
 import java.net.URL;
-import java.util.List;
 
 
-public class CloudFoundryServices {
+public class CloudFoundryService {
 
-    public List<CloudFoundryService> cloudantNoSQLDB;
-
-    public static class CloudFoundryService {
-
-        public String name;
-        public CloudFoundryServiceCredentials credentials;
-    }
+    public String name;
+    public CloudFoundryServiceCredentials credentials;
 
     public static class CloudFoundryServiceCredentials {
 

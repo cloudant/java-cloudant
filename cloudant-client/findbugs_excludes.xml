@@ -95,16 +95,22 @@ For example because it requires an API change
         <Method name="readNextRow"/>
     </Match>
 
-    <!-- This bug is because com.cloudant.client.internal.util.CloudFoundryServices
-    ($CloudFoundryServiceCredentials) is populated via GSON. -->
+    <!-- This bug is because com.cloudant.client.internal.util.CloudFoundryService is populated via
+    GSON. -->
     <Match>
-        <Bug code="UWF" pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
-        <Class name="com.cloudant.client.internal.util.CloudFoundryServices$CloudFoundryService"/>
+        <Bug code="UwF" pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
+        <Class name="com.cloudant.client.internal.util.CloudFoundryService"/>
+        <Field name="credentials"/>
     </Match>
-
     <Match>
-        <Bug code="UWF" pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
-        <Class name="com.cloudant.client.internal.util.CloudFoundryServices$CloudFoundryServiceCredentials"/>
+        <Bug code="UwF" pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
+        <Class name="com.cloudant.client.internal.util.CloudFoundryService"/>
+        <Field name="name"/>
+    </Match>
+    <Match>
+        <Bug code="UwF" pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
+        <Class name="com.cloudant.client.internal.util.CloudFoundryService$CloudFoundryServiceCredentials"/>
+        <Field name="url"/>
     </Match>
 
 </FindBugsFilter>
