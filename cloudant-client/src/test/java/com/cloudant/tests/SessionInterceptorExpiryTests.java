@@ -29,10 +29,11 @@ import com.cloudant.http.internal.interceptors.CookieInterceptor;
 import com.cloudant.http.internal.interceptors.IamCookieInterceptor;
 import com.cloudant.http.internal.ok.OkHttpClientHttpUrlConnectionFactory;
 import com.cloudant.tests.util.HttpFactoryParameterizedTest;
+import com.cloudant.tests.util.IamSystemPropertyMock;
 import com.cloudant.tests.util.MockWebServerResources;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runners.Parameterized;
@@ -46,6 +47,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest {
+
+    public static IamSystemPropertyMock iamSystemPropertyMock;
 
     @Parameterized.Parameters(name = "Using okhttp: {0} for session path {1}")
     public static List<Object[]> testParams() {
@@ -70,6 +73,14 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
     private HttpConnectionRequestInterceptor rqInterceptor;
     private HttpConnectionResponseInterceptor rpInterceptor;
 
+    /**
+     * Before running this test class setup the property mock.
+     */
+    @BeforeClass
+    public static void setupIamSystemPropertyMock() {
+        iamSystemPropertyMock = new IamSystemPropertyMock();
+    }
+
     @Before
     public void setupSessionInterceptor() {
         String baseUrl = mockWebServer.url("").toString();
@@ -79,8 +90,9 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
             rqInterceptor = ci;
             rpInterceptor = ci;
         } else if (sessionPath.equals("/_iam_session")) {
-                IamSystemPropertyMock iamSystemPropertyMock =
-                        new IamSystemPropertyMock(mockIamServer.url("/oidc/token").toString());
+            // Set the endpoint value before each test
+            iamSystemPropertyMock.setMockIamTokenEndpointUrl(mockIamServer.url("/oidc/token")
+                    .toString());
             IamCookieInterceptor ici = new IamCookieInterceptor("apikey", baseUrl);
             rqInterceptor = ici;
             rpInterceptor = ici;
