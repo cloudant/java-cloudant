@@ -32,28 +32,26 @@ import static org.junit.Assert.fail;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.http.Http;
+import com.cloudant.tests.util.IamSystemPropertyMock;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
-import mockit.Invocation;
-import mockit.Mock;
-import mockit.MockUp;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 
 import java.nio.charset.Charset;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by tomblench on 30/06/2017.
  */
 
 public class HttpIamTest {
+
+    public static IamSystemPropertyMock iamSystemPropertyMock;
 
     @Rule
     public MockWebServer mockWebServer = new MockWebServer();
@@ -65,10 +63,21 @@ public class HttpIamTest {
     final static String iamApiKey = "iam";
     final static String iamTokenEndpoint = "/oidc/token";
 
+    /**
+     * Before running this test class setup the property mock.
+     */
+    @BeforeClass
+    public static void setupIamSystemPropertyMock() {
+        iamSystemPropertyMock = new IamSystemPropertyMock();
+    }
+
+    /**
+     * Before each test set the value of the endpoint in the property mock
+     */
     @Before
     public void setIAMMockEndpoint() {
-        IamSystemPropertyMock iamSystemPropertyMock =
-                new IamSystemPropertyMock(mockIamServer.url(iamTokenEndpoint).toString());
+        iamSystemPropertyMock.setMockIamTokenEndpointUrl(mockIamServer.url(iamTokenEndpoint)
+                .toString());
     }
 
     /**
