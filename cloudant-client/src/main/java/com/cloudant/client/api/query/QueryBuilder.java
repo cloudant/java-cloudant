@@ -21,7 +21,7 @@ public class QueryBuilder {
 
     private final OperationOrExpression selector;
     private String[] fields;
-    private String[][] sort;
+    private Sort[] sort;
     private Long limit;
     private Long skip;
 
@@ -34,8 +34,7 @@ public class QueryBuilder {
         return this;
     }
 
-    // TODO this is likely to take an array of FieldSorts or similar when merged with Rich's code
-    public QueryBuilder sort(String[]... sort) {
+    public QueryBuilder sort(Sort... sort) {
         this.sort = sort;
         return this;
     }
@@ -80,10 +79,10 @@ public class QueryBuilder {
     }
 
     // sorts are a bit more awkward and need a helper...
-    private static String quoteSort(String[][] sort) {
+    private static String quoteSort(Sort[] sort) {
         LinkedList<String> sorts = new LinkedList<String>();
-        for (String[] pair : sort) {
-            sorts.add(String.format("{%s}", Helpers.quoteNoSquare(pair)));
+        for (Sort pair : sort) {
+            sorts.add(String.format("{%s}", Helpers.quoteNoSquare(new Object[]{pair.getName(), pair.getOrder().toString()})));
         }
         return sorts.toString();
     }
