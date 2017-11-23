@@ -16,7 +16,7 @@ package com.cloudant.client.api.query;
 import static com.cloudant.client.internal.query.Helpers.quote;
 
 // expression, such as "widget_count" "$eq" 5
-public class Expression implements OperationOrExpression {
+public class Expression implements Selector {
 
     private final String lhs;
     private final String op;

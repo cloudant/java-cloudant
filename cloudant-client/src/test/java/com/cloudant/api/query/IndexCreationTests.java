@@ -14,10 +14,13 @@
 
 package com.cloudant.api.query;
 
+import static com.cloudant.client.api.query.Expression.gt;
 import static org.junit.Assert.assertEquals;
 
 import com.cloudant.client.api.query.JsonIndex;
+import com.cloudant.client.api.query.Selector;
 import com.cloudant.client.api.query.TextIndex;
+import com.cloudant.client.internal.util.SelectorUtils;
 import com.cloudant.tests.util.MockedServerTest;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -33,10 +36,11 @@ public class IndexCreationTests extends MockedServerTest {
 
     private static MockResponse CREATED = new MockResponse().setBody("{\"result\": \"created\"}");
 
-    // Strings for creating partial indexes
-    private String selectorContent = "{year: {$gt: 2010}}";
-    private String selectorPair = "partial_filter_selector: " + selectorContent;
-    private String selector = "{" + selectorPair + "}";
+    // Selector for creating partial indexes
+    private Selector selectorContent = gt("year", 2010);
+    // Keyed selector pair
+    private String selectorPair = SelectorUtils.withKey(SelectorUtils.PARTIAL_FILTER_SELECTOR,
+            selectorContent);
 
     @Test
     public void createJsonIndex() throws Exception {
@@ -96,24 +100,6 @@ public class IndexCreationTests extends MockedServerTest {
         createIndexTest(JsonIndex.builder()
                         .asc("a")
                         .partialFilterSelector(selectorContent)
-                        .definition(),
-                "{type: \"json\", index: {" + selectorPair + ", fields: [{\"a\":\"asc\"}]}}");
-    }
-
-    @Test
-    public void createJsonIndexPartialSelectorPair() throws Exception {
-        createIndexTest(JsonIndex.builder()
-                        .asc("a")
-                        .partialFilterSelector(selectorPair)
-                        .definition(),
-                "{type: \"json\", index: {" + selectorPair + ", fields: [{\"a\":\"asc\"}]}}");
-    }
-
-    @Test
-    public void createJsonIndexPartialSelectorObject() throws Exception {
-        createIndexTest(JsonIndex.builder()
-                        .asc("a")
-                        .partialFilterSelector(selector)
                         .definition(),
                 "{type: \"json\", index: {" + selectorPair + ", fields: [{\"a\":\"asc\"}]}}");
     }
@@ -186,23 +172,7 @@ public class IndexCreationTests extends MockedServerTest {
         createIndexTest(TextIndex.builder()
                         .partialFilterSelector(selectorContent)
                         .definition(),
-                "{type: \"text\", index: " + selector + "}");
-    }
-
-    @Test
-    public void createTextIndexPartialSelectorPair() throws Exception {
-        createIndexTest(TextIndex.builder()
-                        .partialFilterSelector(selectorPair)
-                        .definition(),
-                "{type: \"text\", index: " + selector + "}");
-    }
-
-    @Test
-    public void createTextIndexPartialSelectorObject() throws Exception {
-        createIndexTest(TextIndex.builder()
-                        .partialFilterSelector(selector)
-                        .definition(),
-                "{type: \"text\", index: " + selector + "}");
+                "{type: \"text\", index: {" + selectorPair + "}}");
     }
 
     @Test
@@ -223,7 +193,7 @@ public class IndexCreationTests extends MockedServerTest {
                         .number("n")
                         .defaultField(true, "german")
                         .analyzer("keyword")
-                        .partialFilterSelector(selector)
+                        .partialFilterSelector(selectorContent)
                         .indexArrayLengths(false)
                         .definition(),
                 "{type: \"text\"," +
@@ -235,7 +205,7 @@ public class IndexCreationTests extends MockedServerTest {
                         "{name: \"n\", type:\"number\"}]," +
                         "default_field: {enabled: true, analyzer: \"german\"}," +
                         "analyzer: \"keyword\"," +
-                        "partial_filter_selector: " + selectorContent + "," +
+                        selectorPair + "," +
                         "index_array_lengths: false" +
                         "}}");
     }

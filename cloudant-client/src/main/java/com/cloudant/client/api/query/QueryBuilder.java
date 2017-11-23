@@ -14,18 +14,19 @@
 package com.cloudant.client.api.query;
 
 import com.cloudant.client.internal.query.Helpers;
+import com.cloudant.client.internal.util.SelectorUtils;
 
 import java.util.LinkedList;
 
 public class QueryBuilder {
 
-    private final OperationOrExpression selector;
+    private final Selector selector;
     private String[] fields;
     private Sort[] sort;
     private Long limit;
     private Long skip;
 
-    public QueryBuilder(OperationOrExpression selector) {
+    public QueryBuilder(Selector selector) {
         this.selector = selector;
     }
 
@@ -50,7 +51,6 @@ public class QueryBuilder {
     }
 
     public String build() {
-        String selectorString = selector.toString();
         String fieldsString = this.fields == null ? null : Helpers.quote(this.fields);
         String sortString = this.sort == null ? null : quoteSort(this.sort);
         String limitString = this.limit == null ? null : Helpers.quote(this.limit);
@@ -58,7 +58,7 @@ public class QueryBuilder {
         StringBuilder builder = new StringBuilder();
         // build up components...
         // selector
-        builder.append(String.format("\"selector\": {%s}", selectorString));
+        builder.append(SelectorUtils.withKey(SelectorUtils.SELECTOR, this.selector));
         // fields
         if (fieldsString != null) {
             builder.append(String.format(", \"fields\": %s", fieldsString));

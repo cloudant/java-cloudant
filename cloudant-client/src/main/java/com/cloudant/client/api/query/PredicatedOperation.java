@@ -16,7 +16,7 @@ package com.cloudant.client.api.query;
 import static com.cloudant.client.internal.query.Helpers.quoteCurlyNoSquare;
 
 // predicated operation - an operation which takes one or more predicates such as "$eq" 5 as its rhs
-public class PredicatedOperation implements OperationOrExpression {
+public class PredicatedOperation implements Selector {
 
     private final String lhs;
     private final String op;

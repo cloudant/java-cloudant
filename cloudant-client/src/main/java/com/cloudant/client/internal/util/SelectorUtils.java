@@ -17,18 +17,89 @@ package com.cloudant.client.internal.util;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotNull;
 
+import com.cloudant.client.api.query.Selector;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 public class SelectorUtils {
 
-    public static JsonObject getPartialFilterSelectorFromString(String selectorJson) {
-        return getSelectorFromString("partial_filter_selector", selectorJson);
+    // Selector object keys
+    public static final String SELECTOR = "selector";
+    public static final String PARTIAL_FILTER_SELECTOR = "partial_filter_selector";
+
+    /**
+     * <P>
+     * Encloses the selector in a JSON object and returns the string form.
+     * </P>
+     * <pre>
+     * {@code
+     * Selector selector = eq("year", 2017);
+     * System.out.println(selector.toString());
+     * // Output: "year": {"$eq" : 2017}
+     * System.out.println(SelectorUtils.enclose(selector));
+     * // Output: {"year": {"$eq": 2017}}
+     * }
+     * </pre>
+     *
+     * @param selector the selector to enclose
+     * @return the string form of the selector enclosed in a JSON object
+     */
+    public static String enclose(Selector selector) {
+        return String.format("{%s}", selector.toString());
+    }
+
+    /**
+     * <P>
+     * Returns the string form of the specified key mapping to a JSON object enclosing the selector.
+     * </P>
+     * <pre>
+     * {@code
+     * Selector selector = eq("year", 2017);
+     * System.out.println(selector.toString());
+     * // Output: "year": {"$eq" : 2017}
+     * System.out.println(SelectorUtils.withKey("selector", selector));
+     * // Output: "selector": {"year": {"$eq": 2017}}
+     * }
+     * </pre>
+     *
+     * @param key      key to use for the selector (usually "selector" or "partial_filter_selector")
+     * @param selector the selector
+     * @return the string form of the selector enclosed in a JSON object, keyed by key
+     */
+    public static String withKey(String key, Selector selector) {
+        return String.format("\"%s\": %s", key, enclose(selector));
+    }
+
+    /**
+     * <P>
+     * Returns the string form of a JSON object with the specified key mapping to a JSON object
+     * enclosing the selector.
+     * </P>
+     * <pre>
+     * {@code
+     * Selector selector = eq("year", 2017);
+     * System.out.println(selector.toString());
+     * // Output: "year": {"$eq" : 2017}
+     * System.out.println(SelectorUtils.encloseWithKey("selector", selector));
+     * // Output: {"selector": {"year": {"$eq": 2017}}}
+     * }
+     * </pre>
+     *
+     * @param key      key to use for the selector (usually "selector" or "partial_filter_selector")
+     * @param selector the selector to enclose
+     * @return the string form of the selector enclosed in a JSON object with the specified key
+     */
+    public static String encloseWithKey(String key, Selector selector) {
+        return String.format("{%s}", withKey(key, selector));
+    }
+
+    public static JsonObject getJsonObjectFromSelector(Selector selector) {
+        return new Gson().fromJson(enclose(selector), JsonObject.class);
     }
 
     public static JsonObject getSelectorFromString(String selectorJson) {
-        return getSelectorFromString("selector", selectorJson);
+        return getSelectorFromString(SELECTOR, selectorJson);
     }
 
     private static JsonObject getSelectorFromString(String key, String selectorJson) {

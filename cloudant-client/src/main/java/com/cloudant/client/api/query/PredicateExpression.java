@@ -16,7 +16,7 @@ package com.cloudant.client.api.query;
 import static com.cloudant.client.internal.query.Helpers.quote;
 
 // predicate expression, such as "$eq" 5
-public class PredicateExpression implements OperationOrExpression {
+public class PredicateExpression implements Selector {
 
     private final String op;
     private final Object[] rhs;
