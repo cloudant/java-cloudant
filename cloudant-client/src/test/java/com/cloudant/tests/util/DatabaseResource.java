@@ -34,6 +34,7 @@ public class DatabaseResource extends ExternalResource {
     private CloudantClient client;
     private String databaseName = Utils.generateUUID();
     private Database database;
+    private boolean mock = false;
 
     /**
      * Create a database resource from the specified clientResource. Note that if the resources
@@ -53,6 +54,11 @@ public class DatabaseResource extends ExternalResource {
      */
     public DatabaseResource(CloudantClientResource clientResource) {
         this.clientResource = clientResource;
+    }
+
+    public DatabaseResource(CloudantClientMockServerResource mockServerResource) {
+        this.clientResource = mockServerResource;
+        this.mock = true;
     }
 
     @Override
@@ -94,12 +100,18 @@ public class DatabaseResource extends ExternalResource {
     @Override
     public void before() {
         client = clientResource.get();
-        database = client.database(databaseName, true);
+        if (!mock) {
+            database = client.database(databaseName, true);
+        } else {
+            database = client.database(databaseName, false);
+        }
     }
 
     @Override
     public void after() {
-        client.deleteDB(databaseName);
+        if (!mock) {
+            client.deleteDB(databaseName);
+        }
     }
 
     public Database get() {

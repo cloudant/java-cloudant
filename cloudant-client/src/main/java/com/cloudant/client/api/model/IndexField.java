@@ -19,7 +19,9 @@ package com.cloudant.client.api.model;
  *
  * @author Mario Briggs
  * @since 0.0.1
+ * @see com.cloudant.client.api.query.JsonIndex.Field
  */
+@Deprecated
 public class IndexField {
 
     /**
