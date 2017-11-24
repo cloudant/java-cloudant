@@ -13,12 +13,17 @@
  */
 package com.cloudant.client.api.query;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.Locale;
 
 public enum Type {
 
-    BOOLEAN,
+    @SerializedName("string")
     STRING,
+    @SerializedName("boolean")
+    BOOLEAN,
+    @SerializedName("number")
     NUMBER;
 
     @Override

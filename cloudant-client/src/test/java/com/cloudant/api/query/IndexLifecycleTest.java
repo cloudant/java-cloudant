@@ -22,6 +22,7 @@ import com.cloudant.client.api.query.Index;
 import com.cloudant.client.api.query.JsonIndex;
 import com.cloudant.client.api.query.Sort;
 import com.cloudant.client.api.query.TextIndex;
+import com.cloudant.client.api.query.Type;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
@@ -108,9 +109,9 @@ public class IndexLifecycleTest {
             List<TextIndex.Field> fields = tIndex.getFields();
             assertEquals("There should be three fields", 3, fields.size());
             // Field assertions
-            new FieldAssertHelper.Text(Collections.singletonMap("testString", TextIndex.Field.Type.STRING),
-                    Collections.singletonMap("testNumber", TextIndex.Field.Type.NUMBER),
-                    Collections.singletonMap("testBoolean", TextIndex.Field.Type.BOOLEAN)).assertFields(fields);
+            new FieldAssertHelper.Text(Collections.singletonMap("testString", Type.STRING),
+                    Collections.singletonMap("testNumber", Type.NUMBER),
+                    Collections.singletonMap("testBoolean", Type.BOOLEAN)).assertFields(fields);
         }
 
         {

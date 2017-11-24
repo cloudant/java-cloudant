@@ -26,10 +26,8 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -93,23 +91,6 @@ public class TextIndex extends InternalIndex<TextIndex.Definition, TextIndex.Fie
         private Type type;
 
         /**
-         * The type of the text index field.
-         */
-        public enum Type {
-            @SerializedName("string")
-            STRING,
-            @SerializedName("boolean")
-            BOOLEAN,
-            @SerializedName("number")
-            NUMBER;
-
-            @Override
-            public String toString() {
-                return super.toString().toLowerCase(Locale.ENGLISH);
-            }
-        }
-
-        /**
          * Instantiate a new Field
          *
          * @param name the name of the field
@@ -151,16 +132,16 @@ public class TextIndex extends InternalIndex<TextIndex.Definition, TextIndex.Fie
 
     private static class FieldAdapter implements JsonDeserializer<Field> {
 
-        private static final Type TEXT_FIELD = new TypeToken<Field.Type>() {
+        private static final java.lang.reflect.Type TEXT_FIELD = new TypeToken<Type>() {
         }.getType();
 
         @Override
-        public Field deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext
-                context) throws JsonParseException {
+        public Field deserialize(JsonElement json, java.lang.reflect.Type typeOfT,
+                                 JsonDeserializationContext context) throws JsonParseException {
             JsonObject fieldObject = json.getAsJsonObject();
             Field field = null;
             for (Map.Entry<String, JsonElement> fieldEntry : fieldObject.entrySet()) {
-                field = new Field(fieldEntry.getKey(), context.<Field.Type>deserialize
+                field = new Field(fieldEntry.getKey(), context.<Type>deserialize
                         (fieldEntry.getValue(), TEXT_FIELD));
             }
             return field;
@@ -247,7 +228,7 @@ public class TextIndex extends InternalIndex<TextIndex.Definition, TextIndex.Fie
          * @return the builder for chaining
          */
         public TextIndex.Builder string(String... fieldNames) {
-            return super.fields(fieldNamesToFieldList(Field.Type.STRING, fieldNames));
+            return super.fields(fieldNamesToFieldList(Type.STRING, fieldNames));
         }
 
         /**
@@ -257,7 +238,7 @@ public class TextIndex extends InternalIndex<TextIndex.Definition, TextIndex.Fie
          * @return the builder for chaining
          */
         public TextIndex.Builder number(String... fieldNames) {
-            return super.fields(fieldNamesToFieldList(Field.Type.NUMBER, fieldNames));
+            return super.fields(fieldNamesToFieldList(Type.NUMBER, fieldNames));
         }
 
         /**
@@ -267,10 +248,10 @@ public class TextIndex extends InternalIndex<TextIndex.Definition, TextIndex.Fie
          * @return the builder for chaining
          */
         public TextIndex.Builder bool(String... fieldNames) {
-            return super.fields(fieldNamesToFieldList(Field.Type.BOOLEAN, fieldNames));
+            return super.fields(fieldNamesToFieldList(Type.BOOLEAN, fieldNames));
         }
 
-        private List<Field> fieldNamesToFieldList(Field.Type type, String... fieldNames) {
+        private List<Field> fieldNamesToFieldList(Type type, String... fieldNames) {
             List<Field> fields = new ArrayList<Field>(fieldNames.length);
             for (String fieldName : fieldNames) {
                 fields.add(new Field(fieldName, type));
