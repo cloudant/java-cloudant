@@ -15,7 +15,6 @@
 package com.cloudant.client.api;
 
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
-import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotNull;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
@@ -29,11 +28,14 @@ import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.model.Shard;
+import com.cloudant.client.api.query.Indexes;
+import com.cloudant.client.api.query.JsonIndex;
 import com.cloudant.client.api.views.AllDocsRequestBuilder;
 import com.cloudant.client.api.views.ViewRequestBuilder;
 import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.client.internal.URIBase;
 import com.cloudant.client.internal.util.DeserializationTypes;
+import com.cloudant.client.internal.util.SelectorUtils;
 import com.cloudant.client.internal.views.AllDocsRequestBuilderImpl;
 import com.cloudant.client.internal.views.AllDocsRequestResponse;
 import com.cloudant.client.internal.views.ViewQueryParameters;
@@ -48,7 +50,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
@@ -264,7 +265,7 @@ public class Database {
     }
 
     /**
-     * Create a new index
+     * Create a new JSON index
      * <P>
      * Example usage creating an index that sorts ascending on name, then by year.
      * </P>
@@ -287,20 +288,57 @@ public class Database {
      *
      * @param indexName     optional name of the index (if not provided one will be generated)
      * @param designDocName optional name of the design doc in which the index will be created
-     * @param indexType     optional, type of index (only "json" as of now)
+     * @param indexType     optional, type of index (only "json" for this method)
      * @param fields        array of fields in the index
+     * @see Database#createIndex(String)
      */
+    @Deprecated
     public void createIndex(String indexName, String designDocName, String indexType,
                             IndexField[] fields) {
-        JsonObject indexDefn = getIndexDefinition(indexName, designDocName, indexType, fields);
-        createIndex(indexDefn.toString());
+        if (indexType == null || "json".equalsIgnoreCase(indexType)) {
+            JsonIndex.Builder b = JsonIndex.builder().name(indexName).designDocument(designDocName);
+            for (IndexField f : fields) {
+                switch (f.getOrder()) {
+                    case desc:
+                        b.desc(f.getName());
+                        break;
+                    case asc:
+                    default:
+                        b.asc(f.getName());
+                        break;
+                }
+            }
+            createIndex(b.definition());
+        } else {
+            throw new CouchDbException("Unsupported index type " + indexType);
+        }
     }
 
     /**
-     * Create a new index from a JSON string
+     * <P>
+     * Create a new index from a string of JSON representing the index definition
+     * </P>
+     * <P>
+     * Helpers are available to construct the index definition string for JSON and text indexes.
+     * </P>
+     * <P>
+     * Example usage:
+     * </P>
+     * <pre>
+     * {@code
+     * // Create a JSON index with generated names for the field named "Movie_year" with the default
+     * // ascending sort order
+     * db.createIndex(new JsonIndex.Builder().fields(new JsonIndex.Field("Movie_year")).definition());
+     *
+     * // Create a text index for the string field named "Movie_title"
+     * db.createIndex(new TextIndex.Builder().fields(new TextIndex.Field("Movie_title",
+     *     TextIndex.Field.Type.STRING)).definition());
+     * }
+     * </pre>
      *
      * @param indexDefinition String representation of the index definition JSON
-     * @see #createIndex(String, String, String, IndexField[])
+     * @see JsonIndex.Builder
+     * @see com.cloudant.client.api.query.TextIndex.Builder
      * @see <a
      * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#creating-an-index"
      * target="_blank">index definition</a>
@@ -372,14 +410,11 @@ public class Database {
      */
     public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT, FindByIndexOptions
             options) {
-        assertNotNull(selectorJson, "selectorJson");
-        // If it wasn't null we can safely trim
-        selectorJson = selectorJson.trim();
-        assertNotEmpty(selectorJson, "selectorJson");
+        JsonObject selector = SelectorUtils.getSelectorFromString(selectorJson);
         assertNotEmpty(options, "options");
 
         URI uri = new DatabaseURIHelper(db.getDBUri()).path("_find").build();
-        JsonObject body = getFindByIndexBody(selectorJson, options);
+        JsonObject body = getFindByIndexBody(selector, options);
         InputStream stream = null;
         try {
             stream = client.couchDbClient.executeToInputStream(createPost(uri, body.toString(),
@@ -413,7 +448,9 @@ public class Database {
      * </pre>
      *
      * @return List of Index objects
+     * @see Database#listIndexes()
      */
+    @Deprecated
     public List<Index> listIndices() {
         InputStream response = null;
         try {
@@ -426,16 +463,41 @@ public class Database {
     }
 
     /**
-     * Delete an index
+     * List the indexes in the database. The returned object allows for listing indexes by type.
+     *
+     * @return indexes object with methods for getting indexes of a particular type
+     */
+    public Indexes listIndexes() {
+        URI uri = new DatabaseURIHelper(db.getDBUri()).path("_index").build();
+        return client.couchDbClient.get(uri, Indexes.class);
+    }
+
+    /**
+     * Delete a JSON index
      *
      * @param indexName   name of the index
      * @param designDocId ID of the design doc
      */
     public void deleteIndex(String indexName, String designDocId) {
+        deleteIndex(indexName, designDocId, "json");
+    }
+
+    /**
+     * Delete an index with the specified name and type in the given design document.
+     *
+     * @param indexName   name of the index
+     * @param designDocId ID of the design doc (the _design prefix will be added if not present)
+     * @param type        type of the index, defaults to "json"
+     */
+    public void deleteIndex(String indexName, String designDocId, String type) {
         assertNotEmpty(indexName, "indexName");
         assertNotEmpty(designDocId, "designDocId");
+        if (!designDocId.startsWith("_design")) {
+            designDocId = "_design/" + designDocId;
+        }
+        type = (type == null || type.isEmpty()) ? "json" : type;
         URI uri = new DatabaseURIHelper(db.getDBUri()).path("_index").path(designDocId)
-                .path("json").path(indexName).build();
+                .path(type).path(indexName).build();
         InputStream response = null;
         try {
             HttpConnection connection = Http.DELETE(uri);
@@ -1198,37 +1260,12 @@ public class Database {
     // private helper methods
 
     /**
-     * Form a create index json from parameters
+     *
+     * @param selector sanitized selector JSON object (excluding "selector" key)
+     * @param options find by index options
+     * @return query object to POST
      */
-    private JsonObject getIndexDefinition(String indexName, String designDocName,
-                                          String indexType, IndexField[] fields) {
-        assertNotEmpty(fields, "index fields");
-        JsonObject indexObject = new JsonObject();
-        if (!(indexName == null || indexName.isEmpty())) {
-            indexObject.addProperty("name", indexName);
-        }
-        if (!(designDocName == null || designDocName.isEmpty())) {
-            indexObject.addProperty("ddoc", designDocName);
-        }
-        if (!(indexType == null || indexType.isEmpty())) {
-
-            indexObject.addProperty("type", indexType);
-        }
-
-        JsonArray fieldsArray = new JsonArray();
-        for (int i = 0; i < fields.length; i++) {
-            JsonObject fieldObject = new JsonObject();
-            fieldObject.addProperty(fields[i].getName(), fields[i].getOrder().toString());
-            fieldsArray.add(fieldObject);
-        }
-        JsonObject arrayOfFields = new JsonObject();
-        arrayOfFields.add("fields", fieldsArray);
-        indexObject.add("index", arrayOfFields);
-
-        return indexObject;
-    }
-
-    private JsonObject getFindByIndexBody(String selectorJson,
+    private JsonObject getFindByIndexBody(JsonObject selector,
                                           FindByIndexOptions options) {
 
         JsonArray fieldsArray = new JsonArray();
@@ -1251,32 +1288,8 @@ public class Database {
         }
 
         JsonObject indexObject = new JsonObject();
+        indexObject.add("selector", selector);
 
-        //parse and find if valid json issue #28
-        JsonObject selectorObject = null;
-        boolean isObject = true;
-        try {
-            selectorObject = getGson().fromJson(selectorJson, JsonObject.class);
-        } catch (JsonParseException e) {
-            isObject = false;
-        }
-
-        if (!isObject) {
-            if (selectorJson.startsWith("\"selector\"")) {
-                selectorJson = selectorJson.substring(selectorJson.indexOf(":") + 1,
-                        selectorJson.length()).trim();
-                selectorObject = getGson().fromJson(selectorJson, JsonObject.class);
-            } else {
-                throw new JsonParseException("selectorJson should be valid json or like " +
-                        "\"selector\": {...} ");
-            }
-        }
-
-        if (selectorObject.has("selector")) {
-            indexObject.add("selector", selectorObject.get("selector"));
-        } else {
-            indexObject.add("selector", selectorObject);
-        }
 
         if (fieldsArray.size() > 0) {
             indexObject.add("fields", fieldsArray);

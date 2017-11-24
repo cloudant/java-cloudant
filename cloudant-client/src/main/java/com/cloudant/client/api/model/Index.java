@@ -15,6 +15,8 @@
 package com.cloudant.client.api.model;
 
 import com.cloudant.client.api.model.IndexField.SortOrder;
+import com.cloudant.client.api.query.JsonIndex;
+import com.cloudant.client.api.query.TextIndex;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -25,7 +27,10 @@ import java.util.List;
  *
  * @author Mario Briggs
  * @since 0.0.1
+ * @see JsonIndex
+ * @see TextIndex
  */
+@Deprecated
 public class Index {
 
     private String ddoc;
