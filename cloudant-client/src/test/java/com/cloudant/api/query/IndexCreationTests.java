@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import com.cloudant.client.api.query.JsonIndex;
 import com.cloudant.client.api.query.Selector;
 import com.cloudant.client.api.query.TextIndex;
-import com.cloudant.client.internal.util.SelectorUtils;
+import com.cloudant.client.internal.query.Helpers;
 import com.cloudant.tests.util.MockedServerTest;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -39,7 +39,7 @@ public class IndexCreationTests extends MockedServerTest {
     // Selector for creating partial indexes
     private Selector selectorContent = gt("year", 2010);
     // Keyed selector pair
-    private String selectorPair = SelectorUtils.withKey(SelectorUtils.PARTIAL_FILTER_SELECTOR,
+    private String selectorPair = Helpers.withKey(Helpers.PARTIAL_FILTER_SELECTOR,
             selectorContent);
 
     @Test

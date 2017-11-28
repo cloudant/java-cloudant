@@ -14,7 +14,6 @@
 package com.cloudant.client.api.query;
 
 import com.cloudant.client.internal.query.Helpers;
-import com.cloudant.client.internal.util.SelectorUtils;
 
 import java.util.LinkedList;
 
@@ -58,7 +57,7 @@ public class QueryBuilder {
         StringBuilder builder = new StringBuilder();
         // build up components...
         // selector
-        builder.append(SelectorUtils.withKey(SelectorUtils.SELECTOR, this.selector));
+        builder.append(Helpers.withKey(Helpers.SELECTOR, this.selector));
         // fields
         if (fieldsString != null) {
             builder.append(String.format(", \"fields\": %s", fieldsString));
