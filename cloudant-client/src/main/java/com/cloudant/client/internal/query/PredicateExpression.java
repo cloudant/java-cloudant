@@ -11,9 +11,11 @@
  * either express or implied. See the License for the specific language governing permissions
  * and limitations under the License.
  */
-package com.cloudant.client.api.query;
+package com.cloudant.client.internal.query;
 
 import static com.cloudant.client.internal.query.Helpers.quote;
+
+import com.cloudant.client.api.query.Selector;
 
 // predicate expression, such as "$eq" 5
 public class PredicateExpression implements Selector {
