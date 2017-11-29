@@ -17,29 +17,29 @@ import static com.cloudant.client.internal.query.Helpers.quoteCurly;
 
 // operation - used to combine an operator such as "$and" and a series of operations or expressions
 // on the rhs
-public class Operation implements OperationOrExpression {
+public class Operation implements Selector {
 
     private final String op;
-    private final OperationOrExpression[] rhs;
+    private final Selector[] rhs;
 
-    private Operation(String op, OperationOrExpression... rhs) {
+    private Operation(String op, Selector... rhs) {
         this.op = op;
         this.rhs = rhs;
     }
 
-    public static Operation and(OperationOrExpression... rhs) {
+    public static Operation and(Selector... rhs) {
         return new Operation("$and", rhs);
     }
 
-    public static Operation or(OperationOrExpression... rhs) {
+    public static Operation or(Selector... rhs) {
         return new Operation("$or", rhs);
     }
 
-    public static Operation not(OperationOrExpression rhs) {
+    public static Operation not(Selector rhs) {
         return new Operation("$not", rhs);
     }
 
-    public static Operation nor(OperationOrExpression... rhs) {
+    public static Operation nor(Selector... rhs) {
         return new Operation("$nor", rhs);
     }
 

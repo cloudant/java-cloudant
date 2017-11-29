@@ -41,13 +41,17 @@ public class Sort extends NamedField {
 
     private Order order = null;
 
-    public Sort(String name) {
-        super(name);
-    }
-
-    public Sort(String name, Order order) {
+    protected Sort(String name, Order order) {
         super(name);
         this.order = order;
+    }
+
+    public static Sort asc(String fieldName) {
+        return new Sort(fieldName, Order.ASC);
+    }
+
+    public static Sort desc(String fieldName) {
+        return new Sort(fieldName, Order.DESC);
     }
 
     /**

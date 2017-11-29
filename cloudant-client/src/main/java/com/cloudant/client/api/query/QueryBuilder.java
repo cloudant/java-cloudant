@@ -19,13 +19,13 @@ import java.util.LinkedList;
 
 public class QueryBuilder {
 
-    private final OperationOrExpression selector;
+    private final Selector selector;
     private String[] fields;
-    private String[][] sort;
+    private Sort[] sort;
     private Long limit;
     private Long skip;
 
-    public QueryBuilder(OperationOrExpression selector) {
+    public QueryBuilder(Selector selector) {
         this.selector = selector;
     }
 
@@ -34,8 +34,7 @@ public class QueryBuilder {
         return this;
     }
 
-    // TODO this is likely to take an array of FieldSorts or similar when merged with Rich's code
-    public QueryBuilder sort(String[]... sort) {
+    public QueryBuilder sort(Sort... sort) {
         this.sort = sort;
         return this;
     }
@@ -51,7 +50,6 @@ public class QueryBuilder {
     }
 
     public String build() {
-        String selectorString = selector.toString();
         String fieldsString = this.fields == null ? null : Helpers.quote(this.fields);
         String sortString = this.sort == null ? null : quoteSort(this.sort);
         String limitString = this.limit == null ? null : Helpers.quote(this.limit);
@@ -59,7 +57,7 @@ public class QueryBuilder {
         StringBuilder builder = new StringBuilder();
         // build up components...
         // selector
-        builder.append(String.format("\"selector\": {%s}", selectorString));
+        builder.append(Helpers.withKey(Helpers.SELECTOR, this.selector));
         // fields
         if (fieldsString != null) {
             builder.append(String.format(", \"fields\": %s", fieldsString));
@@ -80,10 +78,10 @@ public class QueryBuilder {
     }
 
     // sorts are a bit more awkward and need a helper...
-    private static String quoteSort(String[][] sort) {
+    private static String quoteSort(Sort[] sort) {
         LinkedList<String> sorts = new LinkedList<String>();
-        for (String[] pair : sort) {
-            sorts.add(String.format("{%s}", Helpers.quoteNoSquare(pair)));
+        for (Sort pair : sort) {
+            sorts.add(String.format("{%s}", Helpers.quoteNoSquare(new Object[]{pair.getName(), pair.getOrder().toString()})));
         }
         return sorts.toString();
     }
