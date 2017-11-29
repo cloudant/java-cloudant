@@ -27,6 +27,7 @@ import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Permissions;
+import com.cloudant.client.api.model.QueryResult;
 import com.cloudant.client.api.model.Shard;
 import com.cloudant.client.api.query.Indexes;
 import com.cloudant.client.api.query.JsonIndex;
@@ -429,6 +430,34 @@ public class Database {
                 list.add(t);
             }
             return list;
+        } catch (UnsupportedEncodingException e) {
+            // This should never happen as every implementation of the java platform is required
+            // to support UTF-8.
+            throw new RuntimeException(e);
+        } finally {
+            close(stream);
+        }
+    }
+
+    public <T> QueryResult<T> query(String query, Class<T> classOfT) {
+        URI uri = new DatabaseURIHelper(db.getDBUri()).path("_find").build();
+        QueryResult<T> result = new QueryResult<T>();
+        InputStream stream = null;
+        try {
+            System.out.println(query);
+            stream = client.couchDbClient.executeToInputStream(createPost(uri, query,
+                    "application/json"));
+            Reader reader = new InputStreamReader(stream, "UTF-8");
+            JsonArray jsonArray = new JsonParser().parse(reader)
+                    .getAsJsonObject().getAsJsonArray("docs");
+            List<T> list = new ArrayList<T>();
+            for (JsonElement jsonElem : jsonArray) {
+                JsonElement elem = jsonElem.getAsJsonObject();
+                T t = client.getGson().fromJson(elem, classOfT);
+                list.add(t);
+            }
+            result.docs = list;
+            return result;
         } catch (UnsupportedEncodingException e) {
             // This should never happen as every implementation of the java platform is required
             // to support UTF-8.

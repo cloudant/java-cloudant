@@ -81,7 +81,7 @@ public class QueryBuilder {
     private static String quoteSort(Sort[] sort) {
         LinkedList<String> sorts = new LinkedList<String>();
         for (Sort pair : sort) {
-            sorts.add(String.format("{%s}", Helpers.quoteNoSquare(new Object[]{pair.getName(), pair.getOrder().toString()})));
+            sorts.add(String.format("{%s: %s}", Helpers.quote(pair.getName()), Helpers.quote(pair.getOrder().toString())));
         }
         return sorts.toString();
     }

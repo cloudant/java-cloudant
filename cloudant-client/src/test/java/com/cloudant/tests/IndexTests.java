@@ -14,6 +14,9 @@
 
 package com.cloudant.tests;
 
+import static com.cloudant.client.api.query.Expression.eq;
+import static com.cloudant.client.api.query.Expression.gt;
+import static com.cloudant.client.api.query.Operation.and;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -23,7 +26,10 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.FindByIndexOptions;
 import com.cloudant.client.api.model.IndexField;
+import com.cloudant.client.api.model.QueryResult;
 import com.cloudant.client.api.query.JsonIndex;
+import com.cloudant.client.api.query.QueryBuilder;
+import com.cloudant.client.api.query.Sort;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
@@ -45,6 +51,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -147,6 +154,26 @@ public class IndexTests {
         assertNotNull(movies);
         assert (movies.size() > 0);
         for (Movie m : movies) {
+            assertNotNull(m.getMovie_name());
+            assertNotNull(m.getMovie_year());
+        }
+
+    }
+
+    @Test
+    public void testNotNullIndexMovieNameAndYearWithCompleteJsonObjectStringSelector_newapi() {
+        QueryResult<Movie> movies = db.query(new QueryBuilder(and(
+                gt("Movie_year", 1960),
+                eq("Person_name", "Alec Guinness"))).
+                sort(Sort.desc("Movie_year")).
+                fields("Movie_name", "Movie_year").
+                build(),
+                Movie.class);
+
+        assertNotNull(movies);
+        assert (movies.docs.size() > 0);
+        // TODO assert order
+        for (Movie m : movies.docs) {
             assertNotNull(m.getMovie_name());
             assertNotNull(m.getMovie_year());
         }
