@@ -53,11 +53,15 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -439,24 +443,16 @@ public class Database {
         }
     }
 
-    public <T> QueryResult<T> query(String query, Class<T> classOfT) {
+    public <T> QueryResult<T> query(String query, final Class<T> classOfT) {
         URI uri = new DatabaseURIHelper(db.getDBUri()).path("_find").build();
-        QueryResult<T> result = new QueryResult<T>();
         InputStream stream = null;
         try {
             System.out.println(query);
             stream = client.couchDbClient.executeToInputStream(createPost(uri, query,
                     "application/json"));
             Reader reader = new InputStreamReader(stream, "UTF-8");
-            JsonArray jsonArray = new JsonParser().parse(reader)
-                    .getAsJsonObject().getAsJsonArray("docs");
-            List<T> list = new ArrayList<T>();
-            for (JsonElement jsonElem : jsonArray) {
-                JsonElement elem = jsonElem.getAsJsonObject();
-                T t = client.getGson().fromJson(elem, classOfT);
-                list.add(t);
-            }
-            result.docs = list;
+            Type type = TypeToken.getParameterized(QueryResult.class, classOfT).getType();
+            QueryResult<T> result = client.getGson().fromJson(reader, type);
             return result;
         } catch (UnsupportedEncodingException e) {
             // This should never happen as every implementation of the java platform is required

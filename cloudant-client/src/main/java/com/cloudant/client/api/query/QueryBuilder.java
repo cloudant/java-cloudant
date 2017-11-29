@@ -24,6 +24,7 @@ public class QueryBuilder {
     private Sort[] sort;
     private Long limit;
     private Long skip;
+    private boolean executionStats;
 
     public QueryBuilder(Selector selector) {
         this.selector = selector;
@@ -46,6 +47,11 @@ public class QueryBuilder {
 
     public QueryBuilder skip(long skip) {
         this.skip = skip;
+        return this;
+    }
+
+    public QueryBuilder executionStats(boolean executionStats) {
+        this.executionStats = executionStats;
         return this;
     }
 
@@ -73,6 +79,10 @@ public class QueryBuilder {
         // skip
         if (skipString != null) {
             builder.append(String.format(", \"skip\": %s", skipString));
+        }
+        // execution_stats
+        if (this.executionStats) {
+            builder.append(", \"execution_stats\": true");
         }
         return String.format("{%s}", builder.toString());
     }
