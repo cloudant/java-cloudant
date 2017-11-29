@@ -20,6 +20,7 @@ import static com.cloudant.client.api.query.Operation.and;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
@@ -167,6 +168,7 @@ public class IndexTests {
                 eq("Person_name", "Alec Guinness"))).
                 sort(Sort.desc("Movie_year")).
                 fields("Movie_name", "Movie_year").
+                executionStats(true).
                 build(),
                 Movie.class);
 
@@ -177,6 +179,9 @@ public class IndexTests {
             assertNotNull(m.getMovie_name());
             assertNotNull(m.getMovie_year());
         }
+        assertTrue(movies.executionStats.executionTimeMs > 0);
+        assertTrue(movies.executionStats.resultsReturned > 0);
+        assertTrue(movies.executionStats.totalDocsExamined > 0);
     }
 
     /**

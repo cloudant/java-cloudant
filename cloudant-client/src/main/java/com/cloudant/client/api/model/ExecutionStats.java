@@ -28,7 +28,7 @@ public class ExecutionStats {
      * Total execution time in milliseconds as measured by the database.
      */
     @SerializedName("execution_time_ms")
-    public final long executionTimeMs;
+    public final double executionTimeMs;
 
     public ExecutionStats(long totalKeysExamined, long totalDocsExamined, long
             totalQuorumDocsExamined, long resultsReturned, long executionTimeMs) {
@@ -37,5 +37,16 @@ public class ExecutionStats {
         this.totalQuorumDocsExamined = totalQuorumDocsExamined;
         this.resultsReturned = resultsReturned;
         this.executionTimeMs = executionTimeMs;
+    }
+
+    @Override
+    public String toString() {
+        return "ExecutionStats{" +
+                "totalKeysExamined=" + totalKeysExamined +
+                ", totalDocsExamined=" + totalDocsExamined +
+                ", totalQuorumDocsExamined=" + totalQuorumDocsExamined +
+                ", resultsReturned=" + resultsReturned +
+                ", executionTimeMs=" + executionTimeMs +
+                '}';
     }
 }
