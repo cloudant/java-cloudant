@@ -105,7 +105,7 @@ systemProp.test.couch.http=[http|https] # default http
 ```
 Alternatively, provide a URL containing all the above information:
 ```
-systemProp.test.couch.uri=https://example.couch.db
+systemProp.test.couch.url=https://example.couch.db
 ```
 You can leave out the port (it will use the protocol's default) and username
 and password (if the server does not require one)
