@@ -27,9 +27,9 @@ import static com.cloudant.client.api.query.Operation.and;
 import static com.cloudant.client.api.query.Operation.nor;
 import static com.cloudant.client.api.query.Operation.not;
 import static com.cloudant.client.api.query.Operation.or;
-import static com.cloudant.client.internal.query.PredicatedOperation.elemMatch;
+import static com.cloudant.client.api.query.PredicatedOperation.elemMatch;
 
-import com.cloudant.client.internal.query.PredicateExpression;
+import com.cloudant.client.api.query.PredicateExpression;
 import com.cloudant.client.api.query.QueryBuilder;
 import com.cloudant.client.api.query.Sort;
 import com.cloudant.client.api.query.Type;
