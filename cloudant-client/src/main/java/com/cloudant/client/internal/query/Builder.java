@@ -16,8 +16,8 @@ package com.cloudant.client.internal.query;
 
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.query.Field;
+import com.cloudant.client.api.query.Selector;
 import com.cloudant.client.api.query.TextIndex;
-import com.cloudant.client.internal.util.SelectorUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -69,8 +69,8 @@ public abstract class Builder<I extends InternalIndex<D, F>, D extends Definitio
      * @param selector string of JSON selector representation
      * @return the builder for chaining
      */
-    public B partialFilterSelector(String selector) {
-        instance.def.selector = SelectorUtils.getPartialFilterSelectorFromString(selector);
+    public B partialFilterSelector(Selector selector) {
+        instance.def.selector = Helpers.getJsonObjectFromSelector(selector);
         return returnThis();
     }
 

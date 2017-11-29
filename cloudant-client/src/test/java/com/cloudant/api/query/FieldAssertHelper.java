@@ -21,6 +21,7 @@ import com.cloudant.client.api.query.Field;
 import com.cloudant.client.api.query.JsonIndex;
 import com.cloudant.client.api.query.Sort;
 import com.cloudant.client.api.query.TextIndex;
+import com.cloudant.client.api.query.Type;
 
 import java.util.HashMap;
 import java.util.List;
@@ -43,15 +44,15 @@ public abstract class FieldAssertHelper<T, F extends Field> {
         }
     }
 
-    public static class Text extends FieldAssertHelper<TextIndex.Field.Type, TextIndex.Field> {
-        Text(Map<String, TextIndex.Field.Type>... expectedTextFields) {
-            for (Map<String, TextIndex.Field.Type> m : expectedTextFields) {
+    public static class Text extends FieldAssertHelper<Type, TextIndex.Field> {
+        Text(Map<String, Type>... expectedTextFields) {
+            for (Map<String, Type> m : expectedTextFields) {
                 this.expectedFields.putAll(m);
             }
         }
 
         @Override
-        protected void assertField(TextIndex.Field field, TextIndex.Field.Type type) {
+        protected void assertField(TextIndex.Field field, Type type) {
             assertEquals("The type should be the same", type, field.getType());
         }
     }

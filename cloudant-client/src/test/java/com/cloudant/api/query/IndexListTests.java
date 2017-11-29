@@ -22,6 +22,7 @@ import com.cloudant.client.api.query.Index;
 import com.cloudant.client.api.query.JsonIndex;
 import com.cloudant.client.api.query.Sort;
 import com.cloudant.client.api.query.TextIndex;
+import com.cloudant.client.api.query.Type;
 import com.cloudant.tests.util.MockedServerTest;
 
 import org.apache.commons.io.IOUtils;
@@ -107,7 +108,7 @@ public class IndexListTests extends MockedServerTest {
     }
 
     private void assertTextIndex(TextIndex index, String name, String selector, String analyzer,
-                                 String defaultField, Map<String, TextIndex.Field.Type>...
+                                 String defaultField, Map<String, Type>...
                                          expectedFields) throws Exception {
         assertIndex(index, name, "text", selector);
         assertEquals("The analyzer should be correct", analyzer, index.getAnalyzer());
@@ -129,16 +130,16 @@ public class IndexListTests extends MockedServerTest {
 
     private void assertSimpleText(TextIndex index) throws Exception {
         assertTextIndex(index, "simpletext", null, "\"keyword\"", "{}", Collections.singletonMap
-                ("Movie_name", TextIndex.Field.Type.STRING));
+                ("Movie_name", Type.STRING));
     }
 
     private void assertComplexText(TextIndex index) throws Exception {
         assertTextIndex(index, "complextext", SELECTOR_STRING, "{\"name\":\"perfield\"," +
                         "\"default\":\"english\",\"fields\":{\"spanish\":\"spanish\"," +
                         "\"german\":\"german\"}}", "{\"enabled\":true,\"analyzer\":\"spanish\"}",
-                Collections.singletonMap("Movie_name", TextIndex.Field.Type.STRING), Collections
-                        .singletonMap("Movie_runtime", TextIndex.Field.Type.NUMBER), Collections
-                        .singletonMap("Movie_wonaward", TextIndex.Field.Type.BOOLEAN));
+                Collections.singletonMap("Movie_name", Type.STRING), Collections
+                        .singletonMap("Movie_runtime", Type.NUMBER), Collections
+                        .singletonMap("Movie_wonaward", Type.BOOLEAN));
     }
 
     @Test
@@ -194,7 +195,7 @@ public class IndexListTests extends MockedServerTest {
         TextIndex simple = indexes.get(0);
         assertTextIndex(simple, "simpleselector", SELECTOR_STRING, "\"keyword\"", "{}",
                 Collections.singletonMap
-                        ("Movie_name", TextIndex.Field.Type.STRING));
+                        ("Movie_name", Type.STRING));
     }
 
     @Test

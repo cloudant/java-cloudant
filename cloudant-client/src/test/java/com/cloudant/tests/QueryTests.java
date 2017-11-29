@@ -27,10 +27,11 @@ import static com.cloudant.client.api.query.Operation.and;
 import static com.cloudant.client.api.query.Operation.nor;
 import static com.cloudant.client.api.query.Operation.not;
 import static com.cloudant.client.api.query.Operation.or;
-import static com.cloudant.client.api.query.PredicatedOperation.elemMatch;
+import static com.cloudant.client.internal.query.PredicatedOperation.elemMatch;
 
-import com.cloudant.client.api.query.PredicateExpression;
+import com.cloudant.client.internal.query.PredicateExpression;
 import com.cloudant.client.api.query.QueryBuilder;
+import com.cloudant.client.api.query.Sort;
 import com.cloudant.client.api.query.Type;
 
 import org.junit.Assert;
@@ -240,7 +241,7 @@ public class QueryTests {
     // "Selector basics"
     @Test
     public void basicSelector1WithSort() {
-        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier")).sort(new String[]{"year", "asc"}, new String[]{"director", "desc"});
+        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier")).sort(Sort.asc("year"), Sort.desc("director"));
         Assert.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +
                 "\"sort\": [{\"year\", \"asc\"}, {\"director\", \"desc\"}]}", qb.build());
     }
@@ -250,7 +251,7 @@ public class QueryTests {
     public void basicSelector1WithAllOptions() {
         QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier")).
                 fields("_id", "_rev", "year", "title").
-                sort(new String[]{"year", "asc"}, new String[]{"director", "desc"}).
+                sort(Sort.asc("year"), Sort.desc("director")).
                 limit(10).
                 skip(0);
         Assert.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +

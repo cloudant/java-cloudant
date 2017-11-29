@@ -34,8 +34,8 @@ import com.cloudant.client.api.views.AllDocsRequestBuilder;
 import com.cloudant.client.api.views.ViewRequestBuilder;
 import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.client.internal.URIBase;
+import com.cloudant.client.internal.query.Helpers;
 import com.cloudant.client.internal.util.DeserializationTypes;
-import com.cloudant.client.internal.util.SelectorUtils;
 import com.cloudant.client.internal.views.AllDocsRequestBuilderImpl;
 import com.cloudant.client.internal.views.AllDocsRequestResponse;
 import com.cloudant.client.internal.views.ViewQueryParameters;
@@ -410,7 +410,7 @@ public class Database {
      */
     public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT, FindByIndexOptions
             options) {
-        JsonObject selector = SelectorUtils.getSelectorFromString(selectorJson);
+        JsonObject selector = Helpers.getSelectorFromString(selectorJson);
         assertNotEmpty(options, "options");
 
         URI uri = new DatabaseURIHelper(db.getDBUri()).path("_find").build();
