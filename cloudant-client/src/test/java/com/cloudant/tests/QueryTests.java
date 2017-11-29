@@ -243,7 +243,7 @@ public class QueryTests {
     public void basicSelector1WithSort() {
         QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier")).sort(Sort.asc("year"), Sort.desc("director"));
         Assert.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +
-                "\"sort\": [{\"year\", \"asc\"}, {\"director\", \"desc\"}]}", qb.build());
+                "\"sort\": [{\"year\": \"asc\"}, {\"director\", \"desc\"}]}", qb.build());
     }
 
     // "Selector basics"
@@ -256,7 +256,7 @@ public class QueryTests {
                 skip(0);
         Assert.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +
                         "\"fields\": [\"_id\", \"_rev\", \"year\", \"title\"], " +
-                "\"sort\": [{\"year\", \"asc\"}, {\"director\", \"desc\"}], \"limit\": 10, " +
+                "\"sort\": [{\"year\": \"asc\"}, {\"director\": \"desc\"}], \"limit\": 10, " +
                 "\"skip\": 0}", qb.build());
     }
 
