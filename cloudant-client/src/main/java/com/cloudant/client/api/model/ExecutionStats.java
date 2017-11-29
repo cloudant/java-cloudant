@@ -15,7 +15,7 @@ public class ExecutionStats {
     @SerializedName("total_docs_examined")
     public final long totalDocsExamined;
     /**
-     * Number of documents fetched from the database using an out-of-band document fetch. This is only non-zero when read quorum > 1 is specified in the query parameters.
+     * Number of documents fetched from the database using an out-of-band document fetch. This is only non-zero when read quorum &gt; 1 is specified in the query parameters.
      */
     @SerializedName("total_quorum_docs_examined")
     public final long totalQuorumDocsExamined;
