@@ -379,6 +379,7 @@ public class Database {
      * @see <a
      * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#selector-syntax"
      * target="_blank">selector syntax</a>
+     * @deprecated Use {@link #query(String, Class)} instead
      */
     @Deprecated
     public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT) {
@@ -413,6 +414,7 @@ public class Database {
      * @see <a
      * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#selector-syntax"
      * target="_blank">selector syntax</a>
+     * @deprecated Use {@link #query(String, Class)} instead
      */
     @Deprecated
     public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT, FindByIndexOptions
@@ -423,6 +425,39 @@ public class Database {
         return query(body.toString(), classOfT).docs;
     }
 
+    /**
+     * <p>
+     *     Query documents using an index and a query selector.
+     * </p>
+     * <p>
+     *     Note: the most convenient way to generate query selectors is using a
+     *     {@link com.cloudant.client.api.query.QueryBuilder}.
+     * </p>
+     * <p>
+     *     Example usage to return the name and year of movies starring Alec Guinness since 1960
+     *     with the results sorted by year descending:
+     * </p>
+     * <pre>
+     * {@code
+     * QueryResult<Movie> movies = db.query(new QueryBuilder(and(
+     *   gt("Movie_year", 1960),
+     *   eq("Person_name", "Alec Guinness"))).
+     *   sort(Sort.desc("Movie_year")).
+     *   fields("Movie_name", "Movie_year").
+     *   build() Movie.class);
+     * }
+     * </pre>
+     * @param query    String representation of a JSON object describing criteria used to
+     *                 select documents.
+     * @param classOfT The class of Java objects to be returned in the {@code docs} field of result.
+     * @param <T>      The type of the Java object to be returned in the {@code docs} field of result.
+     * @return         A {@link QueryResult} object, containing the documents matching the query
+     *                 in the {@code docs} field.
+     * @see com.cloudant.client.api.query.QueryBuilder
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#selector-syntax"
+     * target="_blank">selector syntax</a>
+     */
     public <T> QueryResult<T> query(String query, final Class<T> classOfT) {
         URI uri = new DatabaseURIHelper(db.getDBUri()).path("_find").build();
         InputStream stream = null;
