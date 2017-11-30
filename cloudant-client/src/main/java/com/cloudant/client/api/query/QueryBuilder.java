@@ -25,7 +25,7 @@ public class QueryBuilder {
     private Long limit;
     private Long skip;
     private String bookmark;
-    private boolean update;
+    private boolean update = true;
     private boolean stable;
     private boolean executionStats;
 
