@@ -380,6 +380,7 @@ public class Database {
      * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#selector-syntax"
      * target="_blank">selector syntax</a>
      */
+    @Deprecated
     public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT) {
         return findByIndex(selectorJson, classOfT, new FindByIndexOptions());
     }
@@ -413,6 +414,7 @@ public class Database {
      * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#selector-syntax"
      * target="_blank">selector syntax</a>
      */
+    @Deprecated
     public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT, FindByIndexOptions
             options) {
         JsonObject selector = Helpers.getSelectorFromString(selectorJson);
@@ -420,27 +422,7 @@ public class Database {
 
         URI uri = new DatabaseURIHelper(db.getDBUri()).path("_find").build();
         JsonObject body = getFindByIndexBody(selector, options);
-        InputStream stream = null;
-        try {
-            stream = client.couchDbClient.executeToInputStream(createPost(uri, body.toString(),
-                    "application/json"));
-            Reader reader = new InputStreamReader(stream, "UTF-8");
-            JsonArray jsonArray = new JsonParser().parse(reader)
-                    .getAsJsonObject().getAsJsonArray("docs");
-            List<T> list = new ArrayList<T>();
-            for (JsonElement jsonElem : jsonArray) {
-                JsonElement elem = jsonElem.getAsJsonObject();
-                T t = client.getGson().fromJson(elem, classOfT);
-                list.add(t);
-            }
-            return list;
-        } catch (UnsupportedEncodingException e) {
-            // This should never happen as every implementation of the java platform is required
-            // to support UTF-8.
-            throw new RuntimeException(e);
-        } finally {
-            close(stream);
-        }
+        return query(body.toString(), classOfT).docs;
     }
 
     public <T> QueryResult<T> query(String query, final Class<T> classOfT) {

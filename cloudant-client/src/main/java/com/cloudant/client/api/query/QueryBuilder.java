@@ -28,6 +28,7 @@ public class QueryBuilder {
     private boolean update = true;
     private boolean stable;
     private boolean executionStats;
+    private String[] useIndex;
 
     public QueryBuilder(Selector selector) {
         this.selector = selector;
@@ -73,12 +74,24 @@ public class QueryBuilder {
         return this;
     }
 
+    public QueryBuilder useIndex(String designDocument) {
+        useIndex = new String[]{designDocument};
+        return this;
+    }
+
+    public QueryBuilder useIndex(String designDocument, String indexName) {
+        useIndex = new String[]{designDocument, indexName};
+        return this;
+    }
+
+
     public String build() {
         String fieldsString = this.fields == null ? null : Helpers.quote(this.fields);
         String sortString = this.sort == null ? null : quoteSort(this.sort);
         String limitString = this.limit == null ? null : Helpers.quote(this.limit);
         String skipString = this.skip == null ? null : Helpers.quote(this.skip);
         String bookmarkString = this.bookmark == null ? null : Helpers.quote(this.bookmark);
+        String useIndexString = this.useIndex == null ? null : Helpers.quote(this.useIndex);
         StringBuilder builder = new StringBuilder();
         // build up components...
         // selector
@@ -111,6 +124,9 @@ public class QueryBuilder {
         // execution_stats
         if (this.executionStats) {
             builder.append(", \"execution_stats\": true");
+        }
+        if (useIndexString != null) {
+            builder.append(String.format(", \"use_index\": %s", useIndexString));
         }
         return String.format("{%s}", builder.toString());
     }

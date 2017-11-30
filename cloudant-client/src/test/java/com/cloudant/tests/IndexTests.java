@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2017 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -42,6 +42,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -67,12 +68,10 @@ public class IndexTests {
     public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
 
     private static Database db;
-    private static CloudantClient account;
-    private static Map<String, Object> selector;
 
     @BeforeClass
     public static void setUp() throws Exception {
-        account = clientResource.get();
+        CloudantClient account = clientResource.get();
         db = dbResource.get();
 
         // create the movies-demo db for our index tests
@@ -91,34 +90,12 @@ public class IndexTests {
                 .designDocument("Movie_year")
                 .asc("Movie_year")
                 .definition());
-
-        //Create selector object: {"Movie_year": { "$gt": 1960}, "Person_name": "Alec Guinness"}
-        Map<String, Object> year = new HashMap<String, Object>();
-        year.put("$gt", new Integer(1960));
-        selector = new HashMap<String, Object>();
-        selector.put("Movie_year", year);
-        selector.put("Person_name", "Alec Guinness");
     }
 
-    @Test
-    public void testNotNullIndexNamesAndFields() {
-        List<JsonIndex> indices = db.listIndexes().jsonIndexes();
-        assertNotNull(indices);
-        assert (indices.size() > 0);
-        for (JsonIndex i : indices) {
-            assertNotNull(i.getName());
-            assertNotNull(i.getFields());
-            List<JsonIndex.Field> flds = i.getFields();
-            assertTrue("The fields should not be empty", flds.size() > 0);
-            for (JsonIndex.Field field : flds) {
-                assertNotNull("The field name should not be null", field.getName());
-                assertNotNull("The sort order should not be null", field.getOrder());
-            }
-        }
-    }
+    /* Deprecated API tests */
 
     @Test
-    public void testNotNullIndexMovieNameAndYear() {
+    public void testDeprecatedApiNotNullIndexMovieNameAndYear() {
         List<Movie> movies = db.findByIndex("\"selector\": { \"Movie_year\": {\"$gt\": 1960}, " +
                         "\"Person_name\": \"Alec Guinness\" }",
                 Movie.class,
@@ -145,7 +122,7 @@ public class IndexTests {
      * @see <a href="https://github.com/cloudant/java-cloudant/issues/137">Issue 137</a>
      */
     @Test
-    public void testNotNullIndexMovieNameAndYearWithCompleteJsonObjectStringSelector() {
+    public void testDeprecatedApiNotNullIndexMovieNameAndYearWithCompleteJsonObjectStringSelector() {
         List<Movie> movies = db.findByIndex("{\"selector\": { \"Movie_year\": {\"$gt\": 1960}, " +
                         "\"Person_name\": \"Alec Guinness\" } }",
                 Movie.class,
@@ -154,153 +131,6 @@ public class IndexTests {
                         .fields("Movie_name").fields("Movie_year"));
         assertNotNull(movies);
         assert (movies.size() > 0);
-        for (Movie m : movies) {
-            assertNotNull(m.getMovie_name());
-            assertNotNull(m.getMovie_year());
-        }
-
-    }
-
-    @Test
-    public void testNotNullIndexMovieNameAndYearWithCompleteJsonObjectStringSelector_newapi() {
-        QueryResult<Movie> movies = db.query(new QueryBuilder(and(
-                gt("Movie_year", 1960),
-                eq("Person_name", "Alec Guinness"))).
-                sort(Sort.desc("Movie_year")).
-                fields("Movie_name", "Movie_year").
-                executionStats(true).
-                build(),
-                Movie.class);
-
-        assertNotNull(movies);
-        assert (movies.docs.size() > 0);
-        // TODO assert order
-        for (Movie m : movies.docs) {
-            assertNotNull(m.getMovie_name());
-            assertNotNull(m.getMovie_year());
-        }
-        assertTrue(movies.executionStats.executionTimeMs > 0);
-        assertTrue(movies.executionStats.resultsReturned > 0);
-        assertTrue(movies.executionStats.totalDocsExamined > 0);
-    }
-
-    /**
-     * Tests that a complete JSON object selector, when converted to a String works for findByIndex.
-     *
-     * @see #testNotNullIndexMovieNameAndYearWithCompleteJsonObjectStringSelector()
-     * @see <a href="https://github.com/cloudant/java-cloudant/issues/137">Issue 137</a>
-     */
-    @Test
-    public void testNotNullIndexMovieNameAndYearWithCompleteJsonObjectSelectorAsString() {
-        Map<String, Object> selectorObject = new HashMap<String, Object>();
-        selectorObject.put("selector", selector);
-        JsonObject selectorObj = new Gson().toJsonTree(selectorObject).getAsJsonObject();
-        List<Movie> movies = db.findByIndex(selectorObj.toString(),
-                Movie.class,
-                new FindByIndexOptions()
-                        .sort(new IndexField("Movie_year", IndexField.SortOrder.desc))
-                        .fields("Movie_name").fields("Movie_year"));
-        assertNotNull(movies);
-        assert (movies.size() > 0);
-        for (Movie m : movies) {
-            assertNotNull(m.getMovie_name());
-            assertNotNull(m.getMovie_year());
-        }
-    }
-
-    @Test
-    public void testNotNullIndexMovieNameAndYearSelectorStringWithSpace() {
-        List<Movie> movies = db.findByIndex("    \"selector\"   :      {    \"Movie_year\"    :  " +
-                        "{\"$gt\": 1960}, \"Person_name\": \"Alec Guinness\" }     ", Movie.class,
-                new FindByIndexOptions()
-                        .sort(new IndexField("Movie_year", IndexField.SortOrder.desc))
-                        .fields("Movie_name").fields("Movie_year"));
-        assertNotNull(movies);
-        assert (movies.size() > 0);
-        for (Movie m : movies) {
-            assertNotNull(m.getMovie_name());
-            assertNotNull(m.getMovie_year());
-        }
-    }
-
-    @Test
-    public void testIndexMovieNameAndYearWithLimitSkipOptions() {
-        List<Movie> movies = db.findByIndex("\"selector\": { \"Movie_year\": {\"$gt\": 1960}, " +
-                        "\"Person_name\": \"Alec Guinness\" }",
-                Movie.class,
-                new FindByIndexOptions()
-                        .sort(new IndexField("Movie_year", IndexField.SortOrder.desc))
-                        .fields("Movie_name").fields("Movie_year")
-                        .limit(1)
-                        .skip(1)
-                        .readQuorum(2));
-        assertNotNull(movies);
-        assert (movies.size() == 1);
-        for (Movie m : movies) {
-            assertNotNull(m.getMovie_name());
-            assertNotNull(m.getMovie_year());
-        }
-    }
-
-    @Test
-    public void testIndexMovieNameAndYearWithJsonMapObject() {
-        List<Movie> movies = db.findByIndex(new GsonBuilder().create().toJson(selector),
-                Movie.class,
-                new FindByIndexOptions()
-                        .sort(new IndexField("Movie_year", IndexField.SortOrder.desc))
-                        .fields("Movie_name").fields("Movie_year")
-                        .limit(1)
-                        .skip(1)
-                        .readQuorum(2));
-        assertNotNull(movies);
-        assert (movies.size() == 1);
-        for (Movie m : movies) {
-            assertNotNull(m.getMovie_name());
-            assertNotNull(m.getMovie_year());
-        }
-    }
-
-    @Test
-    public void testIndexMovieFindByIndexDesignDoc() {
-        Map<String, Object> year = new HashMap<String, Object>();
-        year.put("$gt", new Integer(1960));
-        Map<String, Object> selector = new HashMap<String, Object>();
-        selector.put("Movie_year", year);
-        selector.put("Person_name", "Alec Guinness");
-        //check find by using index design doc
-        List<Movie> movies = db.findByIndex(new GsonBuilder().create().toJson(selector),
-                Movie.class,
-                new FindByIndexOptions()
-                        .sort(new IndexField("Movie_year", IndexField.SortOrder.desc))
-                        .fields("Movie_name").fields("Movie_year")
-                        .limit(1)
-                        .skip(1)
-                        .readQuorum(2).useIndex("Movie_year"));
-        assertNotNull(movies);
-        assert (movies.size() == 1);
-        for (Movie m : movies) {
-            assertNotNull(m.getMovie_name());
-            assertNotNull(m.getMovie_year());
-        }
-    }
-
-    @Test
-    public void testIndexMovieFindByIndexDesignDocAndName() {
-        Map<String, Object> year = new HashMap<String, Object>();
-        year.put("$gt", new Integer(1960));
-        Map<String, Object> selector = new HashMap<String, Object>();
-        selector.put("Movie_year", year);
-        selector.put("Person_name", "Alec Guinness");
-        //check find by using index design doc and index name
-        List<Movie> movies = db.findByIndex(new GsonBuilder().create().toJson(selector),
-                Movie.class,
-                new FindByIndexOptions().sort(new IndexField("Movie_year", IndexField.SortOrder.desc))
-                .fields("Movie_name").fields("Movie_year")
-                .limit(1)
-                .skip(1)
-                .readQuorum(2).useIndex("Movie_year", "Movie_year"));
-        assertNotNull(movies);
-        assert (movies.size() == 1);
         for (Movie m : movies) {
             assertNotNull(m.getMovie_name());
             assertNotNull(m.getMovie_year());
@@ -318,6 +148,136 @@ public class IndexTests {
         FindByIndexOptions findByIndexOptions = new FindByIndexOptions();
         findByIndexOptions.fields("\"");
         db.findByIndex("{\"type\":\"subscription\"}", Movie.class, findByIndexOptions);
+    }
+
+    /* Current API tests */
+
+    @Test
+    public void testNotNullIndexMovieNameAndYear() {
+        QueryResult<Movie> movies = db.query(new QueryBuilder(and(
+                gt("Movie_year", 1960),
+                eq("Person_name", "Alec Guinness"))).
+                        sort(Sort.desc("Movie_year")).
+                        fields("Movie_name", "Movie_year").
+                        executionStats(true).
+                        build(),
+                Movie.class);
+
+        assertNotNull(movies);
+        assert (movies.docs.size() > 0);
+        // TODO assert order
+        for (Movie m : movies.docs) {
+            assertNotNull(m.getMovie_name());
+            assertNotNull(m.getMovie_year());
+        }
+        assertTrue(movies.executionStats.executionTimeMs > 0);
+        assertTrue(movies.executionStats.resultsReturned > 0);
+        assertTrue(movies.executionStats.totalDocsExamined > 0);
+    }
+
+    @Test
+    public void testNotNullIndexNamesAndFields() {
+        List<JsonIndex> indices = db.listIndexes().jsonIndexes();
+        assertNotNull(indices);
+        assert (indices.size() > 0);
+        for (JsonIndex i : indices) {
+            assertNotNull(i.getName());
+            assertNotNull(i.getFields());
+            List<JsonIndex.Field> flds = i.getFields();
+            assertTrue("The fields should not be empty", flds.size() > 0);
+            for (JsonIndex.Field field : flds) {
+                assertNotNull("The field name should not be null", field.getName());
+                assertNotNull("The sort order should not be null", field.getOrder());
+            }
+        }
+    }
+
+    // TODO should we support read quorum which this test previously supported
+    @Test
+    public void testIndexMovieNameAndYearWithLimitSkipOptions() {
+        QueryResult<Movie> movies = db.query(new QueryBuilder(and(
+                gt("Movie_year", 1960),
+                eq("Person_name", "Alec Guinness"))).
+                        sort(Sort.desc("Movie_year")).
+                        fields("Movie_name", "Movie_year").
+                        limit(1).
+                        skip(1).
+                        build(),
+                Movie.class);
+        assertNotNull(movies);
+        assert (movies.docs.size() == 1);
+        for (Movie m : movies.docs) {
+            assertNotNull(m.getMovie_name());
+            assertNotNull(m.getMovie_year());
+        }
+    }
+
+
+    @Test
+    public void testIndexMovieFindByIndexDesignDoc() {
+        QueryResult<Movie> movies = db.query(new QueryBuilder(and(
+                gt("Movie_year", 1960),
+                eq("Person_name", "Alec Guinness"))).
+                        sort(Sort.desc("Movie_year")).
+                        fields("Movie_name", "Movie_year").
+                        limit(1).
+                        skip(1).
+                        useIndex("Movie_year").
+                        build(),
+                Movie.class);
+        assertNotNull(movies);
+        assert (movies.docs.size() == 1);
+        for (Movie m : movies.docs) {
+            assertNotNull(m.getMovie_name());
+            assertNotNull(m.getMovie_year());
+        }
+    }
+
+    @Test
+    public void testIndexMovieFindByIndexDesignDocAndName() {
+        QueryResult<Movie> movies = db.query(new QueryBuilder(and(
+                gt("Movie_year", 1960),
+                eq("Person_name", "Alec Guinness"))).
+                        sort(Sort.desc("Movie_year")).
+                        fields("Movie_name", "Movie_year").
+                        limit(1).
+                        skip(1).
+                        useIndex("Movie_year", "Movie_year").
+                        build(),
+                Movie.class);
+        assertNotNull(movies);
+        assert (movies.docs.size() == 1);
+        for (Movie m : movies.docs) {
+            assertNotNull(m.getMovie_name());
+            assertNotNull(m.getMovie_year());
+        }
+    }
+
+    @Test
+    public void testBookmarks() {
+        QueryBuilder queryBuilder = new QueryBuilder(and(
+                gt("Movie_year", 1960),
+                eq("Person_name", "Alec Guinness"))).
+                sort(Sort.desc("Movie_year")).
+                fields("Movie_name", "Movie_year").
+                limit(2);
+
+        QueryResult<Movie> moviesPage;
+        String bookmark = null;
+        int pageCount = 0;
+        QueryBuilder queryBuilderBookmarked = queryBuilder;
+        do {
+            if (bookmark != null) {
+                queryBuilderBookmarked = queryBuilder.bookmark(bookmark);
+            }
+            moviesPage = db.query(queryBuilderBookmarked.build(), Movie.class);
+            bookmark = moviesPage.bookmark;
+            if (!moviesPage.docs.isEmpty()) {
+                pageCount++;
+            }
+        } while (!moviesPage.docs.isEmpty());
+        Assert.assertEquals(3, pageCount);
+
     }
 
     /**
