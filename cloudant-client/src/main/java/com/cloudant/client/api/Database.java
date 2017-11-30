@@ -419,8 +419,6 @@ public class Database {
             options) {
         JsonObject selector = Helpers.getSelectorFromString(selectorJson);
         assertNotEmpty(options, "options");
-
-        URI uri = new DatabaseURIHelper(db.getDBUri()).path("_find").build();
         JsonObject body = getFindByIndexBody(selector, options);
         return query(body.toString(), classOfT).docs;
     }
