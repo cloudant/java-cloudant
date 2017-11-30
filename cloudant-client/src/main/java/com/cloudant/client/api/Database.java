@@ -447,7 +447,6 @@ public class Database {
         URI uri = new DatabaseURIHelper(db.getDBUri()).path("_find").build();
         InputStream stream = null;
         try {
-            System.out.println(query);
             stream = client.couchDbClient.executeToInputStream(createPost(uri, query,
                     "application/json"));
             Reader reader = new InputStreamReader(stream, "UTF-8");
