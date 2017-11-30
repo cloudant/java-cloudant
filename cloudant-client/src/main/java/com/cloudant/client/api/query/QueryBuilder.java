@@ -30,61 +30,131 @@ public class QueryBuilder {
     private boolean executionStats;
     private String[] useIndex;
 
+    /**
+     * Construct a {@code QueryBuilder} object for use with {@link com.cloudant.client.api.Database#query(String, Class)}
+     * @param selector JSON object describing criteria used to select documents.
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#selector-syntax"
+     * target="_blank">selector syntax</a>
+     * @see com.cloudant.client.api.Database#query(String, Class)
+     */
     public QueryBuilder(Selector selector) {
         this.selector = selector;
     }
 
+    /**
+     * Set the fields option for the query builder.
+     * @param fields List specifying which fields of each object should be returned. If it is
+     *               omitted, the entire object is returned.
+     * @return {@code QueryBuilder} object for method chaining.
+     */
     public QueryBuilder fields(String... fields) {
         this.fields = fields;
         return this;
     }
 
+    /**
+     * Set the sort option for the query builder.
+     * @param sort List specifying sort order of returned documents.
+     * @return {@code QueryBuilder} object for method chaining.
+     */
     public QueryBuilder sort(Sort... sort) {
         this.sort = sort;
         return this;
     }
 
+    /**
+     * Set the limit option for the query builder.
+     * @param limit Maximum number of results returned. Default is 25.
+     * @return {@code QueryBuilder} object for method chaining.
+     */
     public QueryBuilder limit(long limit) {
         this.limit = limit;
         return this;
     }
 
+    /**
+     * Set the skip option for the query builder.
+     * @param skip Skip the first {@code n} results, where {@code n} is the value specified.
+     * @return {@code QueryBuilder} object for method chaining.
+     */
     public QueryBuilder skip(long skip) {
         this.skip = skip;
         return this;
     }
 
+    /**
+     * Set the bookmark option for the query builder.
+     * @param bookmark  A string that enables you to specify which page of results you require.
+     *                  Used for paging through result sets. Every query returns an opaque string
+     *                  under the bookmark key that can then be passed back in a query to get the
+     *                  next page of results. If any part of the selector query changes between
+     *                  requests, the results are undefined.
+     * @return {@code QueryBuilder} object for method chaining.
+     */
     public QueryBuilder bookmark(String bookmark) {
         this.bookmark = bookmark;
         return this;
     }
 
+    /**
+     * Set the update option for the query builder.
+     * @param update Whether to update the index prior to returning the result. Default is {@code
+     * true}.
+     * @return {@code QueryBuilder} object for method chaining.
+     */
     public QueryBuilder update(boolean update) {
         this.update = update;
         return this;
     }
 
+    /**
+     * Set the stable option for the query builder.
+     * @param stable Whether or not the view results should be returned from a “stable” set of shards.
+     * @return {@code QueryBuilder} object for method chaining.
+     */
     public QueryBuilder stable(boolean stable) {
         this.stable = stable;
         return this;
     }
 
+    /**
+     * Set the executionStats option for the query builder.
+     * @param executionStats Include execution statistics in the query response. Defailt is
+     * {@code false}
+     * @return {@code QueryBuilder} object for method chaining.
+     */
     public QueryBuilder executionStats(boolean executionStats) {
         this.executionStats = executionStats;
         return this;
     }
 
+    /**
+     * Instruct a query to use a specific index.
+     * @param designDocument Design document to use.
+     * @return {@code QueryBuilder} object for method chaining.
+     */
     public QueryBuilder useIndex(String designDocument) {
         useIndex = new String[]{designDocument};
         return this;
     }
 
+    /**
+     * Instruct a query to use a specific index.
+     * @param designDocument Design document to use.
+     * @param indexName Index name to use.
+     * @return {@code QueryBuilder} object for method chaining.
+     */
     public QueryBuilder useIndex(String designDocument, String indexName) {
         useIndex = new String[]{designDocument, indexName};
         return this;
     }
 
-
+    /**
+     * Build string representation of query for use with
+     * {@link com.cloudant.client.api.Database#query(String, Class)}.
+     * @return String representation of query.
+     */
     public String build() {
         String fieldsString = this.fields == null ? null : Helpers.quote(this.fields);
         String sortString = this.sort == null ? null : quoteSort(this.sort);

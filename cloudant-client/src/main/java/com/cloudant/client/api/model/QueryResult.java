@@ -19,12 +19,28 @@ import java.util.List;
 
 public class QueryResult<T> {
 
+    /**
+     * Array of documents matching the search. In each matching document, the fields specified in
+     * the fields part of the request body are listed, along with their values.
+     */
     public List<T> docs;
 
+    /**
+     * Execution warnings.
+     */
     public String warning;
 
+    /**
+     * Execution statistics.
+     */
     @SerializedName("execution_stats")
     public ExecutionStats executionStats;
 
+    /**
+     * An opaque string used for paging. See {@link com.cloudant.client.api.query.QueryBuilder#bookmark}
+     * for usage details.
+     *
+     * @see com.cloudant.client.api.query.QueryBuilder#bookmark
+     */
     public String bookmark;
 }
