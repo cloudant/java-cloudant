@@ -24,6 +24,9 @@ public class QueryBuilder {
     private Sort[] sort;
     private Long limit;
     private Long skip;
+    private String bookmark;
+    private boolean update;
+    private boolean stable;
     private boolean executionStats;
 
     public QueryBuilder(Selector selector) {
@@ -50,6 +53,21 @@ public class QueryBuilder {
         return this;
     }
 
+    public QueryBuilder bookmark(String bookmark) {
+        this.bookmark = bookmark;
+        return this;
+    }
+
+    public QueryBuilder update(boolean update) {
+        this.update = update;
+        return this;
+    }
+
+    public QueryBuilder stable(boolean stable) {
+        this.stable = stable;
+        return this;
+    }
+
     public QueryBuilder executionStats(boolean executionStats) {
         this.executionStats = executionStats;
         return this;
@@ -60,6 +78,7 @@ public class QueryBuilder {
         String sortString = this.sort == null ? null : quoteSort(this.sort);
         String limitString = this.limit == null ? null : Helpers.quote(this.limit);
         String skipString = this.skip == null ? null : Helpers.quote(this.skip);
+        String bookmarkString = this.bookmark == null ? null : Helpers.quote(this.bookmark);
         StringBuilder builder = new StringBuilder();
         // build up components...
         // selector
@@ -79,6 +98,15 @@ public class QueryBuilder {
         // skip
         if (skipString != null) {
             builder.append(String.format(", \"skip\": %s", skipString));
+        }
+        if (bookmarkString != null) {
+            builder.append(String.format(", \"bookmark\": %s", bookmarkString));
+        }
+        if (!this.update) {
+            builder.append(", \"update\": false");
+        }
+        if (this.stable) {
+            builder.append(", \"stable\": true");
         }
         // execution_stats
         if (this.executionStats) {
