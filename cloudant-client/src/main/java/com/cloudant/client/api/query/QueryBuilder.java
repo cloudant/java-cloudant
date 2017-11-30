@@ -110,7 +110,7 @@ public class QueryBuilder {
 
     /**
      * Set the stable option for the query builder.
-     * @param stable Whether or not the view results should be returned from a “stable” set of shards.
+     * @param stable Whether or not the view results should be returned from a "stable" set of shards.
      * @return {@code QueryBuilder} object for method chaining.
      */
     public QueryBuilder stable(boolean stable) {
