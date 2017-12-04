@@ -27,7 +27,7 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.FindByIndexOptions;
 import com.cloudant.client.api.model.IndexField;
-import com.cloudant.client.api.model.QueryResult;
+import com.cloudant.client.api.query.QueryResult;
 import com.cloudant.client.api.query.JsonIndex;
 import com.cloudant.client.api.query.QueryBuilder;
 import com.cloudant.client.api.query.Sort;

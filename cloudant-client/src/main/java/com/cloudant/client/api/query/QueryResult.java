@@ -11,7 +11,7 @@
  * either express or implied. See the License for the specific language governing permissions
  * and limitations under the License.
  */
-package com.cloudant.client.api.model;
+package com.cloudant.client.api.query;
 
 import com.google.gson.annotations.SerializedName;
 
