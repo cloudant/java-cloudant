@@ -21,44 +21,12 @@ public class ExecutionStats {
     private final long totalKeysExamined;
     @SerializedName("total_docs_examined")
     private final long totalDocsExamined;
-    /**
-     * Number of documents fetched from the database using an out-of-band document fetch. This is only non-zero when read quorum &gt; 1 is specified in the query parameters.
-     */
     @SerializedName("total_quorum_docs_examined")
     private final long totalQuorumDocsExamined;
-    /**
-     * Number of results returned from the query. Ideally this should not be significantly lower than the total documents / keys examined.
-     */
     @SerializedName("results_returned")
     private final long resultsReturned;
-    /**
-     * Total execution time in milliseconds as measured by the database.
-     */
     @SerializedName("execution_time_ms")
     private final double executionTimeMs;
-
-    /**
-     * Number of index keys examined. Currently always 0.
-     */
-    public long getTotalKeysExamined() {
-        return totalKeysExamined;
-    }
-
-    public long getTotalDocsExamined() {
-        return totalDocsExamined;
-    }
-
-    public long getTotalQuorumDocsExamined() {
-        return totalQuorumDocsExamined;
-    }
-
-    public long getResultsReturned() {
-        return resultsReturned;
-    }
-
-    public double getExecutionTimeMs() {
-        return executionTimeMs;
-    }
 
     public ExecutionStats(long totalKeysExamined, long totalDocsExamined, long
             totalQuorumDocsExamined, long resultsReturned, long executionTimeMs) {
@@ -67,6 +35,46 @@ public class ExecutionStats {
         this.totalQuorumDocsExamined = totalQuorumDocsExamined;
         this.resultsReturned = resultsReturned;
         this.executionTimeMs = executionTimeMs;
+    }
+
+    /**
+     * @return
+     * Number of index keys examined. Currently always 0.
+     */
+    public long getTotalKeysExamined() {
+        return totalKeysExamined;
+    }
+
+    /**
+     * @return
+     * Number of documents fetched from the database / index, equivalent to using include_docs=true in a view. These may then be filtered in-memory to further narrow down the result set based on the selector.
+     */
+    public long getTotalDocsExamined() {
+        return totalDocsExamined;
+    }
+
+    /**
+     * @return
+     * Number of documents fetched from the database using an out-of-band document fetch. This is only non-zero when read quorum &gt; 1 is specified in the query parameters.
+     */
+    public long getTotalQuorumDocsExamined() {
+        return totalQuorumDocsExamined;
+    }
+
+    /**
+     * @return
+     * Number of results returned from the query. Ideally this should not be significantly lower than the total documents / keys examined.
+     */
+    public long getResultsReturned() {
+        return resultsReturned;
+    }
+
+    /**
+     * @return
+     * Total execution time in milliseconds as measured by the database.
+     */
+    public double getExecutionTimeMs() {
+        return executionTimeMs;
     }
 
     @Override

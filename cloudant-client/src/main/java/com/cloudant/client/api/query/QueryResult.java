@@ -19,29 +19,13 @@ import java.util.List;
 
 public class QueryResult<T> {
 
-    /**
-     * Array of documents matching the search. In each matching document, the fields specified in
-     * the fields part of the request body are listed, along with their values.
-     */
     private final List<T> docs;
 
-    /**
-     * Execution warnings.
-     */
     private final String warning;
 
-    /**
-     * Execution statistics.
-     */
     @SerializedName("execution_stats")
     private final ExecutionStats executionStats;
 
-    /**
-     * An opaque string used for paging. See {@link com.cloudant.client.api.query.QueryBuilder#bookmark}
-     * for usage details.
-     *
-     * @see com.cloudant.client.api.query.QueryBuilder#bookmark
-     */
     private final String bookmark;
 
     public QueryResult(List<T> docs, String warning, ExecutionStats executionStats, String
@@ -52,18 +36,38 @@ public class QueryResult<T> {
         this.bookmark = bookmark;
     }
 
+    /**
+     * @return
+     * Array of documents matching the search. In each matching document, the fields specified in
+     * the fields part of the request body are listed, along with their values.
+     */
     public List<T> getDocs() {
         return docs;
     }
 
+    /**
+     * @return
+     * Execution warnings.
+     */
     public String getWarning() {
         return warning;
     }
 
+    /**
+     * @return
+     * Execution statistics.
+     */
     public ExecutionStats getExecutionStats() {
         return executionStats;
     }
 
+    /**
+     * @return
+     * An opaque string used for paging. See {@link com.cloudant.client.api.query.QueryBuilder#bookmark}
+     * for usage details.
+     *
+     * @see com.cloudant.client.api.query.QueryBuilder#bookmark
+     */
     public String getBookmark() {
         return bookmark;
     }
