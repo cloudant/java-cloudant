@@ -160,15 +160,15 @@ public class IndexTests {
                 Movie.class);
 
         assertNotNull(movies);
-        assert (movies.docs.size() > 0);
+        assert (movies.getDocs().size() > 0);
         // TODO assert order
-        for (Movie m : movies.docs) {
+        for (Movie m : movies.getDocs()) {
             assertNotNull(m.getMovie_name());
             assertNotNull(m.getMovie_year());
         }
-        assertTrue(movies.executionStats.executionTimeMs > 0);
-        assertTrue(movies.executionStats.resultsReturned > 0);
-        assertTrue(movies.executionStats.totalDocsExamined > 0);
+        assertTrue(movies.getExecutionStats().getExecutionTimeMs() > 0);
+        assertTrue(movies.getExecutionStats().getResultsReturned() > 0);
+        assertTrue(movies.getExecutionStats().getTotalDocsExamined() > 0);
     }
 
     @Test
@@ -201,8 +201,8 @@ public class IndexTests {
                         build(),
                 Movie.class);
         assertNotNull(movies);
-        assert (movies.docs.size() == 1);
-        for (Movie m : movies.docs) {
+        assert (movies.getDocs().size() == 1);
+        for (Movie m : movies.getDocs()) {
             assertNotNull(m.getMovie_name());
             assertNotNull(m.getMovie_year());
         }
@@ -222,8 +222,8 @@ public class IndexTests {
                         build(),
                 Movie.class);
         assertNotNull(movies);
-        assert (movies.docs.size() == 1);
-        for (Movie m : movies.docs) {
+        assert (movies.getDocs().size() == 1);
+        for (Movie m : movies.getDocs()) {
             assertNotNull(m.getMovie_name());
             assertNotNull(m.getMovie_year());
         }
@@ -242,8 +242,8 @@ public class IndexTests {
                         build(),
                 Movie.class);
         assertNotNull(movies);
-        assert (movies.docs.size() == 1);
-        for (Movie m : movies.docs) {
+        assert (movies.getDocs().size() == 1);
+        for (Movie m : movies.getDocs()) {
             assertNotNull(m.getMovie_name());
             assertNotNull(m.getMovie_year());
         }
@@ -267,11 +267,11 @@ public class IndexTests {
                 queryBuilderBookmarked = queryBuilder.bookmark(bookmark);
             }
             moviesPage = db.query(queryBuilderBookmarked.build(), Movie.class);
-            bookmark = moviesPage.bookmark;
-            if (!moviesPage.docs.isEmpty()) {
+            bookmark = moviesPage.getBookmark();
+            if (!moviesPage.getDocs().isEmpty()) {
                 pageCount++;
             }
-        } while (!moviesPage.docs.isEmpty());
+        } while (!moviesPage.getDocs().isEmpty());
         Assert.assertEquals(3, pageCount);
 
     }

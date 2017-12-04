@@ -23,18 +23,18 @@ public class QueryResult<T> {
      * Array of documents matching the search. In each matching document, the fields specified in
      * the fields part of the request body are listed, along with their values.
      */
-    public List<T> docs;
+    private final List<T> docs;
 
     /**
      * Execution warnings.
      */
-    public String warning;
+    private final String warning;
 
     /**
      * Execution statistics.
      */
     @SerializedName("execution_stats")
-    public ExecutionStats executionStats;
+    private final ExecutionStats executionStats;
 
     /**
      * An opaque string used for paging. See {@link com.cloudant.client.api.query.QueryBuilder#bookmark}
@@ -42,5 +42,29 @@ public class QueryResult<T> {
      *
      * @see com.cloudant.client.api.query.QueryBuilder#bookmark
      */
-    public String bookmark;
+    private final String bookmark;
+
+    public QueryResult(List<T> docs, String warning, ExecutionStats executionStats, String
+            bookmark) {
+        this.docs = docs;
+        this.warning = warning;
+        this.executionStats = executionStats;
+        this.bookmark = bookmark;
+    }
+
+    public List<T> getDocs() {
+        return docs;
+    }
+
+    public String getWarning() {
+        return warning;
+    }
+
+    public ExecutionStats getExecutionStats() {
+        return executionStats;
+    }
+
+    public String getBookmark() {
+        return bookmark;
+    }
 }

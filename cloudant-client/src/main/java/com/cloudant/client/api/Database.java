@@ -422,7 +422,7 @@ public class Database {
         JsonObject selector = Helpers.getSelectorFromString(selectorJson);
         assertNotEmpty(options, "options");
         JsonObject body = getFindByIndexBody(selector, options);
-        return query(body.toString(), classOfT).docs;
+        return query(body.toString(), classOfT).getDocs();
     }
 
     /**
