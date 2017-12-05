@@ -11,11 +11,9 @@
  * either express or implied. See the License for the specific language governing permissions
  * and limitations under the License.
  */
-package com.cloudant.client.internal.query;
+package com.cloudant.client.api.query;
 
 import static com.cloudant.client.internal.query.Helpers.quoteCurlyNoSquare;
-
-import com.cloudant.client.api.query.Selector;
 
 // predicated operation - an operation which takes one or more predicates such as "$eq" 5 as its rhs
 public class PredicatedOperation implements Selector {

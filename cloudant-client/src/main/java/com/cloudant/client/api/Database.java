@@ -27,6 +27,7 @@ import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Permissions;
+import com.cloudant.client.api.query.QueryResult;
 import com.cloudant.client.api.model.Shard;
 import com.cloudant.client.api.query.Indexes;
 import com.cloudant.client.api.query.JsonIndex;
@@ -50,13 +51,14 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -374,7 +376,9 @@ public class Database {
      * @see <a
      * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#selector-syntax"
      * target="_blank">selector syntax</a>
+     * @deprecated Use {@link #query(String, Class)} instead
      */
+    @Deprecated
     public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT) {
         return findByIndex(selectorJson, classOfT, new FindByIndexOptions());
     }
@@ -407,28 +411,60 @@ public class Database {
      * @see <a
      * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#selector-syntax"
      * target="_blank">selector syntax</a>
+     * @deprecated Use {@link #query(String, Class)} instead
      */
+    @Deprecated
     public <T> List<T> findByIndex(String selectorJson, Class<T> classOfT, FindByIndexOptions
             options) {
         JsonObject selector = Helpers.getSelectorFromString(selectorJson);
         assertNotEmpty(options, "options");
-
-        URI uri = new DatabaseURIHelper(db.getDBUri()).path("_find").build();
         JsonObject body = getFindByIndexBody(selector, options);
+        return query(body.toString(), classOfT).getDocs();
+    }
+
+    /**
+     * <p>
+     *     Query documents using an index and a query selector.
+     * </p>
+     * <p>
+     *     Note: the most convenient way to generate query selectors is using a
+     *     {@link com.cloudant.client.api.query.QueryBuilder}.
+     * </p>
+     * <p>
+     *     Example usage to return the name and year of movies starring Alec Guinness since 1960
+     *     with the results sorted by year descending:
+     * </p>
+     * <pre>
+     * {@code
+     * QueryResult<Movie> movies = db.query(new QueryBuilder(and(
+     *   gt("Movie_year", 1960),
+     *   eq("Person_name", "Alec Guinness"))).
+     *   sort(Sort.desc("Movie_year")).
+     *   fields("Movie_name", "Movie_year").
+     *   build(), Movie.class);
+     * }
+     * </pre>
+     * @param query    String representation of a JSON object describing criteria used to
+     *                 select documents.
+     * @param classOfT The class of Java objects to be returned in the {@code docs} field of result.
+     * @param <T>      The type of the Java object to be returned in the {@code docs} field of result.
+     * @return         A {@link QueryResult} object, containing the documents matching the query
+     *                 in the {@code docs} field.
+     * @see com.cloudant.client.api.query.QueryBuilder
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#selector-syntax"
+     * target="_blank">selector syntax</a>
+     */
+    public <T> QueryResult<T> query(String query, final Class<T> classOfT) {
+        URI uri = new DatabaseURIHelper(db.getDBUri()).path("_find").build();
         InputStream stream = null;
         try {
-            stream = client.couchDbClient.executeToInputStream(createPost(uri, body.toString(),
+            stream = client.couchDbClient.executeToInputStream(createPost(uri, query,
                     "application/json"));
             Reader reader = new InputStreamReader(stream, "UTF-8");
-            JsonArray jsonArray = new JsonParser().parse(reader)
-                    .getAsJsonObject().getAsJsonArray("docs");
-            List<T> list = new ArrayList<T>();
-            for (JsonElement jsonElem : jsonArray) {
-                JsonElement elem = jsonElem.getAsJsonObject();
-                T t = client.getGson().fromJson(elem, classOfT);
-                list.add(t);
-            }
-            return list;
+            Type type = TypeToken.getParameterized(QueryResult.class, classOfT).getType();
+            QueryResult<T> result = client.getGson().fromJson(reader, type);
+            return result;
         } catch (UnsupportedEncodingException e) {
             // This should never happen as every implementation of the java platform is required
             // to support UTF-8.
