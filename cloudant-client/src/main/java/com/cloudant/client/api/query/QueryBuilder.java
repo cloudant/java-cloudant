@@ -71,8 +71,8 @@ public class QueryBuilder {
 
     /**
      * Set the fields option for the query builder.
-     * @param fields List specifying which fields of each object should be returned. If it is
-     *               omitted, the entire object is returned.
+     * @param fields List specifying which fields of each document should be returned. If it is
+     *               omitted, the entire document is returned.
      * @return {@code QueryBuilder} object for method chaining.
      */
     public QueryBuilder fields(String... fields) {
