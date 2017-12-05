@@ -14,9 +14,36 @@
 package com.cloudant.client.api.query;
 
 import com.cloudant.client.internal.query.Helpers;
+import com.cloudant.http.HttpConnection;
 
 import java.util.LinkedList;
 
+/**
+ * <p>
+ *     Helper class for building query selector strings.
+ * </p>
+ * <p>
+ *     Example usage to return the name and year of movies starring Alec Guinness since 1960
+ *     with the results sorted by year descending:
+ * </p>
+ * <pre>
+ * {@code
+ * String query = db.query(new QueryBuilder(and(
+ *   gt("Movie_year", 1960),
+ *   eq("Person_name", "Alec Guinness"))).
+ *   sort(Sort.desc("Movie_year")).
+ *   fields("Movie_name", "Movie_year").
+ *   build();
+ * }
+ * </pre>
+ * <p>
+ *     The resulting string can then be used to query the database using either
+ *     {@link com.cloudant.client.api.Database#query(String, Class)} (which deserialises the results)
+ *     or {@link com.cloudant.client.api.CloudantClient#executeRequest(HttpConnection)} (which can
+ *     be used to make a "raw" request by POSTing the string to the {@code /_find} endpoint).
+ * </p>
+ * @see Selector
+ */
 public class QueryBuilder {
 
     private final Selector selector;

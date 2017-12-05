@@ -441,7 +441,7 @@ public class Database {
      *   eq("Person_name", "Alec Guinness"))).
      *   sort(Sort.desc("Movie_year")).
      *   fields("Movie_name", "Movie_year").
-     *   build() Movie.class);
+     *   build(), Movie.class);
      * }
      * </pre>
      * @param query    String representation of a JSON object describing criteria used to
