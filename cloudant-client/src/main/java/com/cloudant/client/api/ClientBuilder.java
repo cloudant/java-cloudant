@@ -22,6 +22,7 @@ import com.cloudant.client.internal.util.SecurityDeserializer;
 import com.cloudant.client.internal.util.ShardDeserializer;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.CouchDbProperties;
+import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
 import com.cloudant.http.HttpConnectionInterceptor;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
@@ -195,6 +196,7 @@ public class ClientBuilder {
      * @return a new ClientBuilder for the account
      */
     public static ClientBuilder url(URL url) {
+        CouchDbUtil.assertNotNull(url, "Cloudant URL");
         return new ClientBuilder(url);
     }
 

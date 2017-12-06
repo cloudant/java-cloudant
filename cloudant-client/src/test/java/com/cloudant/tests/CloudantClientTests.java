@@ -521,4 +521,14 @@ public class CloudantClientTests {
         // test.
         c.getAllDbs();
     }
+
+    /**
+     * Asser that a {@code null} URL causes an IllegalArgumentException to be thrown.
+     *
+     * @throws Exception
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void nullURLThrowsIAE() throws Exception {
+        ClientBuilder.url(null);
+    }
 }

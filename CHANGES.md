@@ -1,4 +1,6 @@
 # UNRELEASED
+- [IMPROVED] Throw an `IllegalArgumentException` with a better message if trying to build the client
+  with a `null` URL instead of a `NullPointerException`.
 
 # 2.11.0 (2017-11-21)
 - [NEW] Added an extra bluemix method to the client builder allowing a custom service name to be
