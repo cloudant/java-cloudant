@@ -523,7 +523,7 @@ public class CloudantClientTests {
     }
 
     /**
-     * Asser that a {@code null} URL causes an IllegalArgumentException to be thrown.
+     * Assert that a {@code null} URL causes an IllegalArgumentException to be thrown.
      *
      * @throws Exception
      */
