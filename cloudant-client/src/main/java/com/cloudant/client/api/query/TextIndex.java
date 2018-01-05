@@ -40,6 +40,7 @@ import java.util.Map;
  * or use {@link Database#listIndexes()} and {@link Indexes#textIndexes()} to retrieve existing
  * text index definitions.
  * </P>
+ * @see com.cloudant.client.api.Database#createIndex(String)
  */
 public class TextIndex extends InternalIndex<TextIndex.Definition, TextIndex.Field> {
 
@@ -174,6 +175,43 @@ public class TextIndex extends InternalIndex<TextIndex.Definition, TextIndex.Fie
         @Override
         protected TextIndex.Builder returnThis() {
             return this;
+        }
+
+        /**
+         * Configure the name of the index, if not set a name will be generated.
+         *
+         * @param indexName name of the index
+         * @return the builder for chaining
+         */
+        public TextIndex.Builder name(String indexName) {
+            return super.name(indexName);
+        }
+
+        /**
+         * Configure the design document name, if not set a new design document will be created with
+         * a generated name.
+         *
+         * @param designDocumentId design document ID (the _design prefix is added if not supplied)
+         * @return the builder for chaining
+         */
+        public TextIndex.Builder designDocument(String designDocumentId) {
+            return super.designDocument(designDocumentId);
+        }
+
+        /**
+         * <p>
+         * Configure a selector to choose documents that should be added to the index.
+         * </p>
+         * <p>
+         * Obtain a selector from an {@link Operation} or {@link Expression}.
+         * </p>
+         * @param selector selector represented as an Operation or Expression
+         * @return the builder for chaining
+         * @see Selector
+         */
+        @Override
+        public TextIndex.Builder partialFilterSelector(Selector selector) {
+            return super.partialFilterSelector(selector);
         }
 
         @Override

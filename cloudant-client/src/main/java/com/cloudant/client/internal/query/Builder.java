@@ -15,7 +15,9 @@
 package com.cloudant.client.internal.query;
 
 import com.cloudant.client.api.Database;
+import com.cloudant.client.api.query.Expression;
 import com.cloudant.client.api.query.Field;
+import com.cloudant.client.api.query.Operation;
 import com.cloudant.client.api.query.Selector;
 import com.cloudant.client.api.query.TextIndex;
 import com.google.gson.Gson;
@@ -63,11 +65,6 @@ public abstract class Builder<I extends InternalIndex<D, F>, D extends Definitio
 
     /**
      * Configure a selector to choose documents that should be added to the index.
-     *
-     * //TODO add link to Selector builder
-     *
-     * @param selector string of JSON selector representation
-     * @return the builder for chaining
      */
     public B partialFilterSelector(Selector selector) {
         instance.def.selector = Helpers.getJsonObjectFromSelector(selector);

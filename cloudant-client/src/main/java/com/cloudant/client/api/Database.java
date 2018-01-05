@@ -328,13 +328,32 @@ public class Database {
      * </P>
      * <pre>
      * {@code
-     * // Create a JSON index with generated names for the field named "Movie_year" with the default
-     * // ascending sort order
-     * db.createIndex(new JsonIndex.Builder().fields(new JsonIndex.Field("Movie_year")).definition());
+     * // Create a JSON index with a generated name for the field named "Movie_year" with ascending
+     * // sort order
+     * db.createIndex(JsonIndex.builder().asc("Movie_year").definition());
      *
-     * // Create a text index for the string field named "Movie_title"
-     * db.createIndex(new TextIndex.Builder().fields(new TextIndex.Field("Movie_title",
-     *     TextIndex.Field.Type.STRING)).definition());
+     * // Create a partial JSON index named "movies-after-2010" which will index all movies with
+     * // "Movie_year" greater than 2010, returning the field "Movie_year" in descending order.
+     * Selector selector = gt("Movie_year", 2010);
+     * String indexDefinition = JsonIndex.builder().
+     *     name("movies-after-2010").
+     *     desc("Movie_year").
+     *     partialFilterSelector(selector).
+     *     definition();
+     * db.createIndex(indexDefinition);
+     *
+     * // Create a text index with a generated name for the string field named "Movie_title"
+     * db.createIndex(TextIndex.builder().string("Movie_title").definition());
+     *
+     * // Create a partial text index named "movies-after-2010" for the string field named
+     * // "Movie_title" which will index all movies with "Movie_year" greater than 2010
+     * Selector selector = gt("Movie_year", 2010);
+     * String indexDefinition = TextIndex.builder().
+     *     string("Movie_title").
+     *     name("movies-after-2010").
+     *     partialFilterSelector(selector).
+     *     definition();
+     * db.createIndex(indexDefinition);
      * }
      * </pre>
      *
