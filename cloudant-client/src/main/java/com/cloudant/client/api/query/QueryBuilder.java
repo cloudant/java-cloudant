@@ -59,7 +59,7 @@ public class QueryBuilder {
 
     /**
      * Construct a {@code QueryBuilder} object for use with {@link com.cloudant.client.api.Database#query(String, Class)}
-     * @param selector JSON object describing criteria used to select documents.
+     * @param selector Selector object describing criteria used to select documents.
      * @see <a
      * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#selector-syntax"
      * target="_blank">selector syntax</a>
