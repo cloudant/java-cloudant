@@ -113,8 +113,7 @@ public abstract class CloudantClientHelper {
         return testAddressClient(false);
     }
 
-    public static ClientBuilder newMockWebServerClientBuilder(MockWebServer mockServer) throws
-            MalformedURLException {
+    public static ClientBuilder newMockWebServerClientBuilder(MockWebServer mockServer) {
         return ClientBuilder.url(mockServer.url("/").url());
     }
 
