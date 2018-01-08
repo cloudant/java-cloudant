@@ -398,16 +398,13 @@ library to query a view.
 </P>
 <UL>
     <LI>To see all the indexes in a database use:
-        {@link com.cloudant.client.api.Database#listIndices}
+        {@link com.cloudant.client.api.Database#listIndexes}
     </LI>
     <LI>To create an index use:
-        {@link com.cloudant.client.api.Database#createIndex(java.lang.String)} or
-        {@link com.cloudant.client.api.Database#createIndex(java.lang.String, java.lang.String,
-        java.lang.String, com.cloudant.client.api.model.IndexField[])}
+        {@link com.cloudant.client.api.Database#createIndex(java.lang.String)}
     </LI>
-    <LI>To query an index use: {@link com.cloudant.client.api.Database#findByIndex(java.lang.String,
-        java.lang.Class)} or {@link com.cloudant.client.api.Database#findByIndex(java.lang.String,
-        java.lang.Class, com.cloudant.client.api.model.FindByIndexOptions)}
+    <LI>To query an index use: {@link com.cloudant.client.api.Database#query(java.lang.String,
+        java.lang.Class)}
     </LI>
 </UL>
 
