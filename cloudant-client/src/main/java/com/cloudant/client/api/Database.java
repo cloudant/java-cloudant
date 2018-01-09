@@ -269,7 +269,7 @@ public class Database {
     /**
      * Create a new JSON index
      * <P>
-     * Example usage creating an index that sorts ascending on name, then by year.
+     * Example usage creating an index that sorts ascending on name, then by year:
      * </P>
      * <pre>
      * {@code
@@ -279,7 +279,7 @@ public class Database {
      * }
      * </pre>
      * <P>
-     * Example usage creating an index that sorts ascending by year.
+     * Example usage creating an index that sorts ascending by year:
      * </P>
      * <pre>
      * {@code
@@ -317,40 +317,57 @@ public class Database {
     }
 
     /**
-     * <P>
+     * <p>
      * Create a new index from a string of JSON representing the index definition
-     * </P>
-     * <P>
+     * </p>
+     * <p>
      * Helpers are available to construct the index definition string for JSON and text indexes.
-     * </P>
-     * <P>
-     * Example usage:
-     * </P>
+     * </p>
+     * <p>
+     * Example usage creating a JSON index with a generated name for the field named "Movie_year"
+     * with ascending sort order:
+     * </p>
      * <pre>
      * {@code
-     * // Create a JSON index with a generated name for the field named "Movie_year" with ascending
-     * // sort order
      * db.createIndex(JsonIndex.builder().asc("Movie_year").definition());
-     *
-     * // Create a partial JSON index named "movies-after-2010" which will index all movies with
-     * // "Movie_year" greater than 2010, returning the field "Movie_year" in descending order.
+     * }
+     * </pre>
+     * <p>
+     * Example usage creating a partial JSON index named "movies-after-2010-json" which will
+     * index all movies with "Movie_year" greater than 2010, returning the field "Movie_year" in
+     * descending order:
+     * </p>
+     * <pre>
+     * {@code
      * Selector selector = gt("Movie_year", 2010);
      * String indexDefinition = JsonIndex.builder().
-     *     name("movies-after-2010").
+     *     name("movies-after-2010-json").
      *     desc("Movie_year").
      *     partialFilterSelector(selector).
      *     definition();
      * db.createIndex(indexDefinition);
-     *
-     * // Create a text index with a generated name for the string field named "Movie_title"
+     * }
+     * </pre>
+     * <p>
+     * Example usage creating a text index with a generated name for the string field named
+     * "Movie_title":
+     * </p>
+     * <pre>
+     * {@code
      * db.createIndex(TextIndex.builder().string("Movie_title").definition());
-     *
-     * // Create a partial text index named "movies-after-2010" for the string field named
-     * // "Movie_title" which will index all movies with "Movie_year" greater than 2010
+     * }
+     * </pre>
+     * <p>
+     * Example usage creating a partial text index named "movies-after-2010-text" for the string field
+     * named "Movie_title" which will index all movies titles for movies with "Movie_year" greater
+     * than 2010:
+     * </p>
+     * <pre>
+     * {@code
      * Selector selector = gt("Movie_year", 2010);
      * String indexDefinition = TextIndex.builder().
      *     string("Movie_title").
-     *     name("movies-after-2010").
+     *     name("movies-after-2010-text").
      *     partialFilterSelector(selector).
      *     definition();
      * db.createIndex(indexDefinition);
