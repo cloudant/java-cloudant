@@ -244,11 +244,35 @@ public class TextIndex extends InternalIndex<TextIndex.Definition, TextIndex.Fie
          * Configure the analyzer for the text index.
          * </P>
          * <P>
-         * // TODO string, object differences and example
+         * The analyzer can be a simple string or a more complex JSON object, as shown in the
+         * following examples:
          * </P>
+         * <P>
+         * Configure the "keyword" analyzer:
+         * </P>
+         * <pre>
+         * {@code
+         * TextIndex.builder().analyzer("keyword);
+         * }
+         * </pre>
+         * <p>
+         * Configure different analyzers for different fields:
+         * </p>
+         * <pre>
+         * {@code
+         * String analyzerString = "{\"name\": \"perfield\"," +
+         *     "\"default\": \"english\"," +
+         *     "\"fields\": {" +
+         *     "\"spanish\": \"spanish\"," +
+         *     "\"german\": \"german\"}}";
+         * TextIndex.builder().analyzer(analyzerString);
+         * }
+         * </pre>
          *
-         * @param analyzer string of JSON analyzer representation
+         * @param analyzer either a simple string or a complex JSON object, represented as a string
          * @return the builder for chaining
+         * @see <a href="https://console.bluemix.net/docs/services/Cloudant/api/search.html#analyzers"
+         * target="_blank">Cloudant Search Analyzers</a>
          */
         public TextIndex.Builder analyzer(String analyzer) {
             instance.def.analyzer = new Gson().fromJson(analyzer, JsonElement.class);
