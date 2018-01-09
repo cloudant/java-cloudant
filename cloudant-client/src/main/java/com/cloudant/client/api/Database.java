@@ -474,7 +474,7 @@ public class Database {
      * {@code
      * QueryResult<Movie> movies = db.query(new QueryBuilder(and(
      *   gt("Movie_year", 1960),
-     *   eq("Person_name", "Alec Guinness"))).
+     *   eq("Person_name", "Alec Guinness")).toString()).
      *   sort(Sort.desc("Movie_year")).
      *   fields("Movie_name", "Movie_year").
      *   build(), Movie.class);

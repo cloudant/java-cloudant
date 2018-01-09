@@ -152,7 +152,7 @@ public class IndexTests {
     public void testNotNullIndexMovieNameAndYear() {
         QueryResult<Movie> movies = db.query(new QueryBuilder(and(
                 gt("Movie_year", 1960),
-                eq("Person_name", "Alec Guinness"))).
+                eq("Person_name", "Alec Guinness")).toString()).
                         sort(Sort.desc("Movie_year")).
                         fields("Movie_name", "Movie_year").
                         executionStats(true).
@@ -193,7 +193,7 @@ public class IndexTests {
     public void testIndexMovieNameAndYearWithLimitSkipOptions() {
         QueryResult<Movie> movies = db.query(new QueryBuilder(and(
                 gt("Movie_year", 1960),
-                eq("Person_name", "Alec Guinness"))).
+                eq("Person_name", "Alec Guinness")).toString()).
                         sort(Sort.desc("Movie_year")).
                         fields("Movie_name", "Movie_year").
                         limit(1).
@@ -213,7 +213,7 @@ public class IndexTests {
     public void testIndexMovieFindByIndexDesignDoc() {
         QueryResult<Movie> movies = db.query(new QueryBuilder(and(
                 gt("Movie_year", 1960),
-                eq("Person_name", "Alec Guinness"))).
+                eq("Person_name", "Alec Guinness")).toString()).
                         sort(Sort.desc("Movie_year")).
                         fields("Movie_name", "Movie_year").
                         limit(1).
@@ -233,7 +233,7 @@ public class IndexTests {
     public void testIndexMovieFindByIndexDesignDocAndName() {
         QueryResult<Movie> movies = db.query(new QueryBuilder(and(
                 gt("Movie_year", 1960),
-                eq("Person_name", "Alec Guinness"))).
+                eq("Person_name", "Alec Guinness")).toString()).
                         sort(Sort.desc("Movie_year")).
                         fields("Movie_name", "Movie_year").
                         limit(1).
@@ -253,7 +253,7 @@ public class IndexTests {
     public void testBookmarks() {
         QueryBuilder queryBuilder = new QueryBuilder(and(
                 gt("Movie_year", 1960),
-                eq("Person_name", "Alec Guinness"))).
+                eq("Person_name", "Alec Guinness")).toString()).
                 sort(Sort.desc("Movie_year")).
                 fields("Movie_name", "Movie_year").
                 limit(2);
@@ -283,7 +283,7 @@ public class IndexTests {
      */
     @Test
     public void useIndexDesignDocJsonTypeIsString() throws Exception {
-        JsonElement useIndex = getUseIndexFromRequest(new QueryBuilder(empty()).
+        JsonElement useIndex = getUseIndexFromRequest(new QueryBuilder(empty().toString()).
                 useIndex("Movie_year"));
         assertUseIndexString(useIndex);
     }
@@ -304,7 +304,7 @@ public class IndexTests {
      */
     @Test
     public void useIndexDesignDocAndIndexNameJsonTypeIsArray() throws Exception {
-        JsonElement useIndex = getUseIndexFromRequest(new QueryBuilder(empty()).
+        JsonElement useIndex = getUseIndexFromRequest(new QueryBuilder(empty().toString()).
                 useIndex("Movie_year", "Person_name"));
         assertNotNull("The use_index property should not be null", useIndex);
         assertTrue("The use_index property should be a JsonArray", useIndex.isJsonArray());
@@ -323,7 +323,7 @@ public class IndexTests {
      */
     @Test
     public void useIndexNotSpecified() throws Exception {
-        JsonElement useIndex = getUseIndexFromRequest(new QueryBuilder(empty()));
+        JsonElement useIndex = getUseIndexFromRequest(new QueryBuilder(empty().toString()));
         assertNull("The use_index property should be null (i.e. was not specified)", useIndex);
     }
 
@@ -334,7 +334,7 @@ public class IndexTests {
      */
     @Test
     public void useIndexReplaced() throws Exception {
-        QueryBuilder builder = new QueryBuilder(empty()).
+        QueryBuilder builder = new QueryBuilder(empty().toString()).
                 useIndex("Movie_year", "Person_name").
                 useIndex("Movie_year");
         assertUseIndexString(getUseIndexFromRequest(builder));
