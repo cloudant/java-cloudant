@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 IBM Corp. All rights reserved.
+ * Copyright © 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -27,12 +27,12 @@
  * <ul>
  *     <li>
  *         {@link com.cloudant.client.api.query.QueryBuilder A class for building complex queries}
- *         without having to write them "manually" in JSON.
+ *         which makes the construction of the query JSON easier.
  *     </li>
  *     <li>
  *         Classes for building {@link com.cloudant.client.api.query.Selector complex selectors},
  *         used in the construction of queries (above), and in the construction of partial indexes,
- *         without having to write them "manually" in JSON.
+ *         which makes the construction of the selector JSON easier.
  *     </li>
  *     <li>
  *         Classes for reading the {@link com.cloudant.client.api.query.QueryResult results of
