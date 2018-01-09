@@ -192,7 +192,7 @@ public class QueryBuilder {
         StringBuilder builder = new StringBuilder();
         // build up components...
         // selector
-        builder.append(Helpers.withKey(Helpers.SELECTOR, this.selector));
+        builder.append(Helpers.withKey(Helpers.SELECTOR, this.selector.toString()));
         // fields
         if (fieldsString != null) {
             builder.append(String.format(", \"fields\": %s", fieldsString));

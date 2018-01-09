@@ -154,17 +154,23 @@ public class JsonIndex extends InternalIndex<JsonIndex.Definition, JsonIndex.Fie
 
         /**
          * <p>
-         * Configure a selector to choose documents that should be added to the index.
+         * Configure a selector string to choose documents that should be added to the index.
          * </p>
          * <p>
-         * Obtain a selector from an {@link Operation} or {@link Expression}.
+         * The easiest way of obtaining a selector string is obtain a {@link Selector} from an
+         * {@link Operation} or {@link Expression} and call {@code toString} on the resulting
+         * {@link Selector}.
          * </p>
-         * @param selector selector represented as an Operation or Expression
+         * @param selector string representation of a JSON object describing criteria used to add
+         *                 documents to index
          * @return the builder for chaining
          * @see Selector
+         * @see <a
+         * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#selector-syntax"
+         * target="_blank">selector syntax</a>
          */
         @Override
-        public Builder partialFilterSelector(Selector selector) {
+        public Builder partialFilterSelector(String selector) {
             return super.partialFilterSelector(selector);
         }
 

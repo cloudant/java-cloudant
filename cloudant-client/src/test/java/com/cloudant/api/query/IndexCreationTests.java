@@ -40,7 +40,7 @@ public class IndexCreationTests extends MockedServerTest {
     private Selector selectorContent = gt("year", 2010);
     // Keyed selector pair
     private String selectorPair = Helpers.withKey(Helpers.PARTIAL_FILTER_SELECTOR,
-            selectorContent);
+            selectorContent.toString());
 
     @Test
     public void createJsonIndex() throws Exception {
@@ -99,7 +99,7 @@ public class IndexCreationTests extends MockedServerTest {
     public void createJsonIndexPartialSelectorOnly() throws Exception {
         createIndexTest(JsonIndex.builder()
                         .asc("a")
-                        .partialFilterSelector(selectorContent)
+                        .partialFilterSelector(selectorContent.toString())
                         .definition(),
                 "{type: \"json\", index: {" + selectorPair + ", fields: [{\"a\":\"asc\"}]}}");
     }
@@ -170,7 +170,7 @@ public class IndexCreationTests extends MockedServerTest {
     @Test
     public void createTextIndexPartialSelectorOnly() throws Exception {
         createIndexTest(TextIndex.builder()
-                        .partialFilterSelector(selectorContent)
+                        .partialFilterSelector(selectorContent.toString())
                         .definition(),
                 "{type: \"text\", index: {" + selectorPair + "}}");
     }
@@ -193,7 +193,7 @@ public class IndexCreationTests extends MockedServerTest {
                         .number("n")
                         .defaultField(true, "german")
                         .analyzer("keyword")
-                        .partialFilterSelector(selectorContent)
+                        .partialFilterSelector(selectorContent.toString())
                         .indexArrayLengths(false)
                         .definition(),
                 "{type: \"text\"," +

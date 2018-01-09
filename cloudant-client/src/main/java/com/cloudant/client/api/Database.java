@@ -343,7 +343,7 @@ public class Database {
      * String indexDefinition = JsonIndex.builder().
      *     name("movies-after-2010-json").
      *     desc("Movie_year").
-     *     partialFilterSelector(selector).
+     *     partialFilterSelector(selector.toString()).
      *     definition();
      * db.createIndex(indexDefinition);
      * }
@@ -368,7 +368,7 @@ public class Database {
      * String indexDefinition = TextIndex.builder().
      *     string("Movie_title").
      *     name("movies-after-2010-text").
-     *     partialFilterSelector(selector).
+     *     partialFilterSelector(selector.toString()).
      *     definition();
      * db.createIndex(indexDefinition);
      * }
