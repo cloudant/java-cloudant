@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2017 IBM Corp. All rights reserved.
+ * Copyright © 2016, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -269,7 +269,7 @@ public class Database {
     /**
      * Create a new JSON index
      * <P>
-     * Example usage creating an index that sorts ascending on name, then by year.
+     * Example usage creating an index that sorts ascending on name, then by year:
      * </P>
      * <pre>
      * {@code
@@ -279,7 +279,7 @@ public class Database {
      * }
      * </pre>
      * <P>
-     * Example usage creating an index that sorts ascending by year.
+     * Example usage creating an index that sorts ascending by year:
      * </P>
      * <pre>
      * {@code
@@ -317,24 +317,60 @@ public class Database {
     }
 
     /**
-     * <P>
+     * <p>
      * Create a new index from a string of JSON representing the index definition
-     * </P>
-     * <P>
+     * </p>
+     * <p>
      * Helpers are available to construct the index definition string for JSON and text indexes.
-     * </P>
-     * <P>
-     * Example usage:
-     * </P>
+     * </p>
+     * <p>
+     * Example usage creating a JSON index with a generated name for the field named "Movie_year"
+     * with ascending sort order:
+     * </p>
      * <pre>
      * {@code
-     * // Create a JSON index with generated names for the field named "Movie_year" with the default
-     * // ascending sort order
-     * db.createIndex(new JsonIndex.Builder().fields(new JsonIndex.Field("Movie_year")).definition());
-     *
-     * // Create a text index for the string field named "Movie_title"
-     * db.createIndex(new TextIndex.Builder().fields(new TextIndex.Field("Movie_title",
-     *     TextIndex.Field.Type.STRING)).definition());
+     * db.createIndex(JsonIndex.builder().asc("Movie_year").definition());
+     * }
+     * </pre>
+     * <p>
+     * Example usage creating a partial JSON index named "movies-after-2010-json" which will
+     * index all movies with "Movie_year" greater than 2010, returning the field "Movie_year" in
+     * descending order:
+     * </p>
+     * <pre>
+     * {@code
+     * Selector selector = gt("Movie_year", 2010);
+     * String indexDefinition = JsonIndex.builder().
+     *     name("movies-after-2010-json").
+     *     desc("Movie_year").
+     *     partialFilterSelector(selector.toString()).
+     *     definition();
+     * db.createIndex(indexDefinition);
+     * }
+     * </pre>
+     * <p>
+     * Example usage creating a text index with a generated name for the string field named
+     * "Movie_title":
+     * </p>
+     * <pre>
+     * {@code
+     * db.createIndex(TextIndex.builder().string("Movie_title").definition());
+     * }
+     * </pre>
+     * <p>
+     * Example usage creating a partial text index named "movies-after-2010-text" for the string field
+     * named "Movie_title" which will index all movies titles for movies with "Movie_year" greater
+     * than 2010:
+     * </p>
+     * <pre>
+     * {@code
+     * Selector selector = gt("Movie_year", 2010);
+     * String indexDefinition = TextIndex.builder().
+     *     string("Movie_title").
+     *     name("movies-after-2010-text").
+     *     partialFilterSelector(selector.toString()).
+     *     definition();
+     * db.createIndex(indexDefinition);
      * }
      * </pre>
      *
@@ -438,7 +474,7 @@ public class Database {
      * {@code
      * QueryResult<Movie> movies = db.query(new QueryBuilder(and(
      *   gt("Movie_year", 1960),
-     *   eq("Person_name", "Alec Guinness"))).
+     *   eq("Person_name", "Alec Guinness")).toString()).
      *   sort(Sort.desc("Movie_year")).
      *   fields("Movie_name", "Movie_year").
      *   build(), Movie.class);

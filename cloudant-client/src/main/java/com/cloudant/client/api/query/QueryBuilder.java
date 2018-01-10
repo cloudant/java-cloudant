@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -30,7 +30,7 @@ import java.util.LinkedList;
  * {@code
  * String query = db.query(new QueryBuilder(and(
  *   gt("Movie_year", 1960),
- *   eq("Person_name", "Alec Guinness"))).
+ *   eq("Person_name", "Alec Guinness")).toString()).
  *   sort(Sort.desc("Movie_year")).
  *   fields("Movie_name", "Movie_year").
  *   build();
@@ -46,7 +46,7 @@ import java.util.LinkedList;
  */
 public class QueryBuilder {
 
-    private final Selector selector;
+    private final String selector;
     private String[] fields;
     private Sort[] sort;
     private Long limit;
@@ -58,14 +58,24 @@ public class QueryBuilder {
     private String[] useIndex;
 
     /**
-     * Construct a {@code QueryBuilder} object for use with {@link com.cloudant.client.api.Database#query(String, Class)}
-     * @param selector JSON object describing criteria used to select documents.
+     * <p>
+     * Construct a {@code QueryBuilder} object for use with
+     * {@link com.cloudant.client.api.Database#query(String, Class)}
+     * </p>
+     * <p>
+     * The easiest way of obtaining a selector string is to obtain a {@link Selector} from an
+     * {@link Operation} or {@link Expression} and call {@code toString} on the resulting
+     * {@link Selector}.
+     * </p>
+     * @param selector string representation of a JSON object describing criteria used to select
+     *                 documents.
      * @see <a
      * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#selector-syntax"
      * target="_blank">selector syntax</a>
      * @see com.cloudant.client.api.Database#query(String, Class)
+     * @see Selector
      */
-    public QueryBuilder(Selector selector) {
+    public QueryBuilder(String selector) {
         this.selector = selector;
     }
 

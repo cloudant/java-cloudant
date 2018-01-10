@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -42,6 +42,7 @@ import java.util.Map;
  * or use {@link Database#listIndexes()} and {@link Indexes#jsonIndexes()} to retrieve existing
  * JSON index definitions.
  * </P>
+ * @see com.cloudant.client.api.Database#createIndex(String)
  */
 public class JsonIndex extends InternalIndex<JsonIndex.Definition, JsonIndex.Field> {
 
@@ -128,6 +129,49 @@ public class JsonIndex extends InternalIndex<JsonIndex.Definition, JsonIndex.Fie
         @Override
         protected Builder returnThis() {
             return this;
+        }
+
+        /**
+         * Configure the name of the index, if not set a name will be generated.
+         *
+         * @param indexName name of the index
+         * @return the builder for chaining
+         */
+        public Builder name(String indexName) {
+            return super.name(indexName);
+        }
+
+        /**
+         * Configure the design document name, if not set a new design document will be created with
+         * a generated name.
+         *
+         * @param designDocumentId design document ID (the _design prefix is added if not supplied)
+         * @return the builder for chaining
+         */
+        public Builder designDocument(String designDocumentId) {
+            return super.designDocument(designDocumentId);
+        }
+
+        /**
+         * <p>
+         * Configure a selector string to choose documents that should be added to the index.
+         * </p>
+         * <p>
+         * The easiest way of obtaining a selector string is to obtain a {@link Selector} from an
+         * {@link Operation} or {@link Expression} and call {@code toString} on the resulting
+         * {@link Selector}.
+         * </p>
+         * @param selector string representation of a JSON object describing criteria used to add
+         *                 documents to index
+         * @return the builder for chaining
+         * @see Selector
+         * @see <a
+         * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#selector-syntax"
+         * target="_blank">selector syntax</a>
+         */
+        @Override
+        public Builder partialFilterSelector(String selector) {
+            return super.partialFilterSelector(selector);
         }
 
         /**

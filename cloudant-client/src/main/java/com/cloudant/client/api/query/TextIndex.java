@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -40,6 +40,7 @@ import java.util.Map;
  * or use {@link Database#listIndexes()} and {@link Indexes#textIndexes()} to retrieve existing
  * text index definitions.
  * </P>
+ * @see com.cloudant.client.api.Database#createIndex(String)
  */
 public class TextIndex extends InternalIndex<TextIndex.Definition, TextIndex.Field> {
 
@@ -176,6 +177,49 @@ public class TextIndex extends InternalIndex<TextIndex.Definition, TextIndex.Fie
             return this;
         }
 
+        /**
+         * Configure the name of the index, if not set a name will be generated.
+         *
+         * @param indexName name of the index
+         * @return the builder for chaining
+         */
+        public TextIndex.Builder name(String indexName) {
+            return super.name(indexName);
+        }
+
+        /**
+         * Configure the design document name, if not set a new design document will be created with
+         * a generated name.
+         *
+         * @param designDocumentId design document ID (the _design prefix is added if not supplied)
+         * @return the builder for chaining
+         */
+        public TextIndex.Builder designDocument(String designDocumentId) {
+            return super.designDocument(designDocumentId);
+        }
+
+        /**
+         * <p>
+         * Configure a selector string to choose documents that should be added to the index.
+         * </p>
+         * <p>
+         * The easiest way of obtaining a selector string is to obtain a {@link Selector} from an
+         * {@link Operation} or {@link Expression} and call {@code toString} on the resulting
+         * {@link Selector}.
+         * </p>
+         * @param selector string representation of a JSON object describing criteria used to add
+         *                 documents to index
+         * @return the builder for chaining
+         * @see Selector
+         * @see <a
+         * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#selector-syntax"
+         * target="_blank">selector syntax</a>
+         */
+        @Override
+        public TextIndex.Builder partialFilterSelector(String selector) {
+            return super.partialFilterSelector(selector);
+        }
+
         @Override
         protected TextIndex newInstance() {
             return new TextIndex();
@@ -200,11 +244,35 @@ public class TextIndex extends InternalIndex<TextIndex.Definition, TextIndex.Fie
          * Configure the analyzer for the text index.
          * </P>
          * <P>
-         * // TODO string, object differences and example
+         * The analyzer can be a simple string or a more complex JSON object, as shown in the
+         * following examples:
          * </P>
+         * <P>
+         * Configure the "keyword" analyzer:
+         * </P>
+         * <pre>
+         * {@code
+         * TextIndex.builder().analyzer("keyword");
+         * }
+         * </pre>
+         * <p>
+         * Configure different analyzers for different fields:
+         * </p>
+         * <pre>
+         * {@code
+         * String analyzerString = "{\"name\": \"perfield\"," +
+         *     "\"default\": \"english\"," +
+         *     "\"fields\": {" +
+         *     "\"spanish\": \"spanish\"," +
+         *     "\"german\": \"german\"}}";
+         * TextIndex.builder().analyzer(analyzerString);
+         * }
+         * </pre>
          *
-         * @param analyzer string of JSON analyzer representation
+         * @param analyzer either a simple string or a complex JSON object, represented as a string
          * @return the builder for chaining
+         * @see <a href="https://console.bluemix.net/docs/services/Cloudant/api/search.html#analyzers"
+         * target="_blank">Cloudant Search Analyzers</a>
          */
         public TextIndex.Builder analyzer(String analyzer) {
             instance.def.analyzer = new Gson().fromJson(analyzer, JsonElement.class);
