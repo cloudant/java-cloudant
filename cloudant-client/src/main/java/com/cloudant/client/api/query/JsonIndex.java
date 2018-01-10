@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -157,7 +157,7 @@ public class JsonIndex extends InternalIndex<JsonIndex.Definition, JsonIndex.Fie
          * Configure a selector string to choose documents that should be added to the index.
          * </p>
          * <p>
-         * The easiest way of obtaining a selector string is obtain a {@link Selector} from an
+         * The easiest way of obtaining a selector string is to obtain a {@link Selector} from an
          * {@link Operation} or {@link Expression} and call {@code toString} on the resulting
          * {@link Selector}.
          * </p>
