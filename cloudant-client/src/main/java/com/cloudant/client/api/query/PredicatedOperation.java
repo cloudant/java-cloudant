@@ -28,6 +28,13 @@ public class PredicatedOperation implements Selector {
         this.rhs = rhs;
     }
 
+    /**
+     * Matches and returns all documents that contain an array field with at least one element that
+     * matches all the specified query criteria
+     * @param lhs The field to check
+     * @param rhs The query criteria
+     * @return PredicatedOperation: lhs $elemMatch $rhs
+     */
     public static PredicatedOperation elemMatch(String lhs, PredicateExpression... rhs) {
         // TODO each expression key must be unique
         return new PredicatedOperation(lhs, "$elemMatch", rhs);
