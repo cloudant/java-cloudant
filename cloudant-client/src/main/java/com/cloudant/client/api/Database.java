@@ -15,6 +15,7 @@
 package com.cloudant.client.api;
 
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotNull;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
@@ -559,15 +560,15 @@ public class Database {
      *
      * @param indexName   name of the index
      * @param designDocId ID of the design doc (the _design prefix will be added if not present)
-     * @param type        type of the index, defaults to "json"
+     * @param type        type of the index, valid values or "text" or "json"
      */
     public void deleteIndex(String indexName, String designDocId, String type) {
         assertNotEmpty(indexName, "indexName");
         assertNotEmpty(designDocId, "designDocId");
+        assertNotNull(type, "type");
         if (!designDocId.startsWith("_design")) {
             designDocId = "_design/" + designDocId;
         }
-        type = (type == null || type.isEmpty()) ? "json" : type;
         URI uri = new DatabaseURIHelper(db.getDBUri()).path("_index").path(designDocId)
                 .path(type).path(indexName).build();
         InputStream response = null;
