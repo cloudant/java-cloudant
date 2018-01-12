@@ -29,38 +29,93 @@ public class Expression implements Selector {
         this.rhs = rhs;
     }
 
+    /**
+     * The field is less than the argument
+     * @param lhs The field to compare
+     * @param rhs The argument for the comparison
+     * @return Expression: lhs $lt rhs
+     */
     public static Expression lt(String lhs, Object rhs) {
         return new Expression(lhs, "$lt", rhs);
     }
 
+    /**
+     * The field is less than or equal to the argument
+     * @param lhs The field to compare
+     * @param rhs The argument for the comparison
+     * @return Expression: lhs $lte rhs
+     */
     public static Expression lte(String lhs, Object rhs) {
         return new Expression(lhs, "$lte", rhs);
     }
 
+    /**
+     * The field is equal to the argument
+     * @param lhs The field to compare
+     * @param rhs The argument for the comparison
+     * @return Expression: lhs $eq rhs
+     */
     public static Expression eq(String lhs, Object rhs) {
         return new Expression(lhs, "$eq", rhs);
     }
 
+    /**
+     * The field is not equal to the argument
+     * @param lhs The field to compare
+     * @param rhs The argument for the comparison
+     * @return Expression: lhs $ne rhs
+     */
     public static Expression ne(String lhs, Object rhs) {
         return new Expression(lhs, "$ne", rhs);
     }
 
+    /**
+     * The field is greater than or equal to the argument
+     * @param lhs The field to compare
+     * @param rhs The argument for the comparison
+     * @return Expression: lhs $gte rhs
+     */
     public static Expression gte(String lhs, Object rhs) {
         return new Expression(lhs, "$gte", rhs);
     }
 
+    /**
+     * The field is greater than the argument
+     * @param lhs The field to compare
+     * @param rhs The argument for the comparison
+     * @return Expression: lhs $gt rhs
+     */
     public static Expression gt(String lhs, Object rhs) {
         return new Expression(lhs, "$gt", rhs);
     }
 
+    /**
+     * Check whether the field exists or not, regardless of its value
+     * @param lhs The field to check
+     * @param rhs The argument (true or false)
+     * @return Expression: lhs $exists rhs
+     */
     public static Expression exists(String lhs, boolean rhs) {
         return new Expression(lhs, "$exists", rhs);
     }
 
+    /**
+     * Check the document field's type
+     * and object
+     * @param lhs The field to check
+     * @param rhs The type
+     * @return Expression: lhs $exists rhs
+     */
     public static Expression type(String lhs, Type rhs) {
         return new Expression(lhs, "$type", rhs.toString());
     }
 
+    /**
+     * The document field must exist in the list provided
+     * @param lhs The field to check
+     * @param rhs The argument - one or more values
+     * @return Expression: lhs $in rhs
+     */
     public static Expression in(String lhs, Object... rhs) {
         Expression ex = new Expression(lhs, "$in", rhs);
         if (rhs.length == 1) {
@@ -69,6 +124,12 @@ public class Expression implements Selector {
         return ex;
     }
 
+    /**
+     * The document field must not exist in the list provided
+     * @param lhs The field to check
+     * @param rhs The argument - one or more values
+     * @return Expression: lhs $nin rhs
+     */
     public static Expression nin(String lhs, Object... rhs) {
         Expression ex = new Expression(lhs, "$nin", rhs);
         if (rhs.length == 1) {
@@ -77,18 +138,49 @@ public class Expression implements Selector {
         return ex;
     }
 
+    /**
+     * Special condition to match the length of an array field in a document. Non-array fields
+     * cannot match this condition
+     * @param lhs The field to check
+     * @param rhs The length of the array
+     * @return Expression: lhs $size rhs
+     */
     public static Expression size(String lhs, Long rhs) {
         return new Expression(lhs, "$size", rhs);
     }
 
+    /**
+     * Divisor and Remainder are both positive or negative integers. Non-integer values result in a
+     * 404 status. Matches documents where the expression (field % Divisor == Remainder) is true,
+     * and only when the document field is an integer
+     *
+     * TODO fix - the rhs needs to be an array of two elements, [Divisor, Remainder]
+     *
+     * @param lhs The field to check
+     * @param rhs TODO
+     * @return Expression: lhs $mod rhs
+     */
     public static Expression mod(String lhs, Long rhs) {
         return new Expression(lhs, "$mod", rhs);
     }
 
+    /**
+     * A regular expression pattern to match against the document field. Matches only when the field
+     * is a string value and matches the supplied regular expression
+     * @param lhs The field to match
+     * @param rhs The regular expression
+     * @return Expression: lhs $regex rhs
+     */
     public static Expression regex(String lhs, String rhs) {
         return new Expression(lhs, "$regex", rhs);
     }
 
+    /**
+     * Matches an array value if it contains all the elements of the argument array
+     * @param lhs The field to match
+     * @param rhs The arguments
+     * @return Expression: lhs $all rhs
+     */
     public static Expression all(String lhs, Object... rhs) {
         Expression ex = new Expression(lhs, "$all", rhs);
         if (rhs.length == 1) {
