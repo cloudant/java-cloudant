@@ -375,7 +375,7 @@ public class Database {
      * </pre>
      *
      * @param indexDefinition String representation of the index definition JSON
-     * @see JsonIndex.Builder
+     * @see com.cloudant.client.api.query.JsonIndex.Builder
      * @see com.cloudant.client.api.query.TextIndex.Builder
      * @see <a
      * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#creating-an-index"
