@@ -16,6 +16,16 @@ package com.cloudant.client.api.query;
 import static com.cloudant.client.internal.query.Helpers.quote;
 
 // predicate expression, such as "$eq" 5
+// currently only used by $elemMatch
+
+/**
+ * {@code PredicateExpression}s are the same as ordinary {@code Expression}s, but instead of
+ * taking a field name as one of their arguments, they are combined with a {@code
+ * PredicatedOperation}.
+ *
+ * @see Expression
+ * @see PredicatedOperation
+ */
 public class PredicateExpression {
 
     private final String op;
@@ -26,27 +36,57 @@ public class PredicateExpression {
         this.rhs = rhs;
     }
 
-    // predicate format expressions, as used by $elemMatch
+    /**
+     * The field is less than the argument
+     * @param rhs The argument for the comparison
+     * @return PredicateExpression: $lt rhs
+     */
     public static PredicateExpression lt(Object rhs) {
         return new PredicateExpression("$lt", rhs);
     }
 
+    /**
+     * The field is less than or equal to the argument
+     * @param rhs The argument for the comparison
+     * @return PredicateExpression: $lte rhs
+     */
     public static PredicateExpression lte(Object rhs) {
         return new PredicateExpression("$lte", rhs);
     }
 
+    /**
+     * The field is equal to the argument
+     * @param rhs The argument for the comparison
+     * @return PredicateExpression: $eq rhs
+     */
     public static PredicateExpression eq(Object rhs) {
         return new PredicateExpression("$eq", rhs);
     }
 
+    /**
+     * The field is not equal to the argument
+     * @param rhs The argument for the comparison
+     * @return PredicateExpression: $ne rhs
+     */
     public static PredicateExpression ne(Object rhs) {
         return new PredicateExpression("$ne", rhs);
     }
 
+
+    /**
+     * The field is greater than or equal to the argument
+     * @param rhs The argument for the comparison
+     * @return PredicateExpression: $gte rhs
+     */
     public static PredicateExpression gte(Object rhs) {
         return new PredicateExpression("$gte", rhs);
     }
 
+     /**
+     * The field is greater than the argument
+     * @param rhs The argument for the comparison
+     * @return PredicateExpression: $gt rhs
+     */
     public static PredicateExpression gt(Object rhs) {
         return new PredicateExpression("$gt", rhs);
     }

@@ -16,6 +16,18 @@ package com.cloudant.client.api.query;
 import static com.cloudant.client.internal.query.Helpers.quote;
 
 // expression, such as "widget_count" "$eq" 5
+
+/**
+ * {@code Expression}s are used to evaluate true/false criteria to select documents. For example,
+ * an expression to select documents where the field "widget_count" is equal to 5 would be
+ * constructed as follows
+ *
+ * <pre>
+ * {@code
+ * Expression e = Expression.eq("widget_count", 5);
+ * }
+ * </pre>
+ */
 public class Expression implements Selector {
 
     private final String lhs;
@@ -104,7 +116,7 @@ public class Expression implements Selector {
      * and object
      * @param lhs The field to check
      * @param rhs The type
-     * @return Expression: lhs $exists rhs
+     * @return Expression: lhs $type rhs
      */
     public static Expression type(String lhs, Type rhs) {
         return new Expression(lhs, "$type", rhs.toString());
