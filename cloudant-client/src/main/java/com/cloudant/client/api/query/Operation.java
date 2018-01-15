@@ -17,6 +17,20 @@ import static com.cloudant.client.internal.query.Helpers.quoteCurly;
 
 // operation - used to combine an operator such as "$and" and a series of operations or expressions
 // on the rhs
+
+/**
+ * <p>
+ * An {@code Operation} allows {@code Expressions} or other {@code Operations} to be combined using
+ * logical operators or negated.
+ * </p>
+ * <p>
+ * These are also known as <a
+ * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#combination-operators"
+ * target="_blank">Combination Operators</a>.
+ * </p>
+ *
+ * @see Expression
+ */
 public class Operation implements Selector {
 
     private final String op;
@@ -27,18 +41,38 @@ public class Operation implements Selector {
         this.rhs = rhs;
     }
 
+    /**
+     * Combine two or more selectors using the "and" operator
+     * @param rhs varargs list of {@code Selector}s
+     * @return Operation: $and rhs1 rhs2...
+     */
     public static Operation and(Selector... rhs) {
         return new Operation("$and", rhs);
     }
 
+    /**
+     * Combine two or more selectors using the "or" operator
+     * @param rhs varargs list of {@code Selector}s
+     * @return Operation: $or rhs1 rhs2...
+     */
     public static Operation or(Selector... rhs) {
         return new Operation("$or", rhs);
     }
 
+    /**
+     * Negate the logic of the selector
+     * @param rhs a {@code Selector}
+     * @return Operation: $not rhs
+     */
     public static Operation not(Selector rhs) {
         return new Operation("$not", rhs);
     }
 
+    /**
+     * Combine two or more selectors using the "nor" operator
+     * @param rhs varargs list of {@code Selector}s
+     * @return Operation: $nor rhs1 rhs2...
+     */
     public static Operation nor(Selector... rhs) {
         return new Operation("$nor", rhs);
     }

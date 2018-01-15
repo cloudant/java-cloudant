@@ -16,6 +16,20 @@ package com.cloudant.client.api.query;
 import static com.cloudant.client.internal.query.Helpers.quoteCurlyNoSquare;
 
 // predicated operation - an operation which takes one or more predicates such as "$eq" 5 as its rhs
+
+/**
+ * <p>
+ * A {@code PredicatedOperation} allows multiple predicates (such as "equals 5") to be combined.
+ * Currently the only {@code PredicatedOperation} is {@code $elemMatch}.
+ * </p>
+ * <p>
+ * These are also known as <a
+ * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#combination-operators"
+ * target="_blank">Combination Operators</a>.
+ * </p>
+ *
+ * @see PredicateExpression
+ */
 public class PredicatedOperation implements Selector {
 
     private final String lhs;
