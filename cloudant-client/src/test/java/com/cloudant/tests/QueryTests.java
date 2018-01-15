@@ -42,7 +42,7 @@ public class QueryTests {
     // "Selector basics"
     @Test
     public void basicSelector1() {
-        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier").toString());
+        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier"));
         Assert.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}}", qb.build());
     }
 
@@ -51,21 +51,21 @@ public class QueryTests {
     public void basicSelector2() {
         QueryBuilder qb = new QueryBuilder(and(
                 eq("name", "Paul"),
-                eq("location", "Boston")).toString());
+                eq("location", "Boston")));
         Assert.assertEquals("{\"selector\": {\"$and\": [{\"name\": {\"$eq\": \"Paul\"}}, {\"location\": {\"$eq\": \"Boston\"}}]}}", qb.build());
     }
 
     // "SUBFIELDS"
     @Test
     public void basicSelector3() {
-        QueryBuilder qb = new QueryBuilder(eq("imdb.rating", 8).toString());
+        QueryBuilder qb = new QueryBuilder(eq("imdb.rating", 8));
         Assert.assertEquals("{\"selector\": {\"imdb.rating\": {\"$eq\": 8}}}", qb.build());
     }
 
     // "Example selector using an operator to match any document, where the age field has a value greater than 20:"
     @Test
     public void basicSelector4() {
-        QueryBuilder qb = new QueryBuilder(gt("year", 2018).toString());
+        QueryBuilder qb = new QueryBuilder(gt("year", 2018));
         Assert.assertEquals("{\"selector\": {\"year\": {\"$gt\": 2018}}}", qb.build());
     }
 
@@ -75,7 +75,7 @@ public class QueryTests {
         QueryBuilder qb = new QueryBuilder(and(
                 eq("$text", "Schwarzenegger"),
                 in("year", 1984, 1991)
-        ).toString());
+        ));
         Assert.assertEquals("{\"selector\": {\"$and\": [{\"$text\": {\"$eq\": \"Schwarzenegger\"}}, {\"year\": {\"$in\": [1984, 1991]}}]}}", qb.build());
     }
 
@@ -85,7 +85,7 @@ public class QueryTests {
         QueryBuilder qb = new QueryBuilder(and(
                 eq("$text", "Schwarzenegger"),
                 in("year", 1984)
-        ).toString());
+        ));
         Assert.assertEquals("{\"selector\": {\"$and\": [{\"$text\": {\"$eq\": \"Schwarzenegger\"}}, {\"year\": {\"$in\": [1984]}}]}}", qb.build());
     }
 
@@ -95,7 +95,7 @@ public class QueryTests {
         QueryBuilder qb = new QueryBuilder(or(
                 eq("director", "George Lucas"),
                 eq("director", "Steven Spielberg")
-        ).toString());
+        ));
         Assert.assertEquals("{\"selector\": {\"$or\": [{\"director\": {\"$eq\": \"George Lucas\"}}, {\"director\": {\"$eq\": \"Steven Spielberg\"}}]}}", qb.build());
     }
 
@@ -108,7 +108,7 @@ public class QueryTests {
                         eq("director", "George Lucas"),
                         eq("director", "Steven Spielberg")
                 )
-        ).toString());
+        ));
         Assert.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$eq\": 1977}}, {\"$or\": [{\"director\": {\"$eq\": \"George Lucas\"}}, {\"director\": {\"$eq\": \"Steven Spielberg\"}}]}]}}", qb.build());
     }
 
@@ -119,7 +119,7 @@ public class QueryTests {
                 gte("year", 1900),
                 lte("year", 1903),
                 not(eq("year", 1901))
-        ).toString());
+        ));
         Assert.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$gte\": 1900}}, {\"year\": {\"$lte\": 1903}}, {\"$not\": {\"year\": {\"$eq\": 1901}}}]}}", qb.build());
     }
 
@@ -133,28 +133,28 @@ public class QueryTests {
                         eq("year", 1901),
                         eq("year", 1905),
                         eq("year", 1907))
-        ).toString());
+        ));
         Assert.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$gte\": 1900}}, {\"year\": {\"$lte\": 1910}}, {\"$nor\": [{\"year\": {\"$eq\": 1901}}, {\"year\": {\"$eq\": 1905}}, {\"year\": {\"$eq\": 1907}}]}]}}", qb.build());
     }
 
     // "$all operator used with full text indexing"
     @Test
     public void basicSelector10() {
-        QueryBuilder qb = new QueryBuilder(all("genre", "Comedy", "Short").toString());
+        QueryBuilder qb = new QueryBuilder(all("genre", "Comedy", "Short"));
         Assert.assertEquals("{\"selector\": {\"genre\": {\"$all\": [\"Comedy\", \"Short\"]}}}", qb.build());
     }
 
     // "$all operator used with full text indexing"
     @Test
     public void basicSelector10_single() {
-        QueryBuilder qb = new QueryBuilder(all("genre", "Comedy").toString());
+        QueryBuilder qb = new QueryBuilder(all("genre", "Comedy"));
         Assert.assertEquals("{\"selector\": {\"genre\": {\"$all\": [\"Comedy\"]}}}", qb.build());
     }
 
     // "elemMatch operator used with full text indexing"
     @Test
     public void basicSelector11() {
-        QueryBuilder qb = new QueryBuilder(elemMatch("genre", PredicateExpression.eq("Horror")).toString());
+        QueryBuilder qb = new QueryBuilder(elemMatch("genre", PredicateExpression.eq("Horror")));
         Assert.assertEquals("{\"selector\": {\"genre\": {\"$elemMatch\": {\"$eq\": \"Horror\"}}}}", qb.build());
     }
 
@@ -162,35 +162,35 @@ public class QueryTests {
     // (similar for all (in)equality tests, so one is representative
     @Test
     public void basicSelector12() {
-        QueryBuilder qb = new QueryBuilder(lt("year", 1900).toString());
+        QueryBuilder qb = new QueryBuilder(lt("year", 1900));
         Assert.assertEquals("{\"selector\": {\"year\": {\"$lt\": 1900}}}", qb.build());
     }
 
     // "$exists operator used with database indexed on the field "year""
     @Test
     public void basicSelector13() {
-        QueryBuilder qb = new QueryBuilder(and(eq("year", 2015), exists("title", true)).toString());
+        QueryBuilder qb = new QueryBuilder(and(eq("year", 2015), exists("title", true)));
         Assert.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$eq\": 2015}}, {\"title\": {\"$exists\": true}}]}}", qb.build());
     }
 
     // "$type operator used with full text indexing"
     @Test
     public void basicSelector14() {
-        QueryBuilder qb = new QueryBuilder(type("year", Type.NUMBER).toString());
+        QueryBuilder qb = new QueryBuilder(type("year", Type.NUMBER));
         Assert.assertEquals("{\"selector\": {\"year\": {\"$type\": \"number\"}}}", qb.build());
     }
 
     // "$in operator used with full text indexing"
     @Test
     public void basicSelector15() {
-        QueryBuilder qb = new QueryBuilder(in("year", 2010, 2015).toString());
+        QueryBuilder qb = new QueryBuilder(in("year", 2010, 2015));
         Assert.assertEquals("{\"selector\": {\"year\": {\"$in\": [2010, 2015]}}}", qb.build());
     }
 
     // "$in operator used with full text indexing"
     @Test
     public void basicSelector15_single() {
-        QueryBuilder qb = new QueryBuilder(in("year", 2010).toString());
+        QueryBuilder qb = new QueryBuilder(in("year", 2010));
         Assert.assertEquals("{\"selector\": {\"year\": {\"$in\": [2010]}}}", qb.build());
     }
 
@@ -198,7 +198,7 @@ public class QueryTests {
     @Test
     public void basicSelector16() {
         QueryBuilder qb = new QueryBuilder(and(gt("year", 2009),
-            nin("year", 2010, 2015)).toString());
+            nin("year", 2010, 2015)));
         Assert.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$gt\": 2009}}, {\"year\": {\"$nin\": [2010, 2015]}}]}}", qb.build());
     }
 
@@ -206,14 +206,14 @@ public class QueryTests {
     @Test
     public void basicSelector16_single() {
         QueryBuilder qb = new QueryBuilder(and(gt("year", 2009),
-                nin("year", 2010)).toString());
+                nin("year", 2010)));
         Assert.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$gt\": 2009}}, {\"year\": {\"$nin\": [2010]}}]}}", qb.build());
     }
 
     @Test
     public void complexSelector1() {
         QueryBuilder qb = new QueryBuilder(not(and(gt("year", 2009),
-                nin("year", 2010, 2015))).toString());
+                nin("year", 2010, 2015))));
         Assert.assertEquals("{\"selector\": {\"$not\": {\"$and\": [{\"year\": {\"$gt\": 2009}}, {\"year\": {\"$nin\": [2010, 2015]}}]}}}", qb.build());
     }
 
@@ -226,14 +226,14 @@ public class QueryTests {
                 and(
                         eq("Actor","de Vito"),
                         eq("Year", 2001))
-        ).toString());
+        ));
         Assert.assertEquals("{\"selector\": {\"$or\": [{\"$and\": [{\"Actor\": {\"$eq\": \"Schwarzenegger\"}}, {\"Year\": {\"$eq\": 2012}}]}, {\"$and\": [{\"Actor\": {\"$eq\": \"de Vito\"}}, {\"Year\": {\"$eq\": 2001}}]}]}}", qb.build());
     }
 
     // "Selector basics"
     @Test
     public void basicSelector1WithFields() {
-        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier").toString()).fields("_id", "_rev", "year", "title");
+        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier")).fields("_id", "_rev", "year", "title");
         Assert.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +
                 "\"fields\": [\"_id\", \"_rev\", \"year\", \"title\"]}", qb.build());
     }
@@ -241,7 +241,7 @@ public class QueryTests {
     // "Selector basics"
     @Test
     public void basicSelector1WithSort() {
-        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier").toString()).sort(Sort.asc("year"), Sort.desc("director"));
+        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier")).sort(Sort.asc("year"), Sort.desc("director"));
         Assert.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +
                 "\"sort\": [{\"year\": \"asc\"}, {\"director\": \"desc\"}]}", qb.build());
     }
@@ -249,7 +249,7 @@ public class QueryTests {
     // "Selector basics"
     @Test
     public void basicSelector1WithAllOptions() {
-        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier").toString()).
+        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier")).
                 fields("_id", "_rev", "year", "title").
                 sort(Sort.asc("year"), Sort.desc("director")).
                 limit(10).

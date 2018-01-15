@@ -30,7 +30,7 @@ import java.util.LinkedList;
  * {@code
  * String query = db.query(new QueryBuilder(and(
  *   gt("Movie_year", 1960),
- *   eq("Person_name", "Alec Guinness")).toString()).
+ *   eq("Person_name", "Alec Guinness"))).
  *   sort(Sort.desc("Movie_year")).
  *   fields("Movie_name", "Movie_year").
  *   build();
@@ -46,7 +46,7 @@ import java.util.LinkedList;
  */
 public class QueryBuilder {
 
-    private final String selector;
+    private final Selector selector;
     private String[] fields;
     private Sort[] sort;
     private Long limit;
@@ -64,10 +64,9 @@ public class QueryBuilder {
      * </p>
      * <p>
      * The easiest way of obtaining a selector string is to obtain a {@link Selector} from an
-     * {@link Operation} or {@link Expression} and call {@code toString} on the resulting
-     * {@link Selector}.
+     * {@link Operation} or {@link Expression}.
      * </p>
-     * @param selector string representation of a JSON object describing criteria used to select
+     * @param selector {@code Selector} object describing criteria used to select
      *                 documents.
      * @see <a
      * href="https://console.bluemix.net/docs/services/Cloudant/api/cloudant_query.html#selector-syntax"
@@ -75,7 +74,7 @@ public class QueryBuilder {
      * @see com.cloudant.client.api.Database#query(String, Class)
      * @see Selector
      */
-    public QueryBuilder(String selector) {
+    public QueryBuilder(Selector selector) {
         this.selector = selector;
     }
 
@@ -202,7 +201,7 @@ public class QueryBuilder {
         StringBuilder builder = new StringBuilder();
         // build up components...
         // selector
-        builder.append(Helpers.withKey(Helpers.SELECTOR, this.selector));
+        builder.append(Helpers.withKey(Helpers.SELECTOR, this.selector.toString()));
         // fields
         if (fieldsString != null) {
             builder.append(String.format(", \"fields\": %s", fieldsString));
