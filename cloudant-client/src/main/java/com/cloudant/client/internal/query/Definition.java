@@ -24,7 +24,6 @@ import java.util.List;
  * Abstract model of common index definition parameters.
  */
 public class Definition<F extends Field> {
-    //TODO decide if this alternate is needed
     @SerializedName(value = "partial_filter_selector", alternate = {"selector"})
     protected JsonObject selector;
     protected List<F> fields;
