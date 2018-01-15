@@ -1,7 +1,9 @@
 # UNRELEASED
 - [IMPROVED] Throw an `IllegalArgumentException` with a better message if trying to build the client
   with a `null` URL instead of a `NullPointerException`.
-- [NEW] Index creation APIs and builders including support for text indexes.
+- [NEW] Index creation APIs and builders including support for text and partial indexes.
+- [NEW] Support for query bookmarks and execution stats.
+- [NEW] Utilities for generating selectors for queries and partial indexes.
 - [DEPRECATED] Old index creation and listing APIs:
     - `com.cloudant.client.api.model.Index`
     - `com.cloudant.client.api.model.IndexField`
