@@ -66,9 +66,8 @@ public abstract class Builder<I extends InternalIndex<D, F>, D extends Definitio
     /**
      * Configure a selector to choose documents that should be added to the index.
      */
-    public B partialFilterSelector(String selector) {
-        instance.def.selector = Helpers.getSelectorFromString(
-                Helpers.encloseWithKey("selector", selector));
+    public B partialFilterSelector(Selector selector) {
+        instance.def.selector = Helpers.getJsonObjectFromSelector(selector);
         return returnThis();
     }
 

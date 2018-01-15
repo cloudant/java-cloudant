@@ -63,8 +63,7 @@ public class QueryBuilder {
      * {@link com.cloudant.client.api.Database#query(String, Class)}
      * </p>
      * <p>
-     * The easiest way of obtaining a selector string is to obtain a {@link Selector} from an
-     * {@link Operation} or {@link Expression}.
+     * Obtain a selector from an {@link Operation} or {@link Expression}.
      * </p>
      * @param selector {@code Selector} object describing criteria used to select
      *                 documents.
@@ -201,7 +200,7 @@ public class QueryBuilder {
         StringBuilder builder = new StringBuilder();
         // build up components...
         // selector
-        builder.append(Helpers.withKey(Helpers.SELECTOR, this.selector.toString()));
+        builder.append(Helpers.withKey(Helpers.SELECTOR, this.selector));
         // fields
         if (fieldsString != null) {
             builder.append(String.format(", \"fields\": %s", fieldsString));

@@ -154,12 +154,10 @@ public class JsonIndex extends InternalIndex<JsonIndex.Definition, JsonIndex.Fie
 
         /**
          * <p>
-         * Configure a selector string to choose documents that should be added to the index.
+         * Configure a selector to choose documents that should be added to the index.
          * </p>
          * <p>
-         * The easiest way of obtaining a selector string is to obtain a {@link Selector} from an
-         * {@link Operation} or {@link Expression} and call {@code toString} on the resulting
-         * {@link Selector}.
+         * Obtain a selector from an {@link Operation} or {@link Expression}.
          * </p>
          * @param selector string representation of a JSON object describing criteria used to add
          *                 documents to index
@@ -170,7 +168,7 @@ public class JsonIndex extends InternalIndex<JsonIndex.Definition, JsonIndex.Fie
          * target="_blank">selector syntax</a>
          */
         @Override
-        public Builder partialFilterSelector(String selector) {
+        public Builder partialFilterSelector(Selector selector) {
             return super.partialFilterSelector(selector);
         }
 

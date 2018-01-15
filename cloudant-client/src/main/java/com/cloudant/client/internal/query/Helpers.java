@@ -119,8 +119,8 @@ public class Helpers {
      * @param selector the selector to enclose
      * @return the string form of the selector enclosed in a JSON object
      */
-    public static String enclose(String selector) {
-        return String.format("{%s}", selector);
+    public static String enclose(Selector selector) {
+        return String.format("{%s}", selector.toString());
     }
 
     /**
@@ -141,7 +141,7 @@ public class Helpers {
      * @param selector the selector
      * @return the string form of the selector enclosed in a JSON object, keyed by key
      */
-    public static String withKey(String key, String selector) {
+    public static String withKey(String key, Selector selector) {
         return String.format("\"%s\": %s", key, enclose(selector));
     }
 
@@ -164,8 +164,12 @@ public class Helpers {
      * @param selector the selector to enclose
      * @return the string form of the selector enclosed in a JSON object with the specified key
      */
-    public static String encloseWithKey(String key, String selector) {
+    public static String encloseWithKey(String key, Selector selector) {
         return String.format("{%s}", withKey(key, selector));
+    }
+
+    public static JsonObject getJsonObjectFromSelector(Selector selector) {
+        return new Gson().fromJson(enclose(selector), JsonObject.class);
     }
 
     public static JsonObject getSelectorFromString(String selectorJson) {
