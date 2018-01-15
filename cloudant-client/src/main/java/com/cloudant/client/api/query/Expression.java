@@ -165,15 +165,13 @@ public class Expression implements Selector {
      * Divisor and Remainder are both positive or negative integers. Non-integer values result in a
      * 404 status. Matches documents where the expression (field % Divisor == Remainder) is true,
      * and only when the document field is an integer
-     *
-     * TODO fix - the rhs needs to be an array of two elements, [Divisor, Remainder]
-     *
      * @param lhs The field to check
-     * @param rhs TODO
-     * @return Expression: lhs $mod rhs
+     * @param divisor The divisor argument of the mod operation
+     * @param remainder The remainder argument of the mod operation
+     * @return Expression: lhs $mod divisor remainder
      */
-    public static Expression mod(String lhs, Long rhs) {
-        return new Expression(lhs, "$mod", rhs);
+    public static Expression mod(String lhs, Long divisor, Long remainder) {
+        return new Expression(lhs, "$mod", divisor, remainder);
     }
 
     /**
