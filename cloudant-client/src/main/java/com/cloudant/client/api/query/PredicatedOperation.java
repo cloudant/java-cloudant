@@ -50,7 +50,7 @@ public class PredicatedOperation implements Selector {
      * @return PredicatedOperation: lhs $elemMatch $rhs
      */
     public static PredicatedOperation elemMatch(String lhs, PredicateExpression... rhs) {
-        // TODO each expression key must be unique
+        // note each expression key must be unique or the JSON is malformed
         return new PredicatedOperation(lhs, "$elemMatch", rhs);
     }
 
