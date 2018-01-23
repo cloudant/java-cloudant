@@ -4,6 +4,7 @@
 - [NEW] Utilities for generating selectors for queries and partial indexes.
 - [IMPROVED] Throw an `IllegalArgumentException` with a better message if trying to build the client
   with a `null` URL instead of a `NullPointerException`.
+- [FIXED] Updated default IBM Cloud Identity and Access Management token URL.
 - [DEPRECATED] Old index creation and listing APIs:
     - `com.cloudant.client.api.model.Index`
     - `com.cloudant.client.api.model.IndexField`
