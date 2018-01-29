@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -91,7 +91,7 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
             rpInterceptor = ci;
         } else if (sessionPath.equals("/_iam_session")) {
             // Set the endpoint value before each test
-            iamSystemPropertyMock.setMockIamTokenEndpointUrl(mockIamServer.url("/oidc/token")
+            iamSystemPropertyMock.setMockIamTokenEndpointUrl(mockIamServer.url("/identity/token")
                     .toString());
             IamCookieInterceptor ici = new IamCookieInterceptor("apikey", baseUrl);
             rqInterceptor = ici;

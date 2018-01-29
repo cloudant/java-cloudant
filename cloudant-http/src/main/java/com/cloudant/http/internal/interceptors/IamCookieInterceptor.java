@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -44,7 +44,7 @@ public class IamCookieInterceptor extends CookieInterceptorBase {
         // Read iamServer from system property, or set default
         try {
             this.iamServerUrl = new URL(System.getProperty("com.cloudant.client.iamserver",
-                    "https://iam.bluemix.net/oidc/token"));
+                    "https://iam.bluemix.net/identity/token"));
         } catch (MalformedURLException mue) {
             throw new RuntimeException("IAM server property was not a valid URL", mue);
         }

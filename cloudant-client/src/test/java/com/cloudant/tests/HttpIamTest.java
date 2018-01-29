@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -61,7 +61,7 @@ public class HttpIamTest {
 
     final static String hello = "{\"hello\":\"world\"}\r\n";
     final static String iamApiKey = "iam";
-    final static String iamTokenEndpoint = "/oidc/token";
+    final static String iamTokenEndpoint = "/identity/token";
 
     /**
      * Before running this test class setup the property mock.
@@ -127,7 +127,7 @@ public class HttpIamTest {
         // asserts on the IAM server
         // assert that there was 1 call
         RecordedRequest[] recordedIamRequests = takeN(mockIamServer, 1);
-        assertEquals("The request should have been for /oidc/token", iamTokenEndpoint,
+        assertEquals("The request should have been for /identity/token", iamTokenEndpoint,
                 recordedIamRequests[0].getPath());
         assertThat("The request body should contain the IAM API key",
                 recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
@@ -181,7 +181,7 @@ public class HttpIamTest {
         // asserts on the IAM server
         // assert that there was 1 call
         RecordedRequest[] recordedIamRequests = takeN(mockIamServer, 1);
-        assertEquals("The request should have been for /oidc/token", iamTokenEndpoint,
+        assertEquals("The request should have been for /identity/token", iamTokenEndpoint,
                 recordedIamRequests[0].getPath());
         assertThat("The request body should contain the IAM API key",
                 recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
@@ -274,13 +274,13 @@ public class HttpIamTest {
         // assert that there were 2 calls
         RecordedRequest[] recordedIamRequests = takeN(mockIamServer, 2);
         // first time, automatically fetch because cookie jar is empty
-        assertEquals("The request should have been for /oidc/token", iamTokenEndpoint,
+        assertEquals("The request should have been for /identity/token", iamTokenEndpoint,
                 recordedIamRequests[0].getPath());
         assertThat("The request body should contain the IAM API key",
                 recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
                 containsString("apikey="+iamApiKey));
         // second time, refresh because the cloudant session cookie has expired
-        assertEquals("The request should have been for /oidc/token", iamTokenEndpoint,
+        assertEquals("The request should have been for /identity/token", iamTokenEndpoint,
                 recordedIamRequests[1].getPath());
     }
 
@@ -360,13 +360,13 @@ public class HttpIamTest {
         // assert that there were 2 calls
         RecordedRequest[] recordedIamRequests = takeN(mockIamServer, 2);
         // first time, automatically fetch because cookie jar is empty
-        assertEquals("The request should have been for /oidc/token", iamTokenEndpoint,
+        assertEquals("The request should have been for /identity/token", iamTokenEndpoint,
                 recordedIamRequests[0].getPath());
         assertThat("The request body should contain the IAM API key",
                 recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
                 containsString("apikey="+iamApiKey));
         // second time, refresh (but gets 500) because the cloudant session cookie has expired
-        assertEquals("The request should have been for /oidc/token", iamTokenEndpoint,
+        assertEquals("The request should have been for /identity/token", iamTokenEndpoint,
                 recordedIamRequests[1].getPath());
     }
 
@@ -453,13 +453,13 @@ public class HttpIamTest {
         // assert that there were 2 calls
         RecordedRequest[] recordedIamRequests = takeN(mockIamServer, 2);
         // first time, automatically fetch because cookie jar is empty
-        assertEquals("The request should have been for /oidc/token", iamTokenEndpoint,
+        assertEquals("The request should have been for /identity/token", iamTokenEndpoint,
                 recordedIamRequests[0].getPath());
         assertThat("The request body should contain the IAM API key",
                 recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
                 containsString("apikey="+iamApiKey));
         // second time, refresh because the cloudant session cookie has expired
-        assertEquals("The request should have been for /oidc/token", iamTokenEndpoint,
+        assertEquals("The request should have been for /identity/token", iamTokenEndpoint,
                 recordedIamRequests[1].getPath());
     }
 
