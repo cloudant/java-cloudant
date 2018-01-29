@@ -5,6 +5,8 @@
 - [IMPROVED] Throw an `IllegalArgumentException` with a better message if trying to build the client
   with a `null` URL instead of a `NullPointerException`.
 - [FIXED] Updated default IBM Cloud Identity and Access Management token URL.
+- [FIXED] An issue where a row was truncated from an `_all_docs` response including deleted docs for
+  a request using `keys` where the server returns a `total_rows` count only for undeleted docs.
 - [DEPRECATED] Old index creation and listing APIs:
     - `com.cloudant.client.api.model.Index`
     - `com.cloudant.client.api.model.IndexField`
