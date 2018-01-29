@@ -80,12 +80,12 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
             totalRows = rows.size();
         }
 
-        long rowsPerPage = (initialQueryParameters.getRowsPerPage() != null) ?
-                initialQueryParameters.getRowsPerPage().longValue() : totalRows;
+        Long rowsPerPage = (initialQueryParameters.getRowsPerPage() != null) ?
+                initialQueryParameters.getRowsPerPage().longValue() : null;
 
-        //we expect limit = rowsPerPage + 1 results, if we have rowsPerPage or less we are on the
-        // last page
-        hasNext = resultRows > rowsPerPage;
+        // We expect limit = rowsPerPage + 1 results, if we have rowsPerPage or less,
+        // or if rowsPerPage wasn't set then we are on the last page.
+        hasNext = (rowsPerPage != null) ? (resultRows > rowsPerPage) : false;
 
         if (PageMetadata.PagingDirection.BACKWARD == thisPageDirection) {
             //Result needs reversing because to implement backward paging the view reading
@@ -131,9 +131,14 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
         }
 
         // calculate paging display info
-        long offset = (this.pageNumber - 1) * rowsPerPage;
-        resultFrom = offset + 1;
-        resultTo = offset + (hasNext ? rowsPerPage : resultRows);
+        if (rowsPerPage != null) {
+            long offset = (this.pageNumber - 1) * rowsPerPage;
+            resultFrom = offset + 1;
+            resultTo = offset + (hasNext ? rowsPerPage : resultRows);
+        } else {
+            resultFrom = 1;
+            resultTo = totalRows;
+        }
     }
 
     @Override

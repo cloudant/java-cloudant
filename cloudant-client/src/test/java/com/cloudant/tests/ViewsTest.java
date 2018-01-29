@@ -62,6 +62,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -1246,9 +1247,6 @@ public class ViewsTest {
         UnpaginatedRequestBuilder<String, Integer> viewBuilder = database.getViewRequestBuilder
                 ("testDDoc", "testView").newRequest(Key.Type.STRING, Integer.class);
 
-        MockResponse mockResponse = new MockResponse().setResponseCode(200).setBody
-                ("{\"rows\":[{\"key\":null,\"value\":10}]}");
-
         // Regex patterns for stale parameter cases
         Pattern noStaleParameter = Pattern.compile(".*/notarealdb/_design/testDDoc/_view/testView");
         Pattern staleParameterOK = Pattern.compile(".*/notarealdb/_design/testDDoc/_view" +
@@ -1257,19 +1255,15 @@ public class ViewsTest {
                 "/testView\\?stale=update_after");
 
         // Test the no stale argument supplied case
-        mockWebServer.enqueue(mockResponse);
         assertStaleParameter(viewBuilder.build(), noStaleParameter);
 
         // Test the OK stale argument supplied case
-        mockWebServer.enqueue(mockResponse);
         assertStaleParameter(viewBuilder.stale(SettableViewParameters.STALE_OK).build(), staleParameterOK);
 
         // Test the update_after stale argument supplied case
-        mockWebServer.enqueue(mockResponse);
         assertStaleParameter(viewBuilder.stale(SettableViewParameters.STALE_UPDATE_AFTER).build(), staleParameterUpdate);
 
         // Test the NO stale argument supplied case
-        mockWebServer.enqueue(mockResponse);
         assertStaleParameter(viewBuilder.stale(SettableViewParameters.STALE_NO).build(), noStaleParameter);
     }
 
@@ -1310,5 +1304,52 @@ public class ViewsTest {
     public void getIdsAndRevsForTwoNonExistentKeysWithAllDocs() throws Exception {
         db.getAllDocsRequestBuilder().keys(new String[]{"a", "b"}).build().getResponse()
                 .getIdsAndRevs();
+    }
+
+    /**
+     * <p>
+     * Test added for https://github.com/cloudant/java-cloudant/issues/411
+     * </p>
+     * <p>
+     * When _all_docs is used with specified keys deleted documents are also returned. The value of
+     * total_rows may represent only the un-deleted documents meaning more rows are returned than
+     * total_rows. This total_rows variance doesn't always manifest so we reproduce it using a mock.
+     * </p>
+     *
+     * @throws Exception
+     */
+    @Test
+    public void getIdsAndRevsForDeletedIDsWithAllDocs() throws Exception {
+
+        Map<String, String> idsAndRevs = new HashMap<String, String>(4);
+        idsAndRevs.put("docid0", "1-a00e6463d52d7f167c8ac5c834836c1b");
+        idsAndRevs.put("docid1", "1-a00e6463d52d7f167c8ac5c834836c1b");
+        idsAndRevs.put("docid2", "2-acbb972b187ec952eae1ca74cfef16a9");
+        idsAndRevs.put("docid3", "2-acbb972b187ec952eae1ca74cfef16a9");
+
+        CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .build();
+        Database database = client.database("deletedidsalldocskeysdb", false);
+
+        // _all_docs?keys=["docid0", "docid1", "docid2", "docid3"]
+        MockResponse mockResponse = new MockResponse().setResponseCode(200).setBody
+                ("{\"total_rows\":2,\"offset\":0,\"rows\":[\n" +
+                        "{\"id\":\"docid0\",\"key\":\"docid0\"," +
+                        "\"value\":{\"rev\":\"1-a00e6463d52d7f167c8ac5c834836c1b\"}},\n" +
+                        "{\"id\":\"docid1\",\"key\":\"docid1\"," +
+                        "\"value\":{\"rev\":\"1-a00e6463d52d7f167c8ac5c834836c1b\"}},\n" +
+                        "{\"id\":\"docid2\",\"key\":\"docid2\"," +
+                        "\"value\":{\"rev\":\"2-acbb972b187ec952eae1ca74cfef16a9\"," +
+                        "\"deleted\":true}},\n" +
+                        "{\"id\":\"docid3\",\"key\":\"docid3\"," +
+                        "\"value\":{\"rev\":\"2-acbb972b187ec952eae1ca74cfef16a9\"," +
+                        "\"deleted\":true}}\n" +
+                        "]}");
+        mockWebServer.enqueue(mockResponse);
+
+        // Do an _all_docs request using the 4 _ids of the generated docs.
+        Map<String, String> allDocsIdsAndRevs = database.getAllDocsRequestBuilder().keys(idsAndRevs
+                .keySet().toArray(new String[4])).build().getResponse().getIdsAndRevs();
+        assertEquals("The ids and revs should be equal", idsAndRevs, allDocsIdsAndRevs);
     }
 }
