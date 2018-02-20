@@ -251,6 +251,9 @@ public class CouchDbClient {
         }
     }
 
+    /**
+     * @return DB Server metadata.
+     */
     public MetaInformation metaInformation() {
         InputStream instream = null;
         try {

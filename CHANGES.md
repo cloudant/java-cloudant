@@ -1,3 +1,7 @@
+# Unreleased
+
+- [NEW] Add `CloudantClient.metaInformation()`.
+
 # 2.12.0 (2018-02-08)
 - [NEW] Index creation APIs and builders including support for text and partial indexes.
 - [NEW] Support for query bookmarks and execution stats.

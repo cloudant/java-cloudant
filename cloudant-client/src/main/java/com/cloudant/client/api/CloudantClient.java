@@ -279,6 +279,14 @@ public class CloudantClient {
         return couchDbClient.serverVersion();
     }
 
+    /**
+     * Get the welcome message metadata.
+     *
+     * @return Welcome message metadata.
+     * @see <a target="_blank"
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/advanced.html#-get-">
+     * GET meta information about the cluster</a>
+     */
     public MetaInformation metaInformation() {
         return couchDbClient.metaInformation();
     }
