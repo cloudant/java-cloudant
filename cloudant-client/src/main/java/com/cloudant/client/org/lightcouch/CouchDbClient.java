@@ -241,7 +241,7 @@ public class CouchDbClient {
         try {
             instream = get(getBaseUri());
             Reader reader = new InputStreamReader(instream, "UTF-8");
-            return getAsString(new JsonParser().parse(reader).getAsJsonObject(), "version");
+            return metaInformation().getVersion();
         } catch (UnsupportedEncodingException e) {
             // This should never happen as every implementation of the java platform is required
             // to support UTF-8.
@@ -250,6 +250,22 @@ public class CouchDbClient {
             close(instream);
         }
     }
+
+    public MetaInformation metaInformation() {
+        InputStream instream = null;
+        try {
+            instream = get(getBaseUri());
+            Reader reader = new InputStreamReader(instream, "UTF-8");
+            return getGson().fromJson(reader, MetaInformation.class);
+        } catch (UnsupportedEncodingException e) {
+            // This should never happen as every implementation of the java platform is required
+            // to support UTF-8.
+            throw new RuntimeException(e);
+        } finally {
+            close(instream);
+        }
+    }
+
 
     /**
      * Provides access to CouchDB <tt>replication</tt> APIs.
