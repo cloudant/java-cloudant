@@ -19,12 +19,18 @@ import java.util.List;
 public class MetaInformation {
 
     private String couchdb;
+    private String uuid;
     private String version;
     private Vendor vendor;
     private List<String> features;
 
     public String getCouchdb() {
         return couchdb;
+    }
+
+    // optional
+    public String getUuid() {
+        return uuid;
     }
 
     public String getVersion() {
@@ -35,6 +41,7 @@ public class MetaInformation {
         return vendor;
     }
 
+    // optional
     public List<String> getFeatures() {
         return features;
     }
@@ -70,6 +77,7 @@ public class MetaInformation {
     public String toString() {
         return "MetaInformation{" +
                 "couchdb='" + couchdb + '\'' +
+                ", uuid='" + uuid + '\'' +
                 ", version='" + version + '\'' +
                 ", vendor=" + vendor +
                 ", features=" + features +

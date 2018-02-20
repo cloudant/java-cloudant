@@ -70,7 +70,6 @@ public class DBServerTest {
         MetaInformation mi = account.metaInformation();
         assertNotNull(mi);
         assertNotNull(mi.getCouchdb());
-        assertNotNull(mi.getFeatures());
         assertNotNull(mi.getVendor());
         assertNotNull(mi.getVersion());
     }
