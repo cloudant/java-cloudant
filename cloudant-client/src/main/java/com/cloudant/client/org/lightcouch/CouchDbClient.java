@@ -237,18 +237,7 @@ public class CouchDbClient {
      * @return DB Server version.
      */
     public String serverVersion() {
-        InputStream instream = null;
-        try {
-            instream = get(getBaseUri());
-            Reader reader = new InputStreamReader(instream, "UTF-8");
-            return metaInformation().getVersion();
-        } catch (UnsupportedEncodingException e) {
-            // This should never happen as every implementation of the java platform is required
-            // to support UTF-8.
-            throw new RuntimeException(e);
-        } finally {
-            close(instream);
-        }
+        return metaInformation().getVersion();
     }
 
     /**

@@ -24,6 +24,15 @@ public class MetaInformation {
     private Vendor vendor;
     private List<String> features;
 
+    public MetaInformation(String couchdb, String uuid, String version, Vendor vendor,
+                           List<String> features) {
+        this.couchdb = couchdb;
+        this.uuid = uuid;
+        this.version = version;
+        this.vendor = vendor;
+        this.features = features;
+    }
+
     public String getCouchdb() {
         return couchdb;
     }
@@ -46,10 +55,17 @@ public class MetaInformation {
         return features;
     }
 
-    public class Vendor {
+    public static class Vendor {
+
         private String name;
         private String version;
         private String variant;
+
+        public Vendor(String name, String version, String variant) {
+            this.name = name;
+            this.version = version;
+            this.variant = variant;
+        }
 
         public String getName() {
             return name;
