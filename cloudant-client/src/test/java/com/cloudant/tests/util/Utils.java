@@ -106,7 +106,6 @@ public class Utils {
         //initial wait of 100 ms
         long delay = 100;
 
-        boolean finished = false;
         while (System.currentTimeMillis() < timeout) {
             //Sleep before finding replication document
             Thread.sleep(delay);
