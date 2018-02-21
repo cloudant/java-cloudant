@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright © 2015, 2016 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -21,6 +21,7 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.generateUU
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
 
+import com.cloudant.client.api.model.MetaInformation;
 import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.client.internal.URIBase;
 import com.cloudant.client.internal.util.DeserializationTypes;
@@ -38,7 +39,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 
 import org.apache.commons.io.IOUtils;
 
@@ -237,11 +237,18 @@ public class CouchDbClient {
      * @return DB Server version.
      */
     public String serverVersion() {
+        return metaInformation().getVersion();
+    }
+
+    /**
+     * @return DB Server metadata.
+     */
+    public MetaInformation metaInformation() {
         InputStream instream = null;
         try {
             instream = get(getBaseUri());
             Reader reader = new InputStreamReader(instream, "UTF-8");
-            return getAsString(new JsonParser().parse(reader).getAsJsonObject(), "version");
+            return getGson().fromJson(reader, MetaInformation.class);
         } catch (UnsupportedEncodingException e) {
             // This should never happen as every implementation of the java platform is required
             // to support UTF-8.
@@ -250,6 +257,7 @@ public class CouchDbClient {
             close(instream);
         }
     }
+
 
     /**
      * Provides access to CouchDB <tt>replication</tt> APIs.

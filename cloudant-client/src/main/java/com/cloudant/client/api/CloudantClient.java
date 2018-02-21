@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -27,6 +27,7 @@ import com.cloudant.client.internal.util.DeserializationTypes;
 import com.cloudant.client.org.lightcouch.CouchDbClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.CouchDbProperties;
+import com.cloudant.client.api.model.MetaInformation;
 import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.Replicator;
 import com.cloudant.http.HttpConnection;
@@ -276,6 +277,18 @@ public class CloudantClient {
      */
     public String serverVersion() {
         return couchDbClient.serverVersion();
+    }
+
+    /**
+     * Get the welcome message metadata.
+     *
+     * @return Welcome message metadata.
+     * @see <a target="_blank"
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/advanced.html#-get-">
+     * GET meta information about the cluster</a>
+     */
+    public MetaInformation metaInformation() {
+        return couchDbClient.metaInformation();
     }
 
     /**

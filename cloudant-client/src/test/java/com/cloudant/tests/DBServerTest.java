@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.DbInfo;
+import com.cloudant.client.api.model.MetaInformation;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;
@@ -62,6 +63,15 @@ public class DBServerTest {
     public void serverVersion() {
         String version = account.serverVersion();
         assertNotNull(version);
+    }
+
+    @Test
+    public void metaInformation() {
+        MetaInformation mi = account.metaInformation();
+        assertNotNull(mi);
+        assertNotNull(mi.getCouchdb());
+        assertNotNull(mi.getVendor());
+        assertNotNull(mi.getVersion());
     }
 
     @Test
