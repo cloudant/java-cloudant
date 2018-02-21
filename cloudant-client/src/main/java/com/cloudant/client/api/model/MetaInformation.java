@@ -12,7 +12,7 @@
  * and limitations under the License.
  */
 
-package com.cloudant.client.org.lightcouch;
+package com.cloudant.client.api.model;
 
 import java.util.List;
 

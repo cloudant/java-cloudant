@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.DbInfo;
-import com.cloudant.client.org.lightcouch.MetaInformation;
+import com.cloudant.client.api.model.MetaInformation;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.util.CloudantClientResource;
 import com.cloudant.tests.util.DatabaseResource;

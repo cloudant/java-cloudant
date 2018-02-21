@@ -27,7 +27,7 @@ import com.cloudant.client.internal.util.DeserializationTypes;
 import com.cloudant.client.org.lightcouch.CouchDbClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.CouchDbProperties;
-import com.cloudant.client.org.lightcouch.MetaInformation;
+import com.cloudant.client.api.model.MetaInformation;
 import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.Replicator;
 import com.cloudant.http.HttpConnection;

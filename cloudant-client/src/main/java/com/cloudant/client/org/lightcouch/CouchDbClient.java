@@ -21,6 +21,7 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.generateUU
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
 
+import com.cloudant.client.api.model.MetaInformation;
 import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.client.internal.URIBase;
 import com.cloudant.client.internal.util.DeserializationTypes;
@@ -38,7 +39,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 
 import org.apache.commons.io.IOUtils;
 
