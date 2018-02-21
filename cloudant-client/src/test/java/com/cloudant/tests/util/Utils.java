@@ -27,6 +27,7 @@ import com.cloudant.client.api.DesignDocumentManager;
 import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
+import com.cloudant.client.api.scheduler.SchedulerDocsResponse;
 import com.cloudant.client.internal.URIBase;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.http.Http;
@@ -82,54 +83,62 @@ public class Utils {
         assertThat(removeResponse.getError(), is(nullValue()));
     }
 
-    public static ReplicatorDocument waitForReplicatorToStart(CloudantClient account,
+    public static String waitForReplicatorToStart(CloudantClient account,
                                                               String replicatorDocId)
             throws Exception {
-        return waitForReplicatorToReachStatus(account, replicatorDocId, "triggered");
+        return waitForReplicatorToReachStatus(account, replicatorDocId, "triggered", "running");
     }
 
-    public static ReplicatorDocument waitForReplicatorToComplete(CloudantClient account,
+    public static String waitForReplicatorToComplete(CloudantClient account,
                                                                  String replicatorDocId)
             throws Exception {
         return waitForReplicatorToReachStatus(account, replicatorDocId, "completed");
     }
 
-    public static ReplicatorDocument waitForReplicatorToReachStatus(CloudantClient account,
+    public static String waitForReplicatorToReachStatus(CloudantClient account,
                                                                     String replicatorDocId,
-                                                                    String status)
+                                                                    String... expectedStates)
             throws Exception {
         ReplicatorDocument replicatorDoc = null;
-
-        boolean finished = false;
 
         long startTime = System.currentTimeMillis();
         long timeout = startTime + TIMEOUT_MILLISECONDS;
         //initial wait of 100 ms
         long delay = 100;
 
-        while (!finished && System.currentTimeMillis() < timeout) {
+        boolean finished = false;
+        while (System.currentTimeMillis() < timeout) {
             //Sleep before finding replication document
             Thread.sleep(delay);
 
-            replicatorDoc = account.replicator()
-                    .replicatorDocId(replicatorDocId)
-                    .find();
-
             //Check if replicator doc is in specified state
             String state;
-            if (replicatorDoc != null && (state = replicatorDoc.getReplicationState()) != null) {
-                //if we've reached the status or we reached an error then we are finished
-                if (state.equalsIgnoreCase(status) || state.equalsIgnoreCase("error")) {
-                    finished = true;
+
+            if (account.metaInformation().getFeatures() != null &&
+                    account.metaInformation().getFeatures().contains("scheduler")) {
+                SchedulerDocsResponse.Doc doc = account.schedulerDocs(replicatorDocId);
+                state = doc != null ? doc.getState() : null;
+            } else {
+                replicatorDoc = account.replicator()
+                        .replicatorDocId(replicatorDocId)
+                        .find();
+                state = replicatorDoc != null ? replicatorDoc.getReplicationState() : null;
+            }
+
+            //if we've reached the status or we reached an error then we are finished
+            if ("error".equalsIgnoreCase(state)) {
+                return state;
+            } else {
+                for (String expectedState : expectedStates) {
+                    if (expectedState.equalsIgnoreCase(state)) {
+                        return state;
+                    }
                 }
             }
             //double the delay for the next iteration
             delay *= 2;
         }
-        if (!finished) {
-            throw new TimeoutException("Timed out waiting for replication to complete");
-        }
-        return replicatorDoc;
+        throw new TimeoutException("Timed out waiting for replication to complete");
     }
 
     public static String generateUUID() {

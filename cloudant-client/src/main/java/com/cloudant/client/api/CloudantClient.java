@@ -22,6 +22,8 @@ import com.cloudant.client.api.model.ApiKey;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.Membership;
 import com.cloudant.client.api.model.Task;
+import com.cloudant.client.api.scheduler.SchedulerDocsResponse;
+import com.cloudant.client.api.scheduler.SchedulerJobsResponse;
 import com.cloudant.client.internal.URIBase;
 import com.cloudant.client.internal.util.DeserializationTypes;
 import com.cloudant.client.org.lightcouch.CouchDbClient;
@@ -321,6 +323,40 @@ public class CloudantClient {
         com.cloudant.client.api.Replicator replicator = new com.cloudant.client.api.Replicator
                 (couchDbReplicator);
         return replicator;
+    }
+
+    /**
+     * Lists replication jobs. Includes replications created via /_replicate endpoint as well as
+     * those created from replication documents. Does not include replications which have
+     * completed or have failed to start because replication documents were malformed. Each job
+     * description will include source and target information, replication id, a history of
+     * recent event, and a few other things.
+     *
+     * @return List of replication jobs
+     */
+    public SchedulerJobsResponse schedulerJobs() {
+        return couchDbClient.schedulerJobs();
+    }
+
+    /**
+     * Lists replication document states. Includes information about all the documents, even in
+     * completed and failed states. For each document it returns the document ID, the database,
+     * the replication ID, source and target, and other information.
+     *
+     * @return List of replication document states
+     */
+    public SchedulerDocsResponse schedulerDocs() {
+        return couchDbClient.schedulerDocs();
+    }
+
+    /**
+     * Get replication document state for a given replication document ID.
+     *
+     * @param docId The replication document ID
+     * @return Replication document state
+     */
+    public SchedulerDocsResponse.Doc schedulerDocs(String docId) {
+        return couchDbClient.schedulerDocs(docId);
     }
 
     /**
