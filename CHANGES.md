@@ -1,6 +1,11 @@
 # Unreleased
 
 - [NEW] Add `CloudantClient.metaInformation()`.
+- [NEW] Add the following methods:
+  - `CloudantClient.metaInformation()`,
+  - `CloudantClient.schedulerJobs()`,
+  - `CloudantClient.schedulerDocs()`,
+  - `CloudantClient.schedulerDocs(docId)`.
 - [FIXED] An issue where `getReason()` returned an incorrect value for
   `Response` objects returned by `Database.bulk()`.
 
