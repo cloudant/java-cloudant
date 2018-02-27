@@ -21,23 +21,87 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import org.junit.Assert;
-import org.junit.Test;
-import org.junit.experimental.runners.Enclosed;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.Extension;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolver;
+import org.junit.jupiter.api.extension.TestTemplateInvocationContext;
+import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Created by Rhys Short on 24/02/2016.
  */
-@RunWith(Enclosed.class)
+@ExtendWith(DesignDocumentTest.ParameterProvider.class)
 public class DesignDocumentTest {
+
+
+    // TODO might be easier just to pass in fields to each test,
+    static class ParameterProvider implements TestTemplateInvocationContextProvider {
+        @Override
+        public boolean supportsTestTemplate(ExtensionContext context) {
+            return true;
+        }
+
+        @Override
+        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
+            return StreamSupport.stream(data().spliterator(), false);
+        }
+
+        public static TestTemplateInvocationContext invocationContext(final Field field) {
+            return new TestTemplateInvocationContext() {
+                @Override
+                public String getDisplayName(int invocationIndex) {
+                    return String.format("Field:%s", field);
+                }
+
+                @Override
+                public List<Extension> getAdditionalExtensions() {
+                    return Collections.<Extension>singletonList(new ParameterResolver() {
+                        @Override
+                        public boolean supportsParameter(ParameterContext parameterContext,
+                                                         ExtensionContext extensionContext) {
+                            switch(parameterContext.getIndex()) {
+                                case 0:
+                                    return parameterContext.getParameter().getType().equals(Field.class);
+                            }
+                            return false;
+                        }
+
+                        @Override
+                        public Object resolveParameter(ParameterContext parameterContext,
+                                                       ExtensionContext extensionContext) {
+                            switch(parameterContext.getIndex()) {
+                                case 0:
+                                    return field;
+                            }
+                            return null;
+                        }
+                    });
+                }
+            };
+        }
+    }
+
+    public static Iterable<TestTemplateInvocationContext> data() {
+        List<TestTemplateInvocationContext> contexts = new ArrayList<TestTemplateInvocationContext>();
+        for (Field f : EnumSet.allOf(Field.class)) {
+            contexts.add(ParameterProvider.invocationContext(f));
+        }
+        return contexts;
+    }
+
 
     static Gson gson = new GsonBuilder().create();
 
@@ -154,33 +218,17 @@ public class DesignDocumentTest {
         return designDocument;
     }
 
-    public static class OneOffEqualityTests {
         @Test
         public void testDesignDocEqualsForAllFields() {
             Assert.assertEquals(getDesignDocument(), getDesignDocument());
         }
-    }
 
-    @RunWith(Parameterized.class)
-    public static final class ParameterizedEqualityTests {
-
-        /**
-         * Parameters for these tests so we run each test multiple times.
-         * We run with a single key or a complex key and both ascending and descending.
-         */
-        @Parameterized.Parameters(name = "Field:{0}")
-        public static Collection<Field> data() {
-            return EnumSet.allOf(Field.class);
-        }
-
-        @Parameterized.Parameter
-        public Field field;
 
         /**
          * Tests the design docs are equal for each field in turn.
          */
-        @Test
-        public void testDesignDocEqualsForEachField() {
+        @TestTemplate
+        public void testDesignDocEqualsForEachField(Field field) {
             Assert.assertEquals(getDesignDocumentWithFields(EnumSet.of(field)),
                     getDesignDocumentWithFields(EnumSet.of(field)));
         }
@@ -190,8 +238,8 @@ public class DesignDocumentTest {
          *
          * @throws Exception
          */
-        @Test
-        public void testDesignDocNotEqualEmpty() throws Exception {
+        @TestTemplate
+        public void testDesignDocNotEqualEmpty(Field field) throws Exception {
             Assert.assertNotEquals(getDesignDocument(), getDesignDocumentWithFields(EnumSet
                     .complementOf(EnumSet.of(field))));
         }
@@ -202,12 +250,11 @@ public class DesignDocumentTest {
          *
          * @throws Exception
          */
-        @Test
-        public void testDesignDocNotEqualDifferent() throws Exception {
+        @TestTemplate
+        public void testDesignDocNotEqualDifferent(Field field) throws Exception {
             Assert.assertNotEquals(getDesignDocument(), getDesignDocumentWithDifferent(field));
         }
 
-    }
 
     private static void indexes(DesignDocument designDocument) {
         Map<String, Map<String, String>> indexes = new HashMap<String, Map<String, String>>();

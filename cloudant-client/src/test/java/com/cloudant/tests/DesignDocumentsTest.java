@@ -14,34 +14,32 @@
  */
 package com.cloudant.tests;
 
-import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.DesignDocumentManager;
-import com.cloudant.client.api.Replication;
 import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.api.model.Response;
-import com.cloudant.client.api.views.AllDocsRequest;
-import com.cloudant.client.api.views.Key;
 import com.cloudant.client.org.lightcouch.CouchDbException;
-import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.base.TestWithDb;
+import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.JsonObject;
 
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.function.Executable;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -55,26 +53,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-@Category(RequiresDB.class)
-public class DesignDocumentsTest {
+@RequiresDB
+public class DesignDocumentsTest extends TestWithDb {
 
-    @ClassRule
-    public static CloudantClientResource clientResource = new CloudantClientResource();
-    @Rule
-    public DatabaseResource dbResource = new DatabaseResource(clientResource);
-    @ClassRule
-    public static MockWebServer mockWebServer = new MockWebServer();
+    @RegisterExtension
+    public static MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
 
-    private Database db;
-    private CloudantClient account;
-    private File rootDesignDir;
-    private DesignDocument designDocExample;
-    private DesignDocumentManager designManager;
+    private static MockWebServer mockWebServer;
 
-    @Before
-    public void setUp() throws Exception {
-        account = clientResource.get();
-        db = dbResource.get();
+    private static File rootDesignDir;
+    private static DesignDocument designDocExample;
+    private static DesignDocumentManager designManager;
+
+    @BeforeEach
+    public void beforeEach() {
+        mockWebServer = mockWebServerExt.get();
+    }
+
+    @BeforeAll
+    public static void beforeAll() throws Exception {
         rootDesignDir = new File(System.getProperty("user.dir")
                 + "/src/test/resources/design-files");
         designManager = db.getDesignDocumentManager();
@@ -90,7 +87,7 @@ public class DesignDocumentsTest {
      * @return the DesignDocument object generated from the file.
      * @throws Exception
      */
-    private DesignDocument fileToDesignDocument(String name) throws Exception {
+    private static DesignDocument fileToDesignDocument(String name) throws Exception {
         File testDesignDocFile = new File(String.format("%s/%s_design_doc.js", rootDesignDir, name));
         return designManager.fromFile(testDesignDocFile);
     }
@@ -109,7 +106,7 @@ public class DesignDocumentsTest {
 
         DesignDocument designDoc11 = db.getDesignDocumentManager().get("_design/example");
 
-        assertEquals("The design document retrieved should equal ", exampleDoc, designDoc11);
+        assertEquals(exampleDoc, designDoc11, "The design document retrieved should equal ");
     }
 
     @Test
@@ -148,7 +145,7 @@ public class DesignDocumentsTest {
         designManager.put(docArray);
 
         for (String id : new String[]{"_design/conflicts", "_design/example", "_design/views101"}) {
-            assertNotNull("", designManager.get(id));
+            assertNotNull(designManager.get(id), "");
         }
     }
 
@@ -163,8 +160,7 @@ public class DesignDocumentsTest {
         designManager.put(designDocExample);
 
         // Retrieve it without a prefix
-        assertNotNull("The design doc should be retrieved without a _design prefix",
-                designManager.get("example"));
+        assertNotNull(designManager.get("example"), "The design doc should be retrieved without a _design prefix");
     }
 
     /**
@@ -179,8 +175,7 @@ public class DesignDocumentsTest {
         Response r = designManager.put(designDocExample);
 
         // Retrieve it without a prefix
-        assertNotNull("The design doc should be retrieved without a _design prefix",
-                designManager.get("example", r.getRev()));
+        assertNotNull(designManager.get("example", r.getRev()), "The design doc should be retrieved without a _design prefix");
     }
 
     /**
@@ -245,8 +240,7 @@ public class DesignDocumentsTest {
         Utils.assertOKResponse(designManager.put(designDocExampleNoPrefix));
 
         // Retrieve it with a prefix
-        assertNotNull("The design doc should be retrievable with a _design prefix",
-                designManager.get("_design/example"));
+        assertNotNull(designManager.get("_design/example"), "The design doc should be retrievable with a _design prefix");
     }
 
     /**
@@ -269,15 +263,21 @@ public class DesignDocumentsTest {
      *
      * @throws Exception
      */
-    @Test(expected = CouchDbException.class)
+    @Test
     public void couchDbExceptionIfIOExceptionDuringDDocRemove() throws Exception {
-        CloudantClient mockClient = CloudantClientHelper.newMockWebServerClientBuilder
-                (mockWebServer).readTimeout(50, TimeUnit.MILLISECONDS).build();
-        // Cause a read timeout to generate an IOException
-        mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE));
-        Database database = mockClient.database(dbResource.getDatabaseName(), false);
-        // Try to remove a design document by id only, generates a HEAD request for revision info
-        database.getDesignDocumentManager().remove("example");
+        assertThrows(CouchDbException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                CloudantClient mockClient = CloudantClientHelper.newMockWebServerClientBuilder
+                        (mockWebServer).readTimeout(50, TimeUnit.MILLISECONDS).build();
+                // Cause a read timeout to generate an IOException
+                mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE));
+                Database database = mockClient.database(dbResource.getDatabaseName(), false);
+                // Try to remove a design document by id only, generates a HEAD request for
+                // revision info
+                database.getDesignDocumentManager().remove("example");
+            }
+        });
     }
 
     /**
@@ -285,14 +285,19 @@ public class DesignDocumentsTest {
      *
      * @throws Exception
      */
-    @Test(expected = CouchDbException.class)
+    @Test
     public void couchDbExceptionIfNoETagOnDDocRemove() throws Exception {
-        CloudantClient mockClient = CloudantClientHelper.newMockWebServerClientBuilder
-                (mockWebServer).build();
-        Database database = mockClient.database(dbResource.getDatabaseName(), false);
-        // Queue a mock response with no "ETag" header
-        mockWebServer.enqueue(new MockResponse());
-        database.getDesignDocumentManager().remove("example");
+        assertThrows(CouchDbException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                CloudantClient mockClient = CloudantClientHelper.newMockWebServerClientBuilder
+                        (mockWebServer).build();
+                Database database = mockClient.database(dbResource.getDatabaseName(), false);
+                // Queue a mock response with no "ETag" header
+                mockWebServer.enqueue(new MockResponse());
+                database.getDesignDocumentManager().remove("example");
+            }
+        });
     }
 
     /**
@@ -320,8 +325,7 @@ public class DesignDocumentsTest {
             doc.setRevision(designManager.put(doc).getRev());
         }
 
-        assertEquals("The retrieved list of design documents should match the expected list",
-                designDocs, designManager.list());
+        assertEquals(designDocs, designManager.list(), "The retrieved list of design documents should match the expected list");
     }
 
     /**
@@ -342,9 +346,8 @@ public class DesignDocumentsTest {
         DesignDocument queryDDoc = fileToDesignDocument("example");
         Map<String, DesignDocument.MapReduce> views = queryDDoc.getViews();
         for (DesignDocument.MapReduce mrView : views.values()) {
-            assertFalse("The map function should not start with \"", mrView.getMap().startsWith
-                    ("\""));
-            assertFalse("The map function should not end with \"", mrView.getMap().endsWith("\""));
+            assertFalse(mrView.getMap().startsWith("\""), "The map function should not start with \"");
+            assertFalse(mrView.getMap().endsWith("\""), "The map function should not end with \"");
         }
     }
 
@@ -375,13 +378,12 @@ public class DesignDocumentsTest {
 
         // Retrieve the doc and check that the javascript function is correct
         DesignDocument retrievedDDoc = designManager.get(testDDocName, r.getRev());
-        assertNotNull("There should be a retrieved design doc", retrievedDDoc);
+        assertNotNull(retrievedDDoc, "There should be a retrieved design doc");
         Map<String, DesignDocument.MapReduce> retrievedViews = retrievedDDoc.getViews();
-        assertNotNull("There should be views defined on the design doc", retrievedViews);
+        assertNotNull(retrievedViews, "There should be views defined on the design doc");
         DesignDocument.MapReduce mrView = retrievedViews.get("testView");
-        assertNotNull("There should be a testView in the retrieved design doc", mrView);
-        assertEquals("The map function string should be the expected string",
-                mapFunction, mrView.getMap());
+        assertNotNull(mrView, "There should be a testView in the retrieved design doc");
+        assertEquals(mapFunction, mrView.getMap(), "The map function string should be the expected string");
     }
 
     /**
@@ -397,14 +399,11 @@ public class DesignDocumentsTest {
     public void serializeQueryDesignDoc() throws Exception {
         DesignDocument queryDDoc = fileToDesignDocument("query");
         Map<String, DesignDocument.MapReduce> views = queryDDoc.getViews();
-        assertEquals("There should be one view", 1, views.size());
+        assertEquals(1, views.size(), "There should be one view");
         for (DesignDocument.MapReduce mrView : views.values()) {
-            assertTrue("The map function should be a javascript function in a JSON form, " +
-                    "so start with {", mrView.getMap().startsWith("{"));
-            assertTrue("The map function should be a javascript function in a JSON form, " +
-                    "so end with }", mrView.getMap().endsWith("}"));
-            assertEquals("The map function string should be an object form",
-                    "{\"fields\":{\"Person_dob\":\"asc\"}}", mrView.getMap());
+            assertTrue(mrView.getMap().startsWith("{"), "The map function should be a javascript function in a JSON form, " + "so start with {");
+            assertTrue(mrView.getMap().endsWith("}"), "The map function should be a javascript function in a JSON form, " + "so end with }");
+            assertEquals("{\"fields\":{\"Person_dob\":\"asc\"}}", mrView.getMap(), "The map function string should be an object form");
         }
     }
 
@@ -424,14 +423,11 @@ public class DesignDocumentsTest {
         // Get the query design document
         DesignDocument queryDDoc = designManager.get("testQuery");
         Map<String, DesignDocument.MapReduce> views = queryDDoc.getViews();
-        assertEquals("There should be one view", 1, views.size());
+        assertEquals(1, views.size(), "There should be one view");
         for (DesignDocument.MapReduce mrView : views.values()) {
-            assertTrue("The map function should be a javascript function in a JSON form, " +
-                    "so start with {", mrView.getMap().startsWith("{"));
-            assertTrue("The map function should be a javascript function in a JSON form, " +
-                    "so end with }", mrView.getMap().endsWith("}"));
-            assertEquals("The map function string should be an object form",
-                    "{\"fields\":{\"Person_dob\":\"asc\"}}", mrView.getMap());
+            assertTrue(mrView.getMap().startsWith("{"), "The map function should be a javascript function in a JSON form, " + "so start with {");
+            assertTrue(mrView.getMap().endsWith("}"), "The map function should be a javascript function in a JSON form, " + "so end with }");
+            assertEquals("{\"fields\":{\"Person_dob\":\"asc\"}}", mrView.getMap(), "The map function string should be an object form");
         }
     }
 }

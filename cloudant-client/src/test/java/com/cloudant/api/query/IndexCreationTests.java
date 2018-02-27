@@ -15,24 +15,24 @@
 package com.cloudant.api.query;
 
 import static com.cloudant.client.api.query.Expression.gt;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cloudant.client.api.query.JsonIndex;
 import com.cloudant.client.api.query.Selector;
 import com.cloudant.client.api.query.TextIndex;
 import com.cloudant.client.internal.query.Helpers;
-import com.cloudant.tests.util.MockedServerTest;
+import com.cloudant.tests.base.TestWithMockedServer;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
 
 import java.util.concurrent.TimeUnit;
 
-public class IndexCreationTests extends MockedServerTest {
+public class IndexCreationTests extends TestWithMockedServer {
 
     private static MockResponse CREATED = new MockResponse().setBody("{\"result\": \"created\"}");
 
@@ -122,7 +122,7 @@ public class IndexCreationTests extends MockedServerTest {
     @Test
     public void createTextIndexInDesignDoc() throws Exception {
         createIndexTest(TextIndex.builder()
-                .designDocument("testddoc")
+                        .designDocument("testddoc")
                         .definition(),
                 "{type: \"text\", ddoc: \"testddoc\", index: {}}");
     }
@@ -216,6 +216,6 @@ public class IndexCreationTests extends MockedServerTest {
         db.createIndex(definition);
         RecordedRequest request = server.takeRequest(1, TimeUnit.SECONDS);
         JsonObject actual = new Gson().fromJson(request.getBody().readUtf8(), JsonObject.class);
-        assertEquals("The request body should match the expected", exp, actual);
+        assertEquals(exp, actual, "The request body should match the expected");
     }
 }

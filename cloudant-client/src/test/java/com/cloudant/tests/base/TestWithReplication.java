@@ -12,42 +12,42 @@
  * and limitations under the License.
  */
 
-package com.cloudant.tests;
+package com.cloudant.tests.base;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.views.Key;
 import com.cloudant.client.api.views.ViewResponse;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.extensions.CloudantClientExtension;
+import com.cloudant.tests.extensions.DatabaseExtension;
+import com.cloudant.tests.extensions.MultiExtension;
 import com.cloudant.tests.util.Utils;
 
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class ReplicateBaseTest {
+public class TestWithReplication {
 
-    @ClassRule
-    public static CloudantClientResource clientResource = new CloudantClientResource();
-    protected CloudantClient account = clientResource.get();
+    protected static CloudantClientExtension clientResource = new CloudantClientExtension();
+    protected static CloudantClient account;
 
-    @Rule
-    public DatabaseResource db1Resource = new DatabaseResource(clientResource);
-    @Rule
-    public DatabaseResource db2Resource = new DatabaseResource(clientResource);
+    protected static DatabaseExtension.PerClass db1Resource = new DatabaseExtension.PerClass(clientResource);
+    protected static DatabaseExtension.PerClass db2Resource = new DatabaseExtension.PerClass(clientResource);
 
-    protected Database db1;
+    @RegisterExtension
+    public static MultiExtension extensions = new MultiExtension(clientResource, db1Resource, db2Resource);
 
-    protected Database db2;
+    protected static Database db1;
+    protected static Database db2;
 
     protected static String db1URI;
     protected static String db2URI;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeAll
+    public static void setUp() throws Exception {
+        account = clientResource.get();
 
         db1 = db1Resource.get();
         db1URI = db1Resource.getDbURIWithUserInfo();
@@ -56,6 +56,7 @@ public class ReplicateBaseTest {
         db2 = db2Resource.get();
         db2URI = db2Resource.getDbURIWithUserInfo();
         Utils.putDesignDocs(db2);
+
     }
 
     protected void assertConflictsNotZero(Database db) throws Exception {
@@ -63,7 +64,6 @@ public class ReplicateBaseTest {
                 ("conflicts", "conflict").newRequest(Key.Type.COMPLEX, String.class).build()
                 .getResponse();
         int conflictCount = conflicts.getRows().size();
-        assertTrue("There should be at least 1 conflict, there were " + conflictCount,
-                conflictCount > 0);
+        assertTrue(conflictCount > 0, "There should be at least 1 conflict, there were " + conflictCount);
     }
 }

@@ -14,12 +14,10 @@
 
 package com.cloudant.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
 import com.cloudant.client.api.DesignDocumentManager;
 import com.cloudant.client.api.Search;
 import com.cloudant.client.api.model.DesignDocument;
@@ -27,14 +25,10 @@ import com.cloudant.client.api.model.SearchResult;
 import com.cloudant.client.api.model.SearchResult.SearchResultRow;
 import com.cloudant.client.internal.URIBase;
 import com.cloudant.test.main.RequiresCloudant;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.base.TestWithDb;
 
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.net.URI;
@@ -45,24 +39,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-@Category(RequiresCloudant.class)
-public class SearchTests {
+@RequiresCloudant
+public class SearchTests extends TestWithDb {
 
-    public static CloudantClientResource clientResource = new CloudantClientResource();
-    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
-
-    @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
-
-    private static Database db;
-    private static CloudantClient account;
-
-    @BeforeClass
+    @BeforeAll
     public static void setUp() throws Exception {
-        account = clientResource.get();
-        db = dbResource.get();
-
-        // replciate the animals db for search tests
+        // replicate the animals db for search tests
         com.cloudant.client.api.Replication r = account.replication();
         r.source("https://clientlibs-test.cloudant.com/animaldb");
         r.createTarget(true);

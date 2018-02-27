@@ -31,7 +31,7 @@ def runTests(testEnv, isServiceTests) {
                 try {
                     sh './gradlew -Dtest.couch.username=$DB_USER -Dtest.couch.password=$DB_PASSWORD -Dtest.couch.host=$DB_HOST -Dtest.couch.port=$DB_PORT -Dtest.couch.http=$DB_HTTP $GRADLE_TARGET'
                 } finally {
-                    junit '**/build/test-results/*.xml'
+                    junit '**/build/test-results/**/*.xml'
                 }
             }
         }
@@ -75,7 +75,7 @@ stage('QA') {
 
     // For the master branch, add additional axes to the coverage matrix for Couch 1.6, 2.0
     // and Cloudant Local
-    if (env.BRANCH_NAME == "master") {
+    if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "junit5") {
         axes.putAll(
                 Couch1_6: {
                     runTests(COUCH1_6_ENV, false)

@@ -16,42 +16,20 @@ package com.cloudant.tests;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.DbInfo;
 import com.cloudant.client.api.model.MetaInformation;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.base.TestWithDb;
 
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-@Category(RequiresDB.class)
-public class DBServerTest {
-
-    public static CloudantClientResource clientResource = new CloudantClientResource();
-    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
-    @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
-
-    private static CloudantClient account;
-    private static Database db;
-
-    @BeforeClass
-    public static void setUp() {
-        account = clientResource.get();
-        db = dbResource.get();
-    }
-
+@RequiresDB
+public class DBServerTest extends TestWithDb {
 
     @Test
     public void dbInfo() {

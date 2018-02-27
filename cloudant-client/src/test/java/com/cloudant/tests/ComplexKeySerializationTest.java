@@ -14,13 +14,13 @@
 
 package com.cloudant.tests;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cloudant.client.api.views.Key;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ComplexKeySerializationTest {
 

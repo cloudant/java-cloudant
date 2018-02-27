@@ -15,14 +15,14 @@
 package com.cloudant.tests;
 
 
-import static org.junit.Assert.assertEquals;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.jsonToObject;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class CouchDbUtilTest {
 

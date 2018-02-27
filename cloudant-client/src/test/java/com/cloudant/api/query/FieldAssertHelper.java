@@ -14,8 +14,8 @@
 
 package com.cloudant.api.query;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.cloudant.client.api.query.Field;
 import com.cloudant.client.api.query.JsonIndex;
@@ -40,7 +40,7 @@ public abstract class FieldAssertHelper<T, F extends Field> {
 
         @Override
         protected void assertField(JsonIndex.Field field, Sort.Order order) {
-            assertEquals("The order should be the same", order, field.getOrder());
+            assertEquals(order, field.getOrder(), "The order should be the same");
         }
     }
 
@@ -53,20 +53,20 @@ public abstract class FieldAssertHelper<T, F extends Field> {
 
         @Override
         protected void assertField(TextIndex.Field field, Type type) {
-            assertEquals("The type should be the same", type, field.getType());
+            assertEquals(type, field.getType(), "The type should be the same");
         }
     }
 
     public void assertFields(List<F> actualFields) {
-        assertEquals("There should be the correct number of fields", expectedFields.size(),
-                actualFields.size());
+        assertEquals(expectedFields.size(),
+                actualFields.size(), "There should be the correct number of fields");
         for (F field : actualFields) {
             assertNotNull("The field should have a name", field.getName());
             T expected = expectedFields.remove(field.getName());
-            assertNotNull("Unexpected field " + field.getName() + " found.", expected);
+            assertNotNull(expected, "Unexpected field " + field.getName() + " found.");
             assertField(field, expected);
         }
-        assertEquals("All fields should be asserted.", 0, expectedFields.size());
+        assertEquals(0, expectedFields.size(), "All fields should be asserted.");
     }
 
     protected abstract void assertField(F field, T type);

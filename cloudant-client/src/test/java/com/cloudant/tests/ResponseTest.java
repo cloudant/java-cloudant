@@ -13,10 +13,10 @@
  */
 package com.cloudant.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -29,15 +29,11 @@ import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.base.TestWithDb;
 import com.cloudant.tests.util.Utils;
 
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,19 +43,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Test cases to verify status code from Response object.
  * Assert status codes in CouchDbException and its subclasses.
  */
-public class ResponseTest {
+public class ResponseTest extends TestWithDb {
 
-    public static CloudantClientResource clientResource = new CloudantClientResource();
-    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
-    @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
 
     private Foo foo;
-    private static Database db;
 
-    @Before
+    @BeforeEach
     public void setup() {
-        db = dbResource.get();
         foo = new Foo(Utils.generateUUID());
     }
 
@@ -141,7 +131,7 @@ public class ResponseTest {
      * handling path, but it is worth checking that we do work with these error types.
      * </P>
      */
-    @Category(RequiresCloudant.class)
+    @RequiresCloudant
     @Test
     public void testJsonErrorStreamFromLB() throws Exception {
         final AtomicBoolean badHeaderEnabled = new AtomicBoolean(false);
@@ -165,7 +155,7 @@ public class ResponseTest {
             // Make a good request, which will set up the session etc
             HttpConnection d = c.executeRequest(Http.GET(c.getBaseUri()));
             d.responseAsString();
-            assertTrue("The first request should succeed", d.getConnection().getResponseCode() / 100 == 2);
+            assertTrue(d.getConnection().getResponseCode() / 100 == 2, "The first request should succeed");
 
             // Enable the bad headers and expect the exception on the next request
             badHeaderEnabled.set(true);
@@ -174,10 +164,10 @@ public class ResponseTest {
         } catch (CouchDbException e) {
             //we expect a CouchDbException
 
-            assertEquals("The exception should be for a bad request", 400, e.getStatusCode());
+            assertEquals(400, e.getStatusCode(), "The exception should be for a bad request");
 
-            assertNotNull("The exception should have an error set", e.getError());
-            assertEquals("The exception error should be bad request", "bad_request", e.getError());
+            assertNotNull(e.getError(), "The exception should have an error set");
+            assertEquals("bad_request", e.getError(), "The exception error should be bad request");
         } finally {
             // Disable the bad header to allow a clean shutdown
             badHeaderEnabled.set(false);
@@ -195,16 +185,15 @@ public class ResponseTest {
      */
     private void exceptionAsserts(CouchDbException e, int expectedCode, String expectedReason) {
         assertExceptionStatusCode(e, expectedCode);
-        assertNotNull("The error should not be null", e.getError());
+        assertNotNull(e.getError(), "The error should not be null");
         if ("".equals(expectedReason)) {
-            assertNotNull("The reason should not be null", e.getReason());
+            assertNotNull(e.getReason(), "The reason should not be null");
         } else {
-            assertEquals("The reason should be " + expectedReason, expectedReason, e.getReason());
+            assertEquals(expectedReason, e.getReason(), "The reason should be " + expectedReason);
         }
     }
 
     private void assertExceptionStatusCode(CouchDbException e, int expectedCode) {
-        assertEquals("The HTTP status code should be " + expectedCode, expectedCode, e
-                .getStatusCode());
+        assertEquals(expectedCode, e.getStatusCode(), "The HTTP status code should be " + expectedCode);
     }
 }

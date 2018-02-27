@@ -16,6 +16,7 @@ package com.cloudant.tests;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
+
 import okhttp3.mockwebserver.MockWebServer;
 
 import java.net.MalformedURLException;
@@ -47,6 +48,8 @@ public abstract class CloudantClientHelper {
         try {
             //a URL might be supplied, otherwise use the separate properties
             String URL = System.getProperty("test.couch.url");
+            System.out.println(System.getProperties());
+            System.out.println("*** using "+URL);
             if (URL != null) {
                 URL couch = new URL(URL);
                 HTTP_PROTOCOL = couch.getProtocol();

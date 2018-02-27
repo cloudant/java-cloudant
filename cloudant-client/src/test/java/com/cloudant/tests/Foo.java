@@ -14,9 +14,8 @@
 
 package com.cloudant.tests;
 
-import com.google.gson.JsonArray;
-
 import com.cloudant.client.org.lightcouch.Attachment;
+import com.google.gson.JsonArray;
 
 import java.util.Arrays;
 import java.util.Date;

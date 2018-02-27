@@ -15,10 +15,10 @@
 package com.cloudant.tests.util;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.views.Key;
@@ -198,8 +198,8 @@ public class CheckPagination {
         }
         List<Foo> resultList = page.getDocsAs(Foo.class);
         for (int i = 0; i < resultList.size(); ++i) {
-            assertEquals("Document titles do not match", ViewsTest.docTitle(descending ? offset-- :
-                    offset++), resultList.get(i).getTitle());
+            assertEquals(ViewsTest.docTitle(descending ? offset-- :
+                    offset++), resultList.get(i).getTitle(), "Document titles do not match");
         }
     }
 

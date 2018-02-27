@@ -12,14 +12,17 @@
  * and limitations under the License.
  */
 
-package com.cloudant.tests.util;
+package com.cloudant.tests.base;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
+import com.cloudant.tests.extensions.CloudantClientMockServerExtension;
+import com.cloudant.tests.extensions.DatabaseExtension;
+import com.cloudant.tests.extensions.MockWebServerExtension;
+import com.cloudant.tests.extensions.MultiExtension;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import okhttp3.mockwebserver.MockWebServer;
 
@@ -27,21 +30,27 @@ import okhttp3.mockwebserver.MockWebServer;
  * Class of tests that run against a MockWebServer. This class handles set up and tear down of the
  * mock server and associated client and db objects before/after each test.
  */
-public abstract class MockedServerTest {
+public abstract class TestWithMockedServer {
 
-    protected MockWebServer server = new MockWebServer();
+    public static MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
+    public static CloudantClientMockServerExtension clientResource = new CloudantClientMockServerExtension(mockWebServerExt);
+    public static DatabaseExtension.PerTest dbResource = new DatabaseExtension.PerTest(clientResource);
+    @RegisterExtension
+    public static MultiExtension extensions = new MultiExtension(
+            mockWebServerExt,
+            clientResource,
+            dbResource
+    );
+
+    protected MockWebServer server;
     protected CloudantClient client;
     protected Database db;
 
-    protected CloudantClientMockServerResource clientResource = new
-            CloudantClientMockServerResource(server);
-    protected DatabaseResource dbResource = new DatabaseResource(clientResource);
-    @Rule
-    public RuleChain chain = RuleChain.outerRule(server).around(clientResource).around(dbResource);
-
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    public void beforeEach() {
+        server = mockWebServerExt.get();
         client = clientResource.get();
         db = dbResource.get();
     }
+
 }

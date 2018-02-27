@@ -14,32 +14,25 @@
  */
 package com.cloudant.tests;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Attachment;
 import com.cloudant.client.api.model.Document;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
-import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.base.TestWithDb;
 import com.cloudant.tests.util.Utils;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -47,21 +40,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 
-@Category(RequiresDB.class)
-public class AttachmentsTest {
-
-    public static CloudantClientResource clientResource = new CloudantClientResource();
-    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
-    @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
-
-    private static Database db;
-
-    @BeforeClass
-    public static void setUp() {
-        db = dbResource.get();
-    }
-
+@RequiresDB
+public class AttachmentsTest extends TestWithDb {
 
     @Test
     public void attachmentInline() {
@@ -177,9 +157,9 @@ public class AttachmentsTest {
         Response attResponse = db.saveAttachment(bytesIn, "foo.txt", "text/plain", response.getId
                 (), response.getRev());
 
-        assertEquals("The document ID should be the same", response.getId(), attResponse.getId());
-        assertTrue("The response code should be a 20x", attResponse.getStatusCode() / 100 == 2);
-        assertNull("There should be no error saving the attachment", attResponse.getError());
+        assertEquals(response.getId(), attResponse.getId(), "The document ID should be the same");
+        assertTrue(attResponse.getStatusCode() / 100 == 2, "The response code should be a 20x");
+        assertNull(attResponse.getError(), "There should be no error saving the attachment");
 
         // Assert the attachment is correct
         Document doc = db.find(Document.class, response.getId(), attResponse.getRev());
@@ -227,7 +207,7 @@ public class AttachmentsTest {
         // Save the attachment to a doc with the given ID
         Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", docId, null);
 
-        assertEquals("The saved document ID should match", docId, response.getId());
+        assertEquals(docId, response.getId(), "The saved document ID should match");
 
         InputStream in = db.getAttachment(docId, "foo.txt");
 
@@ -241,26 +221,42 @@ public class AttachmentsTest {
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void attachmentStandaloneNullDocNonNullRev() {
-        byte[] bytesToDB = "binary data".getBytes();
-        ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
-        Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", null, "1-abcdef");
+        assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                byte[] bytesToDB = "binary data".getBytes();
+                ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+                Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", null,
+                        "1-abcdef");
+            }
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void attachmentStandaloneEmptyDocId() {
-        byte[] bytesToDB = "binary data".getBytes();
-        ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
-        Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", "", "1-abcdef");
+        assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                byte[] bytesToDB = "binary data".getBytes();
+                ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+                Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", "", "1-abcdef");
+            }
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test()
     public void attachmentStandaloneDocIdEmptyRev() {
-        String docId = Utils.generateUUID();
-        byte[] bytesToDB = "binary data".getBytes();
-        ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
-        Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", docId, "");
+        assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                String docId = Utils.generateUUID();
+                byte[] bytesToDB = "binary data".getBytes();
+                ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
+                Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", docId, "");
+            }
+        });
     }
 
     @Test
@@ -284,23 +280,38 @@ public class AttachmentsTest {
         assertNull(bar3.getAttachments());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void removeAttachmentNullIdNonNullRev() {
-        String attachmentName = "txt_1.txt";
-        Response response = db.removeAttachment(null, "1-abcdef", attachmentName);
+        assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                String attachmentName = "txt_1.txt";
+                Response response = db.removeAttachment(null, "1-abcdef", attachmentName);
+            }
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void removeAttachmentNonNullIdNullRev() {
-        String docId = Utils.generateUUID();
-        String attachmentName = "txt_1.txt";
-        Response response = db.removeAttachment(docId, null, attachmentName);
+        assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                String docId = Utils.generateUUID();
+                String attachmentName = "txt_1.txt";
+                Response response = db.removeAttachment(docId, null, attachmentName);
+            }
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void removeAttachmentNonNullIdNonNullRevNullAttachmentName() {
-        String docId = Utils.generateUUID();
-        String rev = "1-abcdef";
-        Response response = db.removeAttachment(docId, rev, null);
+        assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                String docId = Utils.generateUUID();
+                String rev = "1-abcdef";
+                Response response = db.removeAttachment(docId, rev, null);
+            }
+        });
     }
 }

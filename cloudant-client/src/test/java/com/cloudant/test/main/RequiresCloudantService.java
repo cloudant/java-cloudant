@@ -14,8 +14,20 @@
 
 package com.cloudant.test.main;
 
+import org.junit.jupiter.api.Tag;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
- * JUnit category to label tests which require the Cloudant service
+ * JUnit tag to label tests which require the Cloudant service
  */
-public class RequiresCloudantService extends RequiresCloudant {
+@Target({ ElementType.TYPE, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+@Tag("RequiresCloudantService")
+@Tag("RequiresCloudant")
+@Tag("RequiresDB")
+public @interface RequiresCloudantService {
 }

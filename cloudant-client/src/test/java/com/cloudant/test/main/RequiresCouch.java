@@ -14,8 +14,19 @@
 
 package com.cloudant.test.main;
 
+import org.junit.jupiter.api.Tag;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
- * JUnit category to label tests which require a running DB
+ * JUnit tag to label tests which require a running DB
  */
-public class RequiresCouch extends RequiresDB {
+@Target({ ElementType.TYPE, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+@Tag("RequiresCouch")
+@Tag("RequiresDB")
+public @interface RequiresCouch {
 }

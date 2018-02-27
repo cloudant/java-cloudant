@@ -18,22 +18,22 @@ import static com.cloudant.client.api.query.EmptyExpression.empty;
 import static com.cloudant.client.api.query.Expression.eq;
 import static com.cloudant.client.api.query.Expression.gt;
 import static com.cloudant.client.api.query.Operation.and;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.FindByIndexOptions;
 import com.cloudant.client.api.model.IndexField;
-import com.cloudant.client.api.query.QueryResult;
 import com.cloudant.client.api.query.JsonIndex;
 import com.cloudant.client.api.query.QueryBuilder;
+import com.cloudant.client.api.query.QueryResult;
 import com.cloudant.client.api.query.Sort;
 import com.cloudant.test.main.RequiresCloudant;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.base.TestWithDb;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -41,12 +41,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -55,20 +52,11 @@ import okhttp3.mockwebserver.RecordedRequest;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@Category(RequiresCloudant.class)
-public class IndexTests {
+@RequiresCloudant
+public class IndexTests extends TestWithDb {
 
-    private static CloudantClientResource clientResource = new CloudantClientResource();
-    private static DatabaseResource dbResource = new DatabaseResource(clientResource);
-    @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
-
-    private static Database db;
-
-    @BeforeClass
+    @BeforeAll
     public static void setUp() throws Exception {
-        CloudantClient account = clientResource.get();
-        db = dbResource.get();
 
         // create the movies-demo db for our index tests
         com.cloudant.client.api.Replication r = account.replication();
@@ -134,16 +122,26 @@ public class IndexTests {
 
     }
 
-    @Test(expected = JsonParseException.class)
+    @Test
     public void invalidSelectorObjectThrowsJsonParseException() {
-        db.findByIndex("\"selector\"invalid", Movie.class);
+        assertThrows(JsonParseException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                db.findByIndex("\"selector\"invalid", Movie.class);
+            }
+        });
     }
 
-    @Test(expected = JsonParseException.class)
+    @Test
     public void invalidFieldThrowsJsonParseException() {
-        FindByIndexOptions findByIndexOptions = new FindByIndexOptions();
-        findByIndexOptions.fields("\"");
-        db.findByIndex("{\"type\":\"subscription\"}", Movie.class, findByIndexOptions);
+        assertThrows(JsonParseException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                FindByIndexOptions findByIndexOptions = new FindByIndexOptions();
+                findByIndexOptions.fields("\"");
+                db.findByIndex("{\"type\":\"subscription\"}", Movie.class, findByIndexOptions);
+            }
+        });
     }
 
     /* Current API tests */
@@ -180,10 +178,10 @@ public class IndexTests {
             assertNotNull(i.getName());
             assertNotNull(i.getFields());
             List<JsonIndex.Field> flds = i.getFields();
-            assertTrue("The fields should not be empty", flds.size() > 0);
+            assertTrue(flds.size() > 0, "The fields should not be empty");
             for (JsonIndex.Field field : flds) {
-                assertNotNull("The field name should not be null", field.getName());
-                assertNotNull("The sort order should not be null", field.getOrder());
+                assertNotNull(field.getName(), "The field name should not be null");
+                assertNotNull(field.getOrder(), "The sort order should not be null");
             }
         }
     }
@@ -272,7 +270,7 @@ public class IndexTests {
                 pageCount++;
             }
         } while (!moviesPage.getDocs().isEmpty());
-        Assert.assertEquals(3, pageCount);
+        assertEquals(3, pageCount);
 
     }
 
@@ -289,12 +287,12 @@ public class IndexTests {
     }
 
     private void assertUseIndexString(JsonElement useIndex) throws Exception {
-        assertNotNull("The use_index property should not be null", useIndex);
-        assertTrue("The use_index property should be a JsonPrimitive", useIndex.isJsonPrimitive());
+        assertNotNull(useIndex, "The use_index property should not be null");
+        assertTrue(useIndex.isJsonPrimitive(), "The use_index property should be a JsonPrimitive");
         JsonPrimitive useIndexPrimitive = useIndex.getAsJsonPrimitive();
-        assertTrue("The use_index property should be a string", useIndexPrimitive.isString());
+        assertTrue(useIndexPrimitive.isString(), "The use_index property should be a string");
         String useIndexString = useIndexPrimitive.getAsString();
-        assertEquals("The use_index property should be Movie_year", "Movie_year", useIndexString);
+        assertEquals("Movie_year", useIndexString, "The use_index property should be Movie_year");
     }
 
     /**
@@ -306,14 +304,12 @@ public class IndexTests {
     public void useIndexDesignDocAndIndexNameJsonTypeIsArray() throws Exception {
         JsonElement useIndex = getUseIndexFromRequest(new QueryBuilder(empty()).
                 useIndex("Movie_year", "Person_name"));
-        assertNotNull("The use_index property should not be null", useIndex);
-        assertTrue("The use_index property should be a JsonArray", useIndex.isJsonArray());
+        assertNotNull(useIndex, "The use_index property should not be null");
+        assertTrue(useIndex.isJsonArray(), "The use_index property should be a JsonArray");
         JsonArray useIndexArray = useIndex.getAsJsonArray();
-        assertEquals("The use_index array should have two elements", 2, useIndexArray.size());
-        assertEquals("The use_index design document should be Movie_year", "Movie_year",
-                useIndexArray.get(0).getAsString());
-        assertEquals("The use_index index name should be Person_name", "Person_name",
-                useIndexArray.get(1).getAsString());
+        assertEquals(2, useIndexArray.size(), "The use_index array should have two elements");
+        assertEquals("Movie_year", useIndexArray.get(0).getAsString(), "The use_index design document should be Movie_year");
+        assertEquals("Person_name", useIndexArray.get(1).getAsString(), "The use_index index name should be Person_name");
     }
 
     /**
@@ -324,7 +320,7 @@ public class IndexTests {
     @Test
     public void useIndexNotSpecified() throws Exception {
         JsonElement useIndex = getUseIndexFromRequest(new QueryBuilder(empty()));
-        assertNull("The use_index property should be null (i.e. was not specified)", useIndex);
+        assertNull(useIndex, "The use_index property should be null (i.e. was not specified)");
     }
 
     /**

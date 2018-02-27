@@ -16,13 +16,14 @@ package com.cloudant.tests;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -38,21 +39,22 @@ import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.base.TestWithDbPerTest;
+import com.cloudant.tests.extensions.CloudantClientExtension;
 import com.cloudant.tests.util.ContextCollectingInterceptor;
-import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.extensions.DatabaseExtension;
+import com.cloudant.tests.extensions.MockWebServerExtension;
+import com.cloudant.tests.extensions.MultiExtension;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.function.Executable;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -69,30 +71,27 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-@Category(RequiresDB.class)
-public class ViewsTest {
+@RequiresDB
+public class ViewsTest extends TestWithDbPerTest {
 
-    @ClassRule
-    public static CloudantClientResource clientResource = new CloudantClientResource();
-    @ClassRule
-    public static MockWebServer mockWebServer = new MockWebServer();
+    public static MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
+    public static ContextCollectingInterceptor cci = new ContextCollectingInterceptor();
+    public static CloudantClientExtension interceptedClient = new CloudantClientExtension(CloudantClientHelper.getClientBuilder()
+            .interceptors(cci));
+    public static DatabaseExtension.PerClass interceptedDB = new DatabaseExtension.PerClass(interceptedClient);
 
-    @Rule
-    public DatabaseResource dbResource = new DatabaseResource(clientResource);
+    @RegisterExtension
+    public static MultiExtension extensions = new MultiExtension(
+            mockWebServerExt,
+            interceptedClient,
+            interceptedDB
+    );
 
+    protected MockWebServer mockWebServer;
 
-    private static ContextCollectingInterceptor cci = new ContextCollectingInterceptor();
-    public static CloudantClientResource interceptedClient = new CloudantClientResource
-            (CloudantClientHelper.getClientBuilder().interceptors(cci));
-    public static DatabaseResource interceptedDB = new DatabaseResource(interceptedClient);
-    @ClassRule
-    public static RuleChain intercepted = RuleChain.outerRule(interceptedClient).around
-            (interceptedDB);
-    private Database db;
-
-    @Before
-    public void setUp() throws Exception {
-        db = dbResource.get();
+    @BeforeEach
+    public void beforeEach() throws Exception {
+        mockWebServer = mockWebServerExt.get();
         Utils.putDesignDocs(db);
     }
 
@@ -623,19 +622,14 @@ public class ViewsTest {
     @Test
     public void viewWithNoResult_emptyList() throws IOException {
         init();
-        assertEquals("The results list should be of length 0", 0, db.getViewRequestBuilder
-                ("example", "by_tag").newRequest(Key.Type.STRING, Object.class).keys
-                ("javax").build().getResponse().getKeys().size());
+        assertEquals(0, db.getViewRequestBuilder("example", "by_tag").newRequest(Key.Type.STRING, Object.class).keys("javax").build().getResponse().getKeys().size(), "The results list should be of length 0");
 
     }
 
     @Test
     public void viewWithNoResult_nullSingleResult() throws IOException {
         init();
-        assertNull("The single result should be null", db.getViewRequestBuilder("example",
-                "by_tag").newRequest(Key.Type.STRING,
-                Object.class).keys
-                ("javax").build().getSingleValue());
+        assertNull(db.getViewRequestBuilder("example", "by_tag").newRequest(Key.Type.STRING, Object.class).keys("javax").build().getSingleValue(), "The single result should be null");
 
     }
 
@@ -657,7 +651,7 @@ public class ViewsTest {
                 .getIdsAndRevs();
         assertThat(idsAndRevs.size(), not(0));
         for (Map.Entry<String, String> doc : idsAndRevs.entrySet()) {
-            assertNotNull("The document _rev value should not be null", doc.getValue());
+            assertNotNull(doc.getValue(), "The document _rev value should not be null");
         }
     }
 
@@ -694,7 +688,7 @@ public class ViewsTest {
         Map<String, String> idsAndRevs = response.getIdsAndRevs();
         assertThat(idsAndRevs.size(), is(1));
         for (Map.Entry<String, String> doc : idsAndRevs.entrySet()) {
-            assertNotNull("The document _rev value should not be null", doc.getValue());
+            assertNotNull(doc.getValue(), "The document _rev value should not be null");
         }
 
         assertThat(errors.size(), is(1));
@@ -867,7 +861,7 @@ public class ViewsTest {
      * @throws IOException
      */
     @Test
-    @Category(RequiresCloudant.class)
+    @RequiresCloudant
     public void multiRequest() throws IOException {
         init();
         ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "foo")
@@ -878,11 +872,10 @@ public class ViewsTest {
                 .build();
         int i = 1;
         List<ViewResponse<String, Object>> responses = multi.getViewResponses();
-        assertEquals("There should be 3 respones for 3 requests", 3, responses.size());
+        assertEquals(3, responses.size(), "There should be 3 respones for 3 requests");
         for (ViewResponse<String, Object> response : responses) {
-            assertEquals("There should be 1 row in each response", 1, response.getRows().size());
-            assertEquals("The returned key should be key-" + i, "key-" + i, response.getKeys()
-                    .get(0));
+            assertEquals(1, response.getRows().size(), "There should be 1 row in each response");
+            assertEquals("key-" + i, response.getKeys().get(0), "The returned key should be key-" + i);
             i++;
         }
     }
@@ -949,24 +942,38 @@ public class ViewsTest {
      * Validate that an IllegalStateException is thrown if an attempt is made to build a multi
      * request without calling add() before build() with two requests.
      */
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void multiRequestBuildOnlyAfterAdd() {
-        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "foo")
-                .newMultipleRequest(Key.Type.STRING, Object.class)
-                .keys("key-1").add()
-                .keys("key-2").build();
+        assertThrows(IllegalStateException.class,
+                new Executable() {
+                    @Override
+                    public void execute() throws Throwable {
+                        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder
+                                ("example", "foo")
+                                .newMultipleRequest(Key.Type.STRING, Object.class)
+                                .keys("key-1").add()
+                                .keys("key-2").build();
+                    }
+                });
     }
 
     /**
      * Validate that an IllegalStateException is thrown if an attempt is made to build a multi
      * request without calling add() before build() with a single request with parameters.
      */
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void multiRequestBuildOnlyAfterAddSingle() {
-        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "foo")
-                .newMultipleRequest(Key.Type.STRING, Object.class)
-                .keys("key-1")
-                .build();
+        assertThrows(IllegalStateException.class,
+                new Executable() {
+                    @Override
+                    public void execute() throws Throwable {
+                        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder
+                                ("example", "foo")
+                                .newMultipleRequest(Key.Type.STRING, Object.class)
+                                .keys("key-1")
+                                .build();
+                    }
+                });
     }
 
     /**
@@ -974,11 +981,18 @@ public class ViewsTest {
      * request without calling add() before build() with a single request with no view request
      * parameter calls.
      */
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void multiRequestBuildOnlyAfterAddNoParams() {
-        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "foo")
-                .newMultipleRequest(Key.Type.STRING, Object.class)
-                .build();
+        assertThrows(IllegalStateException.class,
+                new Executable() {
+                    @Override
+                    public void execute() throws Throwable {
+                        ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder
+                                ("example", "foo")
+                                .newMultipleRequest(Key.Type.STRING, Object.class)
+                                .build();
+                    }
+                });
     }
 
     /**
@@ -988,7 +1002,7 @@ public class ViewsTest {
      * @throws IOException
      */
     @Test
-    @Category(RequiresCloudant.class)
+    @RequiresCloudant
     public void multiRequestMixedReduced() throws IOException {
         init();
         ViewMultipleRequest<String, Object> multi = db.getViewRequestBuilder("example", "by_tag")
@@ -999,15 +1013,15 @@ public class ViewsTest {
                 .build();
 
         List<ViewResponse<String, Object>> responses = multi.getViewResponses();
-        assertEquals("There should be 2 respones for 2 requests", 2, responses.size());
+        assertEquals(2, responses.size(), "There should be 2 respones for 2 requests");
 
         List<String> javaTagKeys = responses.get(0).getKeys();
-        assertEquals("There should be 1 java tag result", 1, javaTagKeys.size());
-        assertEquals("The key should be java", "java", javaTagKeys.get(0));
+        assertEquals(1, javaTagKeys.size(), "There should be 1 java tag result");
+        assertEquals("java", javaTagKeys.get(0), "The key should be java");
 
         List<Object> allTagsReduced = responses.get(1).getValues();
-        assertEquals("There should be 1 reduced result", 1, allTagsReduced.size());
-        assertEquals("The result should be 4", 4, ((Number) allTagsReduced.get(0)).intValue());
+        assertEquals(1, allTagsReduced.size(), "There should be 1 reduced result");
+        assertEquals(4, ((Number) allTagsReduced.get(0)).intValue(), "The result should be 4");
     }
 
     /**
@@ -1022,9 +1036,9 @@ public class ViewsTest {
         ViewResponse<String, Object> response = db.getViewRequestBuilder("example", "foo")
                 .newRequest(Key.Type.STRING,
                         Object.class).limit(2).build().getResponse();
-        assertEquals("There should be 2 keys returned", 2, response.getKeys().size());
-        assertFalse("There should be no additional pages", response.hasNextPage());
-        assertNull("The next page should be null", response.nextPage());
+        assertEquals(2, response.getKeys().size(), "There should be 2 keys returned");
+        assertFalse(response.hasNextPage(), "There should be no additional pages");
+        assertNull(response.nextPage(), "The next page should be null");
     }
 
     /**
@@ -1041,8 +1055,8 @@ public class ViewsTest {
                         Object.class).rowsPerPage(1).build();
         int i = 1;
         for (ViewResponse<String, Object> page : paginatedQuery.getResponse()) {
-            assertEquals("There should be one key on each page", 1, page.getKeys().size());
-            assertEquals("The key should be key-" + i, "key-" + i, page.getKeys().get(0));
+            assertEquals(1, page.getKeys().size(), "There should be one key on each page");
+            assertEquals("key-" + i, page.getKeys().get(0), "The key should be key-" + i);
             i++;
         }
     }
@@ -1052,11 +1066,18 @@ public class ViewsTest {
      *
      * @throws Exception
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void rowsPerPageValidationMax() throws Exception {
-        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
-                .newPaginatedRequest(Key.Type.STRING,
-                        Object.class).rowsPerPage(Integer.MAX_VALUE).build();
+        assertThrows(IllegalArgumentException.class,
+                new Executable() {
+                    @Override
+                    public void execute() throws Throwable {
+                        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder
+                                ("example", "foo")
+                                .newPaginatedRequest(Key.Type.STRING,
+                                        Object.class).rowsPerPage(Integer.MAX_VALUE).build();
+                    }
+                });
     }
 
     /**
@@ -1064,11 +1085,18 @@ public class ViewsTest {
      *
      * @throws Exception
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void rowsPerPageValidationZero() throws Exception {
-        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
-                .newPaginatedRequest(Key.Type.STRING,
-                        Object.class).rowsPerPage(0).build();
+        assertThrows(IllegalArgumentException.class,
+                new Executable() {
+                    @Override
+                    public void execute() throws Throwable {
+                        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder
+                                ("example", "foo")
+                                .newPaginatedRequest(Key.Type.STRING,
+                                        Object.class).rowsPerPage(0).build();
+                    }
+                });
     }
 
     /**
@@ -1076,11 +1104,18 @@ public class ViewsTest {
      *
      * @throws Exception
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void rowsPerPageValidationMin() throws Exception {
-        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
-                .newPaginatedRequest(Key.Type.STRING,
-                        Object.class).rowsPerPage(-25).build();
+        assertThrows(IllegalArgumentException.class,
+                new Executable() {
+                    @Override
+                    public void execute() throws Throwable {
+                        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder
+                                ("example", "foo")
+                                .newPaginatedRequest(Key.Type.STRING,
+                                        Object.class).rowsPerPage(-25).build();
+                    }
+                });
     }
 
     /**
@@ -1089,11 +1124,18 @@ public class ViewsTest {
      *
      * @throws Exception
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void validationIncludeDocsReduceView() throws Exception {
-        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
-                .newRequest(Key.Type.STRING,
-                        Object.class).includeDocs(true).reduce(true).build();
+        assertThrows(IllegalArgumentException.class,
+                new Executable() {
+                    @Override
+                    public void execute() throws Throwable {
+                        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder
+                                ("example", "foo")
+                                .newRequest(Key.Type.STRING,
+                                        Object.class).includeDocs(true).reduce(true).build();
+                    }
+                });
     }
 
     /**
@@ -1117,11 +1159,18 @@ public class ViewsTest {
      *
      * @throws Exception
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void validationGroupLevelWithSimpleKey() throws Exception {
-        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
-                .newRequest(Key.Type.STRING,
-                        Object.class).groupLevel(1).build();
+        assertThrows(IllegalArgumentException.class,
+                new Executable() {
+                    @Override
+                    public void execute() throws Throwable {
+                        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder
+                                ("example", "foo")
+                                .newRequest(Key.Type.STRING,
+                                        Object.class).groupLevel(1).build();
+                    }
+                });
     }
 
     /**
@@ -1130,11 +1179,18 @@ public class ViewsTest {
      *
      * @throws Exception
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void validationGroupLevelWithNonReduce() throws Exception {
-        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
-                .newRequest(Key.Type.STRING,
-                        Object.class).reduce(false).groupLevel(1).build();
+        assertThrows(IllegalArgumentException.class,
+                new Executable() {
+                    @Override
+                    public void execute() throws Throwable {
+                        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder
+                                ("example", "foo")
+                                .newRequest(Key.Type.STRING,
+                                        Object.class).reduce(false).groupLevel(1).build();
+                    }
+                });
     }
 
     /**
@@ -1143,11 +1199,18 @@ public class ViewsTest {
      *
      * @throws Exception
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void validationGroupWithNonReduce() throws Exception {
-        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder("example", "foo")
-                .newRequest(Key.Type.STRING,
-                        Object.class).reduce(false).group(true).build();
+        assertThrows(IllegalArgumentException.class,
+                new Executable() {
+                    @Override
+                    public void execute() throws Throwable {
+                        ViewRequest<String, Object> paginatedQuery = db.getViewRequestBuilder
+                                ("example", "foo")
+                                .newRequest(Key.Type.STRING,
+                                        Object.class).reduce(false).group(true).build();
+                    }
+                });
     }
 
     /**
@@ -1195,8 +1258,7 @@ public class ViewsTest {
         // We want the last context
         HttpConnectionInterceptorContext context = cci.contexts.get(cci.contexts.size() - 1);
         String query = context.connection.url.getQuery();
-        assertTrue("The query startkey should match.", query.contains("startkey=%5B%22uuid%22," +
-                "1005%5D"));
+        assertTrue(query.contains("startkey=%5B%22uuid%22," + "1005%5D"), "The query startkey should match.");
     }
 
     /**
@@ -1283,9 +1345,8 @@ public class ViewsTest {
         mockWebServer.enqueue(mockResponse);
         viewRequest.getSingleValue();
         RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
-        assertNotNull("There should have been a view request", request);
-        assertTrue("There request URL should match the pattern " + p.toString(), p.matcher
-                (request.getPath()).matches());
+        assertNotNull(request, "There should have been a view request");
+        assertTrue(p.matcher(request.getPath()).matches(), "There request URL should match the pattern " + p.toString());
     }
 
     /**
@@ -1350,6 +1411,6 @@ public class ViewsTest {
         // Do an _all_docs request using the 4 _ids of the generated docs.
         Map<String, String> allDocsIdsAndRevs = database.getAllDocsRequestBuilder().keys(idsAndRevs
                 .keySet().toArray(new String[4])).build().getResponse().getIdsAndRevs();
-        assertEquals("The ids and revs should be equal", idsAndRevs, allDocsIdsAndRevs);
+        assertEquals(idsAndRevs, allDocsIdsAndRevs, "The ids and revs should be equal");
     }
 }

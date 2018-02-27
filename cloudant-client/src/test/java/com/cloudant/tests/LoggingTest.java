@@ -14,26 +14,22 @@
 
 package com.cloudant.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
+import com.cloudant.tests.extensions.MockWebServerExtension;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.StrictExpectations;
-import mockit.Verifications;
-
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -56,15 +52,17 @@ public class LoggingTest {
 
     private static final String logPrefixPattern = "[0-9,a-f]+-\\d+ ";
 
-    @ClassRule
-    public static MockWebServer mockWebServer = new MockWebServer();
+    @RegisterExtension
+    public static MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
+    public static MockWebServer mockWebServer;
 
     private static CloudantClient client;
     private volatile Logger logger;
     private VerificationLogHandler handler;
 
-    @BeforeClass
-    public static void setupMockWebServer() throws Exception {
+    @BeforeEach
+    public void setupMockWebServer() throws Exception {
+        mockWebServer = mockWebServerExt.get();
         // Set a dispatcher that always returns 200 OK
         mockWebServer.setDispatcher(new Dispatcher() {
             @Override
@@ -76,12 +74,12 @@ public class LoggingTest {
                 .build();
     }
 
-    @Before
+    @BeforeEach
     public void createHandler() {
         handler = new VerificationLogHandler();
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         // Remove the handler from the logger
         logger.removeHandler(handler);
@@ -94,7 +92,7 @@ public class LoggingTest {
     public void httpLoggingEnabled() throws Exception {
         logger = setupLogger(HttpConnection.class, Level.ALL);
         client.executeRequest(Http.GET(client.getBaseUri())).responseAsString();
-        assertTrue("There should be at least 1 log entry", handler.logEntries.size() > 0);
+        assertTrue(handler.logEntries.size() > 0, "There should be at least 1 log entry");
     }
 
     @Test
@@ -113,7 +111,7 @@ public class LoggingTest {
                 .responseAsString();
 
         // Check there were two log messages one for request and one for response
-        assertEquals("There should be 2 log messages", 2, handler.logEntries.size());
+        assertEquals(2, handler.logEntries.size(), "There should be 2 log messages");
         // Check the messages were the ones we expected
         assertHttpMessage("GET .*/testdb request", 0);
         assertHttpMessage("GET .*/testdb response 200 OK", 1);
@@ -123,8 +121,7 @@ public class LoggingTest {
 
         // Make a second request to a different URL and check that nothing else was logged
         client.executeRequest(Http.GET(client.getBaseUri())).responseAsString();
-        assertEquals("There should have been no more log entries", logsize, handler.logEntries
-                .size());
+        assertEquals(logsize, handler.logEntries.size(), "There should have been no more log entries");
     }
 
     private String methodFilterPropName = "com.cloudant.http.filter.method";
@@ -137,7 +134,7 @@ public class LoggingTest {
         client.executeRequest(Http.GET(client.getBaseUri())).responseAsString();
 
         // Check there were two log messages one for request and one for response
-        assertEquals("There should be 2 log messages", 2, handler.logEntries.size());
+        assertEquals(2, handler.logEntries.size(), "There should be 2 log messages");
         // Check the messages were the ones we expected
         assertHttpMessage("GET .* request", 0);
         assertHttpMessage("GET .* response 200 OK", 1);
@@ -148,8 +145,7 @@ public class LoggingTest {
         // Make a PUT request to a different URL and check that nothing else was logged
         client.executeRequest(Http.PUT(client.getBaseUri(), "text/plain").setRequestBody(""))
                 .responseAsString();
-        assertEquals("There should have been no more log entries", logsize, handler.logEntries
-                .size());
+        assertEquals(logsize, handler.logEntries.size(), "There should have been no more log entries");
     }
 
     @Test
@@ -161,7 +157,7 @@ public class LoggingTest {
         client.executeRequest(Http.GET(client.getBaseUri())).responseAsString();
 
         // Check there were two log messages one for request and one for response
-        assertEquals("There should be 2 log messages", 2, handler.logEntries.size());
+        assertEquals(2, handler.logEntries.size(), "There should be 2 log messages");
         // Check the messages were the ones we expected
         assertHttpMessage("GET .* request", 0);
         assertHttpMessage("GET .* response 200 OK", 1);
@@ -170,7 +166,7 @@ public class LoggingTest {
         client.executeRequest(Http.PUT(client.getBaseUri(), "text/plain").setRequestBody(""))
                 .responseAsString();
 
-        assertEquals("There should now be 4 log messages", 4, handler.logEntries.size());
+        assertEquals(4, handler.logEntries.size(), "There should now be 4 log messages");
         // Check the messages were the ones we expected
         assertHttpMessage("PUT .* request", 2);
         assertHttpMessage("PUT .* response 200 OK", 3);
@@ -180,7 +176,7 @@ public class LoggingTest {
     public void clientBuilderLogging() throws Exception {
         logger = setupLogger(ClientBuilder.class, Level.CONFIG);
         CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer).build();
-        assertEquals("There should be 5 log entries", 5, handler.logEntries.size());
+        assertEquals(5, handler.logEntries.size(), "There should be 5 log entries");
         // Validate each of the 5 entries are what we expect
         assertLogMessage("URL: .*", 0);
         assertLogMessage("Building client using URL: .*", 1);
@@ -218,7 +214,7 @@ public class LoggingTest {
     public void dnsNoWarningLessThan30() throws Exception {
         basicDnsLogTest("29");
         // Assert no warning was received
-        assertEquals("There should be no log entry", 0, handler.logEntries.size());
+        assertEquals(0, handler.logEntries.size(), "There should be no log entry");
     }
 
     /**
@@ -230,7 +226,7 @@ public class LoggingTest {
     public void dnsNoWarning0() throws Exception {
         basicDnsLogTest("0");
         // Assert no warning was received
-        assertEquals("There should be no log entry", 0, handler.logEntries.size());
+        assertEquals(0, handler.logEntries.size(), "There should be no log entry");
     }
 
     /**
@@ -242,7 +238,7 @@ public class LoggingTest {
     public void dnsWarningForever() throws Exception {
         basicDnsLogTest("-1");
         // Assert a warning was received
-        assertEquals("There should be 1 log entry", 1, handler.logEntries.size());
+        assertEquals(1, handler.logEntries.size(), "There should be 1 log entry");
         // Assert that it matches the expected pattern
         assertLogMessage("DNS cache lifetime may be too long\\. .*", 0);
     }
@@ -256,7 +252,7 @@ public class LoggingTest {
     public void dnsNoWarning30() throws Exception {
         basicDnsLogTest("30");
         // Assert no warning was received
-        assertEquals("There should be no log entry", 0, handler.logEntries.size());
+        assertEquals(0, handler.logEntries.size(), "There should be no log entry");
     }
 
 
@@ -269,7 +265,7 @@ public class LoggingTest {
     public void dnsWarning31() throws Exception {
         basicDnsLogTest("31");
         // Assert a warning was received
-        assertEquals("There should be 1 log entry", 1, handler.logEntries.size());
+        assertEquals(1, handler.logEntries.size(), "There should be 1 log entry");
         // Assert that it matches the expected pattern
         assertLogMessage("DNS cache lifetime may be too long\\. .*", 0);
     }
@@ -302,7 +298,7 @@ public class LoggingTest {
             System.setSecurityManager(null);
         }
         // Assert a warning was received
-        assertEquals("There should be 1 log entry", 1, handler.logEntries.size());
+        assertEquals(1, handler.logEntries.size(), "There should be 1 log entry");
         // Assert that it matches the expected pattern
         assertLogMessage("Permission denied to check Java DNS cache TTL\\. .*", 0);
     }
@@ -336,7 +332,7 @@ public class LoggingTest {
             System.setSecurityManager(null);
         }
         // Assert a warning was received
-        assertEquals("There should be 1 log entry", 1, handler.logEntries.size());
+        assertEquals(1, handler.logEntries.size(), "There should be 1 log entry");
         // Assert that it matches the expected pattern
         assertLogMessage("DNS cache lifetime may be too long\\. .*", 0);
     }
@@ -348,8 +344,7 @@ public class LoggingTest {
     private void setAndAssertLogProperty(String name, String value) throws Exception {
         LogManager.getLogManager().readConfiguration(new ByteArrayInputStream((name
                 + "=" + value).getBytes()));
-        assertEquals("The log property should be the test value", value, LogManager
-                .getLogManager().getProperty(name));
+        assertEquals(value, LogManager.getLogManager().getProperty(name), "The log property should be the test value");
     }
 
     /**
@@ -361,8 +356,7 @@ public class LoggingTest {
     private void assertLogMessage(String pattern, int index) {
         Pattern p = Pattern.compile(pattern);
         String msg = handler.logEntries.get(index).getMessage();
-        assertTrue("The log entry \"" + msg + "\" should match pattern " + pattern, p.matcher
-                (msg).matches());
+        assertTrue(p.matcher(msg).matches(), "The log entry \"" + msg + "\" should match pattern " + pattern);
     }
 
     /**

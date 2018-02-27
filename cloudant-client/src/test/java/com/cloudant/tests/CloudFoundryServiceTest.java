@@ -17,7 +17,9 @@ package com.cloudant.tests;
 import com.cloudant.client.api.ClientBuilder;
 import com.google.gson.GsonBuilder;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -90,22 +92,33 @@ public class CloudFoundryServiceTest {
         ClientBuilder.bluemix(vcap.toJson(), serviceName, "test_bluemix_service_1").build().serverVersion();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void vcapMissingServiceNameSpecified() {
-        VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-        vcap.createNewService("test_bluemix_service_1",
-                CloudantClientHelper.SERVER_URI_WITH_USER_INFO,
-                CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
-        ClientBuilder.bluemix(vcap.toJson(), "missingService", "test_bluemix_service_1").build();
+        Assertions.assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
+                vcap.createNewService("test_bluemix_service_1",
+                        CloudantClientHelper.SERVER_URI_WITH_USER_INFO,
+                        CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
+                ClientBuilder.bluemix(vcap.toJson(), "missingService", "test_bluemix_service_1")
+                        .build();
+            }
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void vcapNullServiceNameSpecified() {
-        VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-        vcap.createNewService("test_bluemix_service_1",
-                CloudantClientHelper.SERVER_URI_WITH_USER_INFO,
-                CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
-        ClientBuilder.bluemix(vcap.toJson(), null, "test_bluemix_service_1").build();
+        Assertions.assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
+                vcap.createNewService("test_bluemix_service_1",
+                        CloudantClientHelper.SERVER_URI_WITH_USER_INFO,
+                        CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
+                ClientBuilder.bluemix(vcap.toJson(), null, "test_bluemix_service_1").build();
+            }
+        });
     }
 
     @Test
@@ -126,18 +139,29 @@ public class CloudFoundryServiceTest {
         ClientBuilder.bluemix(vcap.toJson()).build().serverVersion();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void vcapSingleServiceMissingNamedService() {
-        VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-        vcap.createNewService("test_bluemix_service_1","http://foo1.bar", "admin1", "pass1");
-        ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_2");
+        Assertions.assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
+                vcap.createNewService("test_bluemix_service_1", "http://foo1.bar", "admin1",
+                        "pass1");
+                ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_2");
+            }
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void vcapSingleServiceEmptyCredentials() {
-        VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-        vcap.createNewServiceWithEmptyCredentials("test_bluemix_service_1");
-        ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_1");
+        Assertions.assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
+                vcap.createNewServiceWithEmptyCredentials("test_bluemix_service_1");
+                ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_1");
+            }
+        });
     }
 
     @Test
@@ -151,45 +175,83 @@ public class CloudFoundryServiceTest {
         ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_3").build().serverVersion();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void vcapMultiServiceNoNameSpecified() {
-        VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-        vcap.createNewService("test_bluemix_service_1","http://foo1.bar", "admin1", "pass1");
-        vcap.createNewService("test_bluemix_service_2","http://foo2.bar", "admin2", "pass2");
-        vcap.createNewService("test_bluemix_service_3","http://foo3.bar", "admin3", "pass3");
-        ClientBuilder.bluemix(vcap.toJson());
+        Assertions.assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
+                vcap.createNewService("test_bluemix_service_1", "http://foo1.bar", "admin1",
+                        "pass1");
+                vcap.createNewService("test_bluemix_service_2", "http://foo2.bar", "admin2",
+                        "pass2");
+                vcap.createNewService("test_bluemix_service_3", "http://foo3.bar", "admin3",
+                        "pass3");
+                ClientBuilder.bluemix(vcap.toJson());
+            }
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void vcapMultiServiceMissingNamedService() {
-        VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-        vcap.createNewService("test_bluemix_service_1","http://foo1.bar", "admin1", "pass1");
-        vcap.createNewService("test_bluemix_service_2","http://foo2.bar", "admin2", "pass2");
-        vcap.createNewService("test_bluemix_service_3","http://foo3.bar", "admin3", "pass3");
-        ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_4");
+        Assertions.assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
+                vcap.createNewService("test_bluemix_service_1", "http://foo1.bar", "admin1",
+                        "pass1");
+                vcap.createNewService("test_bluemix_service_2", "http://foo2.bar", "admin2",
+                        "pass2");
+                vcap.createNewService("test_bluemix_service_3", "http://foo3.bar", "admin3",
+                        "pass3");
+                ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_4");
+            }
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void vcapMultiServiceEmptyCredentials() {
-        VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-        vcap.createNewService("test_bluemix_service_1","http://foo1.bar", "admin1", "pass1");
-        vcap.createNewService("test_bluemix_service_2","http://foo2.bar", "admin2", "pass2");
-        vcap.createNewServiceWithEmptyCredentials("test_bluemix_service_3");
-        ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_3");
+        Assertions.assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
+                vcap.createNewService("test_bluemix_service_1", "http://foo1.bar", "admin1",
+                        "pass1");
+                vcap.createNewService("test_bluemix_service_2", "http://foo2.bar", "admin2",
+                        "pass2");
+                vcap.createNewServiceWithEmptyCredentials("test_bluemix_service_3");
+                ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_3");
+            }
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void vcapNoServicesPresent() {
-        ClientBuilder.bluemix(new CloudFoundryServiceTest.VCAPGenerator().toJson());
+        Assertions.assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                ClientBuilder.bluemix(new CloudFoundryServiceTest.VCAPGenerator().toJson());
+            }
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void vcapInvalidJSON() {
-        ClientBuilder.bluemix("{\"cloudantNoSQLDB\":[]"); // invalid JSON
+        Assertions.assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                ClientBuilder.bluemix("{\"cloudantNoSQLDB\":[]"); // invalid JSON
+            }
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void vcapNotPresent() {
-        ClientBuilder.bluemix(null);
+        Assertions.assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                ClientBuilder.bluemix(null);
+            }
+        });
     }
 }

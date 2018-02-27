@@ -14,21 +14,21 @@
 
 package com.cloudant.api.query;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cloudant.tests.util.MockWebServerResources;
-import com.cloudant.tests.util.MockedServerTest;
+import com.cloudant.tests.base.TestWithMockedServer;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import okhttp3.mockwebserver.RecordedRequest;
 
 import java.util.concurrent.TimeUnit;
 
-public class IndexDeletionTests extends MockedServerTest {
+public class IndexDeletionTests extends TestWithMockedServer {
 
-    @Before
+    @BeforeEach
     public void enqueueOK() {
         server.enqueue(MockWebServerResources.JSON_OK);
     }
@@ -53,7 +53,6 @@ public class IndexDeletionTests extends MockedServerTest {
 
     private void assertDelete(String name, String ddoc, String type) throws Exception {
         RecordedRequest request = server.takeRequest(1, TimeUnit.SECONDS);
-        assertEquals("The request body should match the expected", "/" + dbResource.getDatabaseName() +
-                "/_index/_design/" + ddoc + "/" + type + "/" + name, request.getPath());
+        assertEquals("/" + dbResource.getDatabaseName() + "/_index/_design/" + ddoc + "/" + type + "/" + name, request.getPath(), "The request body should match the expected");
     }
 }

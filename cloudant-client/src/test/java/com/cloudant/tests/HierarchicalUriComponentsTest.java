@@ -14,11 +14,11 @@
 
 package com.cloudant.tests;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cloudant.client.internal.HierarchicalUriComponents;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.UnsupportedEncodingException;
 

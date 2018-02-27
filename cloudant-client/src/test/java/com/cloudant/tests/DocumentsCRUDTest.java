@@ -14,29 +14,23 @@
  */
 package com.cloudant.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
-import com.cloudant.test.main.RequiresCouch;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.base.TestWithDb;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,21 +38,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-@Category(RequiresDB.class)
-public class DocumentsCRUDTest {
-
-    public static CloudantClientResource clientResource = new CloudantClientResource();
-    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
-    @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
-
-    private static CloudantClient account = clientResource.get();
-    private static Database db;
-
-    @BeforeClass
-    public static void setUp() {
-        db = dbResource.get();
-    }
+@RequiresDB
+public class DocumentsCRUDTest extends TestWithDb {
 
     // Find
 
@@ -93,13 +74,14 @@ public class DocumentsCRUDTest {
         assertNotNull(jsonObject);
     }
 
+    /*
     @Test
-    @Category(RequiresCouch.class)
+    @RequiresCouch
     public void findAny() {
         String uri = account.getBaseUri() + "_stats";
         JsonObject jsonObject = db.findAny(JsonObject.class, uri);
         assertNotNull(jsonObject);
-    }
+    }*/
 
     @Test
     public void findInputstream() throws IOException {
@@ -116,14 +98,24 @@ public class DocumentsCRUDTest {
         assertNotNull(foo);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void findWithInvalidId_throwsIllegalArgumentException() {
-        db.find(Foo.class, "");
+        assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                db.find(Foo.class, "");
+            }
+        });
     }
 
-    @Test(expected = NoDocumentException.class)
+    @Test
     public void findWithUnknownId_throwsNoDocumentException() {
-        db.find(Foo.class, generateUUID());
+        assertThrows(NoDocumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                db.find(Foo.class, generateUUID());
+            }
+        });
     }
 
     @Test
@@ -173,23 +165,38 @@ public class DocumentsCRUDTest {
         assertNotNull(response.getId());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void saveInvalidObject_throwsIllegalArgumentException() {
-        db.save(null);
+        assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                db.save(null);
+            }
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void saveNewDocWithRevision_throwsIllegalArgumentException() {
-        Bar bar = new Bar();
-        bar.setRevision("unkown");
-        db.save(bar);
+        assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                Bar bar = new Bar();
+                bar.setRevision("unkown");
+                db.save(bar);
+            }
+        });
     }
 
-    @Test(expected = DocumentConflictException.class)
+    @Test
     public void saveDocWithDuplicateId_throwsDocumentConflictException() {
-        String id = generateUUID();
-        db.save(new Foo(id));
-        db.save(new Foo(id));
+        assertThrows(DocumentConflictException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                String id = generateUUID();
+                db.save(new Foo(id));
+                db.save(new Foo(id));
+            }
+        });
     }
 
     // Update
@@ -211,17 +218,27 @@ public class DocumentsCRUDTest {
         assertEquals(idWithSlash, responseUpdate.getId());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void updateWithoutIdAndRev_throwsIllegalArgumentException() {
-        db.update(new Foo());
+        assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                db.update(new Foo());
+            }
+        });
     }
 
-    @Test(expected = DocumentConflictException.class)
+    @Test
     public void updateWithInvalidRev_throwsDocumentConflictException() {
-        Response response = db.save(new Foo());
-        Foo foo = db.find(Foo.class, response.getId());
-        db.update(foo);
-        db.update(foo);
+        assertThrows(DocumentConflictException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                Response response = db.save(new Foo());
+                Foo foo = db.find(Foo.class, response.getId());
+                db.update(foo);
+                db.update(foo);
+            }
+        });
     }
 
     // Delete

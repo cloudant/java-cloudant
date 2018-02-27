@@ -17,39 +17,82 @@ package com.cloudant.tests;
 
 import com.cloudant.client.internal.DatabaseURIHelper;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.Extension;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolver;
+import org.junit.jupiter.api.extension.TestTemplateInvocationContext;
+import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
-@RunWith(Parameterized.class)
+@ExtendWith(DatabaseURIHelperTest.ParameterProvider.class)
 public class DatabaseURIHelperTest {
 
-    @Parameterized.Parameters
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][]{
-                {""}, {"/api/couch/account_2128459498a75498"}
-        });
+    static class ParameterProvider implements TestTemplateInvocationContextProvider {
+        @Override
+        public boolean supportsTestTemplate(ExtensionContext context) {
+            return true;
+        }
+
+        @Override
+        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
+            return Stream.of(invocationContext(""), invocationContext("/api/couch/account_2128459498a75498"));
+        }
+
+        public static TestTemplateInvocationContext invocationContext(final String path) {
+            return new TestTemplateInvocationContext() {
+                @Override
+                public String getDisplayName(int invocationIndex) {
+                    return String.format("path:%s", path);
+                }
+
+                @Override
+                public List<Extension> getAdditionalExtensions() {
+                    return Collections.<Extension>singletonList(new ParameterResolver() {
+                        @Override
+                        public boolean supportsParameter(ParameterContext parameterContext,
+                                                         ExtensionContext extensionContext) {
+                            switch(parameterContext.getIndex()) {
+                                case 0:
+                                    return parameterContext.getParameter().getType().equals(String.class);
+                            }
+                            return false;
+                        }
+
+                        @Override
+                        public Object resolveParameter(ParameterContext parameterContext,
+                                                       ExtensionContext extensionContext) {
+                            switch(parameterContext.getIndex()) {
+                                case 0:
+                                    return path;
+                            }
+                            return null;
+                        }
+                    });
+                }
+            };
+        }
     }
 
     String protocol = "http";
     String hostname = "127.0.0.1";
     int port = 5984;
-    @Parameterized.Parameter
-    public String path;
     String uriBase;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    public void setup(String path) {
         uriBase = protocol + "://" + hostname + ":" + port + path;
     }
 
@@ -58,138 +101,138 @@ public class DatabaseURIHelperTest {
         return new DatabaseURIHelper(new URI(protocol, null, hostname, port, dbName, null, null));
     }
 
-    @Test
-    public void _localDocumentURI() throws Exception {
+    @TestTemplate
+    public void _localDocumentURI(String path) throws Exception {
         final String expected = uriBase + "/db_name/_local/mylocaldoc";
 
         DatabaseURIHelper helper = helper(path + "/db_name");
         URI localDoc = helper.documentUri("_local/mylocaldoc");
 
-        Assert.assertEquals(expected,localDoc.toString());
+        Assertions.assertEquals(expected,localDoc.toString());
     }
 
-    @Test
-    public void buildDbUri() throws Exception {
+    @TestTemplate
+    public void buildDbUri(String path) throws Exception {
         URI expected = new URI(uriBase + "/db_name");
         URI actual = helper(path + "/db_name").getDatabaseUri();
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
     // this test shows that non-ascii characters will be represented correctly
     // in the url but that we don't escape characters like /
-    @Test
-    public void buildEscapedDbUri() throws Exception {
+    @TestTemplate
+    public void buildEscapedDbUri(String path) throws Exception {
         URI expected = new URI(uriBase + "/SDF@%23%25$%23)DFGKLDfdffdg%C3%A9");
         URI actual = helper(path + "/SDF@#%$#)DFGKLDfdffdg\u00E9").getDatabaseUri();
-        Assert.assertEquals(expected.toASCIIString(), actual.toASCIIString());
+        Assertions.assertEquals(expected.toASCIIString(), actual.toASCIIString());
     }
 
-    @Test
-    public void buildChangesUri_options_optionsEncoded() throws Exception {
+    @TestTemplate
+    public void buildChangesUri_options_optionsEncoded(String path) throws Exception {
         URI expected = new URI(uriBase + "/test/_changes?limit=100&since=%22%5B%5D%22");
 
         Map<String, Object> options = new HashMap<String, Object>();
         options.put("since", "\"[]\"");
         options.put("limit", 100);
         URI actual = helper(path + "/test").changesUri(options);
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
-    @Test
-    public void buildChangesUri_woOptions() throws Exception {
+    @TestTemplate
+    public void buildChangesUri_woOptions(String path) throws Exception {
         URI expected = new URI(uriBase + "/test/_changes");
         URI actual = helper(path + "/test").changesUri(new HashMap<String, Object>());
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
-    @Test
-    public void buildBulkDocsUri() throws Exception {
+    @TestTemplate
+    public void buildBulkDocsUri(String path) throws Exception {
         URI expected = new URI(uriBase + "/test/_bulk_docs");
         URI actual = helper(path + "/test").bulkDocsUri();
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
-    @Test
-    public void revsDiffUri() throws Exception {
+    @TestTemplate
+    public void revsDiffUri(String path) throws Exception {
         URI expected = new URI(uriBase + "/test/_revs_diff");
         URI actual = helper(path + "/test").revsDiffUri();
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
     // get a document with a db 'mounted' at /
-    @Test
-    public void buildDocumentUri_emptyDb() throws Exception {
+    @TestTemplate
+    public void buildDocumentUri_emptyDb(String path) throws Exception {
         URI expected = new URI(uriBase + "/documentId");
         URI actual = helper(path).documentUri("documentId");
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
-    @Test
-    public void buildDocumentUri_woOptions() throws Exception {
+    @TestTemplate
+    public void buildDocumentUri_woOptions(String path) throws Exception {
         URI expected = new URI(uriBase + "/test/documentId");
         URI actual = helper(path + "/test").documentUri("documentId");
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
-    @Test
-    public void buildDocumentUri_slashInDocumentId() throws Exception {
+    @TestTemplate
+    public void buildDocumentUri_slashInDocumentId(String path) throws Exception {
         URI expected = new URI(uriBase + "/test/path1%2Fpath2");
         URI actual = helper(path + "/test").documentUri("path1/path2");
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
-    @Test
-    public void buildDocumentUri_specialCharsInDocumentId() throws Exception {
+    @TestTemplate
+    public void buildDocumentUri_specialCharsInDocumentId(String path) throws Exception {
         URI expected = new URI(uriBase + "/test/SDF@%23%25$%23)DFGKLDfdffdg%C3%A9");
         URI actual = helper(path + "/test").documentUri("SDF@#%$#)DFGKLDfdffdg\u00E9");
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
-    @Test
-    public void buildDocumentUri_colonInDocumentId() throws Exception {
+    @TestTemplate
+    public void buildDocumentUri_colonInDocumentId(String path) throws Exception {
         URI expected = new URI(uriBase + "/test/:this:has:colons:");
         URI actual = helper(path + "/test").documentUri(":this:has:colons:");
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
-    @Test
-    public void buildDocumentUri_options_optionsEncoded() throws Exception {
+    @TestTemplate
+    public void buildDocumentUri_options_optionsEncoded(String path) throws Exception {
         URI expected = new URI(uriBase + "/test/path1%2Fpath2?detail=true&revs=%5B1-2%5D");
 
         Map<String, Object> options = new TreeMap<String, Object>();
         options.put("revs", "[1-2]");
         options.put("detail", true);
         URI actual = helper(path + "/test").documentId("path1/path2").query(options).build();
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
-    @Test
-    public void buildDocumentUri_options_encodeSeparators() throws Exception {
+    @TestTemplate
+    public void buildDocumentUri_options_encodeSeparators(String path) throws Exception {
         URI expected = new URI(uriBase + "/test/path1%2Fpath2?d%26etail%3D=%26%3D%3Dds%26&revs=%5B1-2%5D");
 
         TreeMap<String, Object> options = new TreeMap<String, Object>();
         options.put("revs", "[1-2]");
         options.put("d&etail=", "&==ds&");
         URI actual = helper(path + "/test").documentId("path1/path2").query(options).build();
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
-    @Test
-    public void buildDocumentUri_options_hasPlus() throws Exception {
+    @TestTemplate
+    public void buildDocumentUri_options_hasPlus(String path) throws Exception {
         URI expected = new URI(uriBase + "/test/path1%2Fpath2?q=class:mammal%2Bwith%2Bplusses");
 
         TreeMap<String, Object> options = new TreeMap<String, Object>();
         options.put("q", "class:mammal+with+plusses");
         URI actual = helper(path + "/test").documentId("path1/path2").query(options).build();
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
 
     // this test shows that non-ascii characters will be represented correctly
     // in the url but that we don't escape characters like / in the root url, but that they are
     // correctly escaped in the document part of the url
-    @Test
-    public void buildVeryEscapedUri() throws Exception {
+    @TestTemplate
+    public void buildVeryEscapedUri(String path) throws Exception {
         URI expected = new URI(uriBase + "/SDF@%23%25$%23)KLDfdffdg%C3%A9/%2FSF@%23%25$%23)DFGKLDfdffdg%C3%A9%2Fpath2?detail=/SDF@%23%25$%23)%C3%A9&revs=%5B1-2%5D");
 
         Map<String, Object> options = new TreeMap<String, Object>();
@@ -198,24 +241,24 @@ public class DatabaseURIHelperTest {
         URI actual = helper(path + "/SDF@#%$#)KLDfdffdg\u00E9").documentId("/SF@#%$#)"
                 + "DFGKLDfdffdg\u00E9/path2").query(options).build();
 
-        Assert.assertEquals(expected.toASCIIString(), actual.toASCIIString());
+        Assertions.assertEquals(expected.toASCIIString(), actual.toASCIIString());
     }
 
 
-    @Test
-    public void encodePathComponent_slashShouldBeEncoded() throws Exception {
+    @TestTemplate
+    public void encodePathComponent_slashShouldBeEncoded(String path) throws Exception {
         String in = "/path1/path2";
-        Assert.assertEquals("%2Fpath1%2Fpath2", helper(path + "/test").encodeId(in));
+        Assertions.assertEquals("%2Fpath1%2Fpath2", helper(path + "/test").encodeId(in));
     }
 
-    @Test
-    public void encodeQueryParameter_noLeadingQuestionMark() throws Exception {
+    @TestTemplate
+    public void encodeQueryParameter_noLeadingQuestionMark(String path) throws Exception {
         String in = "a";
-        Assert.assertTrue(helper(path + "/test").documentUri(in).toString().charAt(0) != '?');
+        Assertions.assertTrue(helper(path + "/test").documentUri(in).toString().charAt(0) != '?');
     }
 
-    @Test
-    public void buildQuery_joinTwoQueries() throws Exception {
+    @TestTemplate
+    public void buildQuery_joinTwoQueries(String path) throws Exception {
         Map<String, Object> mapOptions = new TreeMap<String, Object>();
         mapOptions.put("revs", "[1-2]");
         mapOptions.put("detail", "/SDF@#%$#)");
@@ -224,7 +267,7 @@ public class DatabaseURIHelperTest {
 
         URI expectedQuery = new URI(uriBase + "?detail=/SDF@%23%25$%23)&revs=%5B1-2%5D&boolean=true");
         URI actualQuery = helper(path).query(mapOptions).query(query).build();
-        Assert.assertEquals(expectedQuery.toASCIIString(), actualQuery.toASCIIString());
+        Assertions.assertEquals(expectedQuery.toASCIIString(), actualQuery.toASCIIString());
     }
 
 }

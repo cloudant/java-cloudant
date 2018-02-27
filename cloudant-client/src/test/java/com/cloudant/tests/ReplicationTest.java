@@ -15,24 +15,24 @@
 package com.cloudant.tests;
 
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudant.client.api.model.ReplicationResult;
 import com.cloudant.client.api.model.ReplicationResult.ReplicationHistory;
 import com.cloudant.test.main.RequiresDB;
+import com.cloudant.tests.base.TestWithReplication;
 import com.cloudant.tests.util.Utils;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Category(RequiresDB.class)
-public class ReplicationTest extends ReplicateBaseTest {
+@RequiresDB
+public class ReplicationTest extends TestWithReplication {
 
     @Test
     public void replication() {
@@ -42,7 +42,7 @@ public class ReplicationTest extends ReplicateBaseTest {
                 .target(db2URI)
                 .trigger();
 
-        assertTrue("The replication should complete ok", result.isOk());
+        assertTrue(result.isOk(), "The replication should complete ok");
 
         List<ReplicationHistory> histories = result.getHistories();
         assertThat(histories.size(), not(0));
@@ -61,7 +61,7 @@ public class ReplicationTest extends ReplicateBaseTest {
                 .queryParams(queryParams)
                 .trigger();
 
-        assertTrue("The replication should complete ok", result.isOk());
+        assertTrue(result.isOk(), "The replication should complete ok");
     }
 
     @Test
@@ -75,10 +75,10 @@ public class ReplicationTest extends ReplicateBaseTest {
         ReplicationResult result = account.replication().source(db1URI)
                 .target(db2URI).createTarget(true).trigger();
 
-        assertTrue("The replication should complete ok", result.isOk());
+        assertTrue(result.isOk(), "The replication should complete ok");
 
         Foo fooOnDb2 = Utils.findDocumentWithRetries(db2, docId, Foo.class, 20);
-        assertNotNull("The document should have been replicated", fooOnDb2);
+        assertNotNull(fooOnDb2, "The document should have been replicated");
     }
 
     @Test
@@ -96,7 +96,7 @@ public class ReplicationTest extends ReplicateBaseTest {
         ReplicationResult result = account.replication().source(db1URI)
                 .target(db2URI).trigger();
 
-        assertTrue("The replication should complete ok", result.isOk());
+        assertTrue(result.isOk(), "The replication should complete ok");
 
         //we replicated with a doc with the same ID but different content in each DB, we should get
         //a conflict

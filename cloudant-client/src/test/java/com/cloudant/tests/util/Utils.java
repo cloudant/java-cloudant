@@ -16,10 +16,10 @@ package com.cloudant.tests.util;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -186,8 +186,8 @@ public class Utils {
      */
     public static String[] splitAndAssert(String toSplit, String splitOn, int expectedNumber) {
         String[] parts = toSplit.split(splitOn);
-        assertEquals("There should be " + expectedNumber + " instances of " + splitOn + " in the " +
-                "content", expectedNumber + 1, parts.length);
+        assertEquals( expectedNumber + 1, parts.length, "There should be " + expectedNumber + " instances of " + splitOn + " in the " +
+                "content");
         return parts;
     }
 
@@ -212,7 +212,7 @@ public class Utils {
     }
 
     public static void assertOKResponse(Response r) throws Exception {
-        assertTrue("The response code should be 2XX was " + r.getStatusCode(), r.getStatusCode()
-                / 100 == 2);
+        assertTrue(r.getStatusCode()
+                / 100 == 2, "The response code should be 2XX was " + r.getStatusCode());
     }
 }
