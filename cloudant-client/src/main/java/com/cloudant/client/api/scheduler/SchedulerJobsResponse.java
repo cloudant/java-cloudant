@@ -35,22 +35,6 @@ public class SchedulerJobsResponse {
     @SerializedName("total_rows")
     private String startTime;
 
-    public SchedulerJobsResponse(long offset, long totalRows, String id, String database, String
-            docId, List<History> history, String pid, String node, String source, String target,
-                                 String startTime) {
-        this.offset = offset;
-        this.totalRows = totalRows;
-        this.id = id;
-        this.database = database;
-        this.docId = docId;
-        this.history = history;
-        this.pid = pid;
-        this.node = node;
-        this.source = source;
-        this.target = target;
-        this.startTime = startTime;
-    }
-
     public long getOffset() {
         return offset;
     }
@@ -95,14 +79,9 @@ public class SchedulerJobsResponse {
         return startTime;
     }
 
-    static class History {
+    public static class History {
         private String timestamp;
         private String type;
-
-        public History(String timestamp, String type) {
-            this.timestamp = timestamp;
-            this.type = type;
-        }
 
         public String getTimestamp() {
             return timestamp;
