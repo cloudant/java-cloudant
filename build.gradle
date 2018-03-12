@@ -28,8 +28,8 @@ subprojects {
     // If the version says "snapshot" anywhere assume it is not a release
     ext.isReleaseVersion = !version.toUpperCase(Locale.ENGLISH).contains("SNAPSHOT")
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
 
     repositories {
         mavenLocal()

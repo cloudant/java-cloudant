@@ -57,6 +57,12 @@ gradle.projectsEvaluated {
     }
 }
 
+// we need Java 1.8 features for JUnit 5 features, but our production code is 1.6
+compileTestJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+}
+
 tasks.withType(Test) {
     def jMockit
     doFirst {
