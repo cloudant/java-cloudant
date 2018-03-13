@@ -57,7 +57,6 @@ public class DatabaseTest extends TestWithDb {
 
     private static MockWebServer mockWebServer;
 
-    // TODO before class?
     @BeforeEach
     public void beforeEach() {
         mockWebServer = mockWebServerExt.get();
