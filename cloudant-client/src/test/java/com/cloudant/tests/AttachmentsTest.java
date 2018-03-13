@@ -246,7 +246,7 @@ public class AttachmentsTest extends TestWithDb {
         });
     }
 
-    @Test()
+    @Test
     public void attachmentStandaloneDocIdEmptyRev() {
         assertThrows(IllegalArgumentException.class, new Executable() {
             @Override
