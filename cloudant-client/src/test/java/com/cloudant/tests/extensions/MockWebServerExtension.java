@@ -34,7 +34,6 @@ public class MockWebServerExtension implements BeforeEachCallback, AfterEachCall
 
     @Override
     public synchronized void afterEach(ExtensionContext context) throws Exception {
-        System.out.println("MWS shutdown");
         this.mockWebServer.shutdown();
         started = false;
     }

@@ -57,7 +57,6 @@ public class IndexListTests extends TestWithMockedServer {
      * @return
      */
     private static String fromFile(String resourceFileName) {
-        System.out.println(new File(".").getAbsolutePath());
         try {
             return IOUtils.toString(new BufferedInputStream(new FileInputStream("" +
                     "./src/test/resources/query-tests/" + resourceFileName + ".js")), "UTF-8");

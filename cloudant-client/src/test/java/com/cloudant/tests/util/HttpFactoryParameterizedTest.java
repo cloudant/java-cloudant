@@ -47,7 +47,6 @@ public abstract class HttpFactoryParameterizedTest extends TestWithDb {
     @BeforeEach
     public void changeHttpConnectionFactory(boolean isOkUsable) throws Exception {
         this.isOkUsable = isOkUsable;
-        System.out.println("***** is ok usable? "+isOkUsable);
         if (!isOkUsable) {
             // New up the mock that will stop okhttp's factory being used
             new OkHelperMock();

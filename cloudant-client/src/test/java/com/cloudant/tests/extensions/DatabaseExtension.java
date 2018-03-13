@@ -130,7 +130,6 @@ public class DatabaseExtension {
      */
     public String getDbURIWithUserInfo() throws Exception {
         String info =  clientResource.getBaseURIWithUserInfo() + "/" + getDatabaseName();
-        System.out.println("*** "+info);
         return info;
     }
 
