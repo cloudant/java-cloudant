@@ -50,7 +50,7 @@ public class IndexLifecycleTest {
     @RegisterExtension
     public static CloudantClientExtension clientResource = new CloudantClientExtension();
     @RegisterExtension
-    public static DatabaseExtension.PerTest dbResource = new DatabaseExtension.PerTest(clientResource);
+    public DatabaseExtension.PerTest dbResource = new DatabaseExtension.PerTest(clientResource);
 
     private static Database db;
 
