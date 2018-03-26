@@ -24,6 +24,7 @@ import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
+import com.cloudant.test.main.RequiresCouch;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.base.TestWithDb;
 import com.google.gson.JsonArray;
@@ -74,14 +75,12 @@ public class DocumentsCRUDTest extends TestWithDb {
         assertNotNull(jsonObject);
     }
 
-    /*
     @Test
-    @RequiresCouch
     public void findAny() {
-        String uri = account.getBaseUri() + "_stats";
+        String uri = account.getBaseUri() + "_all_dbs";
         JsonObject jsonObject = db.findAny(JsonObject.class, uri);
         assertNotNull(jsonObject);
-    }*/
+    }
 
     @Test
     public void findInputstream() throws IOException {
