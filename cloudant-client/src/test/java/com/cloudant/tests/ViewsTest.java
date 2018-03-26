@@ -872,7 +872,7 @@ public class ViewsTest extends TestWithDbPerTest {
                 .build();
         int i = 1;
         List<ViewResponse<String, Object>> responses = multi.getViewResponses();
-        assertEquals(3, responses.size(), "There should be 3 respones for 3 requests");
+        assertEquals(3, responses.size(), "There should be 3 responses for 3 requests");
         for (ViewResponse<String, Object> response : responses) {
             assertEquals(1, response.getRows().size(), "There should be 1 row in each response");
             assertEquals("key-" + i, response.getKeys().get(0), "The returned key should be key-" + i);
@@ -1013,7 +1013,7 @@ public class ViewsTest extends TestWithDbPerTest {
                 .build();
 
         List<ViewResponse<String, Object>> responses = multi.getViewResponses();
-        assertEquals(2, responses.size(), "There should be 2 respones for 2 requests");
+        assertEquals(2, responses.size(), "There should be 2 responses for 2 requests");
 
         List<String> javaTagKeys = responses.get(0).getKeys();
         assertEquals(1, javaTagKeys.size(), "There should be 1 java tag result");
