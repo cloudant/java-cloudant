@@ -30,7 +30,7 @@ import com.cloudant.client.api.model.DesignDocument;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.base.TestWithDb;
+import com.cloudant.tests.base.TestWithDbPerClass;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.JsonObject;
@@ -54,7 +54,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @RequiresDB
-public class DesignDocumentsTest extends TestWithDb {
+public class DesignDocumentsTest extends TestWithDbPerClass {
 
     @RegisterExtension
     public static MockWebServerExtension mockWebServerExt = new MockWebServerExtension();

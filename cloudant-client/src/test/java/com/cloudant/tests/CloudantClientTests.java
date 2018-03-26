@@ -36,7 +36,7 @@ import com.cloudant.http.internal.interceptors.UserAgentInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.base.TestWithDb;
+import com.cloudant.tests.base.TestWithDbPerClass;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.MockWebServerResources;
 import com.cloudant.tests.util.Utils;
@@ -75,7 +75,7 @@ import javax.net.ServerSocketFactory;
 /**
  * Note some tests in this class use Java 1.7 features
  */
-public class CloudantClientTests extends TestWithDb {
+public class CloudantClientTests extends TestWithDbPerClass {
 
     @RegisterExtension
     public MockWebServerExtension mockWebServerExt = new MockWebServerExtension();

@@ -19,7 +19,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.cloudant.client.api.model.Response;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.base.TestWithDb;
+import com.cloudant.tests.base.TestWithDbPerClass;
 import com.google.gson.JsonObject;
 
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RequiresDB
-public class BulkDocumentTest extends TestWithDb {
+public class BulkDocumentTest extends TestWithDbPerClass {
 
     @Test
     public void bulkModifyDocs() {

@@ -18,14 +18,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 import com.cloudant.http.internal.ok.OkHelper;
-import com.cloudant.tests.base.TestWithDb;
+import com.cloudant.tests.base.TestWithDbPerClass;
 
 import org.junit.jupiter.api.BeforeEach;
 
 import mockit.Mock;
 import mockit.MockUp;
 
-public abstract class HttpFactoryParameterizedTest extends TestWithDb {
+public abstract class HttpFactoryParameterizedTest extends TestWithDbPerClass {
 
     /**
      * A parameter governing whether to allow okhttp or not. This lets us exercise both

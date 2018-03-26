@@ -28,7 +28,7 @@ import com.cloudant.client.api.model.ChangesResult.Row;
 import com.cloudant.client.api.model.DbInfo;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.base.TestWithDb;
+import com.cloudant.tests.base.TestWithDbPerClass;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.google.gson.JsonObject;
 
@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @RequiresDB
-public class ChangeNotificationsTest extends TestWithDb {
+public class ChangeNotificationsTest extends TestWithDbPerClass {
 
     @RegisterExtension
     public static MockWebServerExtension mockWebServerExt = new MockWebServerExtension();

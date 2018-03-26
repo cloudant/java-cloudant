@@ -26,7 +26,7 @@ import com.cloudant.client.api.model.Document;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.base.TestWithDb;
+import com.cloudant.tests.base.TestWithDbPerClass;
 import com.cloudant.tests.util.Utils;
 
 import org.apache.commons.codec.binary.Base64;
@@ -41,7 +41,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 
 @RequiresDB
-public class AttachmentsTest extends TestWithDb {
+public class AttachmentsTest extends TestWithDbPerClass {
 
     @Test
     public void attachmentInline() {

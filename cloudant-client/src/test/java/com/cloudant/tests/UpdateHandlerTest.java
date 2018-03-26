@@ -21,14 +21,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.base.TestWithDb;
+import com.cloudant.tests.base.TestWithDbPerClass;
 import com.cloudant.tests.util.Utils;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 @RequiresDB
-public class UpdateHandlerTest extends TestWithDb {
+public class UpdateHandlerTest extends TestWithDbPerClass {
 
     @BeforeAll
     public static void beforeAll() throws Exception {

@@ -29,7 +29,7 @@ import com.cloudant.test.main.RequiresCloudantLocal;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresCouch;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.base.TestWithDb;
+import com.cloudant.tests.base.TestWithDbPerClass;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.MockWebServerResources;
 import com.google.gson.GsonBuilder;
@@ -50,7 +50,7 @@ import java.util.List;
 import java.util.Map;
 
 @RequiresDB
-public class DatabaseTest extends TestWithDb {
+public class DatabaseTest extends TestWithDbPerClass {
 
     @RegisterExtension
     public static MockWebServerExtension mockWebServerExt = new MockWebServerExtension();

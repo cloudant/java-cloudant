@@ -24,9 +24,8 @@ import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
-import com.cloudant.test.main.RequiresCouch;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.base.TestWithDb;
+import com.cloudant.tests.base.TestWithDbPerClass;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -40,7 +39,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RequiresDB
-public class DocumentsCRUDTest extends TestWithDb {
+public class DocumentsCRUDTest extends TestWithDbPerClass {
 
     // Find
 

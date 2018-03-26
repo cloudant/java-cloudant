@@ -25,7 +25,7 @@ import com.cloudant.client.api.model.SearchResult;
 import com.cloudant.client.api.model.SearchResult.SearchResultRow;
 import com.cloudant.client.internal.URIBase;
 import com.cloudant.test.main.RequiresCloudant;
-import com.cloudant.tests.base.TestWithDb;
+import com.cloudant.tests.base.TestWithDbPerClass;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 @RequiresCloudant
-public class SearchTests extends TestWithDb {
+public class SearchTests extends TestWithDbPerClass {
 
     @BeforeAll
     public static void setUp() throws Exception {

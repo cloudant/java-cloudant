@@ -33,7 +33,7 @@ import com.cloudant.client.api.query.QueryBuilder;
 import com.cloudant.client.api.query.QueryResult;
 import com.cloudant.client.api.query.Sort;
 import com.cloudant.test.main.RequiresCloudant;
-import com.cloudant.tests.base.TestWithDb;
+import com.cloudant.tests.base.TestWithDbPerClass;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -53,7 +53,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @RequiresCloudant
-public class IndexTests extends TestWithDb {
+public class IndexTests extends TestWithDbPerClass {
 
     @BeforeAll
     public static void setUp() throws Exception {

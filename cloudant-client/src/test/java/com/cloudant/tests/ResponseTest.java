@@ -29,7 +29,7 @@ import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
-import com.cloudant.tests.base.TestWithDb;
+import com.cloudant.tests.base.TestWithDbPerClass;
 import com.cloudant.tests.util.Utils;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Test cases to verify status code from Response object.
  * Assert status codes in CouchDbException and its subclasses.
  */
-public class ResponseTest extends TestWithDb {
+public class ResponseTest extends TestWithDbPerClass {
 
 
     private Foo foo;

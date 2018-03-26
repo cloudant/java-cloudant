@@ -22,14 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import com.cloudant.client.api.model.DbInfo;
 import com.cloudant.client.api.model.MetaInformation;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.base.TestWithDb;
+import com.cloudant.tests.base.TestWithDbPerClass;
 
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 @RequiresDB
-public class DBServerTest extends TestWithDb {
+public class DBServerTest extends TestWithDbPerClass {
 
     @Test
     public void dbInfo() {
