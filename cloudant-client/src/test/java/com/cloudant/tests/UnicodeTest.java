@@ -51,13 +51,13 @@ public class UnicodeTest extends TestWithDbPerTest {
     //   (U+0000..U+001F, U+0022, U+005C) may be placed in a string.
     // - All Unicode characters may be included as Unicode escapes
     //   (after conversion to UTF-16).
+    private static final String TESTSTRING_KEY = "teststring";
     private static final String TESTSTRING = "Gr\u00fc\u00dfe \u65e5\u672c\u8a9e \uD834\uDD1E.";
     private static final String TESTSTRING_ESCAPED = "Gr\\u00fc\\u00dfe \\u65e5\\u672c\\u8a9e " +
             "\\uD834\\uDD1E.";
-    private static final String TESTJSON = "{\"_id\":\"literal\"," +
-            "\"_rev\":\"1-39933759c7250133b6039d94ea09134f\",\"foo\":\"Grüße 日本語 \uD834\uDD1E.\"}\n";
-    private static final String TESTJSON_ESCAPED = "{\"_id\":\"escaped\"," +
-            "\"_rev\":\"1-39933759c7250133b6039d94ea09134f\",\"foo\":\"Grüße 日本語 \uD834\uDD1E.\"}\n";
+    private static final String EXPECTED_JSON = "{\"_id\":\""+TESTSTRING_KEY+"\"," +
+            "\"_rev\":\"1-39933759c7250133b6039d94ea09134f\",\"foo\":\"Gr\u00fc\u00dfe " +
+            "\u65e5\u672c\u8a9e \uD834\uDD1E.\"}\n";
 
     // ========================================================================
     // REST request utilities.
@@ -243,7 +243,7 @@ public class UnicodeTest extends TestWithDbPerTest {
      */
     @Test
     public void testLiteralUnicode() throws Exception {
-        URI uri = new DatabaseURIHelper(db.getDBUri()).path("literal").build();
+        URI uri = new DatabaseURIHelper(db.getDBUri()).path(TESTSTRING_KEY).build();
         {
             HttpConnection conn = Http.PUT(uri, "application/json");
             conn.requestProperties.put("Accept", "application/json");
@@ -258,7 +258,7 @@ public class UnicodeTest extends TestWithDbPerTest {
             clientResource.get().executeRequest(conn);
             assertEquals(200, conn.getConnection().getResponseCode());
             String result = getPlainTextEntityAsString(conn, uri);
-            assertEquals(TESTJSON, result);
+            assertEquals(EXPECTED_JSON, result);
             closeResponse(conn);
         }
         {
@@ -278,7 +278,7 @@ public class UnicodeTest extends TestWithDbPerTest {
      */
     @Test
     public void testEscapedUnicode() throws Exception {
-        URI uri = new DatabaseURIHelper(db.getDBUri()).path("escaped").build();
+        URI uri = new DatabaseURIHelper(db.getDBUri()).path(TESTSTRING_KEY).build();
         {
             HttpConnection conn = Http.PUT(uri, "application/json");
             conn.requestProperties.put("Accept", "application/json");
@@ -293,7 +293,7 @@ public class UnicodeTest extends TestWithDbPerTest {
             clientResource.get().executeRequest(conn);
             assertEquals(200, conn.getConnection().getResponseCode());
             String result = getPlainTextEntityAsString(conn, uri);
-            assertEquals(TESTJSON_ESCAPED, result);
+            assertEquals(EXPECTED_JSON, result);
             closeResponse(conn);
         }
         {
