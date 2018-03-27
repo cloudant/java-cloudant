@@ -16,7 +16,6 @@ package com.cloudant.api.query;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.cloudant.client.api.Database;
 import com.cloudant.client.api.query.Field;
 import com.cloudant.client.api.query.Index;
 import com.cloudant.client.api.query.JsonIndex;
@@ -24,13 +23,11 @@ import com.cloudant.client.api.query.Sort;
 import com.cloudant.client.api.query.TextIndex;
 import com.cloudant.client.api.query.Type;
 import com.cloudant.test.main.RequiresCloudant;
-import com.cloudant.tests.extensions.CloudantClientExtension;
-import com.cloudant.tests.extensions.DatabaseExtension;
+import com.cloudant.tests.base.TestWithDbPerTest;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.Collections;
 import java.util.List;
@@ -45,18 +42,10 @@ import java.util.List;
  * Test list indexes
  * After delete indexes
  */
-public class IndexLifecycleTest {
-
-    @RegisterExtension
-    public static CloudantClientExtension clientResource = new CloudantClientExtension();
-    @RegisterExtension
-    public DatabaseExtension.PerTest dbResource = new DatabaseExtension.PerTest(clientResource);
-
-    private static Database db;
+public class IndexLifecycleTest extends TestWithDbPerTest {
 
     @BeforeEach
     public void createIndexes() throws Exception {
-        db = dbResource.get();
 
         // Create a JSON index
         db.createIndex(JsonIndex.builder()
