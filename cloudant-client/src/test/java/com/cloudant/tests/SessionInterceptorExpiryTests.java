@@ -71,8 +71,6 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
                     invocationContext(true,"/_session"));
         }
 
-        // because we fill in the args from the left, we can fill in the single argument "okUsable"
-        // for the parent class' (HttpFactoryParameterizedTest) @BeforeEach
         public static TestTemplateInvocationContext invocationContext(final boolean okUsable,
                                                                       final String sessionPath) {
             return new TestTemplateInvocationContext() {
