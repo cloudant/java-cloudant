@@ -75,7 +75,7 @@ stage('QA') {
 
     // For the master branch, add additional axes to the coverage matrix for Couch 1.6, 2.0
     // and Cloudant Local
-    if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "junit5") {
+    if (env.BRANCH_NAME == "master") {
         axes.putAll(
                 Couch1_6: {
                     runTests(COUCH1_6_ENV, false)
