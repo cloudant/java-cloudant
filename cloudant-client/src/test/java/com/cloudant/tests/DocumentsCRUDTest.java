@@ -76,9 +76,9 @@ public class DocumentsCRUDTest extends TestWithDbPerClass {
 
     @Test
     public void findAny() {
-        String uri = account.getBaseUri() + "_all_dbs";
-        JsonObject jsonObject = db.findAny(JsonObject.class, uri);
-        assertNotNull(jsonObject);
+        String uri = account.getBaseUri() + "/_all_dbs";
+        JsonArray jsonArray = db.findAny(JsonArray.class, uri);
+        assertNotNull(jsonArray);
     }
 
     @Test
