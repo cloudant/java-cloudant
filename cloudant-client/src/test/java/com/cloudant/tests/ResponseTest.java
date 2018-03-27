@@ -155,7 +155,8 @@ public class ResponseTest extends TestWithDbPerClass {
             // Make a good request, which will set up the session etc
             HttpConnection d = c.executeRequest(Http.GET(c.getBaseUri()));
             d.responseAsString();
-            assertTrue(d.getConnection().getResponseCode() / 100 == 2, "The first request should succeed");
+            assertTrue(d.getConnection().getResponseCode() / 100 == 2, "The first request should " +
+                    "succeed");
 
             // Enable the bad headers and expect the exception on the next request
             badHeaderEnabled.set(true);
@@ -194,6 +195,7 @@ public class ResponseTest extends TestWithDbPerClass {
     }
 
     private void assertExceptionStatusCode(CouchDbException e, int expectedCode) {
-        assertEquals(expectedCode, e.getStatusCode(), "The HTTP status code should be " + expectedCode);
+        assertEquals(expectedCode, e.getStatusCode(), "The HTTP status code should be " +
+                expectedCode);
     }
 }

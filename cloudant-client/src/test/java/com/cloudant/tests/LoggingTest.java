@@ -121,10 +121,12 @@ public class LoggingTest {
 
         // Make a second request to a different URL and check that nothing else was logged
         client.executeRequest(Http.GET(client.getBaseUri())).responseAsString();
-        assertEquals(logsize, handler.logEntries.size(), "There should have been no more log entries");
+        assertEquals(logsize, handler.logEntries.size(), "There should have been no more log " +
+                "entries");
     }
 
     private String methodFilterPropName = "com.cloudant.http.filter.method";
+
     @Test
     public void httpMethodFilterLogging() throws Exception {
         setAndAssertLogProperty(methodFilterPropName, "GET");
@@ -145,7 +147,8 @@ public class LoggingTest {
         // Make a PUT request to a different URL and check that nothing else was logged
         client.executeRequest(Http.PUT(client.getBaseUri(), "text/plain").setRequestBody(""))
                 .responseAsString();
-        assertEquals(logsize, handler.logEntries.size(), "There should have been no more log entries");
+        assertEquals(logsize, handler.logEntries.size(), "There should have been no more log " +
+                "entries");
     }
 
     @Test
@@ -189,7 +192,6 @@ public class LoggingTest {
      * A basic DNS log test that can be called with different values.
      *
      * @param cacheValue the value to set for the cache lifetime
-     *
      * @throws Exception if the test fails or errors
      */
     private void basicDnsLogTest(String cacheValue) throws Exception {
@@ -339,12 +341,12 @@ public class LoggingTest {
 
     /**
      * Set a LogManager configuration property and assert it was set correctly
-     *
      */
     private void setAndAssertLogProperty(String name, String value) throws Exception {
         LogManager.getLogManager().readConfiguration(new ByteArrayInputStream((name
                 + "=" + value).getBytes()));
-        assertEquals(value, LogManager.getLogManager().getProperty(name), "The log property should be the test value");
+        assertEquals(value, LogManager.getLogManager().getProperty(name), "The log property " +
+                "should be the test value");
     }
 
     /**
@@ -356,7 +358,8 @@ public class LoggingTest {
     private void assertLogMessage(String pattern, int index) {
         Pattern p = Pattern.compile(pattern);
         String msg = handler.logEntries.get(index).getMessage();
-        assertTrue(p.matcher(msg).matches(), "The log entry \"" + msg + "\" should match pattern " + pattern);
+        assertTrue(p.matcher(msg).matches(), "The log entry \"" + msg + "\" should match pattern " +
+                "" + pattern);
     }
 
     /**

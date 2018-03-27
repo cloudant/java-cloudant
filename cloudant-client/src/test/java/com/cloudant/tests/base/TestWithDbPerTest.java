@@ -23,10 +23,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 // Base class for tests which require a new DB for each test method
 public class TestWithDbPerTest extends TestWithDb {
 
-    protected static DatabaseExtension.PerTest dbResource = new DatabaseExtension.PerTest(clientResource);
+    protected static DatabaseExtension.PerTest dbResource = new DatabaseExtension.PerTest
+            (clientResource);
 
     @RegisterExtension
-    protected static MultiExtension perTestExtensions = new MultiExtension(clientResource, dbResource);
+    protected static MultiExtension perTestExtensions = new MultiExtension(clientResource,
+            dbResource);
 
     @BeforeEach
     public void testWithDbBeforeEach() {

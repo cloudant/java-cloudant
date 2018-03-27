@@ -88,7 +88,8 @@ public class DesignDocumentsTest extends TestWithDbPerClass {
      * @throws Exception
      */
     private static DesignDocument fileToDesignDocument(String name) throws Exception {
-        File testDesignDocFile = new File(String.format("%s/%s_design_doc.js", rootDesignDir, name));
+        File testDesignDocFile = new File(String.format("%s/%s_design_doc.js", rootDesignDir,
+                name));
         return designManager.fromFile(testDesignDocFile);
     }
 
@@ -160,7 +161,8 @@ public class DesignDocumentsTest extends TestWithDbPerClass {
         designManager.put(designDocExample);
 
         // Retrieve it without a prefix
-        assertNotNull(designManager.get("example"), "The design doc should be retrieved without a _design prefix");
+        assertNotNull(designManager.get("example"), "The design doc should be retrieved without a" +
+                " _design prefix");
     }
 
     /**
@@ -175,7 +177,8 @@ public class DesignDocumentsTest extends TestWithDbPerClass {
         Response r = designManager.put(designDocExample);
 
         // Retrieve it without a prefix
-        assertNotNull(designManager.get("example", r.getRev()), "The design doc should be retrieved without a _design prefix");
+        assertNotNull(designManager.get("example", r.getRev()), "The design doc should be " +
+                "retrieved without a _design prefix");
     }
 
     /**
@@ -240,11 +243,13 @@ public class DesignDocumentsTest extends TestWithDbPerClass {
         Utils.assertOKResponse(designManager.put(designDocExampleNoPrefix));
 
         // Retrieve it with a prefix
-        assertNotNull(designManager.get("_design/example"), "The design doc should be retrievable with a _design prefix");
+        assertNotNull(designManager.get("_design/example"), "The design doc should be retrievable" +
+                " with a _design prefix");
     }
 
     /**
      * Test that a design document with an index can be deleted.
+     *
      * @throws Exception
      */
     @Test
@@ -325,7 +330,8 @@ public class DesignDocumentsTest extends TestWithDbPerClass {
             doc.setRevision(designManager.put(doc).getRev());
         }
 
-        assertEquals(designDocs, designManager.list(), "The retrieved list of design documents should match the expected list");
+        assertEquals(designDocs, designManager.list(), "The retrieved list of design documents " +
+                "should match the expected list");
     }
 
     /**
@@ -346,7 +352,8 @@ public class DesignDocumentsTest extends TestWithDbPerClass {
         DesignDocument queryDDoc = fileToDesignDocument("example");
         Map<String, DesignDocument.MapReduce> views = queryDDoc.getViews();
         for (DesignDocument.MapReduce mrView : views.values()) {
-            assertFalse(mrView.getMap().startsWith("\""), "The map function should not start with \"");
+            assertFalse(mrView.getMap().startsWith("\""), "The map function should not start with" +
+                    " \"");
             assertFalse(mrView.getMap().endsWith("\""), "The map function should not end with \"");
         }
     }
@@ -383,7 +390,8 @@ public class DesignDocumentsTest extends TestWithDbPerClass {
         assertNotNull(retrievedViews, "There should be views defined on the design doc");
         DesignDocument.MapReduce mrView = retrievedViews.get("testView");
         assertNotNull(mrView, "There should be a testView in the retrieved design doc");
-        assertEquals(mapFunction, mrView.getMap(), "The map function string should be the expected string");
+        assertEquals(mapFunction, mrView.getMap(), "The map function string should be the " +
+                "expected string");
     }
 
     /**
@@ -401,9 +409,12 @@ public class DesignDocumentsTest extends TestWithDbPerClass {
         Map<String, DesignDocument.MapReduce> views = queryDDoc.getViews();
         assertEquals(1, views.size(), "There should be one view");
         for (DesignDocument.MapReduce mrView : views.values()) {
-            assertTrue(mrView.getMap().startsWith("{"), "The map function should be a javascript function in a JSON form, " + "so start with {");
-            assertTrue(mrView.getMap().endsWith("}"), "The map function should be a javascript function in a JSON form, " + "so end with }");
-            assertEquals("{\"fields\":{\"Person_dob\":\"asc\"}}", mrView.getMap(), "The map function string should be an object form");
+            assertTrue(mrView.getMap().startsWith("{"), "The map function should be a javascript " +
+                    "function in a JSON form, " + "so start with {");
+            assertTrue(mrView.getMap().endsWith("}"), "The map function should be a javascript " +
+                    "function in a JSON form, " + "so end with }");
+            assertEquals("{\"fields\":{\"Person_dob\":\"asc\"}}", mrView.getMap(), "The map " +
+                    "function string should be an object form");
         }
     }
 
@@ -425,9 +436,12 @@ public class DesignDocumentsTest extends TestWithDbPerClass {
         Map<String, DesignDocument.MapReduce> views = queryDDoc.getViews();
         assertEquals(1, views.size(), "There should be one view");
         for (DesignDocument.MapReduce mrView : views.values()) {
-            assertTrue(mrView.getMap().startsWith("{"), "The map function should be a javascript function in a JSON form, " + "so start with {");
-            assertTrue(mrView.getMap().endsWith("}"), "The map function should be a javascript function in a JSON form, " + "so end with }");
-            assertEquals("{\"fields\":{\"Person_dob\":\"asc\"}}", mrView.getMap(), "The map function string should be an object form");
+            assertTrue(mrView.getMap().startsWith("{"), "The map function should be a javascript " +
+                    "function in a JSON form, " + "so start with {");
+            assertTrue(mrView.getMap().endsWith("}"), "The map function should be a javascript " +
+                    "function in a JSON form, " + "so end with }");
+            assertEquals("{\"fields\":{\"Person_dob\":\"asc\"}}", mrView.getMap(), "The map " +
+                    "function string should be an object form");
         }
     }
 }

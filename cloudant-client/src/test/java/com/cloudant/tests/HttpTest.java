@@ -41,10 +41,10 @@ import com.cloudant.http.internal.interceptors.CookieInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.extensions.CloudantClientExtension;
 import com.cloudant.tests.extensions.DatabaseExtension;
-import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 import com.cloudant.tests.extensions.MockWebServerExtension;
-import com.cloudant.tests.util.MockWebServerResources;
 import com.cloudant.tests.extensions.MultiExtension;
+import com.cloudant.tests.util.HttpFactoryParameterizedTest;
+import com.cloudant.tests.util.MockWebServerResources;
 import com.cloudant.tests.util.TestTimer;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.Gson;
@@ -99,7 +99,8 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         }
 
         @Override
-        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
+        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts
+                (ExtensionContext context) {
             return Stream.of(invocationContext(false),
                     invocationContext(true));
         }
@@ -117,9 +118,10 @@ public class HttpTest extends HttpFactoryParameterizedTest {
                         @Override
                         public boolean supportsParameter(ParameterContext parameterContext,
                                                          ExtensionContext extensionContext) {
-                            switch(parameterContext.getIndex()) {
+                            switch (parameterContext.getIndex()) {
                                 case 0:
-                                    return parameterContext.getParameter().getType().equals(boolean.class);
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
                             }
                             return false;
                         }
@@ -127,7 +129,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
                         @Override
                         public Object resolveParameter(ParameterContext parameterContext,
                                                        ExtensionContext extensionContext) {
-                            switch(parameterContext.getIndex()) {
+                            switch (parameterContext.getIndex()) {
                                 case 0:
                                     return okUsable;
                             }
@@ -142,11 +144,13 @@ public class HttpTest extends HttpFactoryParameterizedTest {
     private String data = "{\"hello\":\"world\"}";
 
     public static CloudantClientExtension clientResource = new CloudantClientExtension();
-    public static DatabaseExtension.PerClass dbResource = new DatabaseExtension.PerClass(clientResource);
+    public static DatabaseExtension.PerClass dbResource = new DatabaseExtension.PerClass
+            (clientResource);
     public static MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
 
     @RegisterExtension
-    public static MultiExtension extensions = new MultiExtension(clientResource, dbResource, mockWebServerExt);
+    public static MultiExtension extensions = new MultiExtension(clientResource, dbResource,
+            mockWebServerExt);
 
     public MockWebServer mockWebServer;
 
@@ -173,7 +177,8 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         String responseStr = response.responseAsString();
         String okPattern = ".*\"ok\"\\s*:\\s*true.*";
         assertTrue(Pattern.compile(okPattern,
-                Pattern.DOTALL).matcher(responseStr).matches(), "There should be an ok response: " + responseStr);
+                Pattern.DOTALL).matcher(responseStr).matches(), "There should be an ok response: " +
+                "" + responseStr);
 
         // stream was read to end
         assertEquals(0, bis.available());
@@ -335,13 +340,13 @@ public class HttpTest extends HttpFactoryParameterizedTest {
 
         RecordedRequest r = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
         String sessionRequestContent = r.getBody().readString(Charset.forName("UTF-8"));
-assertNotNull(sessionRequestContent, "The _session request should have non-null content");
+        assertNotNull(sessionRequestContent, "The _session request should have non-null content");
         //expecting name=...&password=...
         String[] parts = Utils.splitAndAssert(sessionRequestContent, "&", 1);
         String username = URLDecoder.decode(Utils.splitAndAssert(parts[0], "=", 1)[1], "UTF-8");
-assertEquals(mockUser, username, "The username URL decoded username should match");
+        assertEquals(mockUser, username, "The username URL decoded username should match");
         String password = URLDecoder.decode(Utils.splitAndAssert(parts[1], "=", 1)[1], "UTF-8");
-assertEquals(mockPass, password, "The username URL decoded password should match");
+        assertEquals(mockPass, password, "The username URL decoded password should match");
     }
 
     /**
@@ -378,12 +383,15 @@ assertEquals(mockPass, password, "The username URL decoded password should match
         assertEquals(2, mockWebServer
                 .getRequestCount(), "The server should have received 2 requests");
 
-assertEquals("/_session", MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(), "The request should have been for /_session");
-assertEquals("/", MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(), "The request should have been for /");
+        assertEquals("/_session", MockWebServerResources.takeRequestWithTimeout(mockWebServer)
+                .getPath(), "The request should have been for /_session");
+        assertEquals("/", MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(),
+                "The request should have been for /");
 
         String secondResponse = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
         assertTrue(
-                secondResponse.isEmpty(), "There should be no response body on the mock response" + secondResponse);
+                secondResponse.isEmpty(), "There should be no response body on the mock response"
+                        + secondResponse);
 
         // also assert that there were 3 calls
         assertEquals(3, mockWebServer
@@ -391,7 +399,7 @@ assertEquals("/", MockWebServerResources.takeRequestWithTimeout(mockWebServer).g
 
         // this is the request that should have the new cookie.
         RecordedRequest request = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
-assertEquals("/", request.getPath(), "The request should have been for path /");
+        assertEquals("/", request.getPath(), "The request should have been for path /");
         String headerValue = request.getHeader("Cookie");
         // The cookie may or may not have the session id quoted, so check both
         assertThat("The Cookie header should contain the expected session value", headerValue,
@@ -507,7 +515,8 @@ assertEquals("/", request.getPath(), "The request should have been for path /");
         // also assert that there were the correct number of calls
         assertEquals(
                 expectedRequests, mockWebServer
-                        .getRequestCount(), "The server should receive the expected number of requests");
+                        .getRequestCount(), "The server should receive the expected number of " +
+                        "requests");
     }
 
     @TestTemplate
@@ -621,7 +630,9 @@ assertEquals("/", request.getPath(), "The request should have been for path /");
                         context.replayRequest = true;
                         // Close the error stream
                         InputStream errors = context.connection.getConnection().getErrorStream();
-                        if (errors != null) IOUtils.closeQuietly(errors);
+                        if (errors != null) {
+                            IOUtils.closeQuietly(errors);
+                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -644,8 +655,9 @@ assertEquals("/", request.getPath(), "The request should have been for path /");
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream((int) rr
                 .getBodySize());
         rr.getBody().copyTo(byteArrayOutputStream);
-        assertArrayEquals( expectedContent,
-                byteArrayOutputStream.toByteArray(), "The body bytes should have matched after a retry");
+        assertArrayEquals(expectedContent,
+                byteArrayOutputStream.toByteArray(), "The body bytes should have matched after a " +
+                        "retry");
     }
 
     @TestTemplate
@@ -940,12 +952,14 @@ assertEquals("/", request.getPath(), "The request should have been for path /");
             @Override
             public void execute() throws Throwable {
 
-        // Get a client pointing to an https proxy
-        CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
-                .proxyURL(new URL("https://192.0.2.0")).build();
+                // Get a client pointing to an https proxy
+                CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder
+                        (mockWebServer)
+                        .proxyURL(new URL("https://192.0.2.0")).build();
 
-        String response = client.executeRequest(Http.GET(client.getBaseUri())).responseAsString();
-        fail("There should be an IllegalStateException for an https proxy.");
+                String response = client.executeRequest(Http.GET(client.getBaseUri()))
+                        .responseAsString();
+                fail("There should be an IllegalStateException for an https proxy.");
             }
         });
     }
@@ -971,34 +985,37 @@ assertEquals("/", request.getPath(), "The request should have been for path /");
         URI baseURI = c.getBaseUri();
         URL first = new URL(baseURI.getScheme(), baseURI.getHost(), baseURI.getPort(), "/testdb");
         String response = c.executeRequest(Http.GET(first)).responseAsString();
-assertEquals("first", response, "The correct response body should be present");
+        assertEquals("first", response, "The correct response body should be present");
 
         // There should be a request for a cookie followed by a the real request
         assertEquals(2, mockWebServer.getRequestCount(), "There should be 2 requests");
 
-assertEquals("/_session", MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(), "The first request should have been for a cookie");
+        assertEquals("/_session", MockWebServerResources.takeRequestWithTimeout(mockWebServer)
+                .getPath(), "The first request should have been for a cookie");
 
         RecordedRequest request = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
         assertEquals("/testdb",
                 request.getPath(), "The second request should have been for /testdb");
-assertNotNull(request.getHeader("Cookie"), "There should be a cookie on the request");
+        assertNotNull(request.getHeader("Cookie"), "There should be a cookie on the request");
 
         // Now make a request to another URL
         URL second = new URL(baseURI.getScheme(), baseURI.getHost(), baseURI.getPort(),
                 "/_all_dbs");
 
         response = c.executeRequest(Http.GET(second)).responseAsString();
-assertEquals("second", response, "The correct response body should be present");
+        assertEquals("second", response, "The correct response body should be present");
 
         // There should now be an additional request
         assertEquals(3, mockWebServer.getRequestCount(), "There should be 3 requests");
 
         request = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
-assertEquals("/_all_dbs", request.getPath(), "The second request should have been for /_all_dbs");
+        assertEquals("/_all_dbs", request.getPath(), "The second request should have been for " +
+                "/_all_dbs");
         String cookieHeader = request.getHeader("Cookie");
-assertNotNull(cookieHeader, "There should be a cookie on the request");
+        assertNotNull(cookieHeader, "There should be a cookie on the request");
         assertTrue(
-                request.getHeader("Cookie").contains(EXPECTED_OK_COOKIE), "The cookie header " + cookieHeader + " should contain the expected value.");
+                request.getHeader("Cookie").contains(EXPECTED_OK_COOKIE), "The cookie header " +
+                        cookieHeader + " should contain the expected value.");
     }
 
     /**
@@ -1035,18 +1052,21 @@ assertNotNull(cookieHeader, "There should be a cookie on the request");
         // If the cookie interceptor keeps trying then there will be more _session requests.
         assertEquals(2, mockWebServer.getRequestCount(), "There should be 2 requests");
 
-        assertEquals( "/_session",
-                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(), "The first request should have been for a cookie");
-        assertEquals( "/",
-                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(), "The second request should have been for /");
+        assertEquals("/_session",
+                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(), "The " +
+                        "first request should have been for a cookie");
+        assertEquals("/",
+                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(), "The " +
+                        "second request should have been for /");
 
         response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-assertEquals("TEST", response, "The expected response body should be received");
+        assertEquals("TEST", response, "The expected response body should be received");
 
         // Make another request, the cookie interceptor should not try again so there should only be
         // one more request.
         assertEquals(3, mockWebServer.getRequestCount(), "There should be 3 requests");
-assertEquals("/", MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(), "The third request should have been for /");
+        assertEquals("/", MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(),
+                "The third request should have been for /");
     }
 
     /**
@@ -1062,17 +1082,17 @@ assertEquals("/", MockWebServerResources.takeRequestWithTimeout(mockWebServer).g
             @Override
             public void execute() throws Throwable {
 
-        // Respond with a cookie init to the first request to _session
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
-        // Respond to the executeRequest GET of / with a 403 with no body
-        mockWebServer.enqueue(new MockResponse().setResponseCode(403));
-        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
-                .username("a")
-                .password("b")
-                .build();
+                // Respond with a cookie init to the first request to _session
+                mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+                // Respond to the executeRequest GET of / with a 403 with no body
+                mockWebServer.enqueue(new MockResponse().setResponseCode(403));
+                CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                        .username("a")
+                        .password("b")
+                        .build();
 
-        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-        fail("There should be an exception, but received response " + response);
+                String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+                fail("There should be an exception, but received response " + response);
             }
         });
     }
@@ -1101,7 +1121,7 @@ assertEquals("/", MockWebServerResources.takeRequestWithTimeout(mockWebServer).g
                 .build();
 
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-assertEquals("TEST", response, "The expected response body should be received");
+        assertEquals("TEST", response, "The expected response body should be received");
     }
 
     /**
@@ -1133,7 +1153,8 @@ assertEquals("TEST", response, "The expected response body should be received");
         public CloudantHttpIsolationClassLoader(URL[] urls) {
             // If we are testing okhttp then allow the parent classloader, otherwise use null
             // to isolate okhttp classes from the test load
-            super(urls, isOkUsable ? CloudantHttpIsolationClassLoader.class.getClassLoader() : null);
+            super(urls, isOkUsable ? CloudantHttpIsolationClassLoader.class.getClassLoader() :
+                    null);
         }
 
         @Override
@@ -1145,9 +1166,10 @@ assertEquals("TEST", response, "The expected response body should be received");
     // helper - assert that _n_ requests were made on the mock server and return them in an array
     public static RecordedRequest[] takeN(MockWebServer server, int n) throws Exception {
         assertEquals(n,
-                server.getRequestCount(), String.format(Locale.ENGLISH, "The server should have %d received requests", n));
+                server.getRequestCount(), String.format(Locale.ENGLISH, "The server should have " +
+                        "%d received requests", n));
         RecordedRequest[] recordedRequests = new RecordedRequest[n];
-        for (int i=0; i<n; i++) {
+        for (int i = 0; i < n; i++) {
             recordedRequests[i] = MockWebServerResources.takeRequestWithTimeout(server);
         }
         return recordedRequests;

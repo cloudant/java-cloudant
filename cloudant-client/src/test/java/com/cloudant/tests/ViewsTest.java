@@ -41,10 +41,10 @@ import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.base.TestWithDbPerTest;
 import com.cloudant.tests.extensions.CloudantClientExtension;
-import com.cloudant.tests.util.ContextCollectingInterceptor;
 import com.cloudant.tests.extensions.DatabaseExtension;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.extensions.MultiExtension;
+import com.cloudant.tests.util.ContextCollectingInterceptor;
 import com.cloudant.tests.util.Utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -76,9 +76,11 @@ public class ViewsTest extends TestWithDbPerTest {
 
     public static MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
     public static ContextCollectingInterceptor cci = new ContextCollectingInterceptor();
-    public static CloudantClientExtension interceptedClient = new CloudantClientExtension(CloudantClientHelper.getClientBuilder()
+    public static CloudantClientExtension interceptedClient = new CloudantClientExtension
+            (CloudantClientHelper.getClientBuilder()
             .interceptors(cci));
-    public static DatabaseExtension.PerClass interceptedDB = new DatabaseExtension.PerClass(interceptedClient);
+    public static DatabaseExtension.PerClass interceptedDB = new DatabaseExtension.PerClass
+            (interceptedClient);
 
     @RegisterExtension
     public static MultiExtension extensions = new MultiExtension(
@@ -125,10 +127,11 @@ public class ViewsTest extends TestWithDbPerTest {
     public void byNonExistentAndExistingKey() throws Exception {
         init();
         List<ViewResponse.Row<String, Object>> foos = db.getViewRequestBuilder("example", "foo")
-                .newRequest(Key.Type.STRING, Object.class).includeDocs(true).keys("key-1", "non-existent")
+                .newRequest(Key.Type.STRING, Object.class).includeDocs(true).keys("key-1",
+                        "non-existent")
                 .build().getResponse().getRows();
         assertThat(foos.size(), is(1));
-        for (ViewResponse.Row row: foos) {
+        for (ViewResponse.Row row : foos) {
             if (row.getError() == null) {
                 assertThat(row.getKey().toString(), is("key-1"));
             } else {
@@ -622,14 +625,18 @@ public class ViewsTest extends TestWithDbPerTest {
     @Test
     public void viewWithNoResult_emptyList() throws IOException {
         init();
-        assertEquals(0, db.getViewRequestBuilder("example", "by_tag").newRequest(Key.Type.STRING, Object.class).keys("javax").build().getResponse().getKeys().size(), "The results list should be of length 0");
+        assertEquals(0, db.getViewRequestBuilder("example", "by_tag").newRequest(Key.Type.STRING,
+                Object.class).keys("javax").build().getResponse().getKeys().size(), "The results " +
+                "list should be of length 0");
 
     }
 
     @Test
     public void viewWithNoResult_nullSingleResult() throws IOException {
         init();
-        assertNull(db.getViewRequestBuilder("example", "by_tag").newRequest(Key.Type.STRING, Object.class).keys("javax").build().getSingleValue(), "The single result should be null");
+        assertNull(db.getViewRequestBuilder("example", "by_tag").newRequest(Key.Type.STRING,
+                Object.class).keys("javax").build().getSingleValue(), "The single result should " +
+                "be null");
 
     }
 
@@ -875,7 +882,8 @@ public class ViewsTest extends TestWithDbPerTest {
         assertEquals(3, responses.size(), "There should be 3 responses for 3 requests");
         for (ViewResponse<String, Object> response : responses) {
             assertEquals(1, response.getRows().size(), "There should be 1 row in each response");
-            assertEquals("key-" + i, response.getKeys().get(0), "The returned key should be key-" + i);
+            assertEquals("key-" + i, response.getKeys().get(0), "The returned key should be key-"
+                    + i);
             i++;
         }
     }
@@ -1258,7 +1266,8 @@ public class ViewsTest extends TestWithDbPerTest {
         // We want the last context
         HttpConnectionInterceptorContext context = cci.contexts.get(cci.contexts.size() - 1);
         String query = context.connection.url.getQuery();
-        assertTrue(query.contains("startkey=%5B%22uuid%22," + "1005%5D"), "The query startkey should match.");
+        assertTrue(query.contains("startkey=%5B%22uuid%22," + "1005%5D"), "The query startkey " +
+                "should match.");
     }
 
     /**
@@ -1320,13 +1329,16 @@ public class ViewsTest extends TestWithDbPerTest {
         assertStaleParameter(viewBuilder.build(), noStaleParameter);
 
         // Test the OK stale argument supplied case
-        assertStaleParameter(viewBuilder.stale(SettableViewParameters.STALE_OK).build(), staleParameterOK);
+        assertStaleParameter(viewBuilder.stale(SettableViewParameters.STALE_OK).build(),
+                staleParameterOK);
 
         // Test the update_after stale argument supplied case
-        assertStaleParameter(viewBuilder.stale(SettableViewParameters.STALE_UPDATE_AFTER).build(), staleParameterUpdate);
+        assertStaleParameter(viewBuilder.stale(SettableViewParameters.STALE_UPDATE_AFTER).build()
+                , staleParameterUpdate);
 
         // Test the NO stale argument supplied case
-        assertStaleParameter(viewBuilder.stale(SettableViewParameters.STALE_NO).build(), noStaleParameter);
+        assertStaleParameter(viewBuilder.stale(SettableViewParameters.STALE_NO).build(),
+                noStaleParameter);
     }
 
     /**
@@ -1346,7 +1358,8 @@ public class ViewsTest extends TestWithDbPerTest {
         viewRequest.getSingleValue();
         RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
         assertNotNull(request, "There should have been a view request");
-        assertTrue(p.matcher(request.getPath()).matches(), "There request URL should match the pattern " + p.toString());
+        assertTrue(p.matcher(request.getPath()).matches(), "There request URL should match the " +
+                "pattern " + p.toString());
     }
 
     /**

@@ -129,11 +129,12 @@ public class DatabaseExtension {
      * @return the URI for the DB with creds
      */
     public String getDbURIWithUserInfo() throws Exception {
-        String info =  clientResource.getBaseURIWithUserInfo() + "/" + getDatabaseName();
+        String info = clientResource.getBaseURIWithUserInfo() + "/" + getDatabaseName();
         return info;
     }
 
-    public static class PerClass extends DatabaseExtension implements BeforeAllCallback, AfterAllCallback {
+    public static class PerClass extends DatabaseExtension implements BeforeAllCallback,
+            AfterAllCallback {
 
         public PerClass(CloudantClientExtension clientResource) {
             super(clientResource);
@@ -150,7 +151,8 @@ public class DatabaseExtension {
         }
     }
 
-    public static class PerTest extends DatabaseExtension implements BeforeEachCallback, AfterEachCallback {
+    public static class PerTest extends DatabaseExtension implements BeforeEachCallback,
+            AfterEachCallback {
 
         public PerTest(CloudantClientExtension clientResource) {
             super(clientResource);

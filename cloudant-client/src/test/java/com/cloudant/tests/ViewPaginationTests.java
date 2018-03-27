@@ -51,13 +51,15 @@ public class ViewPaginationTests extends TestWithDbPerTest {
         }
 
         @Override
-        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
+        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts
+                (ExtensionContext context) {
             return StreamSupport.stream(data().spliterator(), false);
         }
 
-        public static TestTemplateInvocationContext invocationContext(final CheckPagination.Type type,
-                                                                final boolean descending,
-                                                                final boolean stateless) {
+        public static TestTemplateInvocationContext invocationContext(final CheckPagination.Type
+                                                                              type,
+                                                                      final boolean descending,
+                                                                      final boolean stateless) {
             return new TestTemplateInvocationContext() {
                 @Override
                 public String getDisplayName(int invocationIndex) {
@@ -71,13 +73,16 @@ public class ViewPaginationTests extends TestWithDbPerTest {
                         @Override
                         public boolean supportsParameter(ParameterContext parameterContext,
                                                          ExtensionContext extensionContext) {
-                            switch(parameterContext.getIndex()) {
+                            switch (parameterContext.getIndex()) {
                                 case 0:
-                                    return parameterContext.getParameter().getType().equals(CheckPagination.Type.class);
+                                    return parameterContext.getParameter().getType().equals
+                                            (CheckPagination.Type.class);
                                 case 1:
-                                    return parameterContext.getParameter().getType().equals(boolean.class);
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
                                 case 2:
-                                    return parameterContext.getParameter().getType().equals(boolean.class);
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
                             }
                             return false;
                         }
@@ -85,7 +90,7 @@ public class ViewPaginationTests extends TestWithDbPerTest {
                         @Override
                         public Object resolveParameter(ParameterContext parameterContext,
                                                        ExtensionContext extensionContext) {
-                            switch(parameterContext.getIndex()) {
+                            switch (parameterContext.getIndex()) {
                                 case 0:
                                     return type;
                                 case 1:
@@ -103,7 +108,8 @@ public class ViewPaginationTests extends TestWithDbPerTest {
 
     public static Iterable<TestTemplateInvocationContext> data() {
 
-        List<TestTemplateInvocationContext> contexts = new ArrayList<TestTemplateInvocationContext>();
+        List<TestTemplateInvocationContext> contexts = new
+                ArrayList<TestTemplateInvocationContext>();
         boolean[] tf = new boolean[]{true, false};
         for (CheckPagination.Type type : CheckPagination.Type.values()) {
             for (boolean descending : tf) {

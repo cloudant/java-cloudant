@@ -184,7 +184,7 @@ public class DatabaseTest extends TestWithDbPerClass {
         GsonBuilder builder = new GsonBuilder();
         builder.setDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
-        CloudantClient account  = CloudantClientHelper.getClientBuilder()
+        CloudantClient account = CloudantClientHelper.getClientBuilder()
                 .gsonBuilder(builder)
                 .build();
 

@@ -48,8 +48,10 @@ public class DatabaseURIHelperTest {
         }
 
         @Override
-        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
-            return Stream.of(invocationContext(""), invocationContext("/api/couch/account_2128459498a75498"));
+        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts
+                (ExtensionContext context) {
+            return Stream.of(invocationContext(""), invocationContext
+                    ("/api/couch/account_2128459498a75498"));
         }
 
         public static TestTemplateInvocationContext invocationContext(final String path) {
@@ -65,9 +67,10 @@ public class DatabaseURIHelperTest {
                         @Override
                         public boolean supportsParameter(ParameterContext parameterContext,
                                                          ExtensionContext extensionContext) {
-                            switch(parameterContext.getIndex()) {
+                            switch (parameterContext.getIndex()) {
                                 case 0:
-                                    return parameterContext.getParameter().getType().equals(String.class);
+                                    return parameterContext.getParameter().getType().equals
+                                            (String.class);
                             }
                             return false;
                         }
@@ -75,7 +78,7 @@ public class DatabaseURIHelperTest {
                         @Override
                         public Object resolveParameter(ParameterContext parameterContext,
                                                        ExtensionContext extensionContext) {
-                            switch(parameterContext.getIndex()) {
+                            switch (parameterContext.getIndex()) {
                                 case 0:
                                     return path;
                             }
@@ -109,7 +112,7 @@ public class DatabaseURIHelperTest {
         DatabaseURIHelper helper = helper(path + "/db_name");
         URI localDoc = helper.documentUri("_local/mylocaldoc");
 
-        Assertions.assertEquals(expected,localDoc.toString());
+        Assertions.assertEquals(expected, localDoc.toString());
     }
 
     @TestTemplate
@@ -209,7 +212,8 @@ public class DatabaseURIHelperTest {
 
     @TestTemplate
     public void buildDocumentUri_options_encodeSeparators(String path) throws Exception {
-        URI expected = new URI(uriBase + "/test/path1%2Fpath2?d%26etail%3D=%26%3D%3Dds%26&revs=%5B1-2%5D");
+        URI expected = new URI(uriBase +
+                "/test/path1%2Fpath2?d%26etail%3D=%26%3D%3Dds%26&revs=%5B1-2%5D");
 
         TreeMap<String, Object> options = new TreeMap<String, Object>();
         options.put("revs", "[1-2]");
@@ -234,7 +238,8 @@ public class DatabaseURIHelperTest {
     // correctly escaped in the document part of the url
     @TestTemplate
     public void buildVeryEscapedUri(String path) throws Exception {
-        URI expected = new URI(uriBase + "/SDF@%23%25$%23)KLDfdffdg%C3%A9/%2FSF@%23%25$%23)DFGKLDfdffdg%C3%A9%2Fpath2?detail=/SDF@%23%25$%23)%C3%A9&revs=%5B1-2%5D");
+        URI expected = new URI(uriBase + "/SDF@%23%25$%23)KLDfdffdg%C3%A9/%2FSF@%23%25$%23)" +
+                "DFGKLDfdffdg%C3%A9%2Fpath2?detail=/SDF@%23%25$%23)%C3%A9&revs=%5B1-2%5D");
 
         Map<String, Object> options = new TreeMap<String, Object>();
         options.put("revs", "[1-2]");
@@ -266,7 +271,8 @@ public class DatabaseURIHelperTest {
 
         String query = "boolean=true";
 
-        URI expectedQuery = new URI(uriBase + "?detail=/SDF@%23%25$%23)&revs=%5B1-2%5D&boolean=true");
+        URI expectedQuery = new URI(uriBase + "?detail=/SDF@%23%25$%23)" +
+                "&revs=%5B1-2%5D&boolean=true");
         URI actualQuery = helper(path).query(mapOptions).query(query).build();
         Assertions.assertEquals(expectedQuery.toASCIIString(), actualQuery.toASCIIString());
     }

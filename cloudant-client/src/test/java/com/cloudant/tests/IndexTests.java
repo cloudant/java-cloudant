@@ -68,7 +68,7 @@ public class IndexTests extends TestWithDbPerClass {
         //Create indexes
         db.createIndex(JsonIndex.builder().name("Person_name")
                 .designDocument("Person_name")
-                .asc("Person_name","Movie_year")
+                .asc("Person_name", "Movie_year")
                 .definition());
         db.createIndex(JsonIndex.builder().name("Movie_year")
                 .designDocument("Movie_year")
@@ -106,7 +106,8 @@ public class IndexTests extends TestWithDbPerClass {
      * @see <a href="https://github.com/cloudant/java-cloudant/issues/137">Issue 137</a>
      */
     @Test
-    public void testDeprecatedApiNotNullIndexMovieNameAndYearWithCompleteJsonObjectStringSelector() {
+    public void testDeprecatedApiNotNullIndexMovieNameAndYearWithCompleteJsonObjectStringSelector
+    () {
         List<Movie> movies = db.findByIndex("{\"selector\": { \"Movie_year\": {\"$gt\": 1960}, " +
                         "\"Person_name\": \"Alec Guinness\" } }",
                 Movie.class,
@@ -308,8 +309,10 @@ public class IndexTests extends TestWithDbPerClass {
         assertTrue(useIndex.isJsonArray(), "The use_index property should be a JsonArray");
         JsonArray useIndexArray = useIndex.getAsJsonArray();
         assertEquals(2, useIndexArray.size(), "The use_index array should have two elements");
-        assertEquals("Movie_year", useIndexArray.get(0).getAsString(), "The use_index design document should be Movie_year");
-        assertEquals("Person_name", useIndexArray.get(1).getAsString(), "The use_index index name should be Person_name");
+        assertEquals("Movie_year", useIndexArray.get(0).getAsString(), "The use_index design " +
+                "document should be Movie_year");
+        assertEquals("Person_name", useIndexArray.get(1).getAsString(), "The use_index index name" +
+                " should be Person_name");
     }
 
     /**

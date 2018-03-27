@@ -251,7 +251,8 @@ public class SearchTests extends TestWithDbPerClass {
         String uriBaseString = account.getBaseUri().toASCIIString();
 
         String expectedUriString = uriBaseString
-                + "/animaldb/_design/views101/_search/animals?include_docs=true&q=" + expectedResult;
+                + "/animaldb/_design/views101/_search/animals?include_docs=true&q=" +
+                expectedResult;
 
         String uriString = uri.toASCIIString();
         assertEquals(expectedUriString, uriString);

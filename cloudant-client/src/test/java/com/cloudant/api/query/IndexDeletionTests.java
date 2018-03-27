@@ -16,8 +16,8 @@ package com.cloudant.api.query;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.cloudant.tests.util.MockWebServerResources;
 import com.cloudant.tests.base.TestWithMockedServer;
+import com.cloudant.tests.util.MockWebServerResources;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +53,7 @@ public class IndexDeletionTests extends TestWithMockedServer {
 
     private void assertDelete(String name, String ddoc, String type) throws Exception {
         RecordedRequest request = server.takeRequest(1, TimeUnit.SECONDS);
-        assertEquals("/" + dbResource.getDatabaseName() + "/_index/_design/" + ddoc + "/" + type + "/" + name, request.getPath(), "The request body should match the expected");
+        assertEquals("/" + dbResource.getDatabaseName() + "/_index/_design/" + ddoc + "/" + type
+                + "/" + name, request.getPath(), "The request body should match the expected");
     }
 }

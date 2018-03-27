@@ -89,7 +89,8 @@ public class CloudFoundryServiceTest {
         vcap.createNewService("test_bluemix_service_1",
                 CloudantClientHelper.SERVER_URI_WITH_USER_INFO,
                 CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
-        ClientBuilder.bluemix(vcap.toJson(), serviceName, "test_bluemix_service_1").build().serverVersion();
+        ClientBuilder.bluemix(vcap.toJson(), serviceName, "test_bluemix_service_1").build()
+                .serverVersion();
     }
 
     @Test
@@ -167,8 +168,8 @@ public class CloudFoundryServiceTest {
     @Test
     public void vcapMultiService() {
         VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-        vcap.createNewService("test_bluemix_service_1","http://foo1.bar", "admin1", "pass1");
-        vcap.createNewService("test_bluemix_service_2","http://foo2.bar", "admin2", "pass2");
+        vcap.createNewService("test_bluemix_service_1", "http://foo1.bar", "admin1", "pass1");
+        vcap.createNewService("test_bluemix_service_2", "http://foo2.bar", "admin2", "pass2");
         vcap.createNewService("test_bluemix_service_3",
                 CloudantClientHelper.SERVER_URI_WITH_USER_INFO,
                 CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);

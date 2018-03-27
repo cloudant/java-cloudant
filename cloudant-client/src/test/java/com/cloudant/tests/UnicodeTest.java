@@ -55,7 +55,7 @@ public class UnicodeTest extends TestWithDbPerTest {
     private static final String TESTSTRING = "Gr\u00fc\u00dfe \u65e5\u672c\u8a9e \uD834\uDD1E.";
     private static final String TESTSTRING_ESCAPED = "Gr\\u00fc\\u00dfe \\u65e5\\u672c\\u8a9e " +
             "\\uD834\\uDD1E.";
-    private static final String EXPECTED_JSON = "{\"_id\":\""+TESTSTRING_KEY+"\"," +
+    private static final String EXPECTED_JSON = "{\"_id\":\"" + TESTSTRING_KEY + "\"," +
             "\"_rev\":\"1-39933759c7250133b6039d94ea09134f\",\"foo\":\"Gr\u00fc\u00dfe " +
             "\u65e5\u672c\u8a9e \uD834\uDD1E.\"}\n";
 

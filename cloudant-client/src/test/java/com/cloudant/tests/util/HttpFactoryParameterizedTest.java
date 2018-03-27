@@ -53,6 +53,7 @@ public abstract class HttpFactoryParameterizedTest extends TestWithDbPerClass {
         }
         // Verify that we are getting the behaviour we expect.
         assertEquals(
-                isOkUsable, OkHelper.isOkUsable(), "The OK usable value was not what was expected for the test parameter.");
+                isOkUsable, OkHelper.isOkUsable(), "The OK usable value was not what was expected" +
+                        " for the test parameter.");
     }
 }

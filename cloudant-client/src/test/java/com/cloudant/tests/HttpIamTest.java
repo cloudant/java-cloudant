@@ -32,8 +32,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.http.Http;
-import com.cloudant.tests.util.IamSystemPropertyMock;
 import com.cloudant.tests.extensions.MockWebServerExtension;
+import com.cloudant.tests.util.IamSystemPropertyMock;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -92,6 +92,7 @@ public class HttpIamTest {
      * - GET a resource on the cloudant server
      * - Cookie jar empty, so get IAM token followed by session cookie
      * - GET now proceeds as normal, expected cookie value is sent in header
+     *
      * @throws Exception
      */
     @Test
@@ -135,15 +136,17 @@ public class HttpIamTest {
         // assert that there was 1 call
         RecordedRequest[] recordedIamRequests = takeN(mockIamServer, 1);
         assertEquals(iamTokenEndpoint,
-                recordedIamRequests[0].getPath(), "The request should have been for /identity/token");
+                recordedIamRequests[0].getPath(), "The request should have been for " +
+                        "/identity/token");
         assertThat("The request body should contain the IAM API key",
                 recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
-                containsString("apikey="+iamApiKey));
+                containsString("apikey=" + iamApiKey));
     }
 
     /**
      * Assert that the IAM API key is preferred to username/password if both are supplied.
      * As above test but with different builder arguments.
+     *
      * @throws Exception
      */
     @Test
@@ -189,10 +192,11 @@ public class HttpIamTest {
         // assert that there was 1 call
         RecordedRequest[] recordedIamRequests = takeN(mockIamServer, 1);
         assertEquals(iamTokenEndpoint,
-                recordedIamRequests[0].getPath(), "The request should have been for /identity/token");
+                recordedIamRequests[0].getPath(), "The request should have been for " +
+                        "/identity/token");
         assertThat("The request body should contain the IAM API key",
                 recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
-                containsString("apikey="+iamApiKey));
+                containsString("apikey=" + iamApiKey));
     }
 
     /**
@@ -202,7 +206,8 @@ public class HttpIamTest {
      * - GET now proceeds as normal, expected cookie value is sent in header
      * - second GET on cloudant server, re-using session cookie
      * - third GET on cloudant server, cookie expired, get IAM token and session cookie and replay
-     *   request
+     * request
+     *
      * @throws Exception
      */
     @Test
@@ -215,7 +220,8 @@ public class HttpIamTest {
         mockWebServer.enqueue(new MockResponse().setResponseCode(200)
                 .setBody(hello));
         // cookie expired
-        mockWebServer.enqueue(new MockResponse().setResponseCode(401).setBody("{\"error\":\"credentials_expired\"}"));
+        mockWebServer.enqueue(new MockResponse().setResponseCode(401).setBody
+                ("{\"error\":\"credentials_expired\"}"));
         // response with new cookie
         mockWebServer.enqueue(OK_IAM_COOKIE_2);
         mockWebServer.enqueue(new MockResponse().setResponseCode(200)
@@ -282,13 +288,15 @@ public class HttpIamTest {
         RecordedRequest[] recordedIamRequests = takeN(mockIamServer, 2);
         // first time, automatically fetch because cookie jar is empty
         assertEquals(iamTokenEndpoint,
-                recordedIamRequests[0].getPath(), "The request should have been for /identity/token");
+                recordedIamRequests[0].getPath(), "The request should have been for " +
+                        "/identity/token");
         assertThat("The request body should contain the IAM API key",
                 recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
-                containsString("apikey="+iamApiKey));
+                containsString("apikey=" + iamApiKey));
         // second time, refresh because the cloudant session cookie has expired
         assertEquals(iamTokenEndpoint,
-                recordedIamRequests[1].getPath(), "The request should have been for /identity/token");
+                recordedIamRequests[1].getPath(), "The request should have been for " +
+                        "/identity/token");
     }
 
     /**
@@ -298,7 +306,8 @@ public class HttpIamTest {
      * - GET now proceeds as normal, expected cookie value is sent in header
      * - second GET on cloudant server, re-using session cookie
      * - third GET on cloudant server, cookie expired, subsequent IAM token fails, no more requests
-     *   are made
+     * are made
+     *
      * @throws Exception
      */
     @Test
@@ -368,13 +377,15 @@ public class HttpIamTest {
         RecordedRequest[] recordedIamRequests = takeN(mockIamServer, 2);
         // first time, automatically fetch because cookie jar is empty
         assertEquals(iamTokenEndpoint,
-                recordedIamRequests[0].getPath(), "The request should have been for /identity/token");
+                recordedIamRequests[0].getPath(), "The request should have been for " +
+                        "/identity/token");
         assertThat("The request body should contain the IAM API key",
                 recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
-                containsString("apikey="+iamApiKey));
+                containsString("apikey=" + iamApiKey));
         // second time, refresh (but gets 500) because the cloudant session cookie has expired
         assertEquals(iamTokenEndpoint,
-                recordedIamRequests[1].getPath(), "The request should have been for /identity/token");
+                recordedIamRequests[1].getPath(), "The request should have been for " +
+                        "/identity/token");
     }
 
     /**
@@ -384,7 +395,8 @@ public class HttpIamTest {
      * - GET now proceeds as normal, expected cookie value is sent in header
      * - second GET on cloudant server, re-using session cookie
      * - third GET on cloudant server, cookie expired, get IAM token, subsequent session cookie
-     *   request fails, no more requests are made
+     * request fails, no more requests are made
+     *
      * @throws Exception
      */
     @Test
@@ -461,13 +473,15 @@ public class HttpIamTest {
         RecordedRequest[] recordedIamRequests = takeN(mockIamServer, 2);
         // first time, automatically fetch because cookie jar is empty
         assertEquals(iamTokenEndpoint,
-                recordedIamRequests[0].getPath(), "The request should have been for /identity/token");
+                recordedIamRequests[0].getPath(), "The request should have been for " +
+                        "/identity/token");
         assertThat("The request body should contain the IAM API key",
                 recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
-                containsString("apikey="+iamApiKey));
+                containsString("apikey=" + iamApiKey));
         // second time, refresh because the cloudant session cookie has expired
         assertEquals(iamTokenEndpoint,
-                recordedIamRequests[1].getPath(), "The request should have been for /identity/token");
+                recordedIamRequests[1].getPath(), "The request should have been for " +
+                        "/identity/token");
     }
 
 

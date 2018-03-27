@@ -33,8 +33,10 @@ import okhttp3.mockwebserver.MockWebServer;
 public abstract class TestWithMockedServer {
 
     public static MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
-    public static CloudantClientMockServerExtension clientResource = new CloudantClientMockServerExtension(mockWebServerExt);
-    public static DatabaseExtension.PerTest dbResource = new DatabaseExtension.PerTest(clientResource);
+    public static CloudantClientMockServerExtension clientResource = new
+            CloudantClientMockServerExtension(mockWebServerExt);
+    public static DatabaseExtension.PerTest dbResource = new DatabaseExtension.PerTest
+            (clientResource);
     @RegisterExtension
     public static MultiExtension extensions = new MultiExtension(
             mockWebServerExt,

@@ -33,11 +33,14 @@ public class TestWithReplication {
     protected static CloudantClientExtension clientResource = new CloudantClientExtension();
     protected static CloudantClient account;
 
-    protected static DatabaseExtension.PerClass db1Resource = new DatabaseExtension.PerClass(clientResource);
-    protected static DatabaseExtension.PerClass db2Resource = new DatabaseExtension.PerClass(clientResource);
+    protected static DatabaseExtension.PerClass db1Resource = new DatabaseExtension.PerClass
+            (clientResource);
+    protected static DatabaseExtension.PerClass db2Resource = new DatabaseExtension.PerClass
+            (clientResource);
 
     @RegisterExtension
-    public static MultiExtension extensions = new MultiExtension(clientResource, db1Resource, db2Resource);
+    public static MultiExtension extensions = new MultiExtension(clientResource, db1Resource,
+            db2Resource);
 
     protected static Database db1;
     protected static Database db2;
@@ -64,6 +67,7 @@ public class TestWithReplication {
                 ("conflicts", "conflict").newRequest(Key.Type.COMPLEX, String.class).build()
                 .getResponse();
         int conflictCount = conflicts.getRows().size();
-        assertTrue(conflictCount > 0, "There should be at least 1 conflict, there were " + conflictCount);
+        assertTrue(conflictCount > 0, "There should be at least 1 conflict, there were " +
+                conflictCount);
     }
 }

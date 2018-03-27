@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 /**
  * JUnit tag to label tests which require the Cloudant service
  */
-@Target({ ElementType.TYPE, ElementType.METHOD })
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Tag("RequiresCloudantService")
 @Tag("RequiresCloudant")

@@ -241,7 +241,8 @@ public class AttachmentsTest extends TestWithDbPerClass {
             public void execute() throws Throwable {
                 byte[] bytesToDB = "binary data".getBytes();
                 ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesToDB);
-                Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", "", "1-abcdef");
+                Response response = db.saveAttachment(bytesIn, "foo.txt", "text/plain", "",
+                        "1-abcdef");
             }
         });
     }

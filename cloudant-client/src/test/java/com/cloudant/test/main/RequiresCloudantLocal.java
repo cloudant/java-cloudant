@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 /**
  * JUnit tag to label tests which require Cloudant local
  */
-@Target({ ElementType.TYPE, ElementType.METHOD })
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Tag("RequiresCloudantLocal")
 @Tag("RequiresCloudant")

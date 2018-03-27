@@ -186,14 +186,16 @@ public class Utils {
      */
     public static String[] splitAndAssert(String toSplit, String splitOn, int expectedNumber) {
         String[] parts = toSplit.split(splitOn);
-        assertEquals( expectedNumber + 1, parts.length, "There should be " + expectedNumber + " instances of " + splitOn + " in the " +
+        assertEquals(expectedNumber + 1, parts.length, "There should be " + expectedNumber + " " +
+                "instances of " + splitOn + " in the " +
                 "content");
         return parts;
     }
 
     /**
      * Test utility to put design documents under the testing resource folder in to the database.
-     * @param db database to put the design docs
+     *
+     * @param db        database to put the design docs
      * @param directory location of design docs
      */
     public static void putDesignDocs(Database db, File directory) throws FileNotFoundException {

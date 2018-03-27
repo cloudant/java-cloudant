@@ -22,8 +22,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.test.main.RequiresCloudantService;
-import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 import com.cloudant.tests.extensions.MockWebServerExtension;
+import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 import com.cloudant.tests.util.MockWebServerResources;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -58,7 +58,8 @@ public class SslAuthenticationTest extends HttpFactoryParameterizedTest {
         }
 
         @Override
-        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
+        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts
+                (ExtensionContext context) {
             return Stream.of(invocationContext(false),
                     invocationContext(true));
         }
@@ -76,9 +77,10 @@ public class SslAuthenticationTest extends HttpFactoryParameterizedTest {
                         @Override
                         public boolean supportsParameter(ParameterContext parameterContext,
                                                          ExtensionContext extensionContext) {
-                            switch(parameterContext.getIndex()) {
+                            switch (parameterContext.getIndex()) {
                                 case 0:
-                                    return parameterContext.getParameter().getType().equals(boolean.class);
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
                             }
                             return false;
                         }
@@ -86,7 +88,7 @@ public class SslAuthenticationTest extends HttpFactoryParameterizedTest {
                         @Override
                         public Object resolveParameter(ParameterContext parameterContext,
                                                        ExtensionContext extensionContext) {
-                            switch(parameterContext.getIndex()) {
+                            switch (parameterContext.getIndex()) {
                                 case 0:
                                     return okUsable;
                             }
@@ -119,7 +121,8 @@ public class SslAuthenticationTest extends HttpFactoryParameterizedTest {
     private static void validateClientAuthenticationException(CouchDbException e) {
         assertNotNull(e, "Expected CouchDbException but got null");
         Throwable t = e.getCause();
-        assertTrue(t instanceof SSLHandshakeException, "Expected SSLHandshakeException caused by client certificate check but got " + t.getClass());
+        assertTrue(t instanceof SSLHandshakeException, "Expected SSLHandshakeException caused by " +
+                "client certificate check but got " + t.getClass());
     }
 
     /**
@@ -248,7 +251,8 @@ public class SslAuthenticationTest extends HttpFactoryParameterizedTest {
         server.enqueue(new MockResponse()); //OK 200
 
         // Use a username and password to enable the cookie auth interceptor
-        CloudantClient dbClient = CloudantClientHelper.newMockWebServerClientBuilder(server).username("user")
+        CloudantClient dbClient = CloudantClientHelper.newMockWebServerClientBuilder(server)
+                .username("user")
                 .password("password")
                 .disableSSLAuthentication()
                 .build();
@@ -268,14 +272,15 @@ public class SslAuthenticationTest extends HttpFactoryParameterizedTest {
         server.enqueue(new MockResponse()); //OK 200
 
         // Use a username and password to enable the cookie auth interceptor
-        CloudantClient dbClient = CloudantClientHelper.newMockWebServerClientBuilder(server).username("user")
+        CloudantClient dbClient = CloudantClientHelper.newMockWebServerClientBuilder(server)
+                .username("user")
                 .password("password")
                 .build();
 
         try {
             dbClient.getAllDbs();
             fail("The SSL authentication failure should result in a CouchDbException");
-        } catch(CouchDbException e) {
+        } catch (CouchDbException e) {
             validateClientAuthenticationException(e);
         }
     }

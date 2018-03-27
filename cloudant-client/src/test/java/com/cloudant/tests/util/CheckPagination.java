@@ -116,9 +116,9 @@ public class CheckPagination {
      * @return the last page in the view.
      */
     private void checkPagesForward(int currentPage,
-                                           int numberOfPages,
-                                           int docCount,
-                                           int docsPerPage) throws IOException {
+                                   int numberOfPages,
+                                   int docCount,
+                                   int docsPerPage) throws IOException {
         for (int i = 0; i < numberOfPages; ++i) {
             nextPage();
             checkPage(page, docCount, docsPerPage, currentPage + i + 1, descending);
@@ -135,9 +135,9 @@ public class CheckPagination {
      * @return the first page in the view
      */
     private void checkPagesBackward(int currentPage,
-                                            int numberOfPages,
-                                            int docCount,
-                                            int docsPerPage) throws IOException {
+                                    int numberOfPages,
+                                    int docCount,
+                                    int docsPerPage) throws IOException {
         for (int i = 0; i < numberOfPages; ++i) {
             previousPage();
             checkPage(page, docCount, docsPerPage, currentPage - i - 1, descending);

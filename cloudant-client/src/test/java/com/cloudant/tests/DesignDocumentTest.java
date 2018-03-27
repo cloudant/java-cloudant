@@ -55,7 +55,8 @@ public class DesignDocumentTest {
         }
 
         @Override
-        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
+        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts
+                (ExtensionContext context) {
             return StreamSupport.stream(data().spliterator(), false);
         }
 
@@ -72,9 +73,10 @@ public class DesignDocumentTest {
                         @Override
                         public boolean supportsParameter(ParameterContext parameterContext,
                                                          ExtensionContext extensionContext) {
-                            switch(parameterContext.getIndex()) {
+                            switch (parameterContext.getIndex()) {
                                 case 0:
-                                    return parameterContext.getParameter().getType().equals(Field.class);
+                                    return parameterContext.getParameter().getType().equals(Field
+                                            .class);
                             }
                             return false;
                         }
@@ -82,7 +84,7 @@ public class DesignDocumentTest {
                         @Override
                         public Object resolveParameter(ParameterContext parameterContext,
                                                        ExtensionContext extensionContext) {
-                            switch(parameterContext.getIndex()) {
+                            switch (parameterContext.getIndex()) {
                                 case 0:
                                     return field;
                             }
@@ -95,7 +97,8 @@ public class DesignDocumentTest {
     }
 
     public static Iterable<TestTemplateInvocationContext> data() {
-        List<TestTemplateInvocationContext> contexts = new ArrayList<TestTemplateInvocationContext>();
+        List<TestTemplateInvocationContext> contexts = new
+                ArrayList<TestTemplateInvocationContext>();
         for (Field f : EnumSet.allOf(Field.class)) {
             contexts.add(ParameterProvider.invocationContext(f));
         }
@@ -218,42 +221,42 @@ public class DesignDocumentTest {
         return designDocument;
     }
 
-        @Test
-        public void testDesignDocEqualsForAllFields() {
-            Assert.assertEquals(getDesignDocument(), getDesignDocument());
-        }
+    @Test
+    public void testDesignDocEqualsForAllFields() {
+        Assert.assertEquals(getDesignDocument(), getDesignDocument());
+    }
 
 
-        /**
-         * Tests the design docs are equal for each field in turn.
-         */
-        @TestTemplate
-        public void testDesignDocEqualsForEachField(Field field) {
-            Assert.assertEquals(getDesignDocumentWithFields(EnumSet.of(field)),
-                    getDesignDocumentWithFields(EnumSet.of(field)));
-        }
+    /**
+     * Tests the design docs are equal for each field in turn.
+     */
+    @TestTemplate
+    public void testDesignDocEqualsForEachField(Field field) {
+        Assert.assertEquals(getDesignDocumentWithFields(EnumSet.of(field)),
+                getDesignDocumentWithFields(EnumSet.of(field)));
+    }
 
-        /**
-         * Tests the design docs are not equal when each field is empty in one of the compared docs.
-         *
-         * @throws Exception
-         */
-        @TestTemplate
-        public void testDesignDocNotEqualEmpty(Field field) throws Exception {
-            Assert.assertNotEquals(getDesignDocument(), getDesignDocumentWithFields(EnumSet
-                    .complementOf(EnumSet.of(field))));
-        }
+    /**
+     * Tests the design docs are not equal when each field is empty in one of the compared docs.
+     *
+     * @throws Exception
+     */
+    @TestTemplate
+    public void testDesignDocNotEqualEmpty(Field field) throws Exception {
+        Assert.assertNotEquals(getDesignDocument(), getDesignDocumentWithFields(EnumSet
+                .complementOf(EnumSet.of(field))));
+    }
 
-        /**
-         * Tests the design docs are not equal when each field is different in one of the
-         * compared docs.
-         *
-         * @throws Exception
-         */
-        @TestTemplate
-        public void testDesignDocNotEqualDifferent(Field field) throws Exception {
-            Assert.assertNotEquals(getDesignDocument(), getDesignDocumentWithDifferent(field));
-        }
+    /**
+     * Tests the design docs are not equal when each field is different in one of the
+     * compared docs.
+     *
+     * @throws Exception
+     */
+    @TestTemplate
+    public void testDesignDocNotEqualDifferent(Field field) throws Exception {
+        Assert.assertNotEquals(getDesignDocument(), getDesignDocumentWithDifferent(field));
+    }
 
 
     private static void indexes(DesignDocument designDocument) {

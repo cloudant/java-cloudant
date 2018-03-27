@@ -31,7 +31,6 @@ import org.junit.jupiter.api.Test;
 import okhttp3.mockwebserver.MockResponse;
 
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.util.Collections;
 import java.util.List;
@@ -61,7 +60,7 @@ public class IndexListTests extends TestWithMockedServer {
             return IOUtils.toString(new BufferedInputStream(new FileInputStream("" +
                     "./src/test/resources/query-tests/" + resourceFileName + ".js")), "UTF-8");
         } catch (Exception e) {
-            fail("Error reading test resource: " +  e.getMessage());
+            fail("Error reading test resource: " + e.getMessage());
         }
         return null;
     }
@@ -94,7 +93,8 @@ public class IndexListTests extends TestWithMockedServer {
         assertEquals(name, index.getName(), "The index should have the correct name");
         assertEquals(ddoc, index.getDesignDocumentID(), "The index should have the correct ddoc");
         assertEquals(type, index.getType(), "The index should have the correct type");
-        assertEquals(selector, index.getPartialFilterSelector(), "The index should have the correct selector");
+        assertEquals(selector, index.getPartialFilterSelector(), "The index should have the " +
+                "correct selector");
     }
 
     private void assertJsonIndex(JsonIndex index, String name, String selector, Map<String, Sort
@@ -233,7 +233,8 @@ public class IndexListTests extends TestWithMockedServer {
                     Index<Field> a = indexes.get(i);
                     assertIndex(a, "_all_docs", null, "special", null);
                     assertEquals(1, a.getFields().size(), "There should be 1 field");
-                    assertEquals("_id", a.getFields().get(0).getName(), "There field should be called _id");
+                    assertEquals("_id", a.getFields().get(0).getName(), "There field should be " +
+                            "called _id");
                     return;
                 case 1:
                     name = "simplejson";

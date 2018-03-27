@@ -24,7 +24,8 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 import okhttp3.mockwebserver.MockWebServer;
 
-public class CloudantClientMockServerExtension extends AbstractClientExtension implements BeforeEachCallback, AfterEachCallback {
+public class CloudantClientMockServerExtension extends AbstractClientExtension implements
+        BeforeEachCallback, AfterEachCallback {
 
     private final MockWebServerExtension mockWebServerExt;
     private MockWebServer mockWebServer;
@@ -37,7 +38,8 @@ public class CloudantClientMockServerExtension extends AbstractClientExtension i
     @Override
     public void beforeEach(ExtensionContext ctx) {
         this.mockWebServer = this.mockWebServerExt.get();
-        this.client = CloudantClientHelper.newMockWebServerClientBuilder(this.mockWebServer).build();
+        this.client = CloudantClientHelper.newMockWebServerClientBuilder(this.mockWebServer)
+                .build();
     }
 
     @Override

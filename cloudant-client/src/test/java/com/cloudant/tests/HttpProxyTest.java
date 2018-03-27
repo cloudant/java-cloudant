@@ -20,8 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.http.Http;
-import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 import com.cloudant.tests.extensions.MockWebServerExtension;
+import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 import com.cloudant.tests.util.MockWebServerResources;
 
 import org.junit.jupiter.api.AfterEach;
@@ -67,7 +67,8 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
         }
 
         @Override
-        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
+        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts
+                (ExtensionContext context) {
 
             // AFAICT there is no way to instruct HttpURLConnection to connect via SSL to a
             // proxy server - so for now we just test an unencrypted proxy.
@@ -81,7 +82,8 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
                     invocationContext(true, false, true, true),
                     invocationContext(true, false, true, false),
                     invocationContext(true, false, false, true),
-                    // see also https://github.com/cloudant/java-cloudant/issues/423 - these tests current fail regardless of ordering
+                    // see also https://github.com/cloudant/java-cloudant/issues/423 - these
+                    // tests current fail regardless of ordering
                     //invocationContext(true, false, false, false),
                     //invocationContext(false, false, true, true),
                     invocationContext(false, false, true, false),
@@ -96,7 +98,8 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
             return new TestTemplateInvocationContext() {
                 @Override
                 public String getDisplayName(int invocationIndex) {
-                    return String.format("okhttp: %s; secure proxy: %s; https server %s: proxy auth: %s",
+                    return String.format("okhttp: %s; secure proxy: %s; https server %s: proxy " +
+                                    "auth: %s",
                             okUsable, useSecureProxy, useHttpsServer, useProxyAuth);
                 }
 
@@ -106,15 +109,19 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
                         @Override
                         public boolean supportsParameter(ParameterContext parameterContext,
                                                          ExtensionContext extensionContext) {
-                            switch(parameterContext.getIndex()) {
+                            switch (parameterContext.getIndex()) {
                                 case 0:
-                                    return parameterContext.getParameter().getType().equals(boolean.class);
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
                                 case 1:
-                                    return parameterContext.getParameter().getType().equals(boolean.class);
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
                                 case 2:
-                                    return parameterContext.getParameter().getType().equals(boolean.class);
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
                                 case 3:
-                                    return parameterContext.getParameter().getType().equals(boolean.class);
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
                             }
                             return false;
                         }
@@ -122,7 +129,7 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
                         @Override
                         public Object resolveParameter(ParameterContext parameterContext,
                                                        ExtensionContext extensionContext) {
-                            switch(parameterContext.getIndex()) {
+                            switch (parameterContext.getIndex()) {
                                 case 0:
                                     return okUsable;
                                 case 1:
@@ -255,7 +262,8 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
                 @Override
                 protected PasswordAuthentication getPasswordAuthentication() {
                     if (getRequestorType() == RequestorType.PROXY) {
-                        return new PasswordAuthentication(mockProxyUser, mockProxyPass.toCharArray());
+                        return new PasswordAuthentication(mockProxyUser, mockProxyPass
+                                .toCharArray());
                     } else {
                         return null;
                     }

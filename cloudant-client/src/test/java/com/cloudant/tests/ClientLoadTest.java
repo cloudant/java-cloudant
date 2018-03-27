@@ -40,7 +40,8 @@ public class ClientLoadTest {
     public static CloudantClientExtension clientResource = new CloudantClientExtension(
             CloudantClientHelper.getClientBuilder().maxConnections(MAX_CONNECTIONS));
     @RegisterExtension
-    public static DatabaseExtension.PerTest dbResource = new DatabaseExtension.PerTest(clientResource);
+    public static DatabaseExtension.PerTest dbResource = new DatabaseExtension.PerTest
+            (clientResource);
 
     private static CloudantClient dbClient;
     private static Database db;

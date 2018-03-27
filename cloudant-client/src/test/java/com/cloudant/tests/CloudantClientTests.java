@@ -144,7 +144,8 @@ public class CloudantClientTests extends TestWithDbPerClass {
         String userAgentHeader = new UserAgentInterceptor(UserAgentInterceptor.class
                 .getClassLoader(),
                 "META-INF/com.cloudant.client.properties").getUserAgent();
-        assertTrue(userAgentHeader.matches(userAgentUnknownRegex), "The value of the User-Agent header: " + userAgentHeader + " should match the " + "format: " + userAgentFormat);
+        assertTrue(userAgentHeader.matches(userAgentUnknownRegex), "The value of the User-Agent " +
+                "header: " + userAgentHeader + " should match the " + "format: " + userAgentFormat);
     }
 
     @Test
@@ -169,7 +170,8 @@ public class CloudantClientTests extends TestWithDbPerClass {
                 return super.getResourceAsStream(name);
             }
         }, "META-INF/com.cloudant.client.properties").getUserAgent();
-        assertTrue(userAgentHeader.matches(userAgentRegex), "The value of the User-Agent header: " + userAgentHeader + " should match the " + "format: " + userAgentFormat);
+        assertTrue(userAgentHeader.matches(userAgentRegex), "The value of the User-Agent header: " +
+                "" + userAgentHeader + " should match the " + "format: " + userAgentFormat);
     }
 
     /**
@@ -193,7 +195,9 @@ public class CloudantClientTests extends TestWithDbPerClass {
         String userAgentHeader = server.takeRequest(10, TimeUnit.SECONDS)
                 .getHeader("User-Agent");
         assertNotNull(userAgentHeader, "The User-Agent header should be present on the request");
-        assertTrue(userAgentHeader.matches(userAgentUnknownRegex), "The value of the User-Agent header " + userAgentHeader + " on the request" + " should match the format " + userAgentFormat);
+        assertTrue(userAgentHeader.matches(userAgentUnknownRegex), "The value of the User-Agent " +
+                "header " + userAgentHeader + " on the request" + " should match the format " +
+                userAgentFormat);
     }
 
     /**
@@ -289,7 +293,7 @@ public class CloudantClientTests extends TestWithDbPerClass {
                 InetAddress loopback = InetAddress.getLoopbackAddress();
                 ServerSocket serverSocket = ServerSocketFactory.getDefault().createServerSocket
                         (0, 1,
-                        loopback);
+                                loopback);
 
                 int port = serverSocket.getLocalPort();
                 //block the single connection to our server
@@ -461,7 +465,8 @@ public class CloudantClientTests extends TestWithDbPerClass {
         // name=YourUserName&password=YourPassword
         Matcher m = CREDENTIALS.matcher(body);
         assertTrue(m.matches(), "The _session request should match the regex");
-        assertEquals(2, m.groupCount(), "There should be a username group and a password group in the creds");
+        assertEquals(2, m.groupCount(), "There should be a username group and a password group in" +
+                " the creds");
         assertEquals(encodedUser, m.group(1), "The username should match");
         assertEquals(encodedPassword, m.group(2), "The password should match");
 
@@ -517,7 +522,8 @@ public class CloudantClientTests extends TestWithDbPerClass {
         client.getAllDbs();
 
         // expected 'username:password'
-        assertEquals("Basic dXNlcm5hbWU6cGFzc3dvcmQ=", server.takeRequest().getHeader("Authorization"));
+        assertEquals("Basic dXNlcm5hbWU6cGFzc3dvcmQ=", server.takeRequest().getHeader
+                ("Authorization"));
     }
 
     @Test
@@ -559,10 +565,10 @@ public class CloudantClientTests extends TestWithDbPerClass {
     @Test
     public void nullURLThrowsIAE() throws Exception {
         assertThrows(IllegalArgumentException.class, new Executable() {
-                    @Override
-                    public void execute() throws Throwable {
+            @Override
+            public void execute() throws Throwable {
                 ClientBuilder.url(null);
-                    }
+            }
         });
     }
 }

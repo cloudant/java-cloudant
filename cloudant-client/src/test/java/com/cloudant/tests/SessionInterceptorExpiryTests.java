@@ -28,9 +28,9 @@ import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 import com.cloudant.http.internal.interceptors.CookieInterceptor;
 import com.cloudant.http.internal.interceptors.IamCookieInterceptor;
 import com.cloudant.http.internal.ok.OkHttpClientHttpUrlConnectionFactory;
+import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 import com.cloudant.tests.util.IamSystemPropertyMock;
-import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.MockWebServerResources;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -64,11 +64,12 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
         }
 
         @Override
-        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
-            return Stream.of(invocationContext(false,"/_iam_session"),
+        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts
+                (ExtensionContext context) {
+            return Stream.of(invocationContext(false, "/_iam_session"),
                     invocationContext(false, "/_session"),
                     invocationContext(true, "/_iam_session"),
-                    invocationContext(true,"/_session"));
+                    invocationContext(true, "/_session"));
         }
 
         public static TestTemplateInvocationContext invocationContext(final boolean okUsable,
@@ -85,11 +86,13 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
                         @Override
                         public boolean supportsParameter(ParameterContext parameterContext,
                                                          ExtensionContext extensionContext) {
-                            switch(parameterContext.getIndex()) {
+                            switch (parameterContext.getIndex()) {
                                 case 0:
-                                    return parameterContext.getParameter().getType().equals(boolean.class);
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
                                 case 1:
-                                    return parameterContext.getParameter().getType().equals(String.class);
+                                    return parameterContext.getParameter().getType().equals
+                                            (String.class);
                             }
                             return false;
                         }
@@ -97,7 +100,7 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
                         @Override
                         public Object resolveParameter(ParameterContext parameterContext,
                                                        ExtensionContext extensionContext) {
-                            switch(parameterContext.getIndex()) {
+                            switch (parameterContext.getIndex()) {
                                 case 0:
                                     return okUsable;
                                 case 1:
@@ -194,27 +197,33 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
         // Consume response stream and assert ok: true
         String responseStr = conn.responseAsString();
         String okPattern = ".*\"ok\"\\s*:\\s*true.*";
-        assertTrue(Pattern.compile(okPattern, Pattern.DOTALL).matcher(responseStr).matches(), "There should be an ok response: " + responseStr);
+        assertTrue(Pattern.compile(okPattern, Pattern.DOTALL).matcher(responseStr).matches(),
+                "There should be an ok response: " + responseStr);
 
         // Assert the _session request
         RecordedRequest sessionRequest = mockWebServer.takeRequest(MockWebServerResources
                 .TIMEOUT, MockWebServerResources.TIMEOUT_UNIT);
 
-        assertEquals(sessionPath, sessionRequest.getPath(), "The interceptor should make a session request");
-        assertNull(sessionRequest.getHeader("Cookie"), "There should be no existing cookie on the session request");
+        assertEquals(sessionPath, sessionRequest.getPath(), "The interceptor should make a " +
+                "session request");
+        assertNull(sessionRequest.getHeader("Cookie"), "There should be no existing cookie on the" +
+                " session request");
 
         // Assert the GET request
         RecordedRequest getRequest = mockWebServer.takeRequest(MockWebServerResources.TIMEOUT,
                 MockWebServerResources.TIMEOUT_UNIT);
         assertEquals("/", getRequest.getPath(), "The request path should be correct");
         assertNotNull(getRequest.getHeader("Cookie"), "There should be a cookie on the request");
-        String expectedCookie = ((sessionPath.equals("/_session")) ? MockWebServerResources.AUTH_COOKIE_NAME :
+        String expectedCookie = ((sessionPath.equals("/_session")) ? MockWebServerResources
+                .AUTH_COOKIE_NAME :
                 MockWebServerResources.IAM_COOKIE_NAME) + "=" + cookieValue;
-        assertEquals(expectedCookie, getRequest.getHeader("Cookie"), "The cookie should be the correct session type");
+        assertEquals(expectedCookie, getRequest.getHeader("Cookie"), "The cookie should be the " +
+                "correct session type");
     }
 
     /**
      * Test the non-expiry case just to validate that things work normally
+     *
      * @throws Exception
      */
     @TestTemplate
@@ -230,9 +239,11 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
      * @throws Exception
      */
     @TestTemplate
-    public void testNewCookieRequestMadeAfterExpiry(boolean okUsable, String sessionPath) throws Exception {
+    public void testNewCookieRequestMadeAfterExpiry(boolean okUsable, String sessionPath) throws
+            Exception {
         // Make a GET request and get a cookie valid for 2 seconds
-        executeTest(okUsable, sessionPath, System.currentTimeMillis() + 2000, MockWebServerResources.EXPECTED_OK_COOKIE);
+        executeTest(okUsable, sessionPath, System.currentTimeMillis() + 2000,
+                MockWebServerResources.EXPECTED_OK_COOKIE);
 
         // Sleep 2 seconds and make another request
         // Note 1 second appears to be insufficient probably due to rounding to the nearest second

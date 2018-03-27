@@ -123,7 +123,8 @@ public class ChangeNotificationsTest extends TestWithDbPerClass {
         RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
         assertNotNull(request, "There should be a changes request");
         assertTrue(request.getPath()
-                .contains("descending=true"), "There should be a descending parameter on the request");
+                .contains("descending=true"), "There should be a descending parameter on the " +
+                "request");
     }
 
     /**
@@ -142,7 +143,8 @@ public class ChangeNotificationsTest extends TestWithDbPerClass {
         assertTrue(request.getPath()
                 .contains("filter=myFilter"), "There should be a filter parameter on the request");
         assertTrue(request.getPath()
-                .contains("myParam=paramValue"), "There should be a custom parameter on the request");
+                .contains("myParam=paramValue"), "There should be a custom parameter on the " +
+                "request");
     }
 
     /**
@@ -176,7 +178,7 @@ public class ChangeNotificationsTest extends TestWithDbPerClass {
         Changes c = db.changes().continuousChanges();
         int nChanges = 0;
         // check against regression where hasNext() will hang
-        while(c.hasNext()) {
+        while (c.hasNext()) {
             nChanges++;
             c.next();
         }
