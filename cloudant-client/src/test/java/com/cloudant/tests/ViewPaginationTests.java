@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,68 +14,115 @@
 
 package com.cloudant.tests;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.cloudant.client.api.Database;
 import com.cloudant.client.api.views.Key;
 import com.cloudant.client.api.views.ViewRequest;
 import com.cloudant.client.api.views.ViewResponse;
+import com.cloudant.test.main.RequiresDB;
+import com.cloudant.tests.base.TestWithDbPerTest;
 import com.cloudant.tests.util.CheckPagination;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
 import com.cloudant.tests.util.Utils;
 
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.Extension;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolver;
+import org.junit.jupiter.api.extension.TestTemplateInvocationContext;
+import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-@RunWith(Parameterized.class)
-public class ViewPaginationTests {
+@RequiresDB
+@ExtendWith(ViewPaginationTests.ParameterProvider.class)
+public class ViewPaginationTests extends TestWithDbPerTest {
 
-    /**
-     * Parameters for these tests so we run each test multiple times.
-     * We run with a single key or a complex key and both ascending and descending.
-     */
-    @Parameterized.Parameters(name = "Key:{0},Descending:{1},Stateless:{2}")
-    public static Iterable<Object[]> data() {
+    static class ParameterProvider implements TestTemplateInvocationContextProvider {
+        @Override
+        public boolean supportsTestTemplate(ExtensionContext context) {
+            return true;
+        }
 
+        @Override
+        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts
+                (ExtensionContext context) {
+            return StreamSupport.stream(data().spliterator(), false);
+        }
+
+        public static TestTemplateInvocationContext invocationContext(final CheckPagination.Type
+                                                                              type,
+                                                                      final boolean descending,
+                                                                      final boolean stateless) {
+            return new TestTemplateInvocationContext() {
+                @Override
+                public String getDisplayName(int invocationIndex) {
+                    return String.format("Key:%s,Descending:%s,Stateless:%s", type,
+                            descending, stateless);
+                }
+
+                @Override
+                public List<Extension> getAdditionalExtensions() {
+                    return Collections.<Extension>singletonList(new ParameterResolver() {
+                        @Override
+                        public boolean supportsParameter(ParameterContext parameterContext,
+                                                         ExtensionContext extensionContext) {
+                            switch (parameterContext.getIndex()) {
+                                case 0:
+                                    return parameterContext.getParameter().getType().equals
+                                            (CheckPagination.Type.class);
+                                case 1:
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
+                                case 2:
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
+                            }
+                            return false;
+                        }
+
+                        @Override
+                        public Object resolveParameter(ParameterContext parameterContext,
+                                                       ExtensionContext extensionContext) {
+                            switch (parameterContext.getIndex()) {
+                                case 0:
+                                    return type;
+                                case 1:
+                                    return descending;
+                                case 2:
+                                    return stateless;
+                            }
+                            return null;
+                        }
+                    });
+                }
+            };
+        }
+    }
+
+    public static Iterable<TestTemplateInvocationContext> data() {
+
+        List<TestTemplateInvocationContext> contexts = new
+                ArrayList<TestTemplateInvocationContext>();
         boolean[] tf = new boolean[]{true, false};
-        List<Object[]> parameters = new ArrayList<Object[]>();
         for (CheckPagination.Type type : CheckPagination.Type.values()) {
             for (boolean descending : tf) {
                 for (boolean stateless : tf) {
-                    parameters.add(new Object[]{type, descending, stateless});
+                    contexts.add(ParameterProvider.invocationContext(type, descending, stateless));
                 }
             }
         }
-        return parameters;
+        return contexts;
     }
 
-    @Parameterized.Parameter
-    public CheckPagination.Type type;
-
-    @Parameterized.Parameter(value = 1)
-    public boolean descending;
-
-    @Parameterized.Parameter(value = 2)
-    public boolean stateless;
-
-    @ClassRule
-    public static CloudantClientResource clientResource = new CloudantClientResource();
-    @Rule
-    public DatabaseResource dbResource = new DatabaseResource(clientResource);
-
-    private Database db;
-
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
-        db = dbResource.get();
         Utils.putDesignDocs(db);
     }
 
@@ -87,8 +134,10 @@ public class ViewPaginationTests {
      * Page forward to the last page, back to the first page, forward to the last page and back to
      * the first page.
      */
-    @Test
-    public void allTheWayInEachDirectionTwice() throws Exception {
+    @TestTemplate
+    public void allTheWayInEachDirectionTwice(CheckPagination.Type type,
+                                              boolean descending,
+                                              boolean stateless) throws Exception {
         CheckPagination.newTest(type)
                 .descending(descending)
                 .docCount(6)
@@ -106,8 +155,10 @@ public class ViewPaginationTests {
      * Page forward to the last page, back to the first page, forward to the last page and back to
      * the first page.
      */
-    @Test
-    public void partialLastPageAllTheWayInEachDirectionTwice() throws Exception {
+    @TestTemplate
+    public void partialLastPageAllTheWayInEachDirectionTwice(CheckPagination.Type type,
+                                                             boolean descending,
+                                                             boolean stateless) throws Exception {
         CheckPagination.newTest(type)
                 .descending(descending)
                 .docCount(5)
@@ -124,8 +175,10 @@ public class ViewPaginationTests {
      *
      * Page part way forward, and part way back a few times before paging to the last page.
      */
-    @Test
-    public void partWayInEachDirection() throws Exception {
+    @TestTemplate
+    public void partWayInEachDirection(CheckPagination.Type type,
+                                       boolean descending,
+                                       boolean stateless) throws Exception {
         CheckPagination.newTest(type)
                 .descending(descending)
                 .docCount(30)
@@ -142,8 +195,10 @@ public class ViewPaginationTests {
      *
      * Page part way forward, and part way back a few times before paging to the last page.
      */
-    @Test
-    public void partialLastPagePartWayInEachDirection() throws Exception {
+    @TestTemplate
+    public void partialLastPagePartWayInEachDirection(CheckPagination.Type type,
+                                                      boolean descending,
+                                                      boolean stateless) throws Exception {
         CheckPagination.newTest(type)
                 .descending(descending)
                 .docCount(28)
@@ -157,21 +212,28 @@ public class ViewPaginationTests {
      * Check that we can page through a view where we use start and end keys.
      * Assert that we don't exceed the limits of those keys.
      */
-    @Test
-    public void startAndEndKeyLimits() throws Exception {
-        startAndEndKeyLimits(true);
+    @TestTemplate
+    public void startAndEndKeyLimits(CheckPagination.Type type,
+                                     boolean descending,
+                                     boolean stateless) throws Exception {
+        startAndEndKeyLimits(type, descending, stateless, true);
     }
 
     /**
      * Check that we can page through a view where we use start and end keys.
      * Assert that we don't exceed the limits of those keys.
      */
-    @Test
-    public void startAndEndKeyLimitsExclusiveEnd() throws Exception {
-        startAndEndKeyLimits(false);
+    @TestTemplate
+    public void startAndEndKeyLimitsExclusiveEnd(CheckPagination.Type type,
+                                                 boolean descending,
+                                                 boolean stateless) throws Exception {
+        startAndEndKeyLimits(type, descending, stateless, false);
     }
 
-    private void startAndEndKeyLimits(boolean inclusiveEnd) throws Exception {
+    private void startAndEndKeyLimits(CheckPagination.Type type,
+                                      boolean descending,
+                                      boolean stateless,
+                                      boolean inclusiveEnd) throws Exception {
         //use the CheckPagination to set-up for this test, but we need to do running differently
         //since this page is not just simple paging
         CheckPagination cp = CheckPagination.newTest(type)
@@ -193,7 +255,7 @@ public class ViewPaginationTests {
                     .newPaginatedRequest(Key.Type.STRING, String.class).reduce(false).descending
                             (descending).inclusiveEnd(inclusiveEnd).rowsPerPage(4).startKey
                             (startKey).endKey(endKey).build();
-            runStartAndEndKeyLimits(request, startKey, expectedEndKey);
+            runStartAndEndKeyLimits(stateless, request, startKey, expectedEndKey);
         } else {
             //for multi we will use the creator_created view
             Key.ComplexKey startKey = (descending) ? Key.complex("uuid").add(1011) : Key.complex
@@ -207,19 +269,21 @@ public class ViewPaginationTests {
                     .newPaginatedRequest(Key.Type.COMPLEX, String.class).reduce(false).descending
                             (descending).inclusiveEnd(inclusiveEnd).rowsPerPage(4).startKey
                             (startKey).endKey(endKey).build();
-            runStartAndEndKeyLimits(request, startKey, expectedEndKey);
+            runStartAndEndKeyLimits(stateless, request, startKey, expectedEndKey);
         }
     }
 
-    private <T> void runStartAndEndKeyLimits(ViewRequest<T, String> request, T expectedStartKey,
+    private <T> void runStartAndEndKeyLimits(boolean stateless,
+                                             ViewRequest<T, String> request,
+                                             T expectedStartKey,
                                              T expectedEndKey)
             throws Exception {
 
         ViewResponse<T, String> page = request.getResponse();
 
         //check the start key is as expected
-        assertEquals("The start key should be " + expectedStartKey, expectedStartKey, page
-                .getKeys().get(0));
+        assertEquals(expectedStartKey, page.getKeys().get(0), "The start key should be " +
+                expectedStartKey);
 
         //get the last page
         while (page.hasNextPage()) {
@@ -230,10 +294,8 @@ public class ViewPaginationTests {
             }
         }
         //check the end key is as expected
-        assertEquals("The end key should be " + expectedEndKey, expectedEndKey, page.getKeys()
-                .get(page.getKeys()
-                        .size()
-                        - 1));
+        assertEquals(expectedEndKey, page.getKeys().get(page.getKeys().size() - 1), "The end key " +
+                "should be " + expectedEndKey);
 
         //now page backwards and ensure the last key we get is the start key
         while (page.hasPreviousPage()) {
@@ -244,7 +306,7 @@ public class ViewPaginationTests {
             }
         }
         //check the start key is as expected
-        assertEquals("The start key should be " + expectedStartKey, expectedStartKey, page
-                .getKeys().get(0));
+        assertEquals(expectedStartKey, page.getKeys().get(0), "The start key should be " +
+                expectedStartKey);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,8 +14,8 @@
 
 package com.cloudant.api.query;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.cloudant.client.api.query.Field;
 import com.cloudant.client.api.query.Index;
@@ -23,21 +23,20 @@ import com.cloudant.client.api.query.JsonIndex;
 import com.cloudant.client.api.query.Sort;
 import com.cloudant.client.api.query.TextIndex;
 import com.cloudant.client.api.query.Type;
-import com.cloudant.tests.util.MockedServerTest;
+import com.cloudant.tests.base.TestWithMockedServer;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import okhttp3.mockwebserver.MockResponse;
 
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class IndexListTests extends MockedServerTest {
+public class IndexListTests extends TestWithMockedServer {
 
     private static String SELECTOR_STRING = "{\"year\":{\"$gt\":2010}}";
 
@@ -57,12 +56,11 @@ public class IndexListTests extends MockedServerTest {
      * @return
      */
     private static String fromFile(String resourceFileName) {
-        System.out.println(new File(".").getAbsolutePath());
         try {
             return IOUtils.toString(new BufferedInputStream(new FileInputStream("" +
                     "./src/test/resources/query-tests/" + resourceFileName + ".js")), "UTF-8");
         } catch (Exception e) {
-            fail("Error reading test resource: " +  e.getMessage());
+            fail("Error reading test resource: " + e.getMessage());
         }
         return null;
     }
@@ -92,12 +90,11 @@ public class IndexListTests extends MockedServerTest {
 
     private void assertIndex(Index index, String name, String ddoc, String type, String selector)
             throws Exception {
-        assertEquals("The index should have the correct name", name, index.getName());
-        assertEquals("The index should have the correct ddoc", ddoc, index
-                .getDesignDocumentID());
-        assertEquals("The index should have the correct type", type, index.getType());
-        assertEquals("The index should have the correct selector", selector, index
-                .getPartialFilterSelector());
+        assertEquals(name, index.getName(), "The index should have the correct name");
+        assertEquals(ddoc, index.getDesignDocumentID(), "The index should have the correct ddoc");
+        assertEquals(type, index.getType(), "The index should have the correct type");
+        assertEquals(selector, index.getPartialFilterSelector(), "The index should have the " +
+                "correct selector");
     }
 
     private void assertJsonIndex(JsonIndex index, String name, String selector, Map<String, Sort
@@ -111,8 +108,8 @@ public class IndexListTests extends MockedServerTest {
                                  String defaultField, Map<String, Type>...
                                          expectedFields) throws Exception {
         assertIndex(index, name, "text", selector);
-        assertEquals("The analyzer should be correct", analyzer, index.getAnalyzer());
-        assertEquals("The default field should be correct", defaultField, index.getDefaultField());
+        assertEquals(analyzer, index.getAnalyzer(), "The analyzer should be correct");
+        assertEquals(defaultField, index.getDefaultField(), "The default field should be correct");
         // Assert the fields
         new FieldAssertHelper.Text(expectedFields).assertFields(index.getFields());
     }
@@ -146,7 +143,7 @@ public class IndexListTests extends MockedServerTest {
     public void listSimpleJsonIndex() throws Exception {
         enqueueList(JSON_SIMPLE);
         List<JsonIndex> indexes = db.listIndexes().jsonIndexes();
-        assertEquals("There should be 1 JSON index", 1, indexes.size());
+        assertEquals(1, indexes.size(), "There should be 1 JSON index");
         JsonIndex simple = indexes.get(0);
         assertSimpleJson(simple);
     }
@@ -155,7 +152,7 @@ public class IndexListTests extends MockedServerTest {
     public void listComplexJsonIndex() throws Exception {
         enqueueList(JSON_COMPLEX);
         List<JsonIndex> indexes = db.listIndexes().jsonIndexes();
-        assertEquals("There should be 1 JSON index", 1, indexes.size());
+        assertEquals(1, indexes.size(), "There should be 1 JSON index");
         JsonIndex complex = indexes.get(0);
         assertComplexJson(complex);
 
@@ -165,7 +162,7 @@ public class IndexListTests extends MockedServerTest {
     public void listMultipleJsonIndexes() throws Exception {
         enqueueList(JSON_SIMPLE, JSON_COMPLEX);
         List<JsonIndex> indexes = db.listIndexes().jsonIndexes();
-        assertEquals("There should be 2 JSON indexes", 2, indexes.size());
+        assertEquals(2, indexes.size(), "There should be 2 JSON indexes");
         JsonIndex simple = indexes.get(0);
         assertSimpleJson(simple);
         JsonIndex complex = indexes.get(1);
@@ -176,7 +173,7 @@ public class IndexListTests extends MockedServerTest {
     public void listSimpleTextIndex() throws Exception {
         enqueueList(TEXT_SIMPLE);
         List<TextIndex> indexes = db.listIndexes().textIndexes();
-        assertEquals("There should be 1 text index", 1, indexes.size());
+        assertEquals(1, indexes.size(), "There should be 1 text index");
         TextIndex simple = indexes.get(0);
         assertSimpleText(simple);
     }
@@ -191,7 +188,7 @@ public class IndexListTests extends MockedServerTest {
     public void listSimpleTextIndexWithSelector() throws Exception {
         enqueueList(TEXT_SIMPLE_SELECTOR);
         List<TextIndex> indexes = db.listIndexes().textIndexes();
-        assertEquals("There should be 1 text index", 1, indexes.size());
+        assertEquals(1, indexes.size(), "There should be 1 text index");
         TextIndex simple = indexes.get(0);
         assertTextIndex(simple, "simpleselector", SELECTOR_STRING, "\"keyword\"", "{}",
                 Collections.singletonMap
@@ -202,7 +199,7 @@ public class IndexListTests extends MockedServerTest {
     public void listComplexTextIndex() throws Exception {
         enqueueList(TEXT_COMPLEX);
         List<TextIndex> indexes = db.listIndexes().textIndexes();
-        assertEquals("There should be 1 text index", 1, indexes.size());
+        assertEquals(1, indexes.size(), "There should be 1 text index");
         TextIndex complex = indexes.get(0);
         assertComplexText(complex);
     }
@@ -211,7 +208,7 @@ public class IndexListTests extends MockedServerTest {
     public void listMultipleTextIndexes() throws Exception {
         enqueueList(TEXT_SIMPLE, TEXT_COMPLEX, TEXT_ALL_FIELDS);
         List<TextIndex> indexes = db.listIndexes().textIndexes();
-        assertEquals("There should be 3 text indexes", 3, indexes.size());
+        assertEquals(3, indexes.size(), "There should be 3 text indexes");
         TextIndex simple = indexes.get(0);
         assertSimpleText(simple);
         TextIndex complex = indexes.get(1);
@@ -226,7 +223,7 @@ public class IndexListTests extends MockedServerTest {
         enqueueList(JSON_SIMPLE, JSON_COMPLEX, TEXT_SIMPLE, TEXT_COMPLEX, TEXT_ALL_FIELDS);
         List<Index<Field>> indexes = db.listIndexes().allIndexes();
         // Note 5 listed here, plus the special index that is always included
-        assertEquals("There should be 6 indexes", 6, indexes.size());
+        assertEquals(6, indexes.size(), "There should be 6 indexes");
         for (int i = 0; i < indexes.size(); i++) {
             String name;
             String type;
@@ -235,9 +232,9 @@ public class IndexListTests extends MockedServerTest {
                 case 0:
                     Index<Field> a = indexes.get(i);
                     assertIndex(a, "_all_docs", null, "special", null);
-                    assertEquals("There should be 1 field", 1, a.getFields().size());
-                    assertEquals("There field should be called _id", "_id", a.getFields().get(0)
-                            .getName());
+                    assertEquals(1, a.getFields().size(), "There should be 1 field");
+                    assertEquals("_id", a.getFields().get(0).getName(), "There field should be " +
+                            "called _id");
                     return;
                 case 1:
                     name = "simplejson";

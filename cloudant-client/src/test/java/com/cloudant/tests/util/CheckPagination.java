@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -15,10 +15,10 @@
 package com.cloudant.tests.util;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.views.Key;
@@ -116,9 +116,9 @@ public class CheckPagination {
      * @return the last page in the view.
      */
     private void checkPagesForward(int currentPage,
-                                           int numberOfPages,
-                                           int docCount,
-                                           int docsPerPage) throws IOException {
+                                   int numberOfPages,
+                                   int docCount,
+                                   int docsPerPage) throws IOException {
         for (int i = 0; i < numberOfPages; ++i) {
             nextPage();
             checkPage(page, docCount, docsPerPage, currentPage + i + 1, descending);
@@ -135,9 +135,9 @@ public class CheckPagination {
      * @return the first page in the view
      */
     private void checkPagesBackward(int currentPage,
-                                            int numberOfPages,
-                                            int docCount,
-                                            int docsPerPage) throws IOException {
+                                    int numberOfPages,
+                                    int docCount,
+                                    int docsPerPage) throws IOException {
         for (int i = 0; i < numberOfPages; ++i) {
             previousPage();
             checkPage(page, docCount, docsPerPage, currentPage - i - 1, descending);
@@ -198,8 +198,8 @@ public class CheckPagination {
         }
         List<Foo> resultList = page.getDocsAs(Foo.class);
         for (int i = 0; i < resultList.size(); ++i) {
-            assertEquals("Document titles do not match", ViewsTest.docTitle(descending ? offset-- :
-                    offset++), resultList.get(i).getTitle());
+            assertEquals(ViewsTest.docTitle(descending ? offset-- :
+                    offset++), resultList.get(i).getTitle(), "Document titles do not match");
         }
     }
 

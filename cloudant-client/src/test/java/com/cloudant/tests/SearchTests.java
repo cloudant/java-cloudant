@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,12 +14,10 @@
 
 package com.cloudant.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
 import com.cloudant.client.api.DesignDocumentManager;
 import com.cloudant.client.api.Search;
 import com.cloudant.client.api.model.DesignDocument;
@@ -27,14 +25,10 @@ import com.cloudant.client.api.model.SearchResult;
 import com.cloudant.client.api.model.SearchResult.SearchResultRow;
 import com.cloudant.client.internal.URIBase;
 import com.cloudant.test.main.RequiresCloudant;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.base.TestWithDbPerClass;
 
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.net.URI;
@@ -45,24 +39,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-@Category(RequiresCloudant.class)
-public class SearchTests {
+@RequiresCloudant
+public class SearchTests extends TestWithDbPerClass {
 
-    public static CloudantClientResource clientResource = new CloudantClientResource();
-    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
-
-    @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
-
-    private static Database db;
-    private static CloudantClient account;
-
-    @BeforeClass
+    @BeforeAll
     public static void setUp() throws Exception {
-        account = clientResource.get();
-        db = dbResource.get();
-
-        // replciate the animals db for search tests
+        // replicate the animals db for search tests
         com.cloudant.client.api.Replication r = account.replication();
         r.source("https://clientlibs-test.cloudant.com/animaldb");
         r.createTarget(true);
@@ -269,7 +251,8 @@ public class SearchTests {
         String uriBaseString = account.getBaseUri().toASCIIString();
 
         String expectedUriString = uriBaseString
-                + "/animaldb/_design/views101/_search/animals?include_docs=true&q=" + expectedResult;
+                + "/animaldb/_design/views101/_search/animals?include_docs=true&q=" +
+                expectedResult;
 
         String uriString = uri.toASCIIString();
         assertEquals(expectedUriString, uriString);

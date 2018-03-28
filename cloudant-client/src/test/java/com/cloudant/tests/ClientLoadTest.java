@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -16,21 +16,19 @@ package com.cloudant.tests;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
-import com.cloudant.tests.util.TestLog;
+import com.cloudant.tests.extensions.CloudantClientExtension;
+import com.cloudant.tests.extensions.DatabaseExtension;
 
-import org.junit.After;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Ignore
+@Disabled
 public class ClientLoadTest {
 
     /**
@@ -38,21 +36,18 @@ public class ClientLoadTest {
      */
     private static final int MAX_CONNECTIONS = 20;
 
-    @ClassRule
-    public static final TestLog log = new TestLog();
-
-    public static CloudantClientResource clientResource = new CloudantClientResource
-            (CloudantClientHelper.getClientBuilder()
-            .maxConnections(MAX_CONNECTIONS));
-    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
-    @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
+    @RegisterExtension
+    public static CloudantClientExtension clientResource = new CloudantClientExtension(
+            CloudantClientHelper.getClientBuilder().maxConnections(MAX_CONNECTIONS));
+    @RegisterExtension
+    public static DatabaseExtension.PerTest dbResource = new DatabaseExtension.PerTest
+            (clientResource);
 
     private static CloudantClient dbClient;
     private static Database db;
 
-    @BeforeClass
-    public static void setUp() {
+    @BeforeEach
+    public void setUp() {
         dbClient = clientResource.get();
         db = dbResource.get();
     }
@@ -61,7 +56,7 @@ public class ClientLoadTest {
     private static final int DOCS_PER_THREAD = 10;
 
 
-    @After
+    @AfterEach
     public void tearDown() {
         dbClient.shutdown();
     }

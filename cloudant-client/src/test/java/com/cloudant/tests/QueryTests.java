@@ -34,8 +34,8 @@ import com.cloudant.client.api.query.QueryBuilder;
 import com.cloudant.client.api.query.Sort;
 import com.cloudant.client.api.query.Type;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class QueryTests {
 
@@ -43,7 +43,8 @@ public class QueryTests {
     @Test
     public void basicSelector1() {
         QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier"));
-        Assert.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}}",
+                qb.build());
     }
 
     // "Selector with two fields"
@@ -52,21 +53,23 @@ public class QueryTests {
         QueryBuilder qb = new QueryBuilder(and(
                 eq("name", "Paul"),
                 eq("location", "Boston")));
-        Assert.assertEquals("{\"selector\": {\"$and\": [{\"name\": {\"$eq\": \"Paul\"}}, {\"location\": {\"$eq\": \"Boston\"}}]}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"$and\": [{\"name\": {\"$eq\": \"Paul\"}}, " +
+                "{\"location\": {\"$eq\": \"Boston\"}}]}}", qb.build());
     }
 
     // "SUBFIELDS"
     @Test
     public void basicSelector3() {
         QueryBuilder qb = new QueryBuilder(eq("imdb.rating", 8));
-        Assert.assertEquals("{\"selector\": {\"imdb.rating\": {\"$eq\": 8}}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"imdb.rating\": {\"$eq\": 8}}}", qb.build());
     }
 
-    // "Example selector using an operator to match any document, where the age field has a value greater than 20:"
+    // "Example selector using an operator to match any document, where the age field has a value
+    // greater than 20:"
     @Test
     public void basicSelector4() {
         QueryBuilder qb = new QueryBuilder(gt("year", 2018));
-        Assert.assertEquals("{\"selector\": {\"year\": {\"$gt\": 2018}}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"year\": {\"$gt\": 2018}}}", qb.build());
     }
 
     // "$and operator used with full text indexing"
@@ -76,7 +79,8 @@ public class QueryTests {
                 eq("$text", "Schwarzenegger"),
                 in("year", 1984, 1991)
         ));
-        Assert.assertEquals("{\"selector\": {\"$and\": [{\"$text\": {\"$eq\": \"Schwarzenegger\"}}, {\"year\": {\"$in\": [1984, 1991]}}]}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"$and\": [{\"$text\": {\"$eq\": " +
+                "\"Schwarzenegger\"}}, {\"year\": {\"$in\": [1984, 1991]}}]}}", qb.build());
     }
 
     // "$and operator used with full text indexing"
@@ -86,7 +90,8 @@ public class QueryTests {
                 eq("$text", "Schwarzenegger"),
                 in("year", 1984)
         ));
-        Assert.assertEquals("{\"selector\": {\"$and\": [{\"$text\": {\"$eq\": \"Schwarzenegger\"}}, {\"year\": {\"$in\": [1984]}}]}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"$and\": [{\"$text\": {\"$eq\": " +
+                "\"Schwarzenegger\"}}, {\"year\": {\"$in\": [1984]}}]}}", qb.build());
     }
 
     // "$or operator used with full text indexing"
@@ -96,7 +101,8 @@ public class QueryTests {
                 eq("director", "George Lucas"),
                 eq("director", "Steven Spielberg")
         ));
-        Assert.assertEquals("{\"selector\": {\"$or\": [{\"director\": {\"$eq\": \"George Lucas\"}}, {\"director\": {\"$eq\": \"Steven Spielberg\"}}]}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"$or\": [{\"director\": {\"$eq\": \"George " +
+                "Lucas\"}}, {\"director\": {\"$eq\": \"Steven Spielberg\"}}]}}", qb.build());
     }
 
     // "$or operator used with database indexed on the field "year"
@@ -109,7 +115,9 @@ public class QueryTests {
                         eq("director", "Steven Spielberg")
                 )
         ));
-        Assert.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$eq\": 1977}}, {\"$or\": [{\"director\": {\"$eq\": \"George Lucas\"}}, {\"director\": {\"$eq\": \"Steven Spielberg\"}}]}]}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$eq\": 1977}}, " +
+                "{\"$or\": [{\"director\": {\"$eq\": \"George Lucas\"}}, {\"director\": {\"$eq\":" +
+                " \"Steven Spielberg\"}}]}]}}", qb.build());
     }
 
     // "$not operator used with database indexed on the field "year""
@@ -120,7 +128,9 @@ public class QueryTests {
                 lte("year", 1903),
                 not(eq("year", 1901))
         ));
-        Assert.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$gte\": 1900}}, {\"year\": {\"$lte\": 1903}}, {\"$not\": {\"year\": {\"$eq\": 1901}}}]}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$gte\": 1900}}, " +
+                "{\"year\": {\"$lte\": 1903}}, {\"$not\": {\"year\": {\"$eq\": 1901}}}]}}", qb
+                .build());
     }
 
     // "$nor operator used with database indexed on the field "year""
@@ -134,28 +144,33 @@ public class QueryTests {
                         eq("year", 1905),
                         eq("year", 1907))
         ));
-        Assert.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$gte\": 1900}}, {\"year\": {\"$lte\": 1910}}, {\"$nor\": [{\"year\": {\"$eq\": 1901}}, {\"year\": {\"$eq\": 1905}}, {\"year\": {\"$eq\": 1907}}]}]}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$gte\": 1900}}, " +
+                "{\"year\": {\"$lte\": 1910}}, {\"$nor\": [{\"year\": {\"$eq\": 1901}}, " +
+                "{\"year\": {\"$eq\": 1905}}, {\"year\": {\"$eq\": 1907}}]}]}}", qb.build());
     }
 
     // "$all operator used with full text indexing"
     @Test
     public void basicSelector10() {
         QueryBuilder qb = new QueryBuilder(all("genre", "Comedy", "Short"));
-        Assert.assertEquals("{\"selector\": {\"genre\": {\"$all\": [\"Comedy\", \"Short\"]}}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"genre\": {\"$all\": [\"Comedy\", " +
+                "\"Short\"]}}}", qb.build());
     }
 
     // "$all operator used with full text indexing"
     @Test
     public void basicSelector10_single() {
         QueryBuilder qb = new QueryBuilder(all("genre", "Comedy"));
-        Assert.assertEquals("{\"selector\": {\"genre\": {\"$all\": [\"Comedy\"]}}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"genre\": {\"$all\": [\"Comedy\"]}}}", qb.build
+                ());
     }
 
     // "elemMatch operator used with full text indexing"
     @Test
     public void basicSelector11() {
         QueryBuilder qb = new QueryBuilder(elemMatch("genre", PredicateExpression.eq("Horror")));
-        Assert.assertEquals("{\"selector\": {\"genre\": {\"$elemMatch\": {\"$eq\": \"Horror\"}}}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"genre\": {\"$elemMatch\": {\"$eq\": " +
+                "\"Horror\"}}}}", qb.build());
     }
 
     // "$lt operator used with database indexed on the field "year""
@@ -163,43 +178,45 @@ public class QueryTests {
     @Test
     public void basicSelector12() {
         QueryBuilder qb = new QueryBuilder(lt("year", 1900));
-        Assert.assertEquals("{\"selector\": {\"year\": {\"$lt\": 1900}}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"year\": {\"$lt\": 1900}}}", qb.build());
     }
 
     // "$exists operator used with database indexed on the field "year""
     @Test
     public void basicSelector13() {
         QueryBuilder qb = new QueryBuilder(and(eq("year", 2015), exists("title", true)));
-        Assert.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$eq\": 2015}}, {\"title\": {\"$exists\": true}}]}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$eq\": 2015}}, " +
+                "{\"title\": {\"$exists\": true}}]}}", qb.build());
     }
 
     // "$type operator used with full text indexing"
     @Test
     public void basicSelector14() {
         QueryBuilder qb = new QueryBuilder(type("year", Type.NUMBER));
-        Assert.assertEquals("{\"selector\": {\"year\": {\"$type\": \"number\"}}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"year\": {\"$type\": \"number\"}}}", qb.build());
     }
 
     // "$in operator used with full text indexing"
     @Test
     public void basicSelector15() {
         QueryBuilder qb = new QueryBuilder(in("year", 2010, 2015));
-        Assert.assertEquals("{\"selector\": {\"year\": {\"$in\": [2010, 2015]}}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"year\": {\"$in\": [2010, 2015]}}}", qb.build());
     }
 
     // "$in operator used with full text indexing"
     @Test
     public void basicSelector15_single() {
         QueryBuilder qb = new QueryBuilder(in("year", 2010));
-        Assert.assertEquals("{\"selector\": {\"year\": {\"$in\": [2010]}}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"year\": {\"$in\": [2010]}}}", qb.build());
     }
 
     // "$nin operator used with full text indexing"
     @Test
     public void basicSelector16() {
         QueryBuilder qb = new QueryBuilder(and(gt("year", 2009),
-            nin("year", 2010, 2015)));
-        Assert.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$gt\": 2009}}, {\"year\": {\"$nin\": [2010, 2015]}}]}}", qb.build());
+                nin("year", 2010, 2015)));
+        Assertions.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$gt\": 2009}}, " +
+                "{\"year\": {\"$nin\": [2010, 2015]}}]}}", qb.build());
     }
 
     // "$nin operator used with full text indexing"
@@ -207,14 +224,16 @@ public class QueryTests {
     public void basicSelector16_single() {
         QueryBuilder qb = new QueryBuilder(and(gt("year", 2009),
                 nin("year", 2010)));
-        Assert.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$gt\": 2009}}, {\"year\": {\"$nin\": [2010]}}]}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"$and\": [{\"year\": {\"$gt\": 2009}}, " +
+                "{\"year\": {\"$nin\": [2010]}}]}}", qb.build());
     }
 
     @Test
     public void complexSelector1() {
         QueryBuilder qb = new QueryBuilder(not(and(gt("year", 2009),
                 nin("year", 2010, 2015))));
-        Assert.assertEquals("{\"selector\": {\"$not\": {\"$and\": [{\"year\": {\"$gt\": 2009}}, {\"year\": {\"$nin\": [2010, 2015]}}]}}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"$not\": {\"$and\": [{\"year\": {\"$gt\": " +
+                "2009}}, {\"year\": {\"$nin\": [2010, 2015]}}]}}}", qb.build());
     }
 
     @Test
@@ -222,27 +241,31 @@ public class QueryTests {
         QueryBuilder qb = new QueryBuilder(or(
                 and(
                         eq("Actor", "Schwarzenegger"),
-                        eq("Year",2012)),
+                        eq("Year", 2012)),
                 and(
-                        eq("Actor","de Vito"),
+                        eq("Actor", "de Vito"),
                         eq("Year", 2001))
         ));
-        Assert.assertEquals("{\"selector\": {\"$or\": [{\"$and\": [{\"Actor\": {\"$eq\": \"Schwarzenegger\"}}, {\"Year\": {\"$eq\": 2012}}]}, {\"$and\": [{\"Actor\": {\"$eq\": \"de Vito\"}}, {\"Year\": {\"$eq\": 2001}}]}]}}", qb.build());
+        Assertions.assertEquals("{\"selector\": {\"$or\": [{\"$and\": [{\"Actor\": {\"$eq\": " +
+                "\"Schwarzenegger\"}}, {\"Year\": {\"$eq\": 2012}}]}, {\"$and\": [{\"Actor\": " +
+                "{\"$eq\": \"de Vito\"}}, {\"Year\": {\"$eq\": 2001}}]}]}}", qb.build());
     }
 
     // "Selector basics"
     @Test
     public void basicSelector1WithFields() {
-        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier")).fields("_id", "_rev", "year", "title");
-        Assert.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +
+        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier")).fields("_id",
+                "_rev", "year", "title");
+        Assertions.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +
                 "\"fields\": [\"_id\", \"_rev\", \"year\", \"title\"]}", qb.build());
     }
 
     // "Selector basics"
     @Test
     public void basicSelector1WithSort() {
-        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier")).sort(Sort.asc("year"), Sort.desc("director"));
-        Assert.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +
+        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier")).sort(Sort.asc
+                ("year"), Sort.desc("director"));
+        Assertions.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +
                 "\"sort\": [{\"year\": \"asc\"}, {\"director\": \"desc\"}]}", qb.build());
     }
 
@@ -254,12 +277,11 @@ public class QueryTests {
                 sort(Sort.asc("year"), Sort.desc("director")).
                 limit(10).
                 skip(0);
-        Assert.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +
-                        "\"fields\": [\"_id\", \"_rev\", \"year\", \"title\"], " +
+        Assertions.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +
+                "\"fields\": [\"_id\", \"_rev\", \"year\", \"title\"], " +
                 "\"sort\": [{\"year\": \"asc\"}, {\"director\": \"desc\"}], \"limit\": 10, " +
                 "\"skip\": 0}", qb.build());
     }
-
 
 
 }

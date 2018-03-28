@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,11 +14,8 @@
 
 package com.cloudant.tests;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.cloudant.client.api.Database;
-import com.cloudant.client.api.query.Field;
-import com.cloudant.client.api.query.Index;
 import com.cloudant.client.api.query.JsonIndex;
 import com.cloudant.client.api.views.Key;
 import com.cloudant.client.internal.DatabaseURIHelper;
@@ -26,18 +23,12 @@ import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
-import com.cloudant.tests.util.TestLog;
+import com.cloudant.tests.base.TestWithDbPerTest;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Test;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -52,31 +43,21 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Category(RequiresDB.class)
-public class UnicodeTest {
-
-    @ClassRule
-    public static final TestLog TEST_LOG = new TestLog();
-    @ClassRule
-    public static final CloudantClientResource clientResource = new CloudantClientResource();
-    @Rule
-    public final DatabaseResource dbResource = new DatabaseResource(clientResource);
+@RequiresDB
+public class UnicodeTest extends TestWithDbPerTest {
 
     // According to JSON (ECMA-404, section 9 "Strings"):
     // - All Unicode characters except those that must be escaped
     //   (U+0000..U+001F, U+0022, U+005C) may be placed in a string.
     // - All Unicode characters may be included as Unicode escapes
     //   (after conversion to UTF-16).
+    private static final String TESTSTRING_KEY = "teststring";
     private static final String TESTSTRING = "Gr\u00fc\u00dfe \u65e5\u672c\u8a9e \uD834\uDD1E.";
     private static final String TESTSTRING_ESCAPED = "Gr\\u00fc\\u00dfe \\u65e5\\u672c\\u8a9e " +
             "\\uD834\\uDD1E.";
-
-    private Database db;
-
-    @Before
-    public void setup() {
-        db = dbResource.get();
-    }
+    private static final String EXPECTED_JSON = "{\"_id\":\"" + TESTSTRING_KEY + "\"," +
+            "\"_rev\":\"1-39933759c7250133b6039d94ea09134f\",\"foo\":\"Gr\u00fc\u00dfe " +
+            "\u65e5\u672c\u8a9e \uD834\uDD1E.\"}\n";
 
     // ========================================================================
     // REST request utilities.
@@ -262,7 +243,7 @@ public class UnicodeTest {
      */
     @Test
     public void testLiteralUnicode() throws Exception {
-        URI uri = new DatabaseURIHelper(db.getDBUri()).path("literal").build();
+        URI uri = new DatabaseURIHelper(db.getDBUri()).path(TESTSTRING_KEY).build();
         {
             HttpConnection conn = Http.PUT(uri, "application/json");
             conn.requestProperties.put("Accept", "application/json");
@@ -277,7 +258,7 @@ public class UnicodeTest {
             clientResource.get().executeRequest(conn);
             assertEquals(200, conn.getConnection().getResponseCode());
             String result = getPlainTextEntityAsString(conn, uri);
-            TEST_LOG.logger.info("testLiteralUnicode: Result as returned in entity: " + result);
+            assertEquals(EXPECTED_JSON, result);
             closeResponse(conn);
         }
         {
@@ -297,7 +278,7 @@ public class UnicodeTest {
      */
     @Test
     public void testEscapedUnicode() throws Exception {
-        URI uri = new DatabaseURIHelper(db.getDBUri()).path("escaped").build();
+        URI uri = new DatabaseURIHelper(db.getDBUri()).path(TESTSTRING_KEY).build();
         {
             HttpConnection conn = Http.PUT(uri, "application/json");
             conn.requestProperties.put("Accept", "application/json");
@@ -312,7 +293,7 @@ public class UnicodeTest {
             clientResource.get().executeRequest(conn);
             assertEquals(200, conn.getConnection().getResponseCode());
             String result = getPlainTextEntityAsString(conn, uri);
-            TEST_LOG.logger.info("testEscapedUnicode: Result as returned in entity: " + result);
+            assertEquals(EXPECTED_JSON, result);
             closeResponse(conn);
         }
         {
@@ -338,7 +319,7 @@ public class UnicodeTest {
     // To reproduce: In Eclipse, use "Run > Run Configurations...", tab "Common",
     // panel "Encoding", set the encoding to ISO-8859-1.
     @Test
-    @Category(RequiresCloudant.class)
+    @RequiresCloudant
     public void testUnicodeInObject() throws Exception {
         db.createIndex(JsonIndex.builder()
                 .name("myview")
@@ -346,10 +327,6 @@ public class UnicodeTest {
                 .asc("foo")
                 .definition());
 
-        // Show the indices.
-        for (Index<Field> index : db.listIndexes().allIndexes()) {
-            TEST_LOG.logger.info(index.toString());
-        }
         // Create an object.
         MyObject object = new MyObject();
         object.foo = TESTSTRING;

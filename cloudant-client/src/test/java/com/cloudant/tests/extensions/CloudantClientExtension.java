@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -12,38 +12,44 @@
  * and limitations under the License.
  */
 
-package com.cloudant.tests.util;
+package com.cloudant.tests.extensions;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.tests.CloudantClientHelper;
 
-import org.junit.rules.ExternalResource;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class CloudantClientResource extends ExternalResource {
+public class CloudantClientExtension extends AbstractClientExtension implements
+        BeforeAllCallback, AfterAllCallback {
+
     private ClientBuilder clientBuilder;
+
     private CloudantClient client;
 
-    public CloudantClientResource() {
+    public CloudantClientExtension() {
         this.clientBuilder = CloudantClientHelper.getClientBuilder();
     }
 
-    public CloudantClientResource(ClientBuilder clientBuilder) {
+    public CloudantClientExtension(ClientBuilder clientBuilder) {
         this.clientBuilder = clientBuilder;
     }
 
     @Override
-    public void before() {
-        client = clientBuilder.build();
+    public CloudantClient get() {
+        return this.client;
     }
 
     @Override
-    public void after() {
+    public void afterAll(ExtensionContext context) throws Exception {
         client.shutdown();
     }
 
-    public CloudantClient get() {
-        return this.client;
+    @Override
+    public void beforeAll(ExtensionContext context) throws Exception {
+        client = clientBuilder.build();
     }
 
     /**
@@ -52,6 +58,7 @@ public class CloudantClientResource extends ExternalResource {
      *
      * @return String representation of the URI
      */
+    @Override
     public String getBaseURIWithUserInfo() {
         return CloudantClientHelper.SERVER_URI_WITH_USER_INFO;
     }

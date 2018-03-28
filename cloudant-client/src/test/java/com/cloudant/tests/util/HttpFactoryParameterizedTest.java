@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 IBM Corp. All rights reserved.
+ * Copyright © 2016, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,27 +14,24 @@
 
 package com.cloudant.tests.util;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 import com.cloudant.http.internal.ok.OkHelper;
+import com.cloudant.tests.base.TestWithDbPerClass;
 
-import org.junit.Before;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
 
 import mockit.Mock;
 import mockit.MockUp;
 
-@RunWith(Parameterized.class)
-public abstract class HttpFactoryParameterizedTest {
+public abstract class HttpFactoryParameterizedTest extends TestWithDbPerClass {
 
     /**
      * A parameter governing whether to allow okhttp or not. This lets us exercise both
      * HttpURLConnection types in these tests.
      */
-    @Parameterized.Parameter
-    public boolean okUsable;
+    public boolean isOkUsable;
 
     /**
      * A mock OkHelper that always returns false to force use of the JVM HttpURLConnection
@@ -47,14 +44,16 @@ public abstract class HttpFactoryParameterizedTest {
         }
     }
 
-    @Before
-    public void changeHttpConnectionFactory() throws Exception {
-        if (!okUsable) {
+    @BeforeEach
+    public void changeHttpConnectionFactory(boolean isOkUsable) throws Exception {
+        this.isOkUsable = isOkUsable;
+        if (!isOkUsable) {
             // New up the mock that will stop okhttp's factory being used
             new OkHelperMock();
         }
         // Verify that we are getting the behaviour we expect.
-        assertEquals("The OK usable value was not what was expected for the test parameter.",
-                okUsable, OkHelper.isOkUsable());
+        assertEquals(
+                isOkUsable, OkHelper.isOkUsable(), "The OK usable value was not what was expected" +
+                        " for the test parameter.");
     }
 }

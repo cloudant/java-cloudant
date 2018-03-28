@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2016 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,8 +14,9 @@
 
 package com.cloudant.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
@@ -28,16 +29,16 @@ import com.cloudant.test.main.RequiresCloudantLocal;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresCouch;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.base.TestWithDbPerClass;
+import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.MockWebServerResources;
 import com.google.gson.GsonBuilder;
 
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.function.Executable;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -48,35 +49,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Category(RequiresDB.class)
-public class DatabaseTest {
+@RequiresDB
+public class DatabaseTest extends TestWithDbPerClass {
 
-    public static CloudantClientResource clientResource = new CloudantClientResource();
-    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
+    @RegisterExtension
+    public static MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
 
-    @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
-    @ClassRule
-    public static MockWebServer mockWebServer = new MockWebServer();
+    private static MockWebServer mockWebServer;
 
-    private static Database db;
-    private static CloudantClient account;
+    @BeforeEach
+    public void beforeEach() {
+        mockWebServer = mockWebServerExt.get();
+    }
 
-    @BeforeClass
-    public static void setUp() throws Exception {
-        account = clientResource.get();
-        db = dbResource.get();
-
+    @BeforeAll
+    public static void beforeAll() throws Exception {
         //replicate animaldb for tests
         com.cloudant.client.api.Replication r = account.replication();
-        r.source("http://clientlibs-test.cloudant.com/animaldb");
+        r.source("https://clientlibs-test.cloudant.com/animaldb");
         r.createTarget(true);
         r.target(dbResource.getDbURIWithUserInfo());
         r.trigger();
     }
 
     @Test
-    @Category(RequiresCloudantService.class)
+    @RequiresCloudantService
     public void permissions() {
         Map<String, EnumSet<Permissions>> userPerms = db.getPermissions();
         assertNotNull(userPerms);
@@ -100,10 +97,15 @@ public class DatabaseTest {
      * Test that when called against a DB that is not a Cloudant service
      * an UnsupportedOperationException is thrown
      */
-    @Test(expected = UnsupportedOperationException.class)
-    @Category({RequiresCouch.class, RequiresCloudantLocal.class})
+    @RequiresCouch
+    @RequiresCloudantLocal
     public void testPermissionsException() {
-        Map<String, EnumSet<Permissions>> userPerms = db.getPermissions();
+        assertThrows(UnsupportedOperationException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                Map<String, EnumSet<Permissions>> userPerms = db.getPermissions();
+            }
+        });
     }
 
     @Test
@@ -126,13 +128,13 @@ public class DatabaseTest {
         try {
             db.setPermissions("testUsername", EnumSet.allOf(Permissions.class));
         } catch (CouchDbException e) {
-            assertEquals("", testError, e.getError());
-            assertEquals("", testReason, e.getReason());
+            assertEquals(testError, e.getError());
+            assertEquals(testReason, e.getReason());
         }
     }
 
     @Test
-    @Category(RequiresCloudant.class)
+    @RequiresCloudant
     public void shards() {
         List<Shard> shards = db.getShards();
         assert (shards.size() > 0);
@@ -144,7 +146,7 @@ public class DatabaseTest {
     }
 
     @Test
-    @Category(RequiresCloudant.class)
+    @RequiresCloudant
     public void shard() {
         Shard s = db.getShard("snipe");
         assertNotNull(s);
@@ -155,7 +157,7 @@ public class DatabaseTest {
 
 
     @Test
-    @Category(RequiresCloudant.class)
+    @RequiresCloudant
     public void QuorumTests() {
 
         db.save(new Animal("human"), 2);
@@ -182,7 +184,7 @@ public class DatabaseTest {
         GsonBuilder builder = new GsonBuilder();
         builder.setDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
-        CloudantClient account  = CloudantClientHelper.getClientBuilder()
+        CloudantClient account = CloudantClientHelper.getClientBuilder()
                 .gsonBuilder(builder)
                 .build();
 

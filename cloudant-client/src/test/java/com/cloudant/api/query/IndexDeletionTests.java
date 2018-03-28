@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,21 +14,21 @@
 
 package com.cloudant.api.query;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.cloudant.tests.base.TestWithMockedServer;
 import com.cloudant.tests.util.MockWebServerResources;
-import com.cloudant.tests.util.MockedServerTest;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import okhttp3.mockwebserver.RecordedRequest;
 
 import java.util.concurrent.TimeUnit;
 
-public class IndexDeletionTests extends MockedServerTest {
+public class IndexDeletionTests extends TestWithMockedServer {
 
-    @Before
+    @BeforeEach
     public void enqueueOK() {
         server.enqueue(MockWebServerResources.JSON_OK);
     }
@@ -53,7 +53,7 @@ public class IndexDeletionTests extends MockedServerTest {
 
     private void assertDelete(String name, String ddoc, String type) throws Exception {
         RecordedRequest request = server.takeRequest(1, TimeUnit.SECONDS);
-        assertEquals("The request body should match the expected", "/" + dbResource.getDatabaseName() +
-                "/_index/_design/" + ddoc + "/" + type + "/" + name, request.getPath());
+        assertEquals("/" + dbResource.getDatabaseName() + "/_index/_design/" + ddoc + "/" + type
+                + "/" + name, request.getPath(), "The request body should match the expected");
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -11,22 +11,14 @@
  * either express or implied. See the License for the specific language governing permissions
  * and limitations under the License.
  */
+package com.cloudant.tests.extensions;
 
-package com.cloudant.test.main;
+import com.cloudant.client.api.CloudantClient;
 
-import org.junit.jupiter.api.Tag;
+public abstract class AbstractClientExtension {
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+    public abstract CloudantClient get();
 
-/**
- * JUnit tag to label tests which require Cloudant Service or Cloudant Local
- */
-@Target({ElementType.TYPE, ElementType.METHOD})
-@Retention(RetentionPolicy.RUNTIME)
-@Tag("RequiresCloudant")
-@Tag("RequiresDB")
-public @interface RequiresCloudant {
+    public abstract String getBaseURIWithUserInfo();
+
 }

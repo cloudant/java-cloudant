@@ -32,7 +32,7 @@ public class IamSystemPropertyMock extends MockUp<System> {
     public void setMockIamTokenEndpointUrl(String mockIamTokenEndpointUrl) {
         this.mockIamTokenEndpointUrl.set(mockIamTokenEndpointUrl);
     }
-    
+
     @Mock
     public String getProperty(Invocation inv, String key) {
         if (key.equals("com.cloudant.client.iamserver")) {

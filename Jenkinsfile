@@ -1,7 +1,7 @@
 #!groovy
 
 /*
- * Copyright © 2016, 2017 IBM Corp. All rights reserved.
+ * Copyright © 2016, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -31,7 +31,7 @@ def runTests(testEnv, isServiceTests) {
                 try {
                     sh './gradlew -Dtest.couch.username=$DB_USER -Dtest.couch.password=$DB_PASSWORD -Dtest.couch.host=$DB_HOST -Dtest.couch.port=$DB_PORT -Dtest.couch.http=$DB_HTTP $GRADLE_TARGET'
                 } finally {
-                    junit '**/build/test-results/*.xml'
+                    junit '**/build/test-results/**/*.xml'
                 }
             }
         }

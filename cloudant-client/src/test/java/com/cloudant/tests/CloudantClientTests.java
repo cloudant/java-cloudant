@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2017 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -15,9 +15,10 @@
 package com.cloudant.tests;
 
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.createPost;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
@@ -35,16 +36,16 @@ import com.cloudant.http.internal.interceptors.UserAgentInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.util.CloudantClientResource;
+import com.cloudant.tests.base.TestWithDbPerClass;
+import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.MockWebServerResources;
-import com.cloudant.tests.util.TestLog;
 import com.cloudant.tests.util.Utils;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.function.Executable;
 
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
@@ -74,20 +75,20 @@ import javax.net.ServerSocketFactory;
 /**
  * Note some tests in this class use Java 1.7 features
  */
-public class CloudantClientTests {
+public class CloudantClientTests extends TestWithDbPerClass {
 
-    @ClassRule
-    public static final TestLog TEST_LOG = new TestLog();
+    @RegisterExtension
+    public MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
 
-    @ClassRule
-    public static CloudantClientResource clientResource = new CloudantClientResource();
-    private CloudantClient account = clientResource.get();
+    public MockWebServer server;
 
-    @Rule
-    public MockWebServer server = new MockWebServer();
+    @BeforeEach
+    public void beforeEach() {
+        server = mockWebServerExt.get();
+    }
 
     @Test
-    @Category(RequiresCloudantService.class)
+    @RequiresCloudantService
     public void apiKey() {
         ApiKey key = account.generateApiKey();
         assertNotNull(key);
@@ -96,14 +97,14 @@ public class CloudantClientTests {
     }
 
     @Test
-    @Category(RequiresCloudant.class)
+    @RequiresCloudant
     public void activeTasks() {
         List<Task> tasks = account.getActiveTasks();
         assertNotNull(tasks);
     }
 
     @Test
-    @Category(RequiresCloudant.class)
+    @RequiresCloudant
     public void membership() {
         Membership mship = account.getMembership();
         assertNotNull(mship);
@@ -114,7 +115,7 @@ public class CloudantClientTests {
     }
 
     @Test
-    @Category(RequiresCloudant.class)
+    @RequiresCloudant
     public void cookieTest() {
 
         Membership membership = account.getMembership();
@@ -143,9 +144,8 @@ public class CloudantClientTests {
         String userAgentHeader = new UserAgentInterceptor(UserAgentInterceptor.class
                 .getClassLoader(),
                 "META-INF/com.cloudant.client.properties").getUserAgent();
-        assertTrue("The value of the User-Agent header: " + userAgentHeader + " should match the " +
-                        "format: " + userAgentFormat,
-                userAgentHeader.matches(userAgentUnknownRegex));
+        assertTrue(userAgentHeader.matches(userAgentUnknownRegex), "The value of the User-Agent " +
+                "header: " + userAgentHeader + " should match the " + "format: " + userAgentFormat);
     }
 
     @Test
@@ -170,9 +170,8 @@ public class CloudantClientTests {
                 return super.getResourceAsStream(name);
             }
         }, "META-INF/com.cloudant.client.properties").getUserAgent();
-        assertTrue("The value of the User-Agent header: " + userAgentHeader + " should match the " +
-                        "format: " + userAgentFormat,
-                userAgentHeader.matches(userAgentRegex));
+        assertTrue(userAgentHeader.matches(userAgentRegex), "The value of the User-Agent header: " +
+                "" + userAgentHeader + " should match the " + "format: " + userAgentFormat);
     }
 
     /**
@@ -190,35 +189,39 @@ public class CloudantClientTests {
                 .build();
         String response = client.executeRequest(createPost(client.getBaseUri(), null,
                 "application/json")).responseAsString();
-        assertTrue("There should be no response body on the mock response", response.isEmpty());
+        assertTrue(response.isEmpty(), "There should be no response body on the mock response");
 
         //assert that the request had the expected header
         String userAgentHeader = server.takeRequest(10, TimeUnit.SECONDS)
                 .getHeader("User-Agent");
-        assertNotNull("The User-Agent header should be present on the request",
-                userAgentHeader);
-        assertTrue("The value of the User-Agent header " + userAgentHeader + " on the request" +
-                        " should match the format " + userAgentFormat,
-                userAgentHeader.matches(userAgentUnknownRegex));
+        assertNotNull(userAgentHeader, "The User-Agent header should be present on the request");
+        assertTrue(userAgentHeader.matches(userAgentUnknownRegex), "The value of the User-Agent " +
+                "header " + userAgentHeader + " on the request" + " should match the format " +
+                userAgentFormat);
     }
 
     /**
      * Test a NoDocumentException is thrown when trying an operation on a DB that doesn't exist
      */
-    @Test(expected = NoDocumentException.class)
-    @Category(RequiresDB.class)
+    @Test
+    @RequiresDB
     public void nonExistentDatabaseException() {
-        //try and get a DB that doesn't exist
-        Database db = account.database("not_really_there", false);
-        //try an operation against the non-existant DB
-        db.info();
+        assertThrows(NoDocumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                //try and get a DB that doesn't exist
+                Database db = account.database("not_really_there", false);
+                //try an operation against the non-existant DB
+                db.info();
+            }
+        });
     }
 
     /**
      * Validate that no exception bubbles up when trying to create a DB that already exists
      */
     @Test
-    @Category(RequiresDB.class)
+    @RequiresDB
     public void existingDatabaseCreateException() {
         String id = Utils.generateUUID();
         String dbName = "existing" + id;
@@ -238,22 +241,28 @@ public class CloudantClientTests {
      * Validate that a PreconditionFailedException is thrown when using the createDB method to
      * create a database that already exists.
      */
-    @Test(expected = PreconditionFailedException.class)
-    @Category(RequiresDB.class)
+    @Test
+    @RequiresDB
     public void existingDatabaseCreateDBException() {
-        String id = Utils.generateUUID();
-        String dbName = "existing" + id;
-        try {
-            //create a DB for this test
-            account.createDB(dbName);
+        assertThrows(PreconditionFailedException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
 
-            //do a get with create true for the already existing DB
-            account.createDB(dbName);
+                String id = Utils.generateUUID();
+                String dbName = "existing" + id;
+                try {
+                    //create a DB for this test
+                    account.createDB(dbName);
 
-        } finally {
-            //clean up the DB created by this test
-            account.deleteDB(dbName);
-        }
+                    //do a get with create true for the already existing DB
+                    account.createDB(dbName);
+
+                } finally {
+                    //clean up the DB created by this test
+                    account.deleteDB(dbName);
+                }
+            }
+        });
     }
 
     @Test
@@ -262,56 +271,68 @@ public class CloudantClientTests {
 
         c = CloudantClientHelper.newTestAddressClient().build();
 
-        assertEquals("The http port should be 80", 80, c.getBaseUri().getPort());
+        assertEquals(80, c.getBaseUri().getPort(), "The http port should be 80");
 
 
         c = CloudantClientHelper.newHttpsTestAddressClient().build();
 
-        assertEquals("The http port should be 443", 443, c.getBaseUri().getPort());
+        assertEquals(443, c.getBaseUri().getPort(), "The http port should be 443");
     }
 
     /**
      * Check that the connection timeout throws a SocketTimeoutException when it can't connect
      * within the timeout.
      */
-    @Test(expected = SocketTimeoutException.class)
+    @Test
     public void connectionTimeout() throws Throwable {
-        // Do this test on the loopback
-        InetAddress loopback = InetAddress.getLoopbackAddress();
-        ServerSocket serverSocket = ServerSocketFactory.getDefault().createServerSocket(0, 1,
-                loopback);
+        assertThrows(SocketTimeoutException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
 
-        int port = serverSocket.getLocalPort();
-        //block the single connection to our server
-        Socket socket = new Socket(loopback.getHostAddress(), port);
+                // Do this test on the loopback
+                InetAddress loopback = InetAddress.getLoopbackAddress();
+                ServerSocket serverSocket = ServerSocketFactory.getDefault().createServerSocket
+                        (0, 1,
+                                loopback);
 
-        //now try to connect, but should timeout because there is no connection available
-        try {
-            CloudantClient c = ClientBuilder.url(new URL("http", loopback.getHostAddress(), port,
-                    "")).connectTimeout(100, TimeUnit.MILLISECONDS)
-                    // Unfortunately openjdk doesn't honour the connect timeout so we set the read
-                    // timeout as well so that the test doesn't take too long on that platform
-                    .readTimeout(250, TimeUnit.MILLISECONDS)
-                    .build();
+                int port = serverSocket.getLocalPort();
+                //block the single connection to our server
+                Socket socket = new Socket(loopback.getHostAddress(), port);
 
-            // Make a request
-            c.getAllDbs();
-        } catch (CouchDbException e) {
-            //unwrap the CouchDbException
-            if (e.getCause() != null) {
-                //whilst it would be really nice to actually assert that this was a connect
-                //exception and not some other SocketTimeoutException there are JVM differences in
-                //this respect (i.e. OpenJDK does not appear to distinguish between read/connect)
-                //in its exception messages
-                throw e.getCause();
-            } else {
-                throw e;
+                //now try to connect, but should timeout because there is no connection available
+                try {
+                    CloudantClient c = ClientBuilder.url(new URL("http", loopback.getHostAddress
+                            (), port,
+                            "")).connectTimeout(100, TimeUnit.MILLISECONDS)
+                            // Unfortunately openjdk doesn't honour the connect timeout so we set
+                            // the read
+                            // timeout as well so that the test doesn't take too long on that
+                            // platform
+                            .readTimeout(250, TimeUnit.MILLISECONDS)
+                            .build();
+
+                    // Make a request
+                    c.getAllDbs();
+                } catch (CouchDbException e) {
+                    //unwrap the CouchDbException
+                    if (e.getCause() != null) {
+                        //whilst it would be really nice to actually assert that this was a connect
+                        //exception and not some other SocketTimeoutException there are JVM
+                        // differences in
+                        //this respect (i.e. OpenJDK does not appear to distinguish between
+                        // read/connect)
+                        //in its exception messages
+                        throw e.getCause();
+                    } else {
+                        throw e;
+                    }
+                } finally {
+                    //make sure we close the sockets
+                    IOUtils.closeQuietly(socket);
+                    IOUtils.closeQuietly(serverSocket);
+                }
             }
-        } finally {
-            //make sure we close the sockets
-            IOUtils.closeQuietly(socket);
-            IOUtils.closeQuietly(serverSocket);
-        }
+        });
     }
 
     /**
@@ -319,48 +340,61 @@ public class CloudantClientTests {
      * server thread never sends a response. If things are working
      * correctly then the client should see a SocketTimeoutException for the read.
      */
-    @Test(expected = SocketTimeoutException.class)
+    @Test
     public void readTimeout() throws Throwable {
-        // Don't respond so the read will timeout
-        server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE));
+        assertThrows(SocketTimeoutException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                // Don't respond so the read will timeout
+                server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE));
+                try {
+                    CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server)
+                            .readTimeout(25, TimeUnit.MILLISECONDS).build();
 
-        try {
-            CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server)
-                    .readTimeout(25, TimeUnit.MILLISECONDS).build();
-
-            //do a call that expects a response
-            c.getAllDbs();
-        } catch (CouchDbException e) {
-            //unwrap the CouchDbException
-            if (e.getCause() != null) {
-                throw e.getCause();
-            } else {
-                throw e;
+                    //do a call that expects a response
+                    c.getAllDbs();
+                } catch (CouchDbException e) {
+                    //unwrap the CouchDbException
+                    if (e.getCause() != null) {
+                        throw e.getCause();
+                    } else {
+                        throw e;
+                    }
+                }
             }
-        }
+        });
     }
 
     /**
      * This tests that a CouchDbException is thrown if the user is null, but the password is
      * supplied.
      */
-    @Test(expected = CouchDbException.class)
+    @Test
     public void nullUser() throws Exception {
-        CloudantClientHelper.newTestAddressClient()
-                .password(":0-myPassword")
-                .build();
-
+        assertThrows(CouchDbException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                CloudantClientHelper.newTestAddressClient()
+                        .password(":0-myPassword")
+                        .build();
+            }
+        });
     }
 
     /**
      * This tests that a CouchDbException is thrown if the user is supplied, but the password is
      * null.
      */
-    @Test(expected = CouchDbException.class)
+    @Test
     public void nullPassword() throws Exception {
-        CloudantClientHelper.newTestAddressClient()
-                .username("user")
-                .build();
+        assertThrows(CouchDbException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                CloudantClientHelper.newTestAddressClient()
+                        .username("user")
+                        .build();
+            }
+        });
     }
 
     /**
@@ -422,7 +456,7 @@ public class CloudantClientTests {
         assertNotNull(responseStr);
 
         // One request to _session then one to get info
-        assertEquals("There should be two requests", 2, server.getRequestCount());
+        assertEquals(2, server.getRequestCount(), "There should be two requests");
 
         // Get the _session request
         RecordedRequest request = server.takeRequest();
@@ -430,11 +464,11 @@ public class CloudantClientTests {
         // body should be of form:
         // name=YourUserName&password=YourPassword
         Matcher m = CREDENTIALS.matcher(body);
-        assertTrue("The _session request should match the regex", m.matches());
-        assertEquals("There should be a username group and a password group in the creds", 2, m
-                .groupCount());
-        assertEquals("The username should match", encodedUser, m.group(1));
-        assertEquals("The password should match", encodedPassword, m.group(2));
+        assertTrue(m.matches(), "The _session request should match the regex");
+        assertEquals(2, m.groupCount(), "There should be a username group and a password group in" +
+                " the creds");
+        assertEquals(encodedUser, m.group(1), "The username should match");
+        assertEquals(encodedPassword, m.group(2), "The password should match");
 
         //ensure that building a URL from it does not throw any exceptions
         new URL(c.getBaseUri().toString());
@@ -449,15 +483,15 @@ public class CloudantClientTests {
         c.shutdown();
 
         RecordedRequest request = server.takeRequest(10, TimeUnit.SECONDS);
-        assertEquals("The request method should be DELETE", "DELETE", request.getMethod());
-        assertEquals("The request should be to the _session path", "/_session", request.getPath());
+        assertEquals("DELETE", request.getMethod(), "The request method should be DELETE");
+        assertEquals("/_session", request.getPath(), "The request should be to the _session path");
     }
 
     /**
      * Test that adding the Basic Authentication interceptor to CloudantClient works.
      */
     @Test
-    @Category(RequiresCloudant.class)
+    @RequiresCloudant
     public void testBasicAuth() throws IOException {
         BasicAuthInterceptor interceptor =
                 new BasicAuthInterceptor(CloudantClientHelper.COUCH_USERNAME
@@ -488,7 +522,8 @@ public class CloudantClientTests {
         client.getAllDbs();
 
         // expected 'username:password'
-        assertEquals("Basic dXNlcm5hbWU6cGFzc3dvcmQ=", server.takeRequest().getHeader("Authorization"));
+        assertEquals("Basic dXNlcm5hbWU6cGFzc3dvcmQ=", server.takeRequest().getHeader
+                ("Authorization"));
     }
 
     @Test
@@ -527,8 +562,13 @@ public class CloudantClientTests {
      *
      * @throws Exception
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void nullURLThrowsIAE() throws Exception {
-        ClientBuilder.url(null);
+        assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                ClientBuilder.url(null);
+            }
+        });
     }
 }

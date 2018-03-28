@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2016 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,20 +14,27 @@
 
 package com.cloudant.tests;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.http.Http;
-import com.cloudant.tests.util.MockWebServerResources;
+import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.HttpFactoryParameterizedTest;
+import com.cloudant.tests.util.MockWebServerResources;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.Extension;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolver;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.extension.TestTemplateInvocationContext;
+import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
 import org.littleshoot.proxy.HttpProxyServer;
 import org.littleshoot.proxy.HttpProxyServerBootstrap;
 import org.littleshoot.proxy.ProxyAuthenticator;
@@ -43,52 +50,106 @@ import java.net.Authenticator;
 import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import javax.net.ssl.SSLEngine;
 
-
+@ExtendWith(HttpProxyTest.ParameterProvider.class)
 public class HttpProxyTest extends HttpFactoryParameterizedTest {
 
-    @Parameterized.Parameters(name = "okhttp: {0}; secure proxy: {1}; https server: {2}; proxy " +
-            "auth: {3}")
-    public static List<Object[]> combinations() {
-        boolean[] tf = new boolean[]{true, false};
-        List<Object[]> combos = new ArrayList<Object[]>();
-        for (boolean okUsable : tf) {
-            for (boolean secureProxy : new boolean[]{false}) {
-                // AFAICT there is no way to instruct HttpURLConnection to connect via SSL to a
-                // proxy server - so for now we just test an unencrypted proxy.
-                // Note this is independent of the SSL tunnelling to an https server and influences
-                // only requests between client and proxy. With an https server client requests are
-                // tunnelled directly to the https server, other than the original HTTP CONNECT
-                // request. The reason for using a SSL proxy would be to encrypt proxy auth creds
-                // but it appears this scenario is not readily supported.
-                for (boolean httpsServer : tf) {
-                    for (boolean proxyAuth : tf) {
-                        combos.add(new Object[]{okUsable, secureProxy, httpsServer, proxyAuth});
-                    }
-                }
-            }
+    static class ParameterProvider implements TestTemplateInvocationContextProvider {
+        @Override
+        public boolean supportsTestTemplate(ExtensionContext context) {
+            return true;
         }
-        return combos;
+
+        @Override
+        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts
+                (ExtensionContext context) {
+
+            // AFAICT there is no way to instruct HttpURLConnection to connect via SSL to a
+            // proxy server - so for now we just test an unencrypted proxy.
+            // Note this is independent of the SSL tunnelling to an https server and influences
+            // only requests between client and proxy. With an https server client requests are
+            // tunnelled directly to the https server, other than the original HTTP CONNECT
+            // request. The reason for using a SSL proxy would be to encrypt proxy auth creds
+            // but it appears this scenario is not readily supported.
+            // TODO is better to list all of these explicitly or not?
+            return Stream.of(
+                    invocationContext(true, false, true, true),
+                    invocationContext(true, false, true, false),
+                    invocationContext(true, false, false, true),
+                    // see also https://github.com/cloudant/java-cloudant/issues/423 - these
+                    // tests current fail regardless of ordering
+                    //invocationContext(true, false, false, false),
+                    //invocationContext(false, false, true, true),
+                    invocationContext(false, false, true, false),
+                    invocationContext(false, false, false, true),
+                    invocationContext(false, false, false, false));
+        }
+
+        public static TestTemplateInvocationContext invocationContext(final boolean okUsable,
+                                                                      final boolean useSecureProxy,
+                                                                      final boolean useHttpsServer,
+                                                                      final boolean useProxyAuth) {
+            return new TestTemplateInvocationContext() {
+                @Override
+                public String getDisplayName(int invocationIndex) {
+                    return String.format("okhttp: %s; secure proxy: %s; https server %s: proxy " +
+                                    "auth: %s",
+                            okUsable, useSecureProxy, useHttpsServer, useProxyAuth);
+                }
+
+                @Override
+                public List<Extension> getAdditionalExtensions() {
+                    return Collections.<Extension>singletonList(new ParameterResolver() {
+                        @Override
+                        public boolean supportsParameter(ParameterContext parameterContext,
+                                                         ExtensionContext extensionContext) {
+                            switch (parameterContext.getIndex()) {
+                                case 0:
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
+                                case 1:
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
+                                case 2:
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
+                                case 3:
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
+                            }
+                            return false;
+                        }
+
+                        @Override
+                        public Object resolveParameter(ParameterContext parameterContext,
+                                                       ExtensionContext extensionContext) {
+                            switch (parameterContext.getIndex()) {
+                                case 0:
+                                    return okUsable;
+                                case 1:
+                                    return useSecureProxy;
+                                case 2:
+                                    return useHttpsServer;
+                                case 3:
+                                    return useProxyAuth;
+                            }
+                            return null;
+                        }
+                    });
+                }
+            };
+        }
     }
 
-    // Note Parameter(0) okUsable is inherited
-
-    @Parameterized.Parameter(1)
-    public boolean secureProxy;
-
-    @Parameterized.Parameter(2)
-    public boolean useHttpsServer;
-
-    @Parameterized.Parameter(3)
-    public boolean useProxyAuth;
-
-    @Rule
-    public MockWebServer server = new MockWebServer();
+    @RegisterExtension
+    public MockWebServerExtension serverExt = new MockWebServerExtension();
+    public MockWebServer server;
 
     HttpProxyServer proxy;
     String mockProxyUser = "alpha";
@@ -106,8 +167,12 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Before
-    public void setupMockServerSSLIfNeeded() throws Exception {
+    @BeforeEach
+    public void setupMockServerSSLIfNeeded(final boolean okUsable,
+                                           final boolean useSecureProxy,
+                                           final boolean useHttpsServer,
+                                           final boolean useProxyAuth) throws Exception {
+        server = serverExt.get();
         if (useHttpsServer) {
             server.useHttps(MockWebServerResources.getSSLSocketFactory(), false);
         }
@@ -119,8 +184,11 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Before
-    public void setupAndStartProxy() throws Exception {
+    @BeforeEach
+    public void setupAndStartProxy(final boolean okUsable,
+                                   final boolean useSecureProxy,
+                                   final boolean useHttpsServer,
+                                   final boolean useProxyAuth) throws Exception {
 
         HttpProxyServerBootstrap proxyBoostrap = DefaultHttpProxyServer.bootstrap()
                 .withAllowLocalOnly(true) // only run on localhost
@@ -142,7 +210,7 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
             proxyBoostrap.withProxyAuthenticator(pa);
         }
 
-        if (secureProxy) {
+        if (useSecureProxy) {
             proxyBoostrap.withSslEngineSource(new SslEngineSource() {
                 @Override
                 public SSLEngine newSslEngine() {
@@ -166,7 +234,7 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @After
+    @AfterEach
     public void shutdownProxy() throws Exception {
         proxy.stop();
     }
@@ -180,18 +248,22 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
      * administrators in accordance with their environment. For the purposes of this test we can
      * add and remove the Authenticator before and after testing.
      */
-    @Before
-    public void setAuthenticatorIfNeeded() {
+    @BeforeEach
+    public void setAuthenticatorIfNeeded(final boolean okUsable,
+                                         final boolean useSecureProxy,
+                                         final boolean useHttpsServer,
+                                         final boolean useProxyAuth) {
         // If we are not using okhttp and we have an https server and a proxy that needs auth then
         // we need to set the default Authenticator
-        if (useProxyAuth && useHttpsServer && !okUsable) {
+        if (useProxyAuth && useHttpsServer && !isOkUsable) {
             // Allow https tunnelling through http proxy for the duration of the test
             System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "");
             Authenticator.setDefault(new Authenticator() {
                 @Override
                 protected PasswordAuthentication getPasswordAuthentication() {
                     if (getRequestorType() == RequestorType.PROXY) {
-                        return new PasswordAuthentication(mockProxyUser, mockProxyPass.toCharArray());
+                        return new PasswordAuthentication(mockProxyUser, mockProxyPass
+                                .toCharArray());
                     } else {
                         return null;
                     }
@@ -203,13 +275,16 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
     /**
      * Reset the Authenticator after the test.
      *
-     * @see #setAuthenticatorIfNeeded()
+     * @see #setAuthenticatorIfNeeded(boolean, boolean, boolean, boolean)
      */
-    @After
-    public void resetAuthenticator() {
+    @AfterEach
+    public void resetAuthenticator(final boolean okUsable,
+                                   final boolean useSecureProxy,
+                                   final boolean useHttpsServer,
+                                   final boolean useProxyAuth) {
         // If we are not using okhttp and we have an https server and a proxy that needs auth then
         // we need to set the default Authenticator
-        if (useProxyAuth && useHttpsServer && !okUsable) {
+        if (useProxyAuth && useHttpsServer && !isOkUsable) {
             Authenticator.setDefault(null);
             // Reset the disabled schemes property
             System.setProperty("jdk.http.auth.tunneling.disabledSchemes", defaultDisabledList);
@@ -219,8 +294,11 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
     /**
      * This test validates that a request can successfully traverse a proxy to our mock server.
      */
-    @Test
-    public void proxiedRequest() throws Exception {
+    @TestTemplate
+    public void proxiedRequest(final boolean okUsable,
+                               final boolean useSecureProxy,
+                               final boolean useHttpsServer,
+                               final boolean useProxyAuth) throws Exception {
 
         //mock a 200 OK
         server.setDispatcher(new Dispatcher() {
@@ -231,7 +309,7 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
         });
 
         InetSocketAddress address = proxy.getListenAddress();
-        URL proxyUrl = new URL((secureProxy) ? "https" : "http", address.getHostName(), address
+        URL proxyUrl = new URL((useSecureProxy) ? "https" : "http", address.getHostName(), address
                 .getPort(), "/");
         ClientBuilder builder = CloudantClientHelper.newMockWebServerClientBuilder(server)
                 .proxyURL(proxyUrl);
@@ -244,7 +322,7 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
 
         String response = client.executeRequest(Http.GET(client.getBaseUri())).responseAsString();
 
-        assertTrue("There should be no response body on the mock response", response.isEmpty());
+        assertTrue(response.isEmpty(), "There should be no response body on the mock response");
         //if it wasn't a 20x then an exception should have been thrown by now
 
         RecordedRequest request = server.takeRequest(10, TimeUnit.SECONDS);

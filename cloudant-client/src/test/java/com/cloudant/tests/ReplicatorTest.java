@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -16,34 +16,34 @@ package com.cloudant.tests;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudant.client.api.model.ReplicatorDocument;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.test.main.RequiresDB;
+import com.cloudant.tests.base.TestWithReplication;
 import com.cloudant.tests.util.Utils;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Category(RequiresDB.class)
-public class ReplicatorTest extends ReplicateBaseTest {
+@RequiresDB
+public class ReplicatorTest extends TestWithReplication {
 
     private String repDocId;
 
-    @Before
+    @BeforeEach
     public void generateReplicatorDocId() {
         repDocId = Utils.generateUUID();
     }
 
-    @After
+    @AfterEach
     public void cleanUpReplicatorDoc() throws Exception {
         Utils.removeReplicatorTestDoc(account, repDocId);
     }
@@ -59,8 +59,8 @@ public class ReplicatorTest extends ReplicateBaseTest {
 
         // find and remove replicator doc
         ReplicatorDocument repDoc = Utils.waitForReplicatorToComplete(account, response.getId());
-        assertTrue("The replicator should reach completed state", "completed".equalsIgnoreCase
-                (repDoc.getReplicationState()));
+        assertTrue("completed".equalsIgnoreCase(repDoc.getReplicationState()), "The replicator " +
+                "should reach completed state");
     }
 
     @Test
@@ -79,8 +79,8 @@ public class ReplicatorTest extends ReplicateBaseTest {
 
         // find and remove replicator doc
         ReplicatorDocument repDoc = Utils.waitForReplicatorToComplete(account, response.getId());
-        assertTrue("The replicator should reach completed state", "completed".equalsIgnoreCase
-                (repDoc.getReplicationState()));
+        assertTrue("completed".equalsIgnoreCase(repDoc.getReplicationState()), "The replicator " +
+                "should reach completed state");
     }
 
     @Test

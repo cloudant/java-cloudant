@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -16,14 +16,15 @@ package com.cloudant.tests;
 import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
@@ -38,8 +39,10 @@ import com.cloudant.http.interceptors.BasicAuthInterceptor;
 import com.cloudant.http.interceptors.Replay429Interceptor;
 import com.cloudant.http.internal.interceptors.CookieInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.extensions.CloudantClientExtension;
+import com.cloudant.tests.extensions.DatabaseExtension;
+import com.cloudant.tests.extensions.MockWebServerExtension;
+import com.cloudant.tests.extensions.MultiExtension;
 import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 import com.cloudant.tests.util.MockWebServerResources;
 import com.cloudant.tests.util.TestTimer;
@@ -51,12 +54,17 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.RuleChain;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.Extension;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolver;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.extension.TestTemplateInvocationContext;
+import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
+import org.junit.jupiter.api.function.Executable;
 
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
@@ -74,30 +82,87 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
+@ExtendWith(HttpTest.ParameterProvider.class)
 public class HttpTest extends HttpFactoryParameterizedTest {
+
+    static class ParameterProvider implements TestTemplateInvocationContextProvider {
+        @Override
+        public boolean supportsTestTemplate(ExtensionContext context) {
+            return true;
+        }
+
+        @Override
+        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts
+                (ExtensionContext context) {
+            return Stream.of(invocationContext(false),
+                    invocationContext(true));
+        }
+
+        public static TestTemplateInvocationContext invocationContext(final boolean okUsable) {
+            return new TestTemplateInvocationContext() {
+                @Override
+                public String getDisplayName(int invocationIndex) {
+                    return String.format("okUsable:%s", okUsable);
+                }
+
+                @Override
+                public List<Extension> getAdditionalExtensions() {
+                    return Collections.<Extension>singletonList(new ParameterResolver() {
+                        @Override
+                        public boolean supportsParameter(ParameterContext parameterContext,
+                                                         ExtensionContext extensionContext) {
+                            switch (parameterContext.getIndex()) {
+                                case 0:
+                                    return parameterContext.getParameter().getType().equals
+                                            (boolean.class);
+                            }
+                            return false;
+                        }
+
+                        @Override
+                        public Object resolveParameter(ParameterContext parameterContext,
+                                                       ExtensionContext extensionContext) {
+                            switch (parameterContext.getIndex()) {
+                                case 0:
+                                    return okUsable;
+                            }
+                            return null;
+                        }
+                    });
+                }
+            };
+        }
+    }
 
     private String data = "{\"hello\":\"world\"}";
 
-    public static CloudantClientResource clientResource = new CloudantClientResource();
-    public static DatabaseResource dbResource = new DatabaseResource(clientResource);
-    @ClassRule
-    public static RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
-    @Rule
-    public MockWebServer mockWebServer = new MockWebServer();
+    public static CloudantClientExtension clientResource = new CloudantClientExtension();
+    public static DatabaseExtension.PerClass dbResource = new DatabaseExtension.PerClass
+            (clientResource);
+    public static MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
 
-    @Parameterized.Parameters(name = "Using okhttp: {0}")
-    public static Object[] okUsable() {
-        return new Object[]{true, false};
+    @RegisterExtension
+    public static MultiExtension extensions = new MultiExtension(clientResource, dbResource,
+            mockWebServerExt);
+
+    public MockWebServer mockWebServer;
+
+    @BeforeEach
+    public void beforeEach() {
+        mockWebServer = mockWebServerExt.get();
     }
 
     /*
      * Basic test that we can write a document body by POSTing to a known database
      */
-    @Test
+    @TestTemplate
     public void testWriteToServerOk() throws Exception {
         HttpConnection conn = new HttpConnection("POST", new URL(dbResource.getDbURIWithUserInfo()),
                 "application/json");
@@ -111,21 +176,22 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         // Consume response stream
         String responseStr = response.responseAsString();
         String okPattern = ".*\"ok\"\\s*:\\s*true.*";
-        assertTrue("There should be an ok response: " + responseStr, Pattern.compile(okPattern,
-                Pattern.DOTALL).matcher(responseStr).matches());
+        assertTrue(Pattern.compile(okPattern,
+                Pattern.DOTALL).matcher(responseStr).matches(), "There should be an ok response: " +
+                "" + responseStr);
 
         // stream was read to end
         assertEquals(0, bis.available());
 
-        assertEquals("Should be a 2XX response code", 2, response.getConnection().getResponseCode
-                () / 100);
+        assertEquals(2, response.getConnection().getResponseCode
+                () / 100, "Should be a 2XX response code");
     }
 
     /*
      * Basic test to check that an IOException is thrown when we attempt to get the response
      * without first calling execute()
      */
-    @Test
+    @TestTemplate
     public void testReadBeforeExecute() throws Exception {
         HttpConnection conn = new HttpConnection("POST", new URL(dbResource.getDbURIWithUserInfo()),
                 "application/json");
@@ -154,8 +220,8 @@ public class HttpTest extends HttpFactoryParameterizedTest {
     // security settings, the database *must* not be public, it *must*
     // be named cookie_test
     //
-    @Test
-    @Category(RequiresCloudant.class)
+    @TestTemplate
+    @RequiresCloudant
     public void testCookieAuthWithoutRetry() throws IOException {
         CookieInterceptor interceptor = new CookieInterceptor(CloudantClientHelper.COUCH_USERNAME,
                 CloudantClientHelper.COUCH_PASSWORD, clientResource.get().getBaseUri().toString());
@@ -190,7 +256,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         }
     }
 
-    @Test
+    @TestTemplate
     public void testCookieAuthWithPath() throws Exception {
         MockWebServer mockWebServer = new MockWebServer();
         mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
@@ -211,8 +277,8 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      * will complete with a response code of 200.  The response input stream
      * is expected to hold the newly created document's id and rev.
      */
-    @Test
-    @Category(RequiresCloudant.class)
+    @TestTemplate
+    @RequiresCloudant
     public void testBasicAuth() throws IOException {
         BasicAuthInterceptor interceptor =
                 new BasicAuthInterceptor(CloudantClientHelper.COUCH_USERNAME
@@ -255,7 +321,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void cookieInterceptorURLEncoding() throws Exception {
         final String mockUser = "myStrangeUsername=&?";
         String mockPass = "?&=NotAsStrangeInAPassword";
@@ -270,20 +336,17 @@ public class HttpTest extends HttpFactoryParameterizedTest {
                 .build();
         //the GET request will try to get a session, then perform the GET
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-        assertTrue("There should be no response body on the mock response", response.isEmpty());
+        assertTrue(response.isEmpty(), "There should be no response body on the mock response");
 
         RecordedRequest r = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
         String sessionRequestContent = r.getBody().readString(Charset.forName("UTF-8"));
-        assertNotNull("The _session request should have non-null content",
-                sessionRequestContent);
+        assertNotNull(sessionRequestContent, "The _session request should have non-null content");
         //expecting name=...&password=...
         String[] parts = Utils.splitAndAssert(sessionRequestContent, "&", 1);
         String username = URLDecoder.decode(Utils.splitAndAssert(parts[0], "=", 1)[1], "UTF-8");
-        assertEquals("The username URL decoded username should match", mockUser,
-                username);
+        assertEquals(mockUser, username, "The username URL decoded username should match");
         String password = URLDecoder.decode(Utils.splitAndAssert(parts[1], "=", 1)[1], "UTF-8");
-        assertEquals("The username URL decoded password should match", mockPass,
-                password);
+        assertEquals(mockPass, password, "The username URL decoded password should match");
     }
 
     /**
@@ -292,7 +355,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void cookieRenewal() throws Exception {
         final String hello = "{\"hello\":\"world\"}\r\n";
         final String renewalCookieToken =
@@ -314,28 +377,29 @@ public class HttpTest extends HttpFactoryParameterizedTest {
                 .build();
 
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-        assertEquals("The expected response should be received", hello, response);
+        assertEquals(hello, response, "The expected response should be received");
 
         // assert that there were 2 calls
-        assertEquals("The server should have received 2 requests", 2, mockWebServer
-                .getRequestCount());
+        assertEquals(2, mockWebServer
+                .getRequestCount(), "The server should have received 2 requests");
 
-        assertEquals("The request should have been for /_session", "/_session",
-                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath());
-        assertEquals("The request should have been for /", "/",
-                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath());
+        assertEquals("/_session", MockWebServerResources.takeRequestWithTimeout(mockWebServer)
+                .getPath(), "The request should have been for /_session");
+        assertEquals("/", MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(),
+                "The request should have been for /");
 
         String secondResponse = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-        assertTrue("There should be no response body on the mock response" + secondResponse,
-                secondResponse.isEmpty());
+        assertTrue(
+                secondResponse.isEmpty(), "There should be no response body on the mock response"
+                        + secondResponse);
 
         // also assert that there were 3 calls
-        assertEquals("The server should have received 3 requests", 3, mockWebServer
-                .getRequestCount());
+        assertEquals(3, mockWebServer
+                .getRequestCount(), "The server should have received 3 requests");
 
         // this is the request that should have the new cookie.
         RecordedRequest request = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
-        assertEquals("The request should have been for path /", "/", request.getPath());
+        assertEquals("/", request.getPath(), "The request should have been for path /");
         String headerValue = request.getHeader("Cookie");
         // The cookie may or may not have the session id quoted, so check both
         assertThat("The Cookie header should contain the expected session value", headerValue,
@@ -350,7 +414,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void cookie403Renewal() throws Exception {
 
         // Test for a 403 with expired credentials, should result in 4 requests
@@ -364,7 +428,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void handleNonExpiry403() throws Exception {
 
         // Test for a non-expiry 403, expect 2 requests
@@ -376,7 +440,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void handleNonExpiry403NoReason() throws Exception {
 
         // Test for a non-expiry 403, expect 2 requests
@@ -388,7 +452,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void handleNonExpiry403NullReason() throws Exception {
 
         // Test for a non-expiry 403, expect 2 requests
@@ -438,23 +502,24 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         // _session followed by a replay of GET
         try {
             String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-            assertTrue("There should be no response body on the mock response", response.isEmpty());
+            assertTrue(response.isEmpty(), "There should be no response body on the mock response");
             if (!error.equals("credentials_expired")) {
                 fail("A 403 not due to cookie expiry should result in a CouchDbException");
             }
         } catch (CouchDbException e) {
-            assertEquals("The exception error should be the expected message", error, e.getError());
-            assertEquals("The exception reason should be the expected message", reason, e
-                    .getReason());
+            assertEquals(error, e.getError(), "The exception error should be the expected message");
+            assertEquals(reason, e
+                    .getReason(), "The exception reason should be the expected message");
         }
 
         // also assert that there were the correct number of calls
-        assertEquals("The server should receive the expected number of requests",
+        assertEquals(
                 expectedRequests, mockWebServer
-                        .getRequestCount());
+                        .getRequestCount(), "The server should receive the expected number of " +
+                        "requests");
     }
 
-    @Test
+    @TestTemplate
     public void inputStreamRetryString() throws Exception {
         HttpConnection request = Http.POST(mockWebServer.url("/").url(), "application/json");
         String content = "abcde";
@@ -462,7 +527,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         testInputStreamRetry(request, content.getBytes("UTF-8"));
     }
 
-    @Test
+    @TestTemplate
     public void inputStreamRetryBytes() throws Exception {
         HttpConnection request = Http.POST(mockWebServer.url("/").url(), "application/json");
         byte[] content = "abcde".getBytes("UTF-8");
@@ -500,7 +565,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         }
     }
 
-    @Test
+    @TestTemplate
     public void inputStreamRetry() throws Exception {
         HttpConnection request = Http.POST(mockWebServer.url("/").url(), "application/json");
         final byte[] content = "abcde".getBytes("UTF-8");
@@ -509,7 +574,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         testInputStreamRetry(request, content);
     }
 
-    @Test
+    @TestTemplate
     public void inputStreamRetryWithLength() throws Exception {
         HttpConnection request = Http.POST(mockWebServer.url("/").url(), "application/json");
         final byte[] content = "abcde".getBytes("UTF-8");
@@ -532,7 +597,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         }
     }
 
-    @Test
+    @TestTemplate
     public void inputStreamRetryGenerator() throws Exception {
         HttpConnection request = Http.POST(mockWebServer.url("/").url(), "application/json");
         byte[] content = "abcde".getBytes("UTF-8");
@@ -540,7 +605,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         testInputStreamRetry(request, content);
     }
 
-    @Test
+    @TestTemplate
     public void inputStreamRetryGeneratorWithLength() throws Exception {
         HttpConnection request = Http.POST(mockWebServer.url("/").url(), "application/json");
         byte[] content = "abcde".getBytes("UTF-8");
@@ -565,7 +630,9 @@ public class HttpTest extends HttpFactoryParameterizedTest {
                         context.replayRequest = true;
                         // Close the error stream
                         InputStream errors = context.connection.getConnection().getErrorStream();
-                        if (errors != null) IOUtils.closeQuietly(errors);
+                        if (errors != null) {
+                            IOUtils.closeQuietly(errors);
+                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -576,23 +643,24 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         }).build().executeRequest(request);
 
         String responseStr = response.responseAsString();
-        assertTrue("There should be no response body on the mock response", responseStr.isEmpty());
-        assertEquals("The final response code should be 200", 200, response.getConnection()
-                .getResponseCode());
+        assertTrue(responseStr.isEmpty(), "There should be no response body on the mock response");
+        assertEquals(200, response.getConnection()
+                .getResponseCode(), "The final response code should be 200");
 
         // We want the second request
-        assertEquals("There should have been two requests", 2, mockWebServer.getRequestCount());
+        assertEquals(2, mockWebServer.getRequestCount(), "There should have been two requests");
         MockWebServerResources.takeRequestWithTimeout(mockWebServer);
         RecordedRequest rr = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
-        assertNotNull("The request should have been recorded", rr);
+        assertNotNull(rr, "The request should have been recorded");
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream((int) rr
                 .getBodySize());
         rr.getBody().copyTo(byteArrayOutputStream);
-        assertArrayEquals("The body bytes should have matched after a retry", expectedContent,
-                byteArrayOutputStream.toByteArray());
+        assertArrayEquals(expectedContent,
+                byteArrayOutputStream.toByteArray(), "The body bytes should have matched after a " +
+                        "retry");
     }
 
-    @Test
+    @TestTemplate
     public void testCookieRenewOnPost() throws Exception {
 
         mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
@@ -610,11 +678,11 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         request.setRequestBody("{\"some\": \"json\"}");
         HttpConnection response = c.executeRequest(request);
         String responseStr = response.responseAsString();
-        assertTrue("There should be no response body on the mock response", responseStr.isEmpty());
+        assertTrue(responseStr.isEmpty(), "There should be no response body on the mock response");
         response.getConnection().getResponseCode();
     }
 
-    @Test
+    @TestTemplate
     public void testCustomHeader() throws Exception {
         mockWebServer.enqueue(new MockResponse());
         final String headerName = "Test-Header";
@@ -630,12 +698,12 @@ public class HttpTest extends HttpFactoryParameterizedTest {
                     }
                 }).build();
         client.getAllDbs();
-        assertEquals("There should have been 1 request", 1, mockWebServer.getRequestCount());
+        assertEquals(1, mockWebServer.getRequestCount(), "There should have been 1 request");
         RecordedRequest request = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
-        assertNotNull("The recorded request should not be null", request);
-        assertNotNull("The custom header should have been present", request.getHeader(headerName));
-        assertEquals("The custom header should have the specified value", headerValue, request
-                .getHeader(headerName));
+        assertNotNull(request, "The recorded request should not be null");
+        assertNotNull(request.getHeader(headerName), "The custom header should have been present");
+        assertEquals(headerValue, request
+                .getHeader(headerName), "The custom header should have the specified value");
     }
 
     /**
@@ -643,7 +711,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void testChunking() throws Exception {
         mockWebServer.enqueue(new MockResponse());
         final int chunkSize = 1024 * 8;
@@ -655,20 +723,20 @@ public class HttpTest extends HttpFactoryParameterizedTest {
                 "text/plain")
                 .setRequestBody(new RandomInputStreamGenerator(chunks * chunkSize)))
                 .responseAsString();
-        assertTrue("There should be no response body on the mock response", response.isEmpty());
-        assertEquals("There should have been 1 request", 1, mockWebServer
-                .getRequestCount());
+        assertTrue(response.isEmpty(), "There should be no response body on the mock response");
+        assertEquals(1, mockWebServer
+                .getRequestCount(), "There should have been 1 request");
         RecordedRequest request = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
-        assertNotNull("The recorded request should not be null", request);
-        assertNull("There should be no Content-Length header", request.getHeader("Content-Length"));
-        assertEquals("The Transfer-Encoding should be chunked", "chunked", request.getHeader
-                ("Transfer-Encoding"));
+        assertNotNull(request, "The recorded request should not be null");
+        assertNull(request.getHeader("Content-Length"), "There should be no Content-Length header");
+        assertEquals("chunked", request.getHeader
+                ("Transfer-Encoding"), "The Transfer-Encoding should be chunked");
 
         // It would be nice to assert that we got the chunk sizes we were expecting, but sadly the
         // HttpURLConnection and ChunkedOutputStream only use the chunkSize as a suggestion and seem
         // to use the buffer size instead. The best assertion we can make is that we did receive
         // multiple chunks.
-        assertTrue("There should have been at least 2 chunks", request.getChunkSizes().size() > 1);
+        assertTrue(request.getChunkSizes().size() > 1, "There should have been at least 2 chunks");
     }
 
     private static final class RandomInputStreamGenerator implements HttpConnection
@@ -692,7 +760,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void test429Backoff() throws Exception {
         mockWebServer.enqueue(MockWebServerResources.get429());
         mockWebServer.enqueue(new MockResponse());
@@ -701,9 +769,9 @@ public class HttpTest extends HttpFactoryParameterizedTest {
                 .interceptors(Replay429Interceptor.WITH_DEFAULTS)
                 .build();
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-        assertTrue("There should be no response body on the mock response", response.isEmpty());
+        assertTrue(response.isEmpty(), "There should be no response body on the mock response");
 
-        assertEquals("There should be 2 requests", 2, mockWebServer.getRequestCount());
+        assertEquals(2, mockWebServer.getRequestCount(), "There should be 2 requests");
     }
 
     /**
@@ -712,7 +780,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void test429BackoffMaxDefault() throws Exception {
 
         // Always respond 429 for this test
@@ -728,10 +796,10 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         } catch (TooManyRequestsException e) {
             long duration = t.stopTimer(TimeUnit.MILLISECONDS);
             // 3 backoff periods for 4 attempts: 250 + 500 + 1000 = 1750 ms
-            assertTrue("The duration should be at least 1750 ms, but was " + duration, duration >=
-                    1750);
-            assertEquals("There should be 4 request attempts", 4, mockWebServer
-                    .getRequestCount());
+            assertTrue(duration >=
+                    1750, "The duration should be at least 1750 ms, but was " + duration);
+            assertEquals(4, mockWebServer
+                    .getRequestCount(), "There should be 4 request attempts");
         }
     }
 
@@ -741,7 +809,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void test429BackoffMaxConfigured() throws Exception {
 
         // Always respond 429 for this test
@@ -758,10 +826,10 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         } catch (TooManyRequestsException e) {
             long duration = t.stopTimer(TimeUnit.MILLISECONDS);
             // 9 backoff periods for 10 attempts: 1 + 2 + 4 + 8 + 16 + 32 + 64 + 128 + 256 = 511 ms
-            assertTrue("The duration should be at least 511 ms, but was " + duration, duration >=
-                    511);
-            assertEquals("There should be 10 request attempts", 10, mockWebServer
-                    .getRequestCount());
+            assertTrue(duration >=
+                    511, "The duration should be at least 511 ms, but was " + duration);
+            assertEquals(10, mockWebServer
+                    .getRequestCount(), "There should be 10 request attempts");
         }
     }
 
@@ -770,7 +838,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void test429BackoffMaxMoreThanRetriesAllowed() throws Exception {
 
         // Always respond 429 for this test
@@ -784,8 +852,8 @@ public class HttpTest extends HttpFactoryParameterizedTest {
                     .responseAsString();
             fail("There should be a TooManyRequestsException instead had response " + response);
         } catch (TooManyRequestsException e) {
-            assertEquals("There should be 3 request attempts", 3, mockWebServer
-                    .getRequestCount());
+            assertEquals(3, mockWebServer
+                    .getRequestCount(), "There should be 3 request attempts");
         }
 
     }
@@ -795,7 +863,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void test429BackoffRetryAfter() throws Exception {
 
         mockWebServer.enqueue(MockWebServerResources.get429().addHeader("Retry-After", "1"));
@@ -806,16 +874,16 @@ public class HttpTest extends HttpFactoryParameterizedTest {
                 .interceptors(Replay429Interceptor.WITH_DEFAULTS)
                 .build();
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-        assertTrue("There should be no response body on the mock response", response.isEmpty());
+        assertTrue(response.isEmpty(), "There should be no response body on the mock response");
 
         long duration = t.stopTimer(TimeUnit.MILLISECONDS);
-        assertTrue("The duration should be at least 1000 ms, but was " + duration, duration >=
-                1000);
-        assertEquals("There should be 2 request attempts", 2, mockWebServer
-                .getRequestCount());
+        assertTrue(duration >=
+                1000, "The duration should be at least 1000 ms, but was " + duration);
+        assertEquals(2, mockWebServer
+                .getRequestCount(), "There should be 2 request attempts");
     }
 
-    @Test
+    @TestTemplate
     public void test429IgnoreRetryAfter() throws Exception {
         mockWebServer.enqueue(MockWebServerResources.get429().addHeader("Retry-After", "1"));
         mockWebServer.enqueue(new MockResponse());
@@ -826,13 +894,13 @@ public class HttpTest extends HttpFactoryParameterizedTest {
                 .build();
 
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-        assertTrue("There should be no response body on the mock response", response.isEmpty());
+        assertTrue(response.isEmpty(), "There should be no response body on the mock response");
 
         long duration = t.stopTimer(TimeUnit.MILLISECONDS);
-        assertTrue("The duration should be less than 1000 ms, but was " + duration, duration <
-                1000);
-        assertEquals("There should be 2 request attempts", 2, mockWebServer
-                .getRequestCount());
+        assertTrue(duration <
+                1000, "The duration should be less than 1000 ms, but was " + duration);
+        assertEquals(2, mockWebServer
+                .getRequestCount(), "There should be 2 request attempts");
     }
 
     /**
@@ -840,7 +908,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void testHttpConnectionRetries() throws Exception {
         // Just return 200 OK
         mockWebServer.setDispatcher(new MockWebServerResources.ConstantResponseDispatcher(200));
@@ -865,10 +933,10 @@ public class HttpTest extends HttpFactoryParameterizedTest {
 
         String response = c.executeRequest(Http.GET(c.getBaseUri()).setNumberOfRetries(5))
                 .responseAsString();
-        assertTrue("There should be no response body on the mock response", response.isEmpty());
+        assertTrue(response.isEmpty(), "There should be no response body on the mock response");
 
-        assertEquals("There should be 5 request attempts", 5, mockWebServer
-                .getRequestCount());
+        assertEquals(5, mockWebServer
+                .getRequestCount(), "There should be 5 request attempts");
     }
 
     /**
@@ -877,15 +945,23 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test(expected = IllegalArgumentException.class)
+    @TestTemplate
     public void httpsProxyIllegalArgumentException() throws Exception {
 
-        // Get a client pointing to an https proxy
-        CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
-                .proxyURL(new URL("https://192.0.2.0")).build();
+        assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
 
-        String response = client.executeRequest(Http.GET(client.getBaseUri())).responseAsString();
-        fail("There should be an IllegalStateException for an https proxy.");
+                // Get a client pointing to an https proxy
+                CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder
+                        (mockWebServer)
+                        .proxyURL(new URL("https://192.0.2.0")).build();
+
+                String response = client.executeRequest(Http.GET(client.getBaseUri()))
+                        .responseAsString();
+                fail("There should be an IllegalStateException for an https proxy.");
+            }
+        });
     }
 
     /**
@@ -894,7 +970,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void cookieAppliedToDifferentURL() throws Exception {
         mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
         mockWebServer.enqueue(new MockResponse().setBody("first"));
@@ -909,36 +985,37 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         URI baseURI = c.getBaseUri();
         URL first = new URL(baseURI.getScheme(), baseURI.getHost(), baseURI.getPort(), "/testdb");
         String response = c.executeRequest(Http.GET(first)).responseAsString();
-        assertEquals("The correct response body should be present", "first", response);
+        assertEquals("first", response, "The correct response body should be present");
 
         // There should be a request for a cookie followed by a the real request
-        assertEquals("There should be 2 requests", 2, mockWebServer.getRequestCount());
+        assertEquals(2, mockWebServer.getRequestCount(), "There should be 2 requests");
 
-        assertEquals("The first request should have been for a cookie", "/_session",
-                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath());
+        assertEquals("/_session", MockWebServerResources.takeRequestWithTimeout(mockWebServer)
+                .getPath(), "The first request should have been for a cookie");
 
         RecordedRequest request = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
-        assertEquals("The second request should have been for /testdb", "/testdb",
-                request.getPath());
-        assertNotNull("There should be a cookie on the request", request.getHeader("Cookie"));
+        assertEquals("/testdb",
+                request.getPath(), "The second request should have been for /testdb");
+        assertNotNull(request.getHeader("Cookie"), "There should be a cookie on the request");
 
         // Now make a request to another URL
         URL second = new URL(baseURI.getScheme(), baseURI.getHost(), baseURI.getPort(),
                 "/_all_dbs");
 
         response = c.executeRequest(Http.GET(second)).responseAsString();
-        assertEquals("The correct response body should be present", "second", response);
+        assertEquals("second", response, "The correct response body should be present");
 
         // There should now be an additional request
-        assertEquals("There should be 3 requests", 3, mockWebServer.getRequestCount());
+        assertEquals(3, mockWebServer.getRequestCount(), "There should be 3 requests");
 
         request = MockWebServerResources.takeRequestWithTimeout(mockWebServer);
-        assertEquals("The second request should have been for /_all_dbs", "/_all_dbs", request
-                .getPath());
+        assertEquals("/_all_dbs", request.getPath(), "The second request should have been for " +
+                "/_all_dbs");
         String cookieHeader = request.getHeader("Cookie");
-        assertNotNull("There should be a cookie on the request", cookieHeader);
-        assertTrue("The cookie header " + cookieHeader + " should contain the expected value.",
-                request.getHeader("Cookie").contains(EXPECTED_OK_COOKIE));
+        assertNotNull(cookieHeader, "There should be a cookie on the request");
+        assertTrue(
+                request.getHeader("Cookie").contains(EXPECTED_OK_COOKIE), "The cookie header " +
+                        cookieHeader + " should contain the expected value.");
     }
 
     /**
@@ -946,7 +1023,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void badCredsDisablesCookie() throws Exception {
         mockWebServer.setDispatcher(new Dispatcher() {
             private int counter = 0;
@@ -969,25 +1046,27 @@ public class HttpTest extends HttpFactoryParameterizedTest {
                 .build();
 
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-        assertEquals("The expected response body should be received", "TEST", response);
+        assertEquals("TEST", response, "The expected response body should be received");
 
         // There should only be two requests: an initial auth failure followed by an ok response.
         // If the cookie interceptor keeps trying then there will be more _session requests.
-        assertEquals("There should be 2 requests", 2, mockWebServer.getRequestCount());
+        assertEquals(2, mockWebServer.getRequestCount(), "There should be 2 requests");
 
-        assertEquals("The first request should have been for a cookie", "/_session",
-                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath());
-        assertEquals("The second request should have been for /", "/",
-                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath());
+        assertEquals("/_session",
+                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(), "The " +
+                        "first request should have been for a cookie");
+        assertEquals("/",
+                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(), "The " +
+                        "second request should have been for /");
 
         response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-        assertEquals("The expected response body should be received", "TEST", response);
+        assertEquals("TEST", response, "The expected response body should be received");
 
         // Make another request, the cookie interceptor should not try again so there should only be
         // one more request.
-        assertEquals("There should be 3 requests", 3, mockWebServer.getRequestCount());
-        assertEquals("The third request should have been for /", "/",
-                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath());
+        assertEquals(3, mockWebServer.getRequestCount(), "There should be 3 requests");
+        assertEquals("/", MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(),
+                "The third request should have been for /");
     }
 
     /**
@@ -996,20 +1075,26 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test(expected = CouchDbException.class)
+    @TestTemplate
     public void noErrorStream403() throws Exception {
 
-        // Respond with a cookie init to the first request to _session
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
-        // Respond to the executeRequest GET of / with a 403 with no body
-        mockWebServer.enqueue(new MockResponse().setResponseCode(403));
-        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
-                .username("a")
-                .password("b")
-                .build();
+        assertThrows(CouchDbException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
 
-        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-        fail("There should be an exception, but received response " + response);
+                // Respond with a cookie init to the first request to _session
+                mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+                // Respond to the executeRequest GET of / with a 403 with no body
+                mockWebServer.enqueue(new MockResponse().setResponseCode(403));
+                CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                        .username("a")
+                        .password("b")
+                        .build();
+
+                String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+                fail("There should be an exception, but received response " + response);
+            }
+        });
     }
 
     /**
@@ -1018,7 +1103,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      *
      * @throws Exception
      */
-    @Test
+    @TestTemplate
     public void noErrorStream401() throws Exception {
 
         // Respond with a cookie init to the first request to _session
@@ -1036,7 +1121,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
                 .build();
 
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-        assertEquals("The expected response body should be received", "TEST", response);
+        assertEquals("TEST", response, "The expected response body should be received");
     }
 
     /**
@@ -1047,15 +1132,15 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      * @throws ClassNotFoundException if the load tries to use any classes it shouldn't
      * @throws Exception              if there is another issue in the test
      */
-    @Test
+    @TestTemplate
     public void okUsableClassLoad() throws ClassNotFoundException, Exception {
         // Point to the built classes, it's a bit awkward but we need to load the class cleanly
-        File f = new File("../cloudant-http/build/classes/main/");
+        File f = new File("../cloudant-http/build/classes/java/main/");
         ClassLoader loader = new CloudantHttpIsolationClassLoader(new URL[]{f.toURI().toURL()});
         Class<?> okHelperClass = Class.forName("com.cloudant.http.internal.ok.OkHelper"
                 , true, loader);
-        assertEquals("The isOkUsable value should be correct", okUsable, okHelperClass.getMethod
-                ("isOkUsable").invoke(null));
+        assertEquals(isOkUsable, okHelperClass.getMethod
+                ("isOkUsable").invoke(null), "The isOkUsable value should be correct");
     }
 
     /**
@@ -1068,7 +1153,8 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         public CloudantHttpIsolationClassLoader(URL[] urls) {
             // If we are testing okhttp then allow the parent classloader, otherwise use null
             // to isolate okhttp classes from the test load
-            super(urls, okUsable ? CloudantHttpIsolationClassLoader.class.getClassLoader() : null);
+            super(urls, isOkUsable ? CloudantHttpIsolationClassLoader.class.getClassLoader() :
+                    null);
         }
 
         @Override
@@ -1079,10 +1165,11 @@ public class HttpTest extends HttpFactoryParameterizedTest {
 
     // helper - assert that _n_ requests were made on the mock server and return them in an array
     public static RecordedRequest[] takeN(MockWebServer server, int n) throws Exception {
-        assertEquals(String.format(Locale.ENGLISH, "The server should have %d received requests", n), n,
-                server.getRequestCount());
+        assertEquals(n,
+                server.getRequestCount(), String.format(Locale.ENGLISH, "The server should have " +
+                        "%d received requests", n));
         RecordedRequest[] recordedRequests = new RecordedRequest[n];
-        for (int i=0; i<n; i++) {
+        for (int i = 0; i < n; i++) {
             recordedRequests[i] = MockWebServerResources.takeRequestWithTimeout(server);
         }
         return recordedRequests;

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain key copy of the License at
+ * except in compliance with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -14,13 +14,13 @@
 
 package com.cloudant.tests;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cloudant.client.api.views.Key;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ComplexKeySerializationTest {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,9 +14,8 @@
 
 package com.cloudant.api.query;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.cloudant.client.api.Database;
 import com.cloudant.client.api.query.Field;
 import com.cloudant.client.api.query.Index;
 import com.cloudant.client.api.query.JsonIndex;
@@ -24,22 +23,18 @@ import com.cloudant.client.api.query.Sort;
 import com.cloudant.client.api.query.TextIndex;
 import com.cloudant.client.api.query.Type;
 import com.cloudant.test.main.RequiresCloudant;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.base.TestWithDbPerTest;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
 
 
 // This really requires Couch2.0 + text index support, but we don't have a way of expressing that
-@Category(RequiresCloudant.class)
+@RequiresCloudant
 
 /**
  * Index lifecycle test.
@@ -47,18 +42,10 @@ import java.util.List;
  * Test list indexes
  * After delete indexes
  */
-public class IndexLifecycleTest {
+public class IndexLifecycleTest extends TestWithDbPerTest {
 
-    private CloudantClientResource clientResource = new CloudantClientResource();
-    private DatabaseResource dbResource = new DatabaseResource(clientResource);
-    @Rule
-    public RuleChain chain = RuleChain.outerRule(clientResource).around(dbResource);
-
-    private Database db;
-
-    @Before
+    @BeforeEach
     public void createIndexes() throws Exception {
-        db = dbResource.get();
 
         // Create a JSON index
         db.createIndex(JsonIndex.builder()
@@ -84,14 +71,14 @@ public class IndexLifecycleTest {
         {
             // JSON index
             List<JsonIndex> jIndexes = db.listIndexes().jsonIndexes();
-            assertEquals("There should be one JSON index", 1, jIndexes.size());
+            assertEquals(1, jIndexes.size(), "There should be one JSON index");
             JsonIndex jIndex = jIndexes.get(0);
-            assertEquals("The ddoc should be correct", "_design/indexlifecycle", jIndex
-                    .getDesignDocumentID());
-            assertEquals("The name should be correct", "testjson", jIndex.getName());
-            assertEquals("The type should be correct", "json", jIndex.getType());
+            assertEquals("_design/indexlifecycle", jIndex
+                    .getDesignDocumentID(), "The ddoc should be correct");
+            assertEquals("testjson", jIndex.getName(), "The name should be correct");
+            assertEquals("json", jIndex.getType(), "The type should be correct");
             List<JsonIndex.Field> fields = jIndex.getFields();
-            assertEquals("There should be two fields", 2, fields.size());
+            assertEquals(2, fields.size(), "There should be two fields");
             // Field assertions
             new FieldAssertHelper.Json(Collections.singletonMap("testDefaultAsc", Sort.Order.ASC)
                     , Collections.singletonMap("testAsc", Sort.Order.ASC)).assertFields(fields);
@@ -100,14 +87,14 @@ public class IndexLifecycleTest {
         {
             // Text index
             List<TextIndex> tIndexes = db.listIndexes().textIndexes();
-            assertEquals("There should be one text index", 1, tIndexes.size());
+            assertEquals(1, tIndexes.size(), "There should be one text index");
             TextIndex tIndex = tIndexes.get(0);
-            assertEquals("The ddoc should be correct", "_design/indexlifecycle", tIndex
-                    .getDesignDocumentID());
-            assertEquals("The name should be correct", "testtext", tIndex.getName());
-            assertEquals("The type should be correct", "text", tIndex.getType());
+            assertEquals("_design/indexlifecycle", tIndex
+                    .getDesignDocumentID(), "The ddoc should be correct");
+            assertEquals("testtext", tIndex.getName(), "The name should be correct");
+            assertEquals("text", tIndex.getType(), "The type should be correct");
             List<TextIndex.Field> fields = tIndex.getFields();
-            assertEquals("There should be three fields", 3, fields.size());
+            assertEquals(3, fields.size(), "There should be three fields");
             // Field assertions
             new FieldAssertHelper.Text(Collections.singletonMap("testString", Type.STRING),
                     Collections.singletonMap("testNumber", Type.NUMBER),
@@ -117,23 +104,23 @@ public class IndexLifecycleTest {
         {
             // All indexes
             List<Index<Field>> allIndexes = db.listIndexes().allIndexes();
-            assertEquals("There should be three total indexes", 3, allIndexes.size());
+            assertEquals(3, allIndexes.size(), "There should be three total indexes");
             for (Index<Field> index : allIndexes) {
                 if (index.getType().equals("special")) {
-                    assertEquals("The name should be correct", "_all_docs", index.getName());
-                    assertEquals("There should be 1 field", 1, index.getFields().size());
-                    assertEquals("There field should be called _id", "_id", index.getFields().get(0)
-                            .getName());
+                    assertEquals("_all_docs", index.getName(), "The name should be correct");
+                    assertEquals(1, index.getFields().size(), "There should be 1 field");
+                    assertEquals("_id", index.getFields().get(0)
+                            .getName(), "There field should be called _id");
                 }
             }
         }
     }
 
-    @After
+    @AfterEach
     public void deleteIndexes() throws Exception {
         db.deleteIndex("testjson", "indexlifecycle", "json");
         db.deleteIndex("testtext", "indexlifecycle", "text");
         List<Index<Field>> allIndexes = db.listIndexes().allIndexes();
-        assertEquals("There should be one (special) index", 1, allIndexes.size());
+        assertEquals(1, allIndexes.size(), "There should be one (special) index");
     }
 }

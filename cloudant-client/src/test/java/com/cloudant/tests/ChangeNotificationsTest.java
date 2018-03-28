@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright © 2015, 2016 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -15,10 +15,10 @@
 package com.cloudant.tests;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudant.client.api.Changes;
 import com.cloudant.client.api.CloudantClient;
@@ -28,15 +28,13 @@ import com.cloudant.client.api.model.ChangesResult.Row;
 import com.cloudant.client.api.model.DbInfo;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.test.main.RequiresDB;
-import com.cloudant.tests.util.CloudantClientResource;
-import com.cloudant.tests.util.DatabaseResource;
+import com.cloudant.tests.base.TestWithDbPerClass;
+import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.google.gson.JsonObject;
 
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -45,22 +43,16 @@ import okhttp3.mockwebserver.RecordedRequest;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@Category(RequiresDB.class)
-public class ChangeNotificationsTest {
+@RequiresDB
+public class ChangeNotificationsTest extends TestWithDbPerClass {
 
-    @ClassRule
-    public static CloudantClientResource clientResource = new CloudantClientResource();
-    @ClassRule
-    public static MockWebServer mockWebServer = new MockWebServer();
+    @RegisterExtension
+    public static MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
+    private static MockWebServer mockWebServer;
 
-    @Rule
-    public DatabaseResource dbResource = new DatabaseResource(clientResource);
-
-    private Database db;
-
-    @Before
+    @BeforeEach
     public void setup() {
-        db = dbResource.get();
+        mockWebServer = mockWebServerExt.get();
     }
 
     @Test
@@ -129,9 +121,10 @@ public class ChangeNotificationsTest {
         mockWebServer.enqueue(new MockResponse().setBody("{\"results\": []}"));
         db.changes().descending(true).getChanges();
         RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
-        assertNotNull("There should be a changes request", request);
-        assertTrue("There should be a descending parameter on the request", request.getPath()
-                .contains("descending=true"));
+        assertNotNull(request, "There should be a changes request");
+        assertTrue(request.getPath()
+                .contains("descending=true"), "There should be a descending parameter on the " +
+                "request");
     }
 
     /**
@@ -146,11 +139,12 @@ public class ChangeNotificationsTest {
         mockWebServer.enqueue(new MockResponse().setBody("{\"results\": []}"));
         db.changes().filter("myFilter").parameter("myParam", "paramValue").getChanges();
         RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
-        assertNotNull("There should be a changes request", request);
-        assertTrue("There should be a filter parameter on the request", request.getPath()
-                .contains("filter=myFilter"));
-        assertTrue("There should be a custom parameter on the request", request.getPath()
-                .contains("myParam=paramValue"));
+        assertNotNull(request, "There should be a changes request");
+        assertTrue(request.getPath()
+                .contains("filter=myFilter"), "There should be a filter parameter on the request");
+        assertTrue(request.getPath()
+                .contains("myParam=paramValue"), "There should be a custom parameter on the " +
+                "request");
     }
 
     /**
@@ -184,13 +178,13 @@ public class ChangeNotificationsTest {
         Changes c = db.changes().continuousChanges();
         int nChanges = 0;
         // check against regression where hasNext() will hang
-        while(c.hasNext()) {
+        while (c.hasNext()) {
             nChanges++;
             c.next();
         }
         RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
-        assertNotNull("There should be a changes request", request);
-        assertEquals("There should be 14 changes", 14, nChanges);
+        assertNotNull(request, "There should be a changes request");
+        assertEquals(14, nChanges, "There should be 14 changes");
     }
 
 }
