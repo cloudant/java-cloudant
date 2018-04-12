@@ -1,6 +1,8 @@
 # Unreleased
 
 - [NEW] Add `CloudantClient.metaInformation()`.
+- [FIXED] An issue where `getReason()` returned an incorrect value for
+  `Response` objects returned by `Database.bulk()`.
 
 # 2.12.0 (2018-02-08)
 - [NEW] Index creation APIs and builders including support for text and partial indexes.
