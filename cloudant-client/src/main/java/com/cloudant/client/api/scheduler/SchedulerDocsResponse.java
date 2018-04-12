@@ -79,7 +79,7 @@ public class SchedulerDocsResponse {
         }
 
         public Date getLastUpdated() {
-            return lastUpdated;
+            return (Date)lastUpdated.clone();
         }
 
         public String getNode() {
@@ -95,7 +95,7 @@ public class SchedulerDocsResponse {
         }
 
         public Date getStartTime() {
-            return startTime;
+            return (Date)startTime.clone();
         }
 
         public String getState() {
