@@ -1090,6 +1090,22 @@ public class Database {
      * List<Response> responses = db.bulk(newDocs);
      * }
      * </pre>
+     * <p>
+     * Note that the value returned by {@code getStatusCode()} on each {@code Response} object is
+     * the overall status returned from {@code bulk_docs} and will therefore be the same for all
+     * {@code Response} objects.
+     * </p>
+     * <p>
+     * The returned list of {@code Response}s should be examined to ensure that all of the documents submitted
+     * in the original request were successfully added to the database.
+     * </p>
+     * <p>
+     * When a document (or document revision) is not correctly committed to the database because of
+     * an error, you must check the value of {@code getError()} to determine error type and course
+     * of action. See
+     * <a href="https://console.bluemix.net/docs/services/Cloudant/api/document.html#bulk-document-validation-and-conflict-errors" target="_blank">
+     * Bulk Document Validation and Conflict Errors</a> for more information.
+     * </p>
      *
      * @param objects the {@link List} of objects
      * @return {@code List<Response>} one per object

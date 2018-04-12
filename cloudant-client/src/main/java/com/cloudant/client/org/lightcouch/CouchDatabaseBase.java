@@ -287,7 +287,6 @@ public abstract class CouchDatabaseBase {
                     DeserializationTypes.LC_RESPONSES);
             for(Response response : bulkResponses) {
                 response.setStatusCode(connection.getConnection().getResponseCode());
-                response.setReason(connection.getConnection().getResponseMessage());
             }
             return bulkResponses;
         }
