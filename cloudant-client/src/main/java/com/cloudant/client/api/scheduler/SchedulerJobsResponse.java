@@ -88,7 +88,11 @@ public class SchedulerJobsResponse {
         }
 
         public Date getStartTime() {
-            return (Date)startTime.clone();
+            if (startTime != null) {
+                return (Date) startTime.clone();
+            } else {
+                return null;
+            }
         }
 
     }
@@ -98,7 +102,11 @@ public class SchedulerJobsResponse {
         private String type;
 
         public Date getTimestamp() {
-            return (Date)timestamp.clone();
+            if (timestamp != null) {
+                return (Date) timestamp.clone();
+            } else {
+                return null;
+            }
         }
 
         public String getType() {
