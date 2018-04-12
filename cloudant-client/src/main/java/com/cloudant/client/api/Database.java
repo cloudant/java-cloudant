@@ -32,7 +32,6 @@ import com.cloudant.client.api.query.QueryResult;
 import com.cloudant.client.api.model.Shard;
 import com.cloudant.client.api.query.Indexes;
 import com.cloudant.client.api.query.JsonIndex;
-import com.cloudant.client.api.scheduler.SchedulerDocsResponse;
 import com.cloudant.client.api.views.AllDocsRequestBuilder;
 import com.cloudant.client.api.views.ViewRequestBuilder;
 import com.cloudant.client.internal.DatabaseURIHelper;
