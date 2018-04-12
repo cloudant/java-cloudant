@@ -16,24 +16,14 @@ package com.cloudant.client.api.scheduler;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Date;
 import java.util.List;
 
 public class SchedulerJobsResponse {
-
     private long offset;
     @SerializedName("total_rows")
     private long totalRows;
-    private String id;
-    private String database;
-    @SerializedName("doc_id")
-    private String docId;
-    private List<History> history;
-    private String pid;
-    private String node;
-    private String source;
-    private String target;
-    @SerializedName("total_rows")
-    private String startTime;
+    private List<Job> jobs;
 
     public long getOffset() {
         return offset;
@@ -43,47 +33,71 @@ public class SchedulerJobsResponse {
         return totalRows;
     }
 
-    public String getId() {
-        return id;
+    public List<Job> getJobs() {
+        return jobs;
     }
 
-    public String getDatabase() {
-        return database;
-    }
+    public static class Job {
+        private String id;
+        private String database;
+        @SerializedName("doc_id")
+        private String docId;
+        private List<History> history;
+        private String pid;
+        private String node;
+        private String source;
+        private String target;
+        private String user;
+        @SerializedName("start_time")
+        private Date startTime;
 
-    public String getDocId() {
-        return docId;
-    }
+        public String getId() {
+            return id;
+        }
 
-    public List<History> getHistory() {
-        return history;
-    }
+        public String getDatabase() {
+            return database;
+        }
 
-    public String getPid() {
-        return pid;
-    }
+        public String getDocId() {
+            return docId;
+        }
 
-    public String getNode() {
-        return node;
-    }
+        public List<History> getHistory() {
+            return history;
+        }
 
-    public String getSource() {
-        return source;
-    }
+        public String getPid() {
+            return pid;
+        }
 
-    public String getTarget() {
-        return target;
-    }
+        public String getNode() {
+            return node;
+        }
 
-    public String getStartTime() {
-        return startTime;
+        public String getSource() {
+            return source;
+        }
+
+        public String getTarget() {
+            return target;
+        }
+
+        public String getUser() {
+            return user;
+        }
+
+        public Date getStartTime() {
+            return startTime;
+        }
+
     }
 
     public static class History {
-        private String timestamp;
+        private Date timestamp;
         private String type;
 
-        public String getTimestamp() {
+        public Date getTimestamp() {
             return timestamp;
         }
 

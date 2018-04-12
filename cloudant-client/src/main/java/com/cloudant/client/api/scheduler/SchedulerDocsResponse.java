@@ -16,7 +16,9 @@ package com.cloudant.client.api.scheduler;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class SchedulerDocsResponse {
 
@@ -45,14 +47,14 @@ public class SchedulerDocsResponse {
         @SerializedName("error_count")
         private long errorCount;
         private String id;
-        private Object info;
+        private Map<String, Object> info;
         @SerializedName("last_updated")
-        private String lastUpdated;
+        private Date lastUpdated;
         private String node;
         private String proxy;
         private String source;
         @SerializedName("start_time")
-        private String startTime;
+        private Date startTime;
         private String state;
         private String target;
 
@@ -72,11 +74,11 @@ public class SchedulerDocsResponse {
             return id;
         }
 
-        public Object getInfo() {
+        public Map<String, Object> getInfo() {
             return info;
         }
 
-        public String getLastUpdated() {
+        public Date getLastUpdated() {
             return lastUpdated;
         }
 
@@ -92,7 +94,7 @@ public class SchedulerDocsResponse {
             return source;
         }
 
-        public String getStartTime() {
+        public Date getStartTime() {
             return startTime;
         }
 
