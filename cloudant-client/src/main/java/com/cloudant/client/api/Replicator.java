@@ -29,7 +29,15 @@ import java.util.Map;
  * that triggered the replication.
  * <h3>Usage Example:</h3>
  * <pre>
- * Response response = db.replicator()
+ * {@code
+ * // first get a client instance
+ * CloudantClient client = ClientBuilder.account("my-cloudant-account").
+ *   username("username").
+ *   password("password").
+ *   build();
+ *
+ * // create a replicator doc
+ * Response response = client.replicator()
  * 	.source("source-db")
  * 	.target("target-db")
  * 	.continuous(true)
@@ -38,19 +46,21 @@ import java.util.Map;
  * 	.replicatorDocId("doc-id")          // optional, defaults to UUID
  * 	.save(); // trigger replication
  *
- * ReplicatorDocument replicatorDoc = db.replicator()
+ * // find an existing replicator doc
+ * ReplicatorDocument replicatorDoc = client.replicator()
  * 	.replicatorDocId("doc-id")
  * 	.replicatorDocRev("doc-rev") // optional
  * 	.find();
  *
- * {@code
- * List<ReplicatorDocument> replicatorDocs = db.replicator().findAll();
- * }
+ * // get all replicator docs
+ * List<ReplicatorDocument> replicatorDocs = client.replicator().findAll();
  *
- * Response response = db.replicator()
+ * // delete a replicator doc
+ * Response response = client.replicator()
  * 	.replicatorDocId("doc-id")
  * 	.replicatorDocRev("doc-rev")
  * 	.remove(); // cancels a replication
+ * }
  * </pre>
  *
  * @author Ganesh K Choudhary
