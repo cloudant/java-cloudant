@@ -115,7 +115,7 @@ public class Utils {
 
             if (account.metaInformation().getFeatures() != null &&
                     account.metaInformation().getFeatures().contains("scheduler")) {
-                SchedulerDocsResponse.Doc doc = account.schedulerDocs(replicatorDocId);
+                SchedulerDocsResponse.Doc doc = account.schedulerDoc(replicatorDocId);
                 state = doc != null ? doc.getState() : null;
             } else {
                 replicatorDoc = account.replicator()

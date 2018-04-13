@@ -5,7 +5,7 @@
   - `CloudantClient.metaInformation()`,
   - `CloudantClient.schedulerJobs()`,
   - `CloudantClient.schedulerDocs()`,
-  - `CloudantClient.schedulerDocs(docId)`.
+  - `CloudantClient.schedulerDoc(docId)`.
 - [FIXED] An issue where `getReason()` returned an incorrect value for
   `Response` objects returned by `Database.bulk()`.
 

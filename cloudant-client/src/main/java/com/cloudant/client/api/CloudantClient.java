@@ -355,8 +355,8 @@ public class CloudantClient {
      * @param docId The replication document ID
      * @return Replication document state
      */
-    public SchedulerDocsResponse.Doc schedulerDocs(String docId) {
-        return couchDbClient.schedulerDocs(docId);
+    public SchedulerDocsResponse.Doc schedulerDoc(String docId) {
+        return couchDbClient.schedulerDoc(docId);
     }
 
     /**

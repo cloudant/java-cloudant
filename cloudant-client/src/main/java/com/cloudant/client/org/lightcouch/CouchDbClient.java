@@ -312,7 +312,7 @@ public class CouchDbClient {
      * @param docId The replication document ID
      * @return Replication document state
      */
-    public SchedulerDocsResponse.Doc schedulerDocs(String docId) {
+    public SchedulerDocsResponse.Doc schedulerDoc(String docId) {
         assertNotEmpty(docId, "docId");
         return this.get(new DatabaseURIHelper(getBaseUri()).
                         path("_scheduler").path("docs").path("_replicator").path(docId).build(),
