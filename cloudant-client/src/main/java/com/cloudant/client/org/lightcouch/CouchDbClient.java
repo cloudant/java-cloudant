@@ -287,7 +287,7 @@ public class CouchDbClient {
      * description will include source and target information, replication id, a history of
      * recent event, and a few other things.
      *
-     * @return List of replication jobs
+     * @return All current replication jobs
      */
     public SchedulerJobsResponse schedulerJobs() {
         return this.get(new DatabaseURIHelper(getBaseUri()).path("_scheduler").path("jobs").build(),
@@ -295,11 +295,11 @@ public class CouchDbClient {
     }
 
     /**
-     * Lists replication document states. Includes information about all the documents, even in
+     * Lists replication documents. Includes information about all the documents, even in
      * completed and failed states. For each document it returns the document ID, the database,
      * the replication ID, source and target, and other information.
      *
-     * @return List of replication document states
+     * @return All replication documents
      */
     public SchedulerDocsResponse schedulerDocs() {
         return this.get(new DatabaseURIHelper(getBaseUri()).path("_scheduler").path("docs").build(),
@@ -310,7 +310,7 @@ public class CouchDbClient {
      * Get replication document state for a given replication document ID.
      *
      * @param docId The replication document ID
-     * @return Replication document state
+     * @return Replication document for {@code docId}
      */
     public SchedulerDocsResponse.Doc schedulerDoc(String docId) {
         assertNotEmpty(docId, "docId");
