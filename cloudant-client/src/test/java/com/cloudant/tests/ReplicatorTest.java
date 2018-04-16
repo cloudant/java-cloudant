@@ -58,8 +58,8 @@ public class ReplicatorTest extends TestWithReplication {
                 .save();
 
         // find and remove replicator doc
-        ReplicatorDocument repDoc = Utils.waitForReplicatorToComplete(account, response.getId());
-        assertTrue("completed".equalsIgnoreCase(repDoc.getReplicationState()), "The replicator " +
+        String state = Utils.waitForReplicatorToComplete(account, response.getId());
+        assertTrue("completed".equalsIgnoreCase(state), "The replicator " +
                 "should reach completed state");
     }
 
@@ -78,8 +78,8 @@ public class ReplicatorTest extends TestWithReplication {
                 .save();
 
         // find and remove replicator doc
-        ReplicatorDocument repDoc = Utils.waitForReplicatorToComplete(account, response.getId());
-        assertTrue("completed".equalsIgnoreCase(repDoc.getReplicationState()), "The replicator " +
+        String state = Utils.waitForReplicatorToComplete(account, response.getId());
+        assertTrue("completed".equalsIgnoreCase(state), "The replicator " +
                 "should reach completed state");
     }
 

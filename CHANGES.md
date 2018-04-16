@@ -1,6 +1,10 @@
 # Unreleased
 
-- [NEW] Add `CloudantClient.metaInformation()`.
+- [NEW] Add `CloudantClient.metaInformation()` to get meta information from the welcome page.
+- [NEW] Add methods for interacting with the replicator's `_scheduler` endpoint:
+  - `CloudantClient.schedulerJobs()`,
+  - `CloudantClient.schedulerDocs()`,
+  - `CloudantClient.schedulerDoc(docId)`.
 - [FIXED] An issue where `getReason()` returned an incorrect value for
   `Response` objects returned by `Database.bulk()`.
 

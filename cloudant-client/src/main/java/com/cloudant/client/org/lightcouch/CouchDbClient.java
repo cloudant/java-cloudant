@@ -22,6 +22,8 @@ import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsStrin
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getResponse;
 
 import com.cloudant.client.api.model.MetaInformation;
+import com.cloudant.client.api.scheduler.SchedulerDocsResponse;
+import com.cloudant.client.api.scheduler.SchedulerJobsResponse;
 import com.cloudant.client.internal.DatabaseURIHelper;
 import com.cloudant.client.internal.URIBase;
 import com.cloudant.client.internal.util.DeserializationTypes;
@@ -275,6 +277,46 @@ public class CouchDbClient {
      */
     public Replicator replicator() {
         return new Replicator(this);
+    }
+
+
+    /**
+     * Lists replication jobs. Includes replications created via /_replicate endpoint as well as
+     * those created from replication documents. Does not include replications which have
+     * completed or have failed to start because replication documents were malformed. Each job
+     * description will include source and target information, replication id, a history of
+     * recent event, and a few other things.
+     *
+     * @return All current replication jobs
+     */
+    public SchedulerJobsResponse schedulerJobs() {
+        return this.get(new DatabaseURIHelper(getBaseUri()).path("_scheduler").path("jobs").build(),
+                SchedulerJobsResponse.class);
+    }
+
+    /**
+     * Lists replication documents. Includes information about all the documents, even in
+     * completed and failed states. For each document it returns the document ID, the database,
+     * the replication ID, source and target, and other information.
+     *
+     * @return All replication documents
+     */
+    public SchedulerDocsResponse schedulerDocs() {
+        return this.get(new DatabaseURIHelper(getBaseUri()).path("_scheduler").path("docs").build(),
+                SchedulerDocsResponse.class);
+    }
+
+    /**
+     * Get replication document state for a given replication document ID.
+     *
+     * @param docId The replication document ID
+     * @return Replication document for {@code docId}
+     */
+    public SchedulerDocsResponse.Doc schedulerDoc(String docId) {
+        assertNotEmpty(docId, "docId");
+        return this.get(new DatabaseURIHelper(getBaseUri()).
+                        path("_scheduler").path("docs").path("_replicator").path(docId).build(),
+                SchedulerDocsResponse.Doc.class);
     }
 
     /**

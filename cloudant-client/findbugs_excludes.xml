@@ -112,7 +112,17 @@ For example because it requires an API change
         <Class name="com.cloudant.client.internal.util.CloudFoundryService$CloudFoundryServiceCredentials"/>
         <Field name="url"/>
     </Match>
-
+    <!-- Populated via GSON -->
+    <Match>
+        <Bug code="UwF" pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
+        <Class name="com.cloudant.client.api.scheduler.SchedulerJobsResponse$History"/>
+        <Field name="timestamp"/>
+    </Match>
+    <Match>
+        <Bug code="UwF" pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
+        <Class name="com.cloudant.client.api.scheduler.SchedulerJobsResponse$History"/>
+        <Field name="type"/>
+    </Match>
 
     <!-- This is likely a false positive in Findbugs, the IDE doesn't complain an unchecked cast.
     See https://sourceforge.net/p/findbugs/bugs/1242/
