@@ -5,6 +5,8 @@
   - `CloudantClient.schedulerJobs()`,
   - `CloudantClient.schedulerDocs()`,
   - `CloudantClient.schedulerDoc(docId)`.
+- [NEW] Add `ComplexKey.addHighSentinel()` to allow matching of all
+  values as part of a complex key range.
 - [FIXED] An issue where `getReason()` returned an incorrect value for
   `Response` objects returned by `Database.bulk()`.
 
