@@ -19,25 +19,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This class can be extended by any class using {@link QueryParameter} annotations on public
+ * This class can be extended by any class using {@link Parameter} annotations on public
  * fields.
  * It provides methods to process those parameters for adding as URL query parameters.
  */
-public class QueryParameters {
+public class ParameterAnnotationProcessor {
 
-    protected Map<String, Object> processParameters() {
+    protected Map<String, Object> processParameters(Parameter.Type type) {
         Map<String, Object> parameters = new HashMap<String, Object>();
         for (Field field : this.getClass().getFields()) {
-            QueryParameter parameter = field.getAnnotation(QueryParameter.class);
-            if (parameter != null) {
+            Parameter parameter = field.getAnnotation(Parameter.class);
+            if (parameter != null && parameter.type().equals(type)) {
                 //use the field name as the parameter name unless one was specified
-                String parameterName = QueryParameter.USE_FIELD_NAME.equals(parameter.value()) ?
+                String parameterName = Parameter.USE_FIELD_NAME.equals(parameter.value()) ?
                         field.getName() : parameter.value();
                 Object parameterValue = null;
                 try {
                     parameterValue = field.get(this);
                 } catch (IllegalAccessException e) {
-                    throw new RuntimeException("A field annotated with @QueryParameter did not " +
+                    throw new RuntimeException("A field annotated with @Parameter did not " +
                             "have the public modifier and as such was not accessible", e);
                 }
                 if (parameterName != null && parameterValue != null) {
@@ -47,4 +47,6 @@ public class QueryParameters {
         }
         return parameters;
     }
+
+
 }

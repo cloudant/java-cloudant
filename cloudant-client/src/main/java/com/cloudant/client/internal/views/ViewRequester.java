@@ -25,7 +25,7 @@ import java.io.InputStream;
 class ViewRequester {
 
     static JsonObject getResponseAsJson(ViewQueryParameters parameters) throws IOException {
-        return executeRequestWithResponseAsJson(parameters, parameters.asGetRequest());
+        return executeRequestWithResponseAsJson(parameters, parameters.asRequest());
     }
 
     static JsonObject executeRequestWithResponseAsJson(ViewQueryParameters parameters,
