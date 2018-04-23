@@ -119,6 +119,13 @@ public interface ViewResponse<K, V> extends Iterable<ViewResponse<K, V>> {
          * @since 2.10.0
          */
         String getError();
+
+        /**
+         * Returns a "sparse" document consisting of only the document ID, the revision ID, and the
+         * deleted flag
+         * @return a sparse document
+         */
+        Document getSparseDocument();
     }
 
     /**

@@ -70,6 +70,24 @@ public class RowImpl<K, V> implements ViewResponse.Row<K, V> {
     }
 
     @Override
+    public Document getSparseDocument() {
+        Document sparseDoc = null;
+        if (row.has("value")) {
+            JsonObject obj = row.get("value").getAsJsonObject();
+            String rev = obj.get("rev").getAsString();
+            boolean deleted = false;
+            if (obj.has("deleted")) {
+                deleted = obj.get("deleted").getAsBoolean();
+            }
+            sparseDoc = new Document();
+            sparseDoc.setId(getId());
+            sparseDoc.setRevision(rev);
+            sparseDoc.setDeleted(deleted);
+        }
+        return sparseDoc;
+    }
+
+    @Override
     public String getError() {
         String error = null;
         if(row.has("key") && row.has("error")) {

@@ -171,12 +171,29 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
                     Document doc = row.getDocument();
                     if(doc != null) {
                         docs.add(doc);
+                    } else {
+                        // we asked for the document, but it may have been deleted, still try to
+                        // fetch sparse information (id, rev, deleted)
+                        Document sparseDoc = row.getSparseDocument();
+                        if (sparseDoc != null) {
+                            docs.add(sparseDoc);
+                        }
                     }
                 }
             }
             return docs;
         } else {
-            throw new IllegalStateException("Cannot getDocs() when include_docs is false.");
+            // include docs was false, but we can still fetch sparse information (id, rev, deleted)
+            if (docs == null) {
+                docs = new ArrayList<Document>();
+                for (Row row : getRows()) {
+                    Document doc = row.getSparseDocument();
+                    if(doc != null) {
+                        docs.add(doc);
+                    }
+                }
+            }
+            return docs;
         }
     }
 
@@ -185,7 +202,10 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
         if (initialQueryParameters.getIncludeDocs()) {
             List<D> documents = new ArrayList<D>();
             for (Row<K, V> row : getRows()) {
-                documents.add(row.getDocumentAsType(docType));
+                D doc = row.getDocumentAsType(docType);
+                if (doc != null) {
+                    documents.add(doc);
+                }
             }
             return documents;
         } else {
