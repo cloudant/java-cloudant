@@ -7,6 +7,10 @@
   - `CloudantClient.schedulerDoc(docId)`.
 - [FIXED] An issue where `getReason()` returned an incorrect value for
   `Response` objects returned by `Database.bulk()`.
+- [IMPROVED] When making view requests (including `_all_docs`), set
+  `keys` in the `POST` body rather than in `GET` query
+  parameters. This is because a large number of keys could previously
+  exceed the maximum URL length, causing errors.
 
 # 2.12.0 (2018-02-08)
 - [NEW] Index creation APIs and builders including support for text and partial indexes.
