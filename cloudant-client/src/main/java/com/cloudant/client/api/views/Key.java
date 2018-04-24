@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright (c) 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -38,7 +38,9 @@ import com.google.gson.JsonSerializer;
 public class Key {
 
     /**
+     * <p>
      * Key type identifier.
+     * </p>
      * <P>
      * Accessed via the constants:
      * </P>
@@ -48,19 +50,35 @@ public class Key {
      * <LI>{@link com.cloudant.client.api.views.Key.Type#NUMBER}</LI>
      * <LI>{@link com.cloudant.client.api.views.Key.Type#STRING}</LI>
      * </UL>
+     * <p>
      * New complex keys are initially created using the static helper methods:
+     * </p>
      * <UL>
      * <LI>{@link com.cloudant.client.api.views.Key#complex(Boolean...)}</LI>
      * <LI>{@link com.cloudant.client.api.views.Key#complex(Number...)}</LI>
      * <LI>{@link com.cloudant.client.api.views.Key#complex(String...)}</LI>
      * </UL>
+     * <p>
      * After creation further values can be added to the complex keys. For example to generate
      * the complex key {@code [true,1,"a","b"]}
+     * </p>
      * <P>
      * {@code
      * Key.complex(true).add(1).add("a", "b");
      * }
      * </P>
+     * <p>
+     * To match all values as part of a complex key range, use {@code addHighSentinel()}.
+     * For instance, to specify the range given in
+     * <a href="http://docs.couchdb.org/en/latest/ddocs/views/collation.html#examples" target="_blank">
+     * this example</a>, use the following:
+     * </p>
+     * <pre>
+     * {@code
+     * Key start = Key.complex("XYZ");
+     * Key end = Key.complex("XYZ).addHighSentinel();
+     * }
+     * </pre>
      *
      * @param <T> {@link Boolean},
      *            {@link Number},
@@ -119,8 +137,12 @@ public class Key {
         //default builder is acceptable as only primitive types
         private static final Gson gson = new GsonBuilder().create();
 
+        // The high key sentinel value which is guaranteed to sort last
+        private static final String HIGH_SENTINEL = "\ufff0";
+
         private JsonArray json = new JsonArray();
 
+        private boolean canAddKeys = true;
 
         private ComplexKey() {
 
@@ -131,6 +153,9 @@ public class Key {
         }
 
         private <T> Key.ComplexKey addObjects(T... keys) {
+            if (!canAddKeys) {
+                throw new IllegalStateException("Cannot add keys after addHighSentinel() has been called");
+            }
             for (T key : keys) {
                 json.add(gson.toJsonTree(key));
             }
@@ -168,6 +193,18 @@ public class Key {
          */
         public Key.ComplexKey add(Number... numberKeys) {
             return addObjects(numberKeys);
+        }
+
+        /**
+         * Add the high key sentinel value, which is guaranteed to sort last, to the complex key.
+         * @return this ComplexKey. Note that chained additions are prohibited after calling this
+         * method and any subsequent calls to {@code add()} will throw an {@code IllegalStateException}.
+         * @since 2.13.0
+         */
+        public Key.ComplexKey addHighSentinel() {
+            Key.ComplexKey k = addObjects(HIGH_SENTINEL);
+            this.canAddKeys = false;
+            return k;
         }
 
         /**

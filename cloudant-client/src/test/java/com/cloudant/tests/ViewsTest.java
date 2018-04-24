@@ -490,6 +490,43 @@ public class ViewsTest extends TestWithDbPerTest {
     }
 
     /**
+     * Assert that passing a complex key with integer, string, and boolean objects, using the
+     * high unicode value represented by addHighSentinel(), in queryView will produce a
+     * result with JSON object values.
+     * Assert that the keys and values in the page result's
+     * JSON objects are the same as the expected objects.
+     */
+    @Test
+    public void queryPageWithComplexStartEndKeyAndJsonObjectValueUsingEndKey() throws Exception {
+        init();
+
+        List<JsonObject> result = db.getViewRequestBuilder("example", "boolean_creator_created")
+                .newPaginatedRequest
+                        (Key.Type.COMPLEX, JsonObject.class).startKey(Key.complex(true)
+                        .add("uuid").add(1))
+                .endKey(Key.complex(true).add("uuid").addHighSentinel()).rowsPerPage(30)
+                .build().getResponse()
+                .getValues();
+
+        assertThat(result.size(), is(2));
+
+        Gson gson = new Gson();
+        ArrayList<JsonObject> expectedJsonObject = new ArrayList<JsonObject>(),
+                actualJsonObject = new ArrayList<JsonObject>();
+
+        for (int i = 0; i < result.size(); i++) {
+            expectedJsonObject.add(multiValueKeyInit(null, i + 1));
+            //Build a list from the query's results of the JSON objects from 'contentArray'
+            JsonObject actualJsonContentObject = (gson.toJsonTree(result.get(i)))
+                    .getAsJsonObject().get("contentArray")
+                    .getAsJsonArray().get(0).getAsJsonObject();
+            actualJsonObject.add(actualJsonContentObject);
+        }
+
+        assertJsonObjectKeysAndValues(expectedJsonObject, actualJsonObject);
+    }
+
+    /**
      * Assert that passing a complex key with integer, string, and
      * boolean objects in query will produce a result with
      * JSON array values.
@@ -742,6 +779,17 @@ public class ViewsTest extends TestWithDbPerTest {
 
         assertNotNull(response);
         assertThat(response.size(), is(0));
+    }
+
+    /**
+     * Assert that IllegalStateException is thrown if any keys are added after calling
+     * addHighSentinel()
+     */
+    @Test
+    public void addingAfterHighSentinelThrowsError() {
+        assertThrows(IllegalStateException.class, () ->  {
+            Key.complex("ABC").addHighSentinel().add("XYZ");
+        });
     }
 
     /**
