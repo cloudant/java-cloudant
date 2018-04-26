@@ -17,7 +17,6 @@ package com.cloudant.client.internal.views;
 import com.cloudant.client.api.model.Document;
 import com.cloudant.client.api.views.AllDocsRequest;
 import com.cloudant.client.api.views.AllDocsResponse;
-import com.cloudant.client.api.views.ViewRequest;
 import com.cloudant.client.api.views.ViewResponse;
 
 import java.io.IOException;
@@ -31,11 +30,11 @@ import java.util.Map;
  */
 public class AllDocsRequestResponse implements AllDocsRequest, AllDocsResponse {
 
-    private final ViewRequest<String, Revision> request;
-    private ViewResponse<String, Revision> response = null;
+    private final AllDocsRequestImpl request;
+    private ViewResponse<String, AllDocsValue> response = null;
 
-    AllDocsRequestResponse(ViewQueryParameters<String, Revision> parameters) {
-        request = new ViewRequestImpl<String, Revision>(parameters);
+    AllDocsRequestResponse(ViewQueryParameters<String, AllDocsValue> parameters) {
+        request = new AllDocsRequestImpl(parameters);
     }
 
 
@@ -53,10 +52,10 @@ public class AllDocsRequestResponse implements AllDocsRequest, AllDocsResponse {
     @Override
     public Map<String, String> getIdsAndRevs() {
         Map<String, String> docIdsAndRevs = new HashMap<String, String>();
-        for (ViewResponse.Row<String, Revision> row : response.getRows()) {
-            Revision rev = row.getValue();
+        for (ViewResponse.Row<String, AllDocsValue> row : response.getRows()) {
+            AllDocsValue rev = row.getValue();
             if (rev != null) {
-                docIdsAndRevs.put(row.getKey(), rev.get());
+                docIdsAndRevs.put(row.getKey(), rev.getRev());
             }
         }
         return docIdsAndRevs;
@@ -75,7 +74,7 @@ public class AllDocsRequestResponse implements AllDocsRequest, AllDocsResponse {
     @Override
     public Map<String, String> getErrors() {
         Map<String, String> errors = new HashMap<String, String>();
-        for (ViewResponse.Row<String, Revision> row : response.getRows()) {
+        for (ViewResponse.Row<String, AllDocsValue> row : response.getRows()) {
             if(row.getError() != null) {
                 errors.put(row.getKey(), row.getError());
             }
@@ -89,15 +88,23 @@ public class AllDocsRequestResponse implements AllDocsRequest, AllDocsResponse {
          * A convenience to allow deserialization of _all_docs JSON revision object data.
          * </P>
          */
-    public static final class Revision {
+    public static final class AllDocsValue {
 
-        private String rev;
+        private String rev = null;
+        private boolean deleted = false;
 
         /**
          * @return the value of the document rev field
          */
-        public String get() {
+        public String getRev() {
             return rev;
+        }
+
+        /**
+         * @return true if deleted
+         */
+        public boolean isDeleted() {
+            return deleted;
         }
     }
 }

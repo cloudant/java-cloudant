@@ -30,14 +30,30 @@ import java.util.Map;
 public interface AllDocsResponse {
 
     /**
+     * <P>
+     * Get the document information from an _all_docs request.
+     * </P>
+     * <P>
+     * Note that if requesting docs using {@link AllDocsRequestBuilder#keys(Object[])} the list of
+     * documents may include <b>deleted</b> documents that have one of the specified ids.
+     * </P>
+     * <P>
+     * Note if {@link AllDocsRequestBuilder#includeDocs(boolean)} is false then attachment metadata
+     * will not be present.
+     * </P>
      * @return a list of Document objects from the _all_docs request
-     * @throws IllegalStateException if include_docs was {@code false}
      * @since 2.0.0
      */
     List<Document> getDocs();
 
     /**
+     * <P>
      * Gets a map of the document id and revision for each result in the _all_docs request.
+     * </P>
+     * <P>
+     * Note that if requesting docs using {@link AllDocsRequestBuilder#keys(Object[])} the ids and
+     * revs may include <b>deleted</b> documents that have one of the specified ids.
+     * </P>
      *
      * @return a map with an entry for each document, key of _id and value of _rev
      * @since 2.0.0
@@ -45,7 +61,14 @@ public interface AllDocsResponse {
     Map<String, String> getIdsAndRevs();
 
     /**
+     * <P>
      * Deserializes the included full content of result documents to a list of the specified type.
+     * </P>
+     * <P>
+     * Note that if requesting docs using {@link AllDocsRequestBuilder#keys(Object[])} the list of
+     * documents may include <b>deleted</b> documents that have one of the specified ids. You may
+     * want to ensure that your document type can support checking of the deleted flag.
+     * </P>
      *
      * @param docType the class type to deserialize the JSON document to
      * @param <D>     the type of the document

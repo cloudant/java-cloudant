@@ -56,7 +56,7 @@ public class ViewMultipleRequester<K, V> implements ViewMultipleRequest<K, V> {
             int index = 0;
             for (ViewQueryParameters<K, V> params : requestParameters) {
                 JsonObject response = jsonResponses.get(index).getAsJsonObject();
-                responses.add(new ViewResponseImpl<K, V>(params, response));
+                responses.add(new ViewResponseImpl<K, V>(params, response, null));
                 index++;
             }
             return responses;

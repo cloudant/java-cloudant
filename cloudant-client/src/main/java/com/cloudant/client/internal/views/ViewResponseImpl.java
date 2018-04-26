@@ -29,7 +29,7 @@ import java.util.NoSuchElementException;
 
 class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
 
-    private final ViewQueryParameters<K, V> initialQueryParameters;
+    protected final ViewQueryParameters<K, V> initialQueryParameters;
     private final boolean hasPrevious;
     private final boolean hasNext;
     private final long pageNumber;
@@ -43,10 +43,6 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
     private List<K> keys = null;
     private List<V> values = null;
     private List<Document> docs = null;
-
-    ViewResponseImpl(ViewQueryParameters<K, V> viewQueryParameters, JsonObject response) {
-        this(viewQueryParameters, response, null);
-    }
 
     ViewResponseImpl(ViewQueryParameters<K, V> initialQueryParameters, JsonObject response,
                      PageMetadata<K, V> pageMetadata) {
@@ -67,7 +63,7 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
         JsonArray rowsArray = response.getAsJsonArray("rows");
         if (rowsArray != null) {
             for (JsonElement row : rowsArray) {
-                rows.add(new RowImpl<K, V>(initialQueryParameters, row));
+                rows.add(fromJson(row));
             }
         }
         int resultRows = rows.size();
@@ -165,36 +161,23 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
     @Override
     public List<Document> getDocs() {
         if (initialQueryParameters.getIncludeDocs()) {
-            if (docs == null) {
-                docs = new ArrayList<Document>();
-                for (Row row : getRows()) {
-                    Document doc = row.getDocument();
-                    if(doc != null) {
-                        docs.add(doc);
-                    } else {
-                        // we asked for the document, but it may have been deleted, still try to
-                        // fetch sparse information (id, rev, deleted)
-                        Document sparseDoc = row.getSparseDocument();
-                        if (sparseDoc != null) {
-                            docs.add(sparseDoc);
-                        }
-                    }
-                }
-            }
-            return docs;
+            return internalGetDocs();
         } else {
-            // include docs was false, but we can still fetch sparse information (id, rev, deleted)
-            if (docs == null) {
-                docs = new ArrayList<Document>();
-                for (Row row : getRows()) {
-                    Document doc = row.getSparseDocument();
-                    if(doc != null) {
-                        docs.add(doc);
-                    }
+            throw new IllegalStateException("Cannot getDocs() when include_docs is false.");
+        }
+    }
+
+    protected List<Document> internalGetDocs() {
+        if (docs == null) {
+            docs = new ArrayList<Document>();
+            for (Row row : getRows()) {
+                Document doc = row.getDocument();
+                if(doc != null) {
+                    docs.add(doc);
                 }
             }
-            return docs;
         }
+        return docs;
     }
 
     @Override
@@ -202,10 +185,7 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
         if (initialQueryParameters.getIncludeDocs()) {
             List<D> documents = new ArrayList<D>();
             for (Row<K, V> row : getRows()) {
-                D doc = row.getDocumentAsType(docType);
-                if (doc != null) {
-                    documents.add(doc);
-                }
+                documents.add(row.getDocumentAsType(docType));
             }
             return documents;
         } else {
@@ -329,5 +309,9 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
             keys.add(row.getKey());
             values.add(row.getValue());
         }
+    }
+
+    protected Row fromJson(JsonElement row) {
+        return new RowImpl<K, V>(initialQueryParameters, row);
     }
 }

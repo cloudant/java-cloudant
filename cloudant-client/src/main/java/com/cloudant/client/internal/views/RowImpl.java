@@ -23,7 +23,7 @@ import com.google.gson.JsonObject;
 public class RowImpl<K, V> implements ViewResponse.Row<K, V> {
 
     private final ViewQueryParameters<K, V> parameters;
-    private final Gson gson;
+    protected final Gson gson;
     private final JsonObject row;
 
     RowImpl(ViewQueryParameters<K, V> parameters, JsonElement row) {
@@ -64,27 +64,12 @@ public class RowImpl<K, V> implements ViewResponse.Row<K, V> {
     public <D> D getDocumentAsType(Class<D> docType) {
         D doc = null;
         if(row.has("doc")) {
-            doc = gson.fromJson(row.get("doc"), docType);
+            JsonElement jsonDoc = row.get("doc");
+            if (jsonDoc.isJsonObject()) {
+                doc = gson.fromJson(jsonDoc, docType);
+            }
         }
         return doc;
-    }
-
-    @Override
-    public Document getSparseDocument() {
-        Document sparseDoc = null;
-        if (row.has("value")) {
-            JsonObject obj = row.get("value").getAsJsonObject();
-            String rev = obj.get("rev").getAsString();
-            boolean deleted = false;
-            if (obj.has("deleted")) {
-                deleted = obj.get("deleted").getAsBoolean();
-            }
-            sparseDoc = new Document();
-            sparseDoc.setId(getId());
-            sparseDoc.setRevision(rev);
-            sparseDoc.setDeleted(deleted);
-        }
-        return sparseDoc;
     }
 
     @Override

@@ -18,10 +18,10 @@ import com.cloudant.client.api.views.AllDocsRequest;
 import com.cloudant.client.api.views.AllDocsRequestBuilder;
 
 public class AllDocsRequestBuilderImpl extends CommonViewRequestBuilder<String,
-        AllDocsRequestResponse.Revision,
+        AllDocsRequestResponse.AllDocsValue,
         AllDocsRequestBuilder> implements AllDocsRequestBuilder {
 
-    public AllDocsRequestBuilderImpl(ViewQueryParameters<String, AllDocsRequestResponse.Revision>
+    public AllDocsRequestBuilderImpl(ViewQueryParameters<String, AllDocsRequestResponse.AllDocsValue>
                                              parameters) {
         super(parameters);
     }

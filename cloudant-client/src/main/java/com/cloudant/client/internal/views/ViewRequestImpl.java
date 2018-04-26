@@ -16,14 +16,13 @@ package com.cloudant.client.internal.views;
 
 import com.cloudant.client.api.views.ViewRequest;
 import com.cloudant.client.api.views.ViewResponse;
-import com.google.gson.JsonObject;
 
 import java.io.IOException;
 import java.util.List;
 
 class ViewRequestImpl<K, V> implements ViewRequest<K, V> {
 
-    private final ViewQueryParameters<K, V> viewQueryParameters;
+    protected final ViewQueryParameters<K, V> viewQueryParameters;
 
     ViewRequestImpl(ViewQueryParameters<K, V> viewQueryParameters) {
         this.viewQueryParameters = viewQueryParameters;
@@ -31,21 +30,16 @@ class ViewRequestImpl<K, V> implements ViewRequest<K, V> {
 
     @Override
     public ViewResponse<K, V> getResponse() throws IOException {
-        JsonObject response = ViewRequester.getResponseAsJson(viewQueryParameters);
-        return new ViewResponseImpl<K, V>(viewQueryParameters, response);
+        return getResponse(null);
     }
 
     @Override
     public ViewResponse<K, V> getResponse(String paginationToken) throws IOException {
-        if (paginationToken == null) {
-            return getResponse();
-        } else {
-            //decode the PageMetadata
-            PageMetadata<K, V> pageMetadata = PaginationToken.mergeTokenAndQueryParameters
-                    (paginationToken, viewQueryParameters);
-            return new ViewResponseImpl<K, V>(viewQueryParameters, ViewRequester
-                    .getResponseAsJson(pageMetadata.pageRequestParameters), pageMetadata);
-        }
+        //decode the PageMetadata if present
+        PageMetadata<K, V> pageMetadata = (paginationToken != null) ? PaginationToken
+                .mergeTokenAndQueryParameters
+                (paginationToken, viewQueryParameters) : null;
+        return makeResponse(pageMetadata);
     }
 
     @Override
@@ -58,4 +52,10 @@ class ViewRequestImpl<K, V> implements ViewRequest<K, V> {
         }
     }
 
+    protected ViewResponseImpl<K, V> makeResponse(PageMetadata<K, V> metadata) throws IOException {
+        ViewQueryParameters<K, V> requestParameters = (metadata != null) ? metadata
+                .pageRequestParameters : viewQueryParameters;
+        return new ViewResponseImpl<K, V>(viewQueryParameters, ViewRequester.getResponseAsJson
+                (requestParameters), metadata);
+    }
 }
