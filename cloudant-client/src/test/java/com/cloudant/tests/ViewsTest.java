@@ -759,7 +759,7 @@ public class ViewsTest extends TestWithDbPerTest {
                 .build()
                 .getResponse()
                 .getDocIds();
-        assertThat(allDocIds.size(), is(100));
+        assertThat(allDocIds.size(), is(nDocs/2));
     }
 
     @Test
