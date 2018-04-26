@@ -744,6 +744,35 @@ public class ViewsTest extends TestWithDbPerTest {
         assertThat(response.size(), is(0));
     }
 
+    @Test
+    public void allDocsWithLargeNumberOfKeys() throws Exception {
+        init();
+        int nDocs = 200;
+        List<String> ids = new ArrayList<String>();
+        for (int i=0; i<nDocs; i++) {
+            String id = db.save(new Foo()).getId();
+            if (i%2 == 0) {
+                ids.add(id);
+            }
+        }
+        List<String> allDocIds = db.getAllDocsRequestBuilder().keys(ids.toArray(new String[]{}))
+                .build()
+                .getResponse()
+                .getDocIds();
+        assertThat(allDocIds.size(), is(100));
+    }
+
+    @Test
+    public void allDocsWithUnicodeKeys() throws Exception {
+        init();
+        db.save(new Foo("日本"));
+        List<String> allDocIds = db.getAllDocsRequestBuilder().keys("日本")
+                .build()
+                .getResponse()
+                .getDocIds();
+        assertThat(allDocIds.size(), is(1));
+    }
+
     /**
      * @param index the index to encode.
      * @return a three character string representing the given {@code index}.
