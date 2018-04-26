@@ -127,6 +127,19 @@ public class ViewsTest extends TestWithDbPerTest {
     }
 
     @Test
+    public void byKeysIncludeDocsFalse() throws Exception {
+        init();
+        // attempting to call getDocs() for a view with include_docs=false raises the exception
+        // java.lang.IllegalStateException: Cannot getDocs() when include_docs is false.
+        assertThrows(IllegalStateException.class, () -> {
+            db.getViewRequestBuilder("example", "foo").newRequest(Key.Type
+                            .STRING,
+                    Object.class).includeDocs(false).keys("key-1", "key-2").build()
+                    .getResponse().getDocs();
+        });
+    }
+
+    @Test
     public void byNonExistentAndExistingKey() throws Exception {
         init();
         List<ViewResponse.Row<String, Object>> foos = db.getViewRequestBuilder("example", "foo")
