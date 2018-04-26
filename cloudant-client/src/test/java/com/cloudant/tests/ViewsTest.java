@@ -18,6 +18,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -760,8 +761,7 @@ public class ViewsTest extends TestWithDbPerTest {
     }
 
     // all docs with given keys, one document deleted:
-    // check that with include_docs true we can serialise non-deleted document using getDocsAs and
-    // that the deleted document is excluded from results
+    // check that with include_docs true we can deserialise when there is a deleted document
     @Test
     public void allDocsWithKeysDocDeletedIncludeDocsGetDocsAs() throws Exception {
         init();
@@ -771,10 +771,18 @@ public class ViewsTest extends TestWithDbPerTest {
         Foo foo2 = new Foo();
         Response response1 = db.save(foo1);
         Response response2 = db.save(foo2);
-        db.remove(response2.getId(), response2.getRev());
+        Response response3 = db.remove(response2.getId(), response2.getRev());
+
         List<Foo> foos = db.getAllDocsRequestBuilder().includeDocs(true).keys(response1.getId(), response2.getId()).build().getResponse().getDocsAs(Foo.class);
-        assertThat(foos, hasSize(1));
+        assertThat(foos, hasSize(2));
         assertThat(foos.get(0).getContent(), is("some content"));
+        // Assert the deleted one has:
+        // is deleted
+        assertEquals(true, foos.get(1)._deleted);
+        // the deleted rev
+        assertEquals(response3.getRev(), foos.get(1).get_rev());
+        // is empty or null content
+        assertThat(foos.get(1).getContent(), isEmptyOrNullString());
     }
 
 
