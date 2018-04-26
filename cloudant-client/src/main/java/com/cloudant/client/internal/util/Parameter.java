@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -19,14 +19,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Annotation for public fields so they can be used as query parameters
- */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface QueryParameter {
+public @interface Parameter {
 
-    String USE_FIELD_NAME = "QueryParameter.USE_FIELD_NAME";
+    String USE_FIELD_NAME = "BodyParameter.USE_FIELD_NAME";
 
     String value() default USE_FIELD_NAME;
+
+    Type type();
+
+    enum Type {
+        QUERY_PARAMETER,
+        BODY_PARAMETER
+    }
+
 }

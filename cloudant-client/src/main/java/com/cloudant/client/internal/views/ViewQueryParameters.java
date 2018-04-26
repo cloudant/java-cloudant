@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright (c) 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -17,8 +17,8 @@ package com.cloudant.client.internal.views;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.internal.DatabaseURIHelper;
-import com.cloudant.client.internal.util.QueryParameter;
-import com.cloudant.client.internal.util.QueryParameters;
+import com.cloudant.client.internal.util.Parameter;
+import com.cloudant.client.internal.util.ParameterAnnotationProcessor;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.google.gson.Gson;
@@ -27,7 +27,7 @@ import com.google.gson.JsonElement;
 
 import java.util.Map;
 
-public class ViewQueryParameters<K, V> extends QueryParameters implements Cloneable {
+public class ViewQueryParameters<K, V> extends ParameterAnnotationProcessor implements Cloneable {
 
     private final CloudantClient client;
     private final Database db;
@@ -43,49 +43,49 @@ public class ViewQueryParameters<K, V> extends QueryParameters implements Clonea
     * server side.
     */
 
-    @QueryParameter
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public Boolean descending = null;
 
-    @QueryParameter
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public JsonElement endkey = null;
 
-    @QueryParameter
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public String endkey_docid = null;
 
-    @QueryParameter
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public Boolean group = null;
 
-    @QueryParameter
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public Integer group_level = null;
 
-    @QueryParameter
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public Boolean include_docs = null;
 
-    @QueryParameter
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public Boolean inclusive_end = null;
 
-    @QueryParameter
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public JsonElement key = null;
 
-    @QueryParameter
+    @Parameter(type = Parameter.Type.BODY_PARAMETER)
     public JsonArray keys = null;
 
-    @QueryParameter
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public Integer limit = null;
 
-    @QueryParameter
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public Boolean reduce = null;
 
-    @QueryParameter
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public Long skip = null;
 
-    @QueryParameter
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public String stale = null;
 
-    @QueryParameter
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public JsonElement startkey = null;
 
-    @QueryParameter
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public String startkey_docid = null;
 
     /* Constructors */
@@ -277,12 +277,21 @@ public class ViewQueryParameters<K, V> extends QueryParameters implements Clonea
 
     /* Parameter output methods */
 
-    HttpConnection asGetRequest() {
+    HttpConnection asRequest() {
         DatabaseURIHelper builder = getViewURIBuilder();
-        for (Map.Entry<String, Object> queryParameter : processParameters().entrySet()) {
+        for (Map.Entry<String, Object> queryParameter : processParameters(Parameter.Type
+                .QUERY_PARAMETER).entrySet()) {
             builder.query(queryParameter.getKey(), queryParameter.getValue());
         }
-        return Http.GET(builder.build());
+        Map<String, Object> parameters = processParameters(Parameter.Type.BODY_PARAMETER);
+        // if there are no parameters in the body, we do a GET, otherwise we do a POST
+        if (parameters == null || parameters.isEmpty()) {
+            return Http.GET(builder.build());
+        }
+        JsonElement body = gson.toJsonTree(parameters);
+        HttpConnection conn = Http.POST(builder.build(),  "application/json");
+        conn.setRequestBody(body.toString());
+        return conn;
     }
 
     protected DatabaseURIHelper getViewURIBuilder() {
@@ -291,7 +300,7 @@ public class ViewQueryParameters<K, V> extends QueryParameters implements Clonea
     }
 
     JsonElement asJson() {
-        Map<String, Object> parameters = processParameters();
+        Map<String, Object> parameters = processParameters(Parameter.Type.QUERY_PARAMETER);
         return gson.toJsonTree(parameters);
     }
 
