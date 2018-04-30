@@ -1,18 +1,17 @@
 # Unreleased
-
 - [NEW] Add `CloudantClient.metaInformation()` to get meta information from the welcome page.
 - [NEW] Add methods for interacting with the replicator's `_scheduler` endpoint:
   - `CloudantClient.schedulerJobs()`,
   - `CloudantClient.schedulerDocs()`,
   - `CloudantClient.schedulerDoc(docId)`.
-- [NEW] Add `ComplexKey.addHighSentinel()` to allow matching of all
-  values as part of a complex key range.
-- [FIXED] An issue where `getReason()` returned an incorrect value for
-  `Response` objects returned by `Database.bulk()`.
-- [IMPROVED] When making view requests (including `_all_docs`), set
-  `keys` in the `POST` body rather than in `GET` query
-  parameters. This is because a large number of keys could previously
-  exceed the maximum URL length, causing errors.
+- [NEW] Add `ComplexKey.addHighSentinel()` to allow matching of all values as part of a complex key
+  range.
+- [IMPROVED] When making view requests (including `_all_docs`), set `keys` in the `POST` body rather
+  than in `GET` query parameters. This is because a large number of keys could previously exceed the
+  maximum URL length, causing errors.
+- [FIXED] An issue where `getReason()` returned an incorrect value for `Response` objects returned
+  by `Database.bulk()`.
+- [FIXED] Issues retrieving deleted documents using an `AllDocsRequest`.
 
 # 2.12.0 (2018-02-08)
 - [NEW] Index creation APIs and builders including support for text and partial indexes.
