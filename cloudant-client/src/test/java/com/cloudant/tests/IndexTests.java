@@ -18,6 +18,7 @@ import static com.cloudant.client.api.query.EmptyExpression.empty;
 import static com.cloudant.client.api.query.Expression.eq;
 import static com.cloudant.client.api.query.Expression.gt;
 import static com.cloudant.client.api.query.Operation.and;
+import static com.cloudant.tests.CloudantClientHelper.getReplicationSourceUrl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -60,7 +61,7 @@ public class IndexTests extends TestWithDbPerClass {
 
         // create the movies-demo db for our index tests
         com.cloudant.client.api.Replication r = account.replication();
-        r.source("https://clientlibs-test.cloudant.com/movies-demo");
+        r.source(getReplicationSourceUrl("movies-demo"));
         r.createTarget(true);
         r.target(dbResource.getDbURIWithUserInfo());
         r.trigger();

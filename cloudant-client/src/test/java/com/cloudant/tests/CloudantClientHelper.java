@@ -121,4 +121,27 @@ public abstract class CloudantClientHelper {
                 .password(COUCH_PASSWORD);
     }
 
+    static String REP_SOURCE = null;
+
+    /**
+     * Uses the environment variable TEST_REPLICATION_SOURCE_URL
+     * or system property test.replication.source.url
+     * to determine the source replication URL for the named database.
+     * If neither the environment variable or the property is set, defaults to
+     * https://clientlibs-test.cloudant.com/ as the prefix.
+     * Note the environment variable takes precedence over the system property.
+     *
+     * @param dbName
+     * @return a URL to use as a source for replication
+     */
+    public static String getReplicationSourceUrl(String dbName) {
+        if (REP_SOURCE == null) {
+            REP_SOURCE = System.getProperty("test.replication.source.url", "https://clientlibs-test.cloudant.com/");
+            if (!REP_SOURCE.endsWith("/")) {
+                REP_SOURCE = REP_SOURCE + "/";
+            }
+        }
+        return REP_SOURCE + dbName;
+    }
+
 }
