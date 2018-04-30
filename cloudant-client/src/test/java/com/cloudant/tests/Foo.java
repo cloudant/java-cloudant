@@ -30,6 +30,7 @@ public class Foo {
 
     private String _id;
     private String _rev;
+    public boolean _deleted;
 
     private String title;
     private String content;

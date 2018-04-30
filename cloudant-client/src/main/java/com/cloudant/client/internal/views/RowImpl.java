@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -23,7 +23,7 @@ import com.google.gson.JsonObject;
 public class RowImpl<K, V> implements ViewResponse.Row<K, V> {
 
     private final ViewQueryParameters<K, V> parameters;
-    private final Gson gson;
+    protected final Gson gson;
     private final JsonObject row;
 
     RowImpl(ViewQueryParameters<K, V> parameters, JsonElement row) {
@@ -64,7 +64,10 @@ public class RowImpl<K, V> implements ViewResponse.Row<K, V> {
     public <D> D getDocumentAsType(Class<D> docType) {
         D doc = null;
         if(row.has("doc")) {
-            doc = gson.fromJson(row.get("doc"), docType);
+            JsonElement jsonDoc = row.get("doc");
+            if (jsonDoc.isJsonObject()) {
+                doc = gson.fromJson(jsonDoc, docType);
+            }
         }
         return doc;
     }

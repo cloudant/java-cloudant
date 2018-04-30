@@ -1,6 +1,6 @@
 /*
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  * Copyright (C) 2011 lightcouch.org
- * Copyright (c) 2015 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -35,6 +35,8 @@ public class Document {
     private String revision;
     @SerializedName("_attachments")
     private Map<String, Attachment> attachments;
+    @SerializedName("_deleted")
+    private boolean deleted;
 
     public String getId() {
         return id;
@@ -58,6 +60,14 @@ public class Document {
 
     public void setAttachments(Map<String, Attachment> attachments) {
         this.attachments = attachments;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 
     /**
@@ -84,15 +94,17 @@ public class Document {
 
         Document document = (Document) o;
 
+        if (deleted != document.deleted) {
+            return false;
+        }
         if (id != null ? !id.equals(document.id) : document.id != null) {
             return false;
         }
         if (revision != null ? !revision.equals(document.revision) : document.revision != null) {
             return false;
         }
-        return !(attachments != null ? !attachments.equals(document.attachments) : document
-                .attachments != null);
-
+        return attachments != null ? attachments.equals(document.attachments) : document
+                .attachments == null;
     }
 
     @Override
@@ -100,6 +112,7 @@ public class Document {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (revision != null ? revision.hashCode() : 0);
         result = 31 * result + (attachments != null ? attachments.hashCode() : 0);
+        result = 31 * result + (deleted ? 1 : 0);
         return result;
     }
 }

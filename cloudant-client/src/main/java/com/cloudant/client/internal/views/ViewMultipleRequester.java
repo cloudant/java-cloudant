@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -56,7 +56,7 @@ public class ViewMultipleRequester<K, V> implements ViewMultipleRequest<K, V> {
             int index = 0;
             for (ViewQueryParameters<K, V> params : requestParameters) {
                 JsonObject response = jsonResponses.get(index).getAsJsonObject();
-                responses.add(new ViewResponseImpl<K, V>(params, response));
+                responses.add(new ViewResponseImpl<K, V>(params, response, null));
                 index++;
             }
             return responses;

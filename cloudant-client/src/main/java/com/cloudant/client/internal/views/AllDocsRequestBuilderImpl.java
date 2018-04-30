@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -18,10 +18,10 @@ import com.cloudant.client.api.views.AllDocsRequest;
 import com.cloudant.client.api.views.AllDocsRequestBuilder;
 
 public class AllDocsRequestBuilderImpl extends CommonViewRequestBuilder<String,
-        AllDocsRequestResponse.Revision,
+        AllDocsRequestResponse.AllDocsValue,
         AllDocsRequestBuilder> implements AllDocsRequestBuilder {
 
-    public AllDocsRequestBuilderImpl(ViewQueryParameters<String, AllDocsRequestResponse.Revision>
+    public AllDocsRequestBuilderImpl(ViewQueryParameters<String, AllDocsRequestResponse.AllDocsValue>
                                              parameters) {
         super(parameters);
     }

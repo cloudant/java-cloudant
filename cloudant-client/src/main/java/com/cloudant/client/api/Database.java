@@ -643,8 +643,8 @@ public class Database {
      */
     public AllDocsRequestBuilder getAllDocsRequestBuilder() {
         return new AllDocsRequestBuilderImpl(new ViewQueryParameters<String,
-                AllDocsRequestResponse.Revision>(client, this, "", "", String.class,
-                AllDocsRequestResponse.Revision.class) {
+                AllDocsRequestResponse.AllDocsValue>(client, this, "", "", String.class,
+                AllDocsRequestResponse.AllDocsValue.class) {
             protected DatabaseURIHelper getViewURIBuilder() {
                 return new DatabaseURIHelper(db.getDBUri()).path("_all_docs");
             }

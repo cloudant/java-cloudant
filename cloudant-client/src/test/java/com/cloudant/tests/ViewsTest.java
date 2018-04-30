@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2011 lightcouch.org
  * Copyright © 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright (C) 2011 lightcouch.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -17,6 +17,8 @@ package com.cloudant.tests;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -28,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Document;
+import com.cloudant.client.api.model.Response;
 import com.cloudant.client.api.views.AllDocsResponse;
 import com.cloudant.client.api.views.Key;
 import com.cloudant.client.api.views.SettableViewParameters;
@@ -121,6 +124,19 @@ public class ViewsTest extends TestWithDbPerTest {
                 Object.class).includeDocs(true).keys("key-1", "key-2").build().getResponse()
                 .getDocsAs(Foo.class);
         assertThat(foos.size(), is(2));
+    }
+
+    @Test
+    public void byKeysIncludeDocsFalse() throws Exception {
+        init();
+        // attempting to call getDocs() for a view with include_docs=false raises the exception
+        // java.lang.IllegalStateException: Cannot getDocs() when include_docs is false.
+        assertThrows(IllegalStateException.class, () -> {
+            db.getViewRequestBuilder("example", "foo").newRequest(Key.Type
+                            .STRING,
+                    Object.class).includeDocs(false).keys("key-1", "key-2").build()
+                    .getResponse().getDocs();
+        });
     }
 
     @Test
@@ -712,6 +728,76 @@ public class ViewsTest extends TestWithDbPerTest {
                 .getDocIds();
         assertThat(allDocIds.size(), is(2));
     }
+
+    // all docs with given keys, one document deleted:
+    // check that with include_docs false we can retrieve "sparse" document info including id, rev,
+    // and deleted flag for the deleted and non-deleted documents
+    @Test
+    public void allDocsWithKeysDocDeleted() throws Exception {
+        init();
+        // delete one object, see that it is retrieved with deleted flag set
+        Foo foo1 = new Foo();
+        Foo foo2 = new Foo();
+        Response response1 = db.save(foo1);
+        Response response2 = db.save(foo2);
+        Response removeResponse = db.remove(response2.getId(), response2.getRev());
+        AllDocsResponse response = db.getAllDocsRequestBuilder().includeDocs(false).keys(response1.getId(), response2.getId()).build().getResponse();
+        assertThat(response.getDocs(), hasSize(2));
+        assertThat(response.getDocs().get(0).isDeleted(), is(false));
+        assertThat(response.getDocs().get(0).getId(), is(response1.getId()));
+        assertThat(response.getDocs().get(0).getRevision(), is(response1.getRev()));
+        assertThat(response.getDocs().get(1).isDeleted(), is(true));
+        assertThat(response.getDocs().get(1).getId(), is(response2.getId()));
+        assertThat(response.getDocs().get(1).getRevision(), is(removeResponse.getRev()));
+    }
+
+    // all docs with given keys, one document deleted:
+    // check that with include_docs true we can retrieve "sparse" document info including id, rev,
+    // and deleted flag for the deleted and non-deleted documents
+    @Test
+    public void allDocsWithKeysDocDeletedIncludeDocs() throws Exception {
+        init();
+        // delete one object, see that it is retrieved with deleted flag set
+        Foo foo1 = new Foo();
+        Foo foo2 = new Foo();
+        Response response1 = db.save(foo1);
+        Response response2 = db.save(foo2);
+        Response removeResponse = db.remove(response2.getId(), response2.getRev());
+        AllDocsResponse response = db.getAllDocsRequestBuilder().includeDocs(true).keys(response1.getId(), response2.getId()).build().getResponse();
+        assertThat(response.getDocs(), hasSize(2));
+        assertThat(response.getDocs().get(0).isDeleted(), is(false));
+        assertThat(response.getDocs().get(0).getId(), is(response1.getId()));
+        assertThat(response.getDocs().get(0).getRevision(), is(response1.getRev()));
+        assertThat(response.getDocs().get(1).isDeleted(), is(true));
+        assertThat(response.getDocs().get(1).getId(), is(response2.getId()));
+        assertThat(response.getDocs().get(1).getRevision(), is(removeResponse.getRev()));
+    }
+
+    // all docs with given keys, one document deleted:
+    // check that with include_docs true we can deserialise when there is a deleted document
+    @Test
+    public void allDocsWithKeysDocDeletedIncludeDocsGetDocsAs() throws Exception {
+        init();
+        // delete one object, see that it is retrieved with deleted flag set
+        Foo foo1 = new Foo();
+        foo1.setContent("some content");
+        Foo foo2 = new Foo();
+        Response response1 = db.save(foo1);
+        Response response2 = db.save(foo2);
+        Response response3 = db.remove(response2.getId(), response2.getRev());
+
+        List<Foo> foos = db.getAllDocsRequestBuilder().includeDocs(true).keys(response1.getId(), response2.getId()).build().getResponse().getDocsAs(Foo.class);
+        assertThat(foos, hasSize(2));
+        assertThat(foos.get(0).getContent(), is("some content"));
+        // Assert the deleted one has:
+        // is deleted
+        assertEquals(true, foos.get(1)._deleted);
+        // the deleted rev
+        assertEquals(response3.getRev(), foos.get(1).get_rev());
+        // is empty or null content
+        assertThat(foos.get(1).getContent(), isEmptyOrNullString());
+    }
+
 
     @Test
     public void allDocsWithOneNonExistingKey() throws Exception {

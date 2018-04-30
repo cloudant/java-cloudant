@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -29,7 +29,7 @@ import java.util.NoSuchElementException;
 
 class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
 
-    private final ViewQueryParameters<K, V> initialQueryParameters;
+    protected final ViewQueryParameters<K, V> initialQueryParameters;
     private final boolean hasPrevious;
     private final boolean hasNext;
     private final long pageNumber;
@@ -43,10 +43,6 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
     private List<K> keys = null;
     private List<V> values = null;
     private List<Document> docs = null;
-
-    ViewResponseImpl(ViewQueryParameters<K, V> viewQueryParameters, JsonObject response) {
-        this(viewQueryParameters, response, null);
-    }
 
     ViewResponseImpl(ViewQueryParameters<K, V> initialQueryParameters, JsonObject response,
                      PageMetadata<K, V> pageMetadata) {
@@ -67,7 +63,7 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
         JsonArray rowsArray = response.getAsJsonArray("rows");
         if (rowsArray != null) {
             for (JsonElement row : rowsArray) {
-                rows.add(new RowImpl<K, V>(initialQueryParameters, row));
+                rows.add(fromJson(row));
             }
         }
         int resultRows = rows.size();
@@ -165,19 +161,23 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
     @Override
     public List<Document> getDocs() {
         if (initialQueryParameters.getIncludeDocs()) {
-            if (docs == null) {
-                docs = new ArrayList<Document>();
-                for (Row row : getRows()) {
-                    Document doc = row.getDocument();
-                    if(doc != null) {
-                        docs.add(doc);
-                    }
-                }
-            }
-            return docs;
+            return internalGetDocs();
         } else {
             throw new IllegalStateException("Cannot getDocs() when include_docs is false.");
         }
+    }
+
+    protected List<Document> internalGetDocs() {
+        if (docs == null) {
+            docs = new ArrayList<Document>();
+            for (Row row : getRows()) {
+                Document doc = row.getDocument();
+                if(doc != null) {
+                    docs.add(doc);
+                }
+            }
+        }
+        return docs;
     }
 
     @Override
@@ -309,5 +309,9 @@ class ViewResponseImpl<K, V> implements ViewResponse<K, V> {
             keys.add(row.getKey());
             values.add(row.getValue());
         }
+    }
+
+    protected Row fromJson(JsonElement row) {
+        return new RowImpl<K, V>(initialQueryParameters, row);
     }
 }
