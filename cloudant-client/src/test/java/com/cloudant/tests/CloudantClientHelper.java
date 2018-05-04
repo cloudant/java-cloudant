@@ -31,17 +31,17 @@ public abstract class CloudantClientHelper {
 
     //some tests need access to the URI with user info (e.g. replication)
     public static final String SERVER_URI_WITH_USER_INFO;
-    //some tests need access to the credentials (e.g. auth interceptors)
+    //some tests need access to the credentials (e.g. auth interceptors, vcap)
     public static final String COUCH_USERNAME;
     public static final String COUCH_PASSWORD;
+    public static final String COUCH_HOST;
+    public static final String COUCH_IAM_API_KEY;
 
     protected static final CloudantClient CLIENT_INSTANCE;
 
-    private static final String COUCH_HOST;
     private static final String COUCH_PORT;
     private static final String HTTP_PROTOCOL;
     private static final URL SERVER_URL;
-    private static final String COUCH_IAM_API_KEY;
 
     static {
 
@@ -121,8 +121,7 @@ public abstract class CloudantClientHelper {
     public static ClientBuilder getClientBuilder() {
         return ClientBuilder.url(SERVER_URL)
                 .username(COUCH_USERNAME)
-                .password(COUCH_PASSWORD)
-                .iamApiKey(COUCH_IAM_API_KEY);
+                .password(COUCH_PASSWORD);
     }
 
 }

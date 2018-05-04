@@ -7,6 +7,7 @@
 - [NEW] Add `ComplexKey.addHighSentinel()` to allow matching of all values as part of a complex key
   range.
 - [NEW] Support IAM authentication in replication documents.
+- [IMPROVED] Added support for IAM API key in the client builder `bluemix` method.
 - [IMPROVED] When making view requests (including `_all_docs`), set `keys` in the `POST` body rather
   than in `GET` query parameters. This is because a large number of keys could previously exceed the
   maximum URL length, causing errors.
