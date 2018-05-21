@@ -15,8 +15,8 @@
 package com.cloudant.tests;
 
 import static com.cloudant.tests.HttpTest.takeN;
-import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE;
-import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE_2;
+import static com.cloudant.tests.util.MockWebServerResources.IAM_API_KEY;
+import static com.cloudant.tests.util.MockWebServerResources.IAM_API_KEY_2;
 import static com.cloudant.tests.util.MockWebServerResources.JSON_OK;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -75,7 +75,7 @@ public class ReplicationMockTest extends TestWithMockedServer {
 
         c.replication()
                 .source(sourceDbUrl)
-                .sourceIamApiKey(EXPECTED_OK_COOKIE)
+                .sourceIamApiKey(IAM_API_KEY)
                 .target(targetDbUrl)
                 .trigger();
 
@@ -86,7 +86,7 @@ public class ReplicationMockTest extends TestWithMockedServer {
         String body = requests[0].getBody().readUtf8();
 
         assertThat("The replication document should contain the source IAM API key",
-                body, containsString(authJson + EXPECTED_OK_COOKIE));
+                body, containsString(authJson + IAM_API_KEY));
 
         assertThat("The replication document should contain the correct target",
                 body, containsString("\"target\":\"" + targetDbUrl + "\""));
@@ -102,7 +102,7 @@ public class ReplicationMockTest extends TestWithMockedServer {
         c.replication()
                 .source(sourceDbUrl)
                 .target(targetDbUrl)
-                .targetIamApiKey(EXPECTED_OK_COOKIE_2)
+                .targetIamApiKey(IAM_API_KEY)
                 .trigger();
 
         RecordedRequest[] requests = takeN(server, 1);
@@ -115,7 +115,7 @@ public class ReplicationMockTest extends TestWithMockedServer {
                 body, containsString("\"source\":\"" + sourceDbUrl + "\""));
 
         assertThat("The replication document should contain the correct target",
-                body, containsString(authJson + EXPECTED_OK_COOKIE_2));
+                body, containsString(authJson + IAM_API_KEY));
     }
 
     @Test
@@ -127,9 +127,9 @@ public class ReplicationMockTest extends TestWithMockedServer {
 
         c.replication()
                 .source(sourceDbUrl)
-                .sourceIamApiKey(EXPECTED_OK_COOKIE)
+                .sourceIamApiKey(IAM_API_KEY)
                 .target(targetDbUrl)
-                .targetIamApiKey(EXPECTED_OK_COOKIE_2)
+                .targetIamApiKey(IAM_API_KEY_2)
                 .trigger();
 
         RecordedRequest[] requests = takeN(server, 1);
@@ -139,9 +139,9 @@ public class ReplicationMockTest extends TestWithMockedServer {
         String body = requests[0].getBody().readUtf8();
 
         assertThat("The replication document should contain the source IAM API key",
-                body, containsString(authJson + EXPECTED_OK_COOKIE));
+                body, containsString(authJson + IAM_API_KEY));
 
         assertThat("The replication document should contain the target IAM API key",
-                body, containsString(authJson + EXPECTED_OK_COOKIE_2));
+                body, containsString(authJson + IAM_API_KEY_2));
     }
 }

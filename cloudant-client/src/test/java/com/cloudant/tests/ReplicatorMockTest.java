@@ -15,8 +15,8 @@
 package com.cloudant.tests;
 
 import static com.cloudant.tests.HttpTest.takeN;
-import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE;
-import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE_2;
+import static com.cloudant.tests.util.MockWebServerResources.IAM_API_KEY;
+import static com.cloudant.tests.util.MockWebServerResources.IAM_API_KEY_2;
 import static com.cloudant.tests.util.MockWebServerResources.JSON_OK;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -52,17 +52,17 @@ public class ReplicatorMockTest extends TestWithMockedServer {
         rep.setSource(sourceDbUrl);
         assertEquals(rep.getSource(), sourceDbUrl);
 
-        rep.setSourceIamApiKey(EXPECTED_OK_COOKIE);
+        rep.setSourceIamApiKey(IAM_API_KEY);
         assertEquals(rep.getSource(), sourceDbUrl);
-        assertEquals(rep.getSourceIamApiKey(), EXPECTED_OK_COOKIE);
+        assertEquals(rep.getSourceIamApiKey(), IAM_API_KEY);
 
         // reconfigure source
 
         rep.setSource(targetDbUrl);
         assertEquals(rep.getSource(), targetDbUrl);
 
-        rep.setSourceIamApiKey(EXPECTED_OK_COOKIE_2);
-        assertEquals(rep.getSourceIamApiKey(), EXPECTED_OK_COOKIE_2);
+        rep.setSourceIamApiKey(IAM_API_KEY_2);
+        assertEquals(rep.getSourceIamApiKey(), IAM_API_KEY_2);
     }
 
     @Test
@@ -72,34 +72,34 @@ public class ReplicatorMockTest extends TestWithMockedServer {
         rep.setTarget(targetDbUrl);
         assertEquals(rep.getTarget(), targetDbUrl);
 
-        rep.setTargetIamApiKey(EXPECTED_OK_COOKIE);
+        rep.setTargetIamApiKey(IAM_API_KEY);
         assertEquals(rep.getTarget(), targetDbUrl);
-        assertEquals(rep.getTargetIamApiKey(), EXPECTED_OK_COOKIE);
+        assertEquals(rep.getTargetIamApiKey(), IAM_API_KEY);
 
         // reconfigure target
 
         rep.setTarget(sourceDbUrl);
         assertEquals(rep.getTarget(), sourceDbUrl);
 
-        rep.setTargetIamApiKey(EXPECTED_OK_COOKIE_2);
-        assertEquals(rep.getTargetIamApiKey(), EXPECTED_OK_COOKIE_2);
+        rep.setTargetIamApiKey(IAM_API_KEY_2);
+        assertEquals(rep.getTargetIamApiKey(), IAM_API_KEY_2);
     }
 
     @Test
     public void createReplicationReconfigureSourceSetIamApiKeyFirst() throws Exception {
         ReplicatorDocument rep = new ReplicatorDocument();
 
-        rep.setSourceIamApiKey(EXPECTED_OK_COOKIE);
-        assertEquals(rep.getSourceIamApiKey(), EXPECTED_OK_COOKIE);
+        rep.setSourceIamApiKey(IAM_API_KEY);
+        assertEquals(rep.getSourceIamApiKey(), IAM_API_KEY);
 
         rep.setSource(sourceDbUrl);
         assertEquals(rep.getSource(), sourceDbUrl);
-        assertEquals(rep.getSourceIamApiKey(), EXPECTED_OK_COOKIE);
+        assertEquals(rep.getSourceIamApiKey(), IAM_API_KEY);
 
         // reconfigure source
 
-        rep.setSourceIamApiKey(EXPECTED_OK_COOKIE_2);
-        assertEquals(rep.getSourceIamApiKey(), EXPECTED_OK_COOKIE_2);
+        rep.setSourceIamApiKey(IAM_API_KEY_2);
+        assertEquals(rep.getSourceIamApiKey(), IAM_API_KEY_2);
 
         rep.setSource(targetDbUrl);
         assertEquals(rep.getSource(), targetDbUrl);
@@ -109,20 +109,20 @@ public class ReplicatorMockTest extends TestWithMockedServer {
     public void createReplicationReconfigureTargetSetIamApiKeyFirst() throws Exception {
         ReplicatorDocument rep = new ReplicatorDocument();
 
-        rep.setTargetIamApiKey(EXPECTED_OK_COOKIE);
-        assertEquals(rep.getTargetIamApiKey(), EXPECTED_OK_COOKIE);
+        rep.setTargetIamApiKey(IAM_API_KEY);
+        assertEquals(rep.getTargetIamApiKey(), IAM_API_KEY);
 
         rep.setTarget(targetDbUrl);
         assertEquals(rep.getTarget(), targetDbUrl);
-        assertEquals(rep.getTargetIamApiKey(), EXPECTED_OK_COOKIE);
+        assertEquals(rep.getTargetIamApiKey(), IAM_API_KEY);
 
         // reconfigure target
 
         rep.setTarget(sourceDbUrl);
         assertEquals(rep.getTarget(), sourceDbUrl);
 
-        rep.setTargetIamApiKey(EXPECTED_OK_COOKIE_2);
-        assertEquals(rep.getTargetIamApiKey(), EXPECTED_OK_COOKIE_2);
+        rep.setTargetIamApiKey(IAM_API_KEY_2);
+        assertEquals(rep.getTargetIamApiKey(), IAM_API_KEY_2);
     }
 
     @Test
@@ -161,7 +161,7 @@ public class ReplicatorMockTest extends TestWithMockedServer {
         c.replicator()
                 .replicatorDocId(replicatorDocId)
                 .source(sourceDbUrl)
-                .sourceIamApiKey(EXPECTED_OK_COOKIE)
+                .sourceIamApiKey(IAM_API_KEY)
                 .target(targetDbUrl)
                 .save();
 
@@ -172,7 +172,7 @@ public class ReplicatorMockTest extends TestWithMockedServer {
         String body = requests[0].getBody().readUtf8();
 
         assertThat("The replication document should contain the source IAM API key",
-                body, containsString(authJson + EXPECTED_OK_COOKIE));
+                body, containsString(authJson + IAM_API_KEY));
 
         assertThat("The replication document should contain the correct target",
                 body, containsString("\"target\":\"" + targetDbUrl + "\""));
@@ -189,7 +189,7 @@ public class ReplicatorMockTest extends TestWithMockedServer {
                 .replicatorDocId(replicatorDocId)
                 .source(sourceDbUrl)
                 .target(targetDbUrl)
-                .targetIamApiKey(EXPECTED_OK_COOKIE_2)
+                .targetIamApiKey(IAM_API_KEY_2)
                 .save();
 
         RecordedRequest[] requests = takeN(server, 1);
@@ -202,7 +202,7 @@ public class ReplicatorMockTest extends TestWithMockedServer {
                 body, containsString("\"source\":\"" + sourceDbUrl + "\""));
 
         assertThat("The replication document should contain the correct target",
-                body, containsString(authJson + EXPECTED_OK_COOKIE_2));
+                body, containsString(authJson + IAM_API_KEY_2));
     }
 
     @Test
@@ -215,9 +215,9 @@ public class ReplicatorMockTest extends TestWithMockedServer {
         c.replicator()
                 .replicatorDocId(replicatorDocId)
                 .source(sourceDbUrl)
-                .sourceIamApiKey(EXPECTED_OK_COOKIE)
+                .sourceIamApiKey(IAM_API_KEY)
                 .target(targetDbUrl)
-                .targetIamApiKey(EXPECTED_OK_COOKIE_2)
+                .targetIamApiKey(IAM_API_KEY_2)
                 .save();
 
         RecordedRequest[] requests = takeN(server, 1);
@@ -227,9 +227,9 @@ public class ReplicatorMockTest extends TestWithMockedServer {
         String body = requests[0].getBody().readUtf8();
 
         assertThat("The replication document should contain the source IAM API key",
-                body, containsString(authJson + EXPECTED_OK_COOKIE));
+                body, containsString(authJson + IAM_API_KEY));
 
         assertThat("The replication document should contain the target IAM API key",
-                body, containsString(authJson + EXPECTED_OK_COOKIE_2));
+                body, containsString(authJson + IAM_API_KEY_2));
     }
 }
