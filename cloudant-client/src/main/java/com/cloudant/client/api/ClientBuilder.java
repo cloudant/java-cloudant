@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2017 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -180,12 +180,8 @@ public class ClientBuilder {
      */
     public static ClientBuilder account(String account) {
         logger.config("Account: " + account);
-        try {
-            URL url = new URL(String.format("https://%s.cloudant.com", account));
-            return ClientBuilder.url(url);
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("Could not generate url from account name.", e);
-        }
+        return ClientBuilder.url(
+                convertStringToURL(String.format("https://%s.cloudant.com", account)));
     }
 
     /**
@@ -229,17 +225,13 @@ public class ClientBuilder {
         String urlPath = url.getPath().trim();
         urlPath = urlPath.endsWith("/") ? urlPath.substring(0, urlPath.length() - 1) : urlPath;
 
-        try {
-            // Reconstruct URL without user credentials
-            this.url = new URL(urlProtocol
-                    + "://"
-                    + urlHost
-                    + ":"
-                    + urlPort
-                    + urlPath);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
+        // Reconstruct URL without user credentials
+        this.url = convertStringToURL(urlProtocol
+                + "://"
+                + urlHost
+                + ":"
+                + urlPort
+                + urlPath);
     }
 
 
@@ -748,11 +740,7 @@ public class ClientBuilder {
         if (instanceName == null) {
             if (cloudantServices.size() == 1) {
                 CloudFoundryService cloudantService = cloudantServices.get(0);
-                if (cloudantService.credentials == null || cloudantService.credentials.url == null) {
-                    throw new IllegalArgumentException(
-                            "The Cloudant service instance information was invalid.");
-                }
-                return ClientBuilder.url(cloudantService.credentials.url);
+                return vcapClientBuilder(cloudantService);
             } else {
                 throw new IllegalArgumentException("Multiple Cloudant service instances present. " +
                         "A service instance name must be specified.");
@@ -761,17 +749,37 @@ public class ClientBuilder {
 
         for (CloudFoundryService cloudantService : cloudantServices) {
             if (instanceName.equals(cloudantService.name)) {
-                if (cloudantService.credentials == null || cloudantService.credentials.url == null) {
-                    throw new IllegalArgumentException(
-                            "The Cloudant service instance information was invalid.");
-                }
-                return ClientBuilder.url(cloudantService.credentials.url);
+                return vcapClientBuilder(cloudantService);
             }
         }
 
         throw new IllegalArgumentException(
                 String.format("Cloudant service instance matching name %s was not found.", instanceName)
         );
+    }
+
+    private static ClientBuilder vcapClientBuilder(CloudFoundryService cloudantService) {
+        // Create client with IAM if the API key exists
+        if (cloudantService.credentials != null
+                && cloudantService.credentials.host != null) {
+            URL vcapUrl = convertStringToURL(
+                    String.format("https://%s", cloudantService.credentials.host));
+            ClientBuilder clientBuilder = ClientBuilder.url(vcapUrl);
+            if (cloudantService.credentials.apikey != null) {
+                return clientBuilder.iamApiKey(cloudantService.credentials.apikey);
+            } else if (cloudantService.credentials.username != null
+                    && cloudantService.credentials.password != null) {
+                return clientBuilder.username(cloudantService.credentials.username)
+                        .password(cloudantService.credentials.password);
+            } else {
+                throw new IllegalArgumentException(
+                        "The Cloudant service instance is missing the IAM API key, " +
+                                "or both the username and password credential properties.");
+            }
+        } else {
+            throw new IllegalArgumentException(
+                    "The Cloudant service instance information was invalid.");
+        }
     }
 
     /**
@@ -787,4 +795,11 @@ public class ClientBuilder {
         return this;
     }
 
+    private static URL convertStringToURL(String urlAsString) {
+        try {
+            return new URL(urlAsString);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

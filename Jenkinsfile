@@ -27,9 +27,10 @@ def runTests(testEnv, isServiceTests) {
 
         //Set up the environment and run the tests
         withEnv(testEnv) {
-            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.CREDS_ID, usernameVariable: 'DB_USER', passwordVariable: 'DB_PASSWORD']]) {
+            withCredentials([usernamePassword(credentialsId: 'clientlibs-test', usernameVariable: 'DB_USER', passwordVariable: 'DB_PASSWORD'),
+                string(credentialsId: 'clientlibs-test-iam', variable: 'DB_IAM_API_KEY')]) {
                 try {
-                    sh './gradlew -Dtest.couch.username=$DB_USER -Dtest.couch.password=$DB_PASSWORD -Dtest.couch.host=$DB_HOST -Dtest.couch.port=$DB_PORT -Dtest.couch.http=$DB_HTTP $GRADLE_TARGET'
+                    sh './gradlew -Dtest.couch.username=$DB_USER -Dtest.couch.password=$DB_PASSWORD -Dtest.couch.host=$DB_HOST -Dtest.couch.port=$DB_PORT -Dtest.couch.http=$DB_HTTP -Dtest.couch.iam.api.key=$DB_IAM_API_KEY $GRADLE_TARGET'
                 } finally {
                     junit '**/build/test-results/**/*.xml'
                 }

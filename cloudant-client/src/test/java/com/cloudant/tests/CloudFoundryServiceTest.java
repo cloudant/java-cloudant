@@ -14,12 +14,33 @@
 
 package com.cloudant.tests;
 
+import static com.cloudant.tests.util.MockWebServerResources.IAM_TOKEN;
+import static com.cloudant.tests.util.MockWebServerResources.OK_IAM_COOKIE;
+import static com.cloudant.tests.util.MockWebServerResources.IAM_API_KEY;
+import static com.cloudant.tests.util.MockWebServerResources.iamTokenEndpoint;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.cloudant.client.api.ClientBuilder;
+import com.cloudant.client.api.CloudantClient;
+import com.cloudant.http.Http;
+import com.cloudant.http.HttpConnection;
+import com.cloudant.tests.extensions.MockWebServerExtension;
+import com.cloudant.tests.util.IamSystemPropertyMock;
+import com.cloudant.tests.util.MockWebServerResources;
 import com.google.gson.GsonBuilder;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.function.Executable;
+
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,6 +49,38 @@ import java.util.Map;
 
 
 public class CloudFoundryServiceTest {
+
+    public static IamSystemPropertyMock iamSystemPropertyMock;
+
+    private String mockServerHostPort;
+
+    @RegisterExtension
+    public MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
+
+    @RegisterExtension
+    public MockWebServerExtension mockIamServerExt = new MockWebServerExtension();
+
+    public MockWebServer server;
+    public MockWebServer mockIamServer;
+
+    /**
+     * Before running this test class setup the property mock.
+     */
+    @BeforeAll
+    public static void setupIamSystemPropertyMock() {
+        iamSystemPropertyMock = new IamSystemPropertyMock();
+    }
+
+    @BeforeEach
+    public void beforeEach() {
+        server = mockWebServerExt.get();
+        server.useHttps(MockWebServerResources.getSSLSocketFactory(), false);
+        mockServerHostPort = String.format("%s:%s/", server.getHostName(), server.getPort());
+        //setup mock IAM server
+        mockIamServer = mockIamServerExt.get();
+        iamSystemPropertyMock.setMockIamTokenEndpointUrl(mockIamServer.url(iamTokenEndpoint)
+                .toString());
+    }
 
     private static class VCAPGenerator {
 
@@ -43,8 +96,9 @@ public class CloudFoundryServiceTest {
             cloudantServices = new ArrayList<HashMap<String, Object>>();
             vcap.put(serviceName, cloudantServices);
         }
-
-        private void addService(String name, String url, String username, String password) {
+        
+        private void addService(String name, String username, String password,
+                                String host, String apikey) {
             HashMap<String, Object> cloudantService = new HashMap<String, Object>();
             cloudantServices.add(cloudantService);
 
@@ -54,27 +108,34 @@ public class CloudFoundryServiceTest {
             if (name != null) {
                 cloudantService.put("name", name);
             }
-            if (url != null) {
-                cloudantCredentials.put("url", url);
+            if (apikey != null) {
+                cloudantCredentials.put("apikey", apikey);
+            }
+            if (host != null) {
+                cloudantCredentials.put("host", host);
             }
             if (username != null) {
-                cloudantCredentials.put("username", url);
+                cloudantCredentials.put("username", username);
             }
             if (password != null) {
-                cloudantCredentials.put("password", url);
+                cloudantCredentials.put("password", password);
             }
         }
 
-        public void createNewService(String name, String url, String username, String password) {
-            addService(name, url, username, password);
+        public void createNewService(String name, String host, String apikey) {
+            addService(name, null, null, host, apikey);
         }
 
-        public void createNewServiceWithEmptyCredentials(String name) {
-            addService(name, null, null, null);
+        public void createNewServiceWithEmptyIAM(String name, String host) {
+            addService(name, null, null, host, null);
         }
 
-        public void createNewServiceWithoutName(String url, String username, String password) {
-            addService(null, url, username, password);
+        public void createNewLegacyService(String name, String host, String username, String password) {
+            addService(name, username, password, host,null);
+        }
+
+        public void createNewLegacyServiceWithEmptyCredentials(String name, String host) {
+            addService(name, null, null, host, null);
         }
 
         public String toJson() {
@@ -83,14 +144,20 @@ public class CloudFoundryServiceTest {
     }
 
     @Test
-    public void vcapValidServiceNameSpecified() {
+    public void vcapValidServiceNameSpecified() throws Exception {
+        //server.enqueue(MockWebServerResources.OK_COOKIE);
         String serviceName = "serviceFoo";
         VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator(serviceName);
-        vcap.createNewService("test_bluemix_service_1",
-                CloudantClientHelper.SERVER_URI_WITH_USER_INFO,
-                CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
-        ClientBuilder.bluemix(vcap.toJson(), serviceName, "test_bluemix_service_1").build()
-                .serverVersion();
+        vcap.createNewLegacyService("test_bluemix_service_1",
+                String.format("%s:%s/", server.getHostName(), server.getPort()),
+                "user", "password");
+        CloudantClient client = ClientBuilder
+                .bluemix(vcap.toJson(), serviceName, "test_bluemix_service_1")
+                .disableSSLAuthentication()
+                .build();
+        this.testMockInfoRequest(client, true);
+        // One request to _session then one to get server info
+        assertEquals(2, server.getRequestCount(), "There should be two requests");
     }
 
     @Test
@@ -99,8 +166,8 @@ public class CloudFoundryServiceTest {
             @Override
             public void execute() throws Throwable {
                 VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-                vcap.createNewService("test_bluemix_service_1",
-                        CloudantClientHelper.SERVER_URI_WITH_USER_INFO,
+                vcap.createNewLegacyService("test_bluemix_service_1",
+                        CloudantClientHelper.COUCH_HOST,
                         CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
                 ClientBuilder.bluemix(vcap.toJson(), "missingService", "test_bluemix_service_1")
                         .build();
@@ -114,8 +181,8 @@ public class CloudFoundryServiceTest {
             @Override
             public void execute() throws Throwable {
                 VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-                vcap.createNewService("test_bluemix_service_1",
-                        CloudantClientHelper.SERVER_URI_WITH_USER_INFO,
+                vcap.createNewLegacyService("test_bluemix_service_1",
+                        CloudantClientHelper.COUCH_HOST,
                         CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
                 ClientBuilder.bluemix(vcap.toJson(), null, "test_bluemix_service_1").build();
             }
@@ -123,21 +190,48 @@ public class CloudFoundryServiceTest {
     }
 
     @Test
-    public void vcapSingleServiceWithName() {
+    public void vcapSingleServiceWithName() throws Exception{
         VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-        vcap.createNewService("test_bluemix_service_1",
-                CloudantClientHelper.SERVER_URI_WITH_USER_INFO,
-                CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
-        ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_1").build().serverVersion();
+        vcap.createNewLegacyService("test_bluemix_service_1",
+                mockServerHostPort,
+                "user", "password");
+        CloudantClient client = ClientBuilder
+                .bluemix(vcap.toJson(), "test_bluemix_service_1")
+                .disableSSLAuthentication()
+                .build();
+        this.testMockInfoRequest(client, true);
+        // One request to _session then one to get server info
+        assertEquals(2, server.getRequestCount(), "There should be two requests");
     }
 
     @Test
-    public void vcapSingleServiceNoNameSpecified() {
+    public void vcapSingleServiceNoNameSpecified() throws Exception {
+        VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
+        vcap.createNewLegacyService("test_bluemix_service_1",
+                mockServerHostPort,
+                "user", "password");
+        CloudantClient client = ClientBuilder
+                .bluemix(vcap.toJson())
+                .disableSSLAuthentication()
+                .build();
+        this.testMockInfoRequest(client, true);
+        // One request to _session then one to get server info
+        assertEquals(2, server.getRequestCount(), "There should be two requests");
+    }
+
+    @Test
+    public void vcapSingleServiceWithIAM() throws Exception{
         VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
         vcap.createNewService("test_bluemix_service_1",
-                CloudantClientHelper.SERVER_URI_WITH_USER_INFO,
-                CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
-        ClientBuilder.bluemix(vcap.toJson()).build().serverVersion();
+                mockServerHostPort,
+                IAM_API_KEY);
+        CloudantClient client = ClientBuilder
+                .bluemix(vcap.toJson(), "test_bluemix_service_1")
+                .disableSSLAuthentication()
+                .build();
+        this.testMockInfoRequest(client, false);
+        // One request to _iam_session then one to get server info
+        assertEquals(2, server.getRequestCount(), "There should be two requests");
     }
 
     @Test
@@ -146,7 +240,7 @@ public class CloudFoundryServiceTest {
             @Override
             public void execute() throws Throwable {
                 VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-                vcap.createNewService("test_bluemix_service_1", "http://foo1.bar", "admin1",
+                vcap.createNewLegacyService("test_bluemix_service_1", "foo1.bar", "admin1",
                         "pass1");
                 ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_2");
             }
@@ -159,21 +253,88 @@ public class CloudFoundryServiceTest {
             @Override
             public void execute() throws Throwable {
                 VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-                vcap.createNewServiceWithEmptyCredentials("test_bluemix_service_1");
+                vcap.createNewLegacyServiceWithEmptyCredentials("test_bluemix_service_1",
+                        CloudantClientHelper.COUCH_HOST);
                 ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_1");
             }
         });
     }
 
     @Test
-    public void vcapMultiService() {
+    public void vcapSingleServiceEmptyCredentialsAndHost() {
+        Assertions.assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
+                vcap.createNewLegacyServiceWithEmptyCredentials("test_bluemix_service_1",null);
+                ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_1");
+            }
+        });
+    }
+
+    @Test
+    public void vcapSingleServiceEmptyIAM() {
+        Assertions.assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
+                vcap.createNewServiceWithEmptyIAM("test_bluemix_service_1",
+                        CloudantClientHelper.COUCH_HOST);
+                ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_1");
+            }
+        });
+    }
+
+    @Test
+    public void vcapSingleServiceEmptyIAMAndHost() {
+        Assertions.assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
+                vcap.createNewServiceWithEmptyIAM("test_bluemix_service_1", null);
+                ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_1");
+            }
+        });
+    }
+
+    @Test
+    public void vcapMultiService() throws Exception {
         VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-        vcap.createNewService("test_bluemix_service_1", "http://foo1.bar", "admin1", "pass1");
-        vcap.createNewService("test_bluemix_service_2", "http://foo2.bar", "admin2", "pass2");
-        vcap.createNewService("test_bluemix_service_3",
-                CloudantClientHelper.SERVER_URI_WITH_USER_INFO,
-                CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
-        ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_3").build().serverVersion();
+        vcap.createNewLegacyService("test_bluemix_service_1", "foo1.bar", "admin1", "pass1");
+        vcap.createNewLegacyService("test_bluemix_service_2", "foo2.bar", "admin2", "pass2");
+        vcap.createNewLegacyService("test_bluemix_service_3",
+                mockServerHostPort,
+                "user", "password");
+        vcap.createNewService("test_bluemix_service_4", "admin4", "api1234key");
+        vcap.createNewService("test_bluemix_service_5", mockServerHostPort,
+                "api1234key");
+        CloudantClient client = ClientBuilder
+                .bluemix(vcap.toJson(), "test_bluemix_service_3")
+                .disableSSLAuthentication()
+                .build();
+        this.testMockInfoRequest(client, true);
+        // One request to _session then one to get server info
+        assertEquals(2, server.getRequestCount(), "There should be two requests");
+    }
+
+    @Test
+    public void vcapMultiServiceUsingIAM() throws Exception{
+        VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
+        vcap.createNewLegacyService("test_bluemix_service_1", "foo1.bar", "admin1", "pass1");
+        vcap.createNewLegacyService("test_bluemix_service_2", "foo2.bar", "admin2", "pass2");
+        vcap.createNewLegacyService("test_bluemix_service_3",
+                mockServerHostPort,
+                "user", "password");
+        vcap.createNewService("test_bluemix_service_4", "admin4", "api1234key");
+        vcap.createNewService("test_bluemix_service_5", mockServerHostPort,
+                IAM_API_KEY);
+        CloudantClient client = ClientBuilder
+                .bluemix(vcap.toJson(), "test_bluemix_service_5")
+                .disableSSLAuthentication()
+                .build();
+        this.testMockInfoRequest(client, false);
+        // One request to _iam_session then one to get server info
+        assertEquals(2, server.getRequestCount(), "There should be two requests");
     }
 
     @Test
@@ -182,12 +343,13 @@ public class CloudFoundryServiceTest {
             @Override
             public void execute() throws Throwable {
                 VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-                vcap.createNewService("test_bluemix_service_1", "http://foo1.bar", "admin1",
+                vcap.createNewLegacyService("test_bluemix_service_1", "foo1.bar", "admin1",
                         "pass1");
-                vcap.createNewService("test_bluemix_service_2", "http://foo2.bar", "admin2",
+                vcap.createNewLegacyService("test_bluemix_service_2", "foo2.bar", "admin2",
                         "pass2");
-                vcap.createNewService("test_bluemix_service_3", "http://foo3.bar", "admin3",
+                vcap.createNewLegacyService("test_bluemix_service_3", "foo3.bar", "admin3",
                         "pass3");
+                vcap.createNewService("test_bluemix_service_4", "admin4", "api1234key");
                 ClientBuilder.bluemix(vcap.toJson());
             }
         });
@@ -199,13 +361,14 @@ public class CloudFoundryServiceTest {
             @Override
             public void execute() throws Throwable {
                 VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-                vcap.createNewService("test_bluemix_service_1", "http://foo1.bar", "admin1",
+                vcap.createNewLegacyService("test_bluemix_service_1", "foo1.bar", "admin1",
                         "pass1");
-                vcap.createNewService("test_bluemix_service_2", "http://foo2.bar", "admin2",
+                vcap.createNewLegacyService("test_bluemix_service_2", "foo2.bar", "admin2",
                         "pass2");
-                vcap.createNewService("test_bluemix_service_3", "http://foo3.bar", "admin3",
+                vcap.createNewLegacyService("test_bluemix_service_3", "foo3.bar", "admin3",
                         "pass3");
-                ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_4");
+                vcap.createNewService("test_bluemix_service_4", "admin4", "api1234key");
+                ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_5");
             }
         });
     }
@@ -216,11 +379,27 @@ public class CloudFoundryServiceTest {
             @Override
             public void execute() throws Throwable {
                 VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
-                vcap.createNewService("test_bluemix_service_1", "http://foo1.bar", "admin1",
+                vcap.createNewLegacyService("test_bluemix_service_1", "foo1.bar", "admin1",
                         "pass1");
-                vcap.createNewService("test_bluemix_service_2", "http://foo2.bar", "admin2",
+                vcap.createNewLegacyService("test_bluemix_service_2", "foo2.bar", "admin2",
                         "pass2");
-                vcap.createNewServiceWithEmptyCredentials("test_bluemix_service_3");
+                vcap.createNewLegacyServiceWithEmptyCredentials("test_bluemix_service_3",
+                        CloudantClientHelper.COUCH_HOST);
+                ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_3");
+            }
+        });
+    }
+
+    @Test
+    public void vcapMultiServiceEmptyIAM() {
+        Assertions.assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
+                vcap.createNewService("test_bluemix_service_1", "admin1", "apikey1");
+                vcap.createNewService("test_bluemix_service_2", "admin2", "apikey2");
+                vcap.createNewServiceWithEmptyIAM("test_bluemix_service_3",
+                        CloudantClientHelper.COUCH_HOST);
                 ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_3");
             }
         });
@@ -254,5 +433,41 @@ public class CloudFoundryServiceTest {
                 ClientBuilder.bluemix(null);
             }
         });
+    }
+
+    private void testMockInfoRequest(CloudantClient client, boolean isCookieAuth) throws Exception {
+        if (isCookieAuth) {
+            // Mock a 200 OK for the _session request
+            server.enqueue(MockWebServerResources.OK_COOKIE);
+        } else {
+            // Request sequence
+            // _iam_session request to get Cookie
+            // GET request -> 200 with a Set-Cookie
+            server.enqueue(OK_IAM_COOKIE);
+
+            mockIamServer.enqueue(new MockResponse().setResponseCode(200).setBody(IAM_TOKEN));
+        }
+        // 200 with the server info
+        MockResponse serverInfoResponse = new MockResponse().setResponseCode(200)
+                .setBody("{\"couchdb\":\"Welcome\"," +
+                        "\"version\":\"2.1.1\",\"vendor\":{\"name\":\"IBM Cloudant\"," +
+                        "\"version\":\"6919\",\"variant\":\"paas\"},\"features\":[\"geo\",\"scheduler\"," +
+                        "\"iam\"]}");
+        server.enqueue(serverInfoResponse);
+        assertEquals("2.1.1", client.serverVersion(), "The server version should be returned correctly");
+
+        if (isCookieAuth) {
+            // _session request
+            RecordedRequest cookieRequest = server.takeRequest();
+            assertEquals("POST", cookieRequest.getMethod(), "The request method should be POST");
+            assertEquals("/_session", cookieRequest.getPath(), "The request should be to the _session path");
+
+            // server info request
+            RecordedRequest request = server.takeRequest();
+            assertEquals("GET", request.getMethod(), "The request method should be GET");
+            assertEquals("/", request.getPath(), "The request should be for /");
+        } else {
+            MockWebServerResources.assertMockIamRequests(server, mockIamServer);
+        }
     }
 }
