@@ -17,6 +17,7 @@ package com.cloudant.tests;
 import static com.cloudant.tests.HttpTest.takeN;
 import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE;
 import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE_2;
+import static com.cloudant.tests.util.MockWebServerResources.IAM_API_KEY;
 import static com.cloudant.tests.util.MockWebServerResources.IAM_TOKEN;
 import static com.cloudant.tests.util.MockWebServerResources.IAM_TOKEN_2;
 import static com.cloudant.tests.util.MockWebServerResources.OK_IAM_COOKIE;
@@ -61,7 +62,6 @@ public class HttpIamTest {
     public MockWebServerExtension mockIamServerExt = new MockWebServerExtension();
 
     final static String hello = "{\"hello\":\"world\"}\r\n";
-    final static String iamApiKey = "iam";
     final static String iamTokenEndpoint = "/identity/token";
 
     public MockWebServer mockWebServer;
@@ -108,7 +108,7 @@ public class HttpIamTest {
         mockIamServer.enqueue(new MockResponse().setResponseCode(200).setBody(IAM_TOKEN));
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
-                .iamApiKey(iamApiKey)
+                .iamApiKey(IAM_API_KEY)
                 .build();
 
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
@@ -140,7 +140,7 @@ public class HttpIamTest {
                         "/identity/token");
         assertThat("The request body should contain the IAM API key",
                 recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
-                containsString("apikey=" + iamApiKey));
+                containsString("apikey=" + IAM_API_KEY));
     }
 
     /**
@@ -164,7 +164,7 @@ public class HttpIamTest {
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
                 .username("username")
                 .password("password")
-                .iamApiKey(iamApiKey)
+                .iamApiKey(IAM_API_KEY)
                 .build();
 
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
@@ -196,7 +196,7 @@ public class HttpIamTest {
                         "/identity/token");
         assertThat("The request body should contain the IAM API key",
                 recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
-                containsString("apikey=" + iamApiKey));
+                containsString("apikey=" + IAM_API_KEY));
     }
 
     /**
@@ -231,7 +231,7 @@ public class HttpIamTest {
         mockIamServer.enqueue(new MockResponse().setResponseCode(200).setBody(IAM_TOKEN_2));
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
-                .iamApiKey(iamApiKey)
+                .iamApiKey(IAM_API_KEY)
                 .build();
 
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
@@ -292,7 +292,7 @@ public class HttpIamTest {
                         "/identity/token");
         assertThat("The request body should contain the IAM API key",
                 recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
-                containsString("apikey=" + iamApiKey));
+                containsString("apikey=" + IAM_API_KEY));
         // second time, refresh because the cloudant session cookie has expired
         assertEquals(iamTokenEndpoint,
                 recordedIamRequests[1].getPath(), "The request should have been for " +
@@ -328,7 +328,7 @@ public class HttpIamTest {
         mockIamServer.enqueue(new MockResponse().setResponseCode(500));
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
-                .iamApiKey(iamApiKey)
+                .iamApiKey(IAM_API_KEY)
                 .build();
 
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
@@ -381,7 +381,7 @@ public class HttpIamTest {
                         "/identity/token");
         assertThat("The request body should contain the IAM API key",
                 recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
-                containsString("apikey=" + iamApiKey));
+                containsString("apikey=" + IAM_API_KEY));
         // second time, refresh (but gets 500) because the cloudant session cookie has expired
         assertEquals(iamTokenEndpoint,
                 recordedIamRequests[1].getPath(), "The request should have been for " +
@@ -418,7 +418,7 @@ public class HttpIamTest {
         mockIamServer.enqueue(new MockResponse().setResponseCode(200).setBody(IAM_TOKEN_2));
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
-                .iamApiKey(iamApiKey)
+                .iamApiKey(IAM_API_KEY)
                 .build();
 
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
@@ -477,7 +477,7 @@ public class HttpIamTest {
                         "/identity/token");
         assertThat("The request body should contain the IAM API key",
                 recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
-                containsString("apikey=" + iamApiKey));
+                containsString("apikey=" + IAM_API_KEY));
         // second time, refresh because the cloudant session cookie has expired
         assertEquals(iamTokenEndpoint,
                 recordedIamRequests[1].getPath(), "The request should have been for " +

@@ -38,6 +38,9 @@ public class MockWebServerResources {
     public static final long TIMEOUT = 10l;
     public static final TimeUnit TIMEOUT_UNIT = TimeUnit.SECONDS;
 
+    public static String IAM_API_KEY = "UQ6ckeialceOOeK03wsUseVx9WLoZ5o7quexi-hOsQ4X";
+    public static String IAM_API_KEY_2 = "YI9dejocvxsBBfH28yDWsoQx9VEyQ9i5cvdek-qCyU1V";
+
     public static final String EXPECTED_OK_COOKIE =
             "a2ltc3RlYmVsOjUxMzRBQTUzOtiY2_IDUIdsTJEVNEjObAbyhrgz";
     public static final String EXPECTED_OK_COOKIE_2 =

@@ -151,6 +151,14 @@ public class ReplicatorDocument {
         return replicatorDocument.getRetriesPerRequest();
     }
 
+    public String getSourceIamApiKey() {
+        return replicatorDocument.getSourceIamApiKey();
+    }
+
+    public String getTargetIamApiKey() {
+        return replicatorDocument.getTargetIamApiKey();
+    }
+
     public void setSource(String source) {
         replicatorDocument.setSource(source);
     }
@@ -227,6 +235,13 @@ public class ReplicatorDocument {
         replicatorDocument.setSinceSeq(sinceSeq);
     }
 
+    public void setSourceIamApiKey(String iamApiKey) {
+        replicatorDocument.setSourceIamApiKey(iamApiKey);
+    }
+
+    public void setTargetIamApiKey(String iamApiKey) {
+        replicatorDocument.setTargetIamApiKey(iamApiKey);
+    }
 
     public static class UserCtx {
         private com.cloudant.client.org.lightcouch.ReplicatorDocument.UserCtx userCtx;

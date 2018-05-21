@@ -183,6 +183,32 @@ public class Replication {
     }
 
     /**
+     * Sets the
+     * <a href="https://console.bluemix.net/docs/services/Cloudant/guides/iam.html#ibm-cloud-identity-and-access-management"
+     * target="_blank">IAM</a> API key for the replication source.
+     *
+     * @param iamApiKey IAM API Key
+     * @return this Replication instance to set more options or trigger the replication
+     */
+    public Replication sourceIamApiKey(String iamApiKey) {
+        this.replication = replication.sourceIamApiKey(iamApiKey);
+        return this;
+    }
+
+    /**
+     * Sets the
+     * <a href="https://console.bluemix.net/docs/services/Cloudant/guides/iam.html#ibm-cloud-identity-and-access-management"
+     * target="_blank">IAM</a> API key for the replication target.
+     *
+     * @param iamApiKey IAM API Key
+     * @return this Replication instance to set more options or trigger the replication
+     */
+    public Replication targetIamApiKey(String iamApiKey) {
+        this.replication = replication.targetIamApiKey(iamApiKey);
+        return this;
+    }
+
+    /**
      * Set OAuth 1 authentication credentials for the replication target
      *
      * @param consumerSecret client secret

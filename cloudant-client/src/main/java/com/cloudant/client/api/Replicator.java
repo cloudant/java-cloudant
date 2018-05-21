@@ -229,5 +229,14 @@ public class Replicator {
         return this;
     }
 
+    public Replicator sourceIamApiKey(String iamApiKey) {
+        this.replicator = replicator.sourceIamApiKey(iamApiKey);
+        return this;
+    }
+
+    public Replicator targetIamApiKey(String iamApiKey) {
+        this.replicator = replicator.targetIamApiKey(iamApiKey);
+        return this;
+    }
 
 }
