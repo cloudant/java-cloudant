@@ -79,6 +79,10 @@ public class Replication {
     private Boolean createTarget;
     private Integer sinceSeq;
 
+    // IAM
+    private String sourceIamApiKey;
+    private String targetIamApiKey;
+
     // OAuth
     private JsonObject targetOauth;
     private String consumerSecret;
@@ -178,6 +182,16 @@ public class Replication {
         return this;
     }
 
+    public Replication sourceIamApiKey(String iamApiKey) {
+        this.sourceIamApiKey = iamApiKey;
+        return this;
+    }
+
+    public Replication targetIamApiKey(String iamApiKey) {
+        this.targetIamApiKey = iamApiKey;
+        return this;
+    }
+
     public Replication targetOauth(String consumerSecret, String consumerKey, String tokenSecret,
                                    String token) {
         targetOauth = new JsonObject();
@@ -192,7 +206,6 @@ public class Replication {
 
     private JsonObject createJson() {
         JsonObject json = new JsonObject();
-        addProperty(json, "source", source);
         addProperty(json, "cancel", cancel);
         addProperty(json, "continuous", continuous);
         addProperty(json, "filter", filter);
@@ -208,22 +221,52 @@ public class Replication {
         addProperty(json, "since_seq", sinceSeq);
         addProperty(json, "create_target", createTarget);
 
+        // source
+
+        if (sourceIamApiKey == null) {
+            addProperty(json, "source", source);
+        } else {
+            JsonObject sourceAuthJson = new JsonObject();
+            JsonObject sourceIamJson = new JsonObject();
+            addProperty(sourceIamJson, "api_key", sourceIamApiKey);
+            sourceAuthJson.add("iam", sourceIamJson);
+
+            JsonObject sourceJson = new JsonObject();
+            addProperty(sourceJson, "url", source);
+            sourceJson.add("auth", sourceAuthJson);
+
+            json.add("source", sourceJson);
+        }
+
+        // target
+
+        JsonObject targetAuth = new JsonObject();
+
+        if (targetIamApiKey != null) {
+            JsonObject targetIamJson = new JsonObject();
+            addProperty(targetIamJson, "api_key", targetIamApiKey);
+            targetAuth.add("iam", targetIamJson);
+        }
         if (targetOauth != null) {
-            JsonObject auth = new JsonObject();
+            // Note: OAuth is only supported on replication target (not source)
             JsonObject oauth = new JsonObject();
             addProperty(oauth, "consumer_secret", consumerSecret);
             addProperty(oauth, "consumer_key", consumerKey);
             addProperty(oauth, "token_secret", tokenSecret);
             addProperty(oauth, "token", token);
-
-            addProperty(targetOauth, "url", target);
-            auth.add("oauth", oauth);
-
-            targetOauth.add("auth", auth);
-            json.add("target", targetOauth);
-        } else {
-            addProperty(json, "target", target);
+            targetAuth.add("oauth", oauth);
         }
+
+        if (targetAuth.size() == 0) {
+            addProperty(json, "target", target);
+        } else {
+            JsonObject targetJson = new JsonObject();
+            addProperty(targetJson, "url", target);
+            targetJson.add("auth", targetAuth);
+
+            json.add("target", targetJson);
+        }
+
         return json;
     }
 

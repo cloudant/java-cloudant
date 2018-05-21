@@ -77,6 +77,9 @@ public class ReplicatorDocument extends Document {
     }
 
     private String getEndpointUrl(JsonElement element) {
+        if (element == null) {
+            return null;
+        }
         JsonPrimitive urlString = null;
         if (element.isJsonPrimitive()) {
             urlString = element.getAsJsonPrimitive();
@@ -84,7 +87,54 @@ public class ReplicatorDocument extends Document {
             JsonObject replicatorEndpointObject = element.getAsJsonObject();
             urlString = replicatorEndpointObject.getAsJsonPrimitive("url");
         }
+        if (urlString == null) {
+            return null;
+        }
         return urlString.getAsString();
+    }
+
+    private JsonElement getDestination(JsonElement oldDestination, String newDestination) {
+        if (oldDestination == null || oldDestination.isJsonPrimitive()) {
+            return new JsonPrimitive(newDestination);
+        }
+        JsonObject json = oldDestination.getAsJsonObject();
+        json.remove("url");
+        json.addProperty("url", newDestination);
+        return json;
+    }
+
+    private String getIamApiKey(JsonElement destination) {
+        if (destination.isJsonPrimitive()) {
+            return null;
+        }
+        JsonObject json = destination.getAsJsonObject();
+        JsonObject authJson = json.getAsJsonObject("auth");
+        if (authJson == null) {
+            return null;
+        }
+        JsonObject iamJson = authJson.getAsJsonObject("iam");
+        if (iamJson == null) {
+            return null;
+        }
+        return iamJson.getAsJsonPrimitive("api_key").getAsString();
+    }
+
+    private JsonObject getDestinationIamJson(String url, String iamApiKey) {
+        JsonObject iamJson = new JsonObject();
+        if (iamApiKey != null) {
+            iamJson.addProperty("api_key", iamApiKey);
+        }
+
+        JsonObject authJson = new JsonObject();
+        authJson.add("iam", iamJson);
+
+        JsonObject json = new JsonObject();
+        if (url != null) {
+            json.addProperty("url", url);
+        }
+        json.add("auth", authJson);
+
+        return json;
     }
 
     public Boolean getContinuous() {
@@ -148,11 +198,11 @@ public class ReplicatorDocument extends Document {
     }
 
     public void setSource(String source) {
-        this.source = new JsonPrimitive(source);
+        this.source = getDestination(this.source, source);
     }
 
     public void setTarget(String target) {
-        this.target = new JsonPrimitive(target);
+        this.target = getDestination(this.target, target);
     }
 
     public void setContinuous(Boolean continuous) {
@@ -221,6 +271,22 @@ public class ReplicatorDocument extends Document {
 
     public void setSinceSeq(Integer sinceSeq) {
         this.sinceSeq = sinceSeq;
+    }
+
+    public String getSourceIamApiKey() {
+        return getIamApiKey(source);
+    }
+
+    public String getTargetIamApiKey() {
+        return getIamApiKey(target);
+    }
+
+    public void setSourceIamApiKey(String iamApiKey) {
+        source = getDestinationIamJson(this.getSource(), iamApiKey);
+    }
+
+    public void setTargetIamApiKey(String iamApiKey) {
+        target = getDestinationIamJson(this.getTarget(), iamApiKey);
     }
 
     public static class UserCtx {

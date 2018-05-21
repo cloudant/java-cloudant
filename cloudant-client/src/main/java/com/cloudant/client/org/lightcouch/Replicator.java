@@ -277,4 +277,14 @@ public class Replicator {
         replicatorDoc.setSinceSeq(sinceSeq);
         return this;
     }
+
+    public Replicator sourceIamApiKey(String iamApiKey) {
+        replicatorDoc.setSourceIamApiKey(iamApiKey);
+        return this;
+    }
+
+    public Replicator targetIamApiKey(String iamApiKey) {
+        replicatorDoc.setTargetIamApiKey(iamApiKey);
+        return this;
+    }
 }
