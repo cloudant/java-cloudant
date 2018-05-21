@@ -192,10 +192,21 @@ public class Replication {
         return this;
     }
 
+    /**
+     * Authenticate with the target database using OAuth.
+     *
+     * @param consumerSecret consumer secret
+     * @param consumerKey consumer key
+     * @param tokenSecret token secret
+     * @param token token
+     * @return this Replication instance to set more options
+     * @deprecated OAuth 1.0 implementation has been <a href="http://docs.couchdb.org/en/stable/whatsnew/2.1.html?highlight=oauth#upgrade-notes"
+     * target="_blank">removed in CouchDB 2.1</a>
+     */
     public Replication targetOauth(String consumerSecret, String consumerKey, String tokenSecret,
                                    String token) {
         targetOauth = new JsonObject();
-        this.consumerSecret = consumerKey;
+        this.consumerSecret = consumerSecret;
         this.consumerKey = consumerKey;
         this.tokenSecret = tokenSecret;
         this.token = token;
