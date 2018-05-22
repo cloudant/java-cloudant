@@ -35,7 +35,6 @@ public abstract class CloudantClientHelper {
     public static final String COUCH_USERNAME;
     public static final String COUCH_PASSWORD;
     public static final String COUCH_HOST;
-    public static final String COUCH_IAM_API_KEY;
 
     protected static final CloudantClient CLIENT_INSTANCE;
 
@@ -69,8 +68,6 @@ public abstract class CloudantClientHelper {
                 HTTP_PROTOCOL = System.getProperty("test.couch.http", "http"); //should either be
                 // http or https
             }
-
-            COUCH_IAM_API_KEY = System.getProperty("test.couch.iam.api.key");
 
             //now build the URLs
             SERVER_URL = new URL(HTTP_PROTOCOL + "://"
