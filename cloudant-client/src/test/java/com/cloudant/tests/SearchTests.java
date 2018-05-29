@@ -273,5 +273,14 @@ public class SearchTests extends TestWithDbPerClass {
         escapingTest("class:mammal%26test%26escaping", "class:mammal&test&escaping");
     }
 
+    @Test
+    public void searchOptionsStaleTest() {
+        Search srch = db.search("views101/animals");
+        SearchResult<Animal> rslt = srch.includeDocs(true)
+                .stale(true)
+                .querySearchResult("class:bird", Animal.class);
+
+    }
+
 }
 

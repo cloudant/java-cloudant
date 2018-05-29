@@ -53,6 +53,51 @@ public interface SettableViewParameters {
     String STALE_UPDATE_AFTER = "update_after";
 
     /**
+     * Constant for the value "false" for use with
+     * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#stable(String)}
+     * <P>
+     * false: the view results should not be returned from a "stable" set of shards
+     * </P>
+     */
+    String STABLE_FALSE = "false";
+
+    /**
+     * Constant for the value "true" for use with
+     * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#stable(String)}
+     * <P>
+     * true: the view results should be returned from a "stable" set of shards
+     * </P>
+     */
+    String STABLE_TRUE = "true";
+
+    /**
+     * Constant for the value "false" for use with
+     * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#update(String)}
+     * <P>
+     * false: the view in question should not be updated prior to responding to the user
+     * </P>
+     */
+    String UPDATE_FALSE = "false";
+
+    /**
+     * Constant for the value "true" for use with
+     * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#update(String)}
+     * <P>
+     * true: the view in question should be updated prior to responding to the user
+     * </P>
+     */
+    String UPDATE_TRUE = "true";
+
+    /**
+     * Constant for the value "lazy" for use with
+     * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#update(String)}
+     * <P>
+     * lazy: the view in question should be updated, but after responding to the user
+     * </P>
+     */
+    String UPDATE_LAZY = "lazy";
+
+    /**
      * Setters for parameters that are common to all view requests.
      *
      * @param <K>  the type of the key emitted by the view
@@ -125,6 +170,23 @@ public interface SettableViewParameters {
         RB keys(K... keys);
 
         /**
+         * <p>
+         * Determine whether the view should be returned from a "stable" set of shards.
+         * </p>
+         * <p>
+         * See:
+         * </p>
+         * <ul>
+         * <li>{@link SettableViewParameters#STABLE_FALSE}</li>
+         * <li>{@link SettableViewParameters#STABLE_TRUE}</li>
+         * </ul>
+         *
+         * @param stable string indicating stable view behaviour
+         * @return the builder to compose additional parameters or build the request
+         */
+        RB stable(String stable);
+
+        /**
          * Allow the results from a stale view to be used. This makes the request return
          * immediately, even if the view has not been completely built yet.
          * <P>If this parameter is not given, a response is returned only after the view has been
@@ -164,6 +226,26 @@ public interface SettableViewParameters {
          * @since 2.0.0
          */
         RB startKeyDocId(String startkey_docid);
+
+        /**
+         * <p>
+         * Determine whether the view in question should be updated prior to or after responding
+         * to the user.
+         * </p>
+         * <p>
+         * See:
+         * </p>
+         * <ul>
+         * <li>{@link SettableViewParameters#UPDATE_FALSE}</li>
+         * <li>{@link SettableViewParameters#UPDATE_TRUE}</li>
+         * <li>{@link SettableViewParameters#UPDATE_LAZY}</li>
+         * </ul>
+         *
+         * @param update string indicating update view behaviour
+         * @return the builder to compose additional parameters or build the request
+         */
+
+        RB update(String update);
     }
 
     /**

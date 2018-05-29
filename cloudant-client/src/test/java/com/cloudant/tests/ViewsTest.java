@@ -27,14 +27,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
 import com.cloudant.client.api.model.Document;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.client.api.views.AllDocsResponse;
 import com.cloudant.client.api.views.Key;
-import com.cloudant.client.api.views.SettableViewParameters;
-import com.cloudant.client.api.views.UnpaginatedRequestBuilder;
 import com.cloudant.client.api.views.ViewMultipleRequest;
 import com.cloudant.client.api.views.ViewRequest;
 import com.cloudant.client.api.views.ViewRequestBuilder;
@@ -45,7 +41,6 @@ import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.base.TestWithDbPerTest;
 import com.cloudant.tests.extensions.CloudantClientExtension;
 import com.cloudant.tests.extensions.DatabaseExtension;
-import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.extensions.MultiExtension;
 import com.cloudant.tests.util.ContextCollectingInterceptor;
 import com.cloudant.tests.util.Utils;
@@ -59,25 +54,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.function.Executable;
 
-import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 @RequiresDB
 public class ViewsTest extends TestWithDbPerTest {
 
-    public static MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
     public static ContextCollectingInterceptor cci = new ContextCollectingInterceptor();
     public static CloudantClientExtension interceptedClient = new CloudantClientExtension
             (CloudantClientHelper.getClientBuilder()
@@ -87,16 +76,12 @@ public class ViewsTest extends TestWithDbPerTest {
 
     @RegisterExtension
     public static MultiExtension extensions = new MultiExtension(
-            mockWebServerExt,
             interceptedClient,
             interceptedDB
     );
 
-    protected MockWebServer mockWebServer;
-
     @BeforeEach
     public void beforeEach() throws Exception {
-        mockWebServer = mockWebServerExt.get();
         Utils.putDesignDocs(db);
     }
 
@@ -1466,64 +1451,6 @@ public class ViewsTest extends TestWithDbPerTest {
         }
     }
 
-    /**
-     * We can't test the server behaviour of stale, but we can test the URL values are what we
-     * expect. This test uses the various values and checks the stale parameter in the URL, it makes
-     * a request using getSingleValue() as it is easier to mock the responses.
-     *
-     * @throws Exception
-     */
-    @Test
-    public void staleParameterValues() throws Exception {
-        CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
-                .build();
-        Database database = client.database("notarealdb", false);
-        UnpaginatedRequestBuilder<String, Integer> viewBuilder = database.getViewRequestBuilder
-                ("testDDoc", "testView").newRequest(Key.Type.STRING, Integer.class);
-
-        // Regex patterns for stale parameter cases
-        Pattern noStaleParameter = Pattern.compile(".*/notarealdb/_design/testDDoc/_view/testView");
-        Pattern staleParameterOK = Pattern.compile(".*/notarealdb/_design/testDDoc/_view" +
-                "/testView\\?stale=ok");
-        Pattern staleParameterUpdate = Pattern.compile(".*/notarealdb/_design/testDDoc/_view" +
-                "/testView\\?stale=update_after");
-
-        // Test the no stale argument supplied case
-        assertStaleParameter(viewBuilder.build(), noStaleParameter);
-
-        // Test the OK stale argument supplied case
-        assertStaleParameter(viewBuilder.stale(SettableViewParameters.STALE_OK).build(),
-                staleParameterOK);
-
-        // Test the update_after stale argument supplied case
-        assertStaleParameter(viewBuilder.stale(SettableViewParameters.STALE_UPDATE_AFTER).build()
-                , staleParameterUpdate);
-
-        // Test the NO stale argument supplied case
-        assertStaleParameter(viewBuilder.stale(SettableViewParameters.STALE_NO).build(),
-                noStaleParameter);
-    }
-
-    /**
-     * Perform a view request against a mock getting a single value and asserting that the path
-     * matches the pattern.
-     *
-     * @param viewRequest view request
-     * @param p           pattern to match
-     * @throws Exception
-     */
-    private void assertStaleParameter(ViewRequest<String, Integer> viewRequest, Pattern p) throws
-            Exception {
-        MockResponse mockResponse = new MockResponse().setResponseCode(200).setBody
-                ("{\"rows\":[{\"key\":null,\"value\":10}]}");
-
-        mockWebServer.enqueue(mockResponse);
-        viewRequest.getSingleValue();
-        RecordedRequest request = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
-        assertNotNull(request, "There should have been a view request");
-        assertTrue(p.matcher(request.getPath()).matches(), "There request URL should match the " +
-                "pattern " + p.toString());
-    }
 
     /**
      * <p>
@@ -1543,50 +1470,4 @@ public class ViewsTest extends TestWithDbPerTest {
                 .getIdsAndRevs();
     }
 
-    /**
-     * <p>
-     * Test added for https://github.com/cloudant/java-cloudant/issues/411
-     * </p>
-     * <p>
-     * When _all_docs is used with specified keys deleted documents are also returned. The value of
-     * total_rows may represent only the un-deleted documents meaning more rows are returned than
-     * total_rows. This total_rows variance doesn't always manifest so we reproduce it using a mock.
-     * </p>
-     *
-     * @throws Exception
-     */
-    @Test
-    public void getIdsAndRevsForDeletedIDsWithAllDocs() throws Exception {
-
-        Map<String, String> idsAndRevs = new HashMap<String, String>(4);
-        idsAndRevs.put("docid0", "1-a00e6463d52d7f167c8ac5c834836c1b");
-        idsAndRevs.put("docid1", "1-a00e6463d52d7f167c8ac5c834836c1b");
-        idsAndRevs.put("docid2", "2-acbb972b187ec952eae1ca74cfef16a9");
-        idsAndRevs.put("docid3", "2-acbb972b187ec952eae1ca74cfef16a9");
-
-        CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
-                .build();
-        Database database = client.database("deletedidsalldocskeysdb", false);
-
-        // _all_docs?keys=["docid0", "docid1", "docid2", "docid3"]
-        MockResponse mockResponse = new MockResponse().setResponseCode(200).setBody
-                ("{\"total_rows\":2,\"offset\":0,\"rows\":[\n" +
-                        "{\"id\":\"docid0\",\"key\":\"docid0\"," +
-                        "\"value\":{\"rev\":\"1-a00e6463d52d7f167c8ac5c834836c1b\"}},\n" +
-                        "{\"id\":\"docid1\",\"key\":\"docid1\"," +
-                        "\"value\":{\"rev\":\"1-a00e6463d52d7f167c8ac5c834836c1b\"}},\n" +
-                        "{\"id\":\"docid2\",\"key\":\"docid2\"," +
-                        "\"value\":{\"rev\":\"2-acbb972b187ec952eae1ca74cfef16a9\"," +
-                        "\"deleted\":true}},\n" +
-                        "{\"id\":\"docid3\",\"key\":\"docid3\"," +
-                        "\"value\":{\"rev\":\"2-acbb972b187ec952eae1ca74cfef16a9\"," +
-                        "\"deleted\":true}}\n" +
-                        "]}");
-        mockWebServer.enqueue(mockResponse);
-
-        // Do an _all_docs request using the 4 _ids of the generated docs.
-        Map<String, String> allDocsIdsAndRevs = database.getAllDocsRequestBuilder().keys(idsAndRevs
-                .keySet().toArray(new String[4])).build().getResponse().getIdsAndRevs();
-        assertEquals(idsAndRevs, allDocsIdsAndRevs, "The ids and revs should be equal");
-    }
 }

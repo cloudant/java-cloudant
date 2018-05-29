@@ -80,6 +80,9 @@ public class ViewQueryParameters<K, V> extends ParameterAnnotationProcessor impl
     public Long skip = null;
 
     @Parameter(type = Parameter.Type.QUERY_PARAMETER)
+    public String stable = null;
+
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public String stale = null;
 
     @Parameter(type = Parameter.Type.QUERY_PARAMETER)
@@ -87,6 +90,10 @@ public class ViewQueryParameters<K, V> extends ParameterAnnotationProcessor impl
 
     @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public String startkey_docid = null;
+
+    @Parameter(type = Parameter.Type.QUERY_PARAMETER)
+    public String update = null;
+
 
     /* Constructors */
 
@@ -234,6 +241,14 @@ public class ViewQueryParameters<K, V> extends ParameterAnnotationProcessor impl
         this.skip = skip;
     }
 
+    public String getStable() {
+        return stable;
+    }
+
+    public void setStable(String stable) {
+        this.stable = stable;
+    }
+
     public String getStale() {
         return stale;
     }
@@ -273,6 +288,14 @@ public class ViewQueryParameters<K, V> extends ParameterAnnotationProcessor impl
         }
         this.rowsPerPage = rowsPerPage;
         this.limit = rowsPerPage + 1;
+    }
+
+    public String getUpdate() {
+        return update;
+    }
+
+    public void setUpdate(String update) {
+        this.update = update;
     }
 
     /* Parameter output methods */

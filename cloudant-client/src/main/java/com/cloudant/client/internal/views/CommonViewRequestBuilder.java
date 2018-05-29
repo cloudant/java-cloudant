@@ -106,6 +106,12 @@ public abstract class CommonViewRequestBuilder<K, V, RB extends RequestBuilder<R
     }
 
     @Override
+    public RB stable(String stable) {
+        viewQueryParameters.setStable(stable);
+        return returnThis();
+    }
+
+    @Override
     public RB stale(String stale) {
         viewQueryParameters.setStale(stale);
         return returnThis();
@@ -140,4 +146,11 @@ public abstract class CommonViewRequestBuilder<K, V, RB extends RequestBuilder<R
         viewQueryParameters.setRowsPerPage(rowsPerPage);
         return returnThis();
     }
+
+    @Override
+    public RB update(String update) {
+        viewQueryParameters.setUpdate(update);
+        return returnThis();
+    }
+
 }
