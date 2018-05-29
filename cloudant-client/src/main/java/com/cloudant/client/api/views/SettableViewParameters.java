@@ -56,7 +56,7 @@ public interface SettableViewParameters {
      * Constant for the value "false" for use with
      * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#stable(String)}
      * <P>
-     * false: the view results should not be returned from a "stable" set of shards
+     * false: Do not prefer view results from a 'stable' set of shards.
      * </P>
      */
     String STABLE_FALSE = "false";
@@ -65,7 +65,8 @@ public interface SettableViewParameters {
      * Constant for the value "true" for use with
      * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#stable(String)}
      * <P>
-     * true: the view results should be returned from a "stable" set of shards
+     * true: Prefer view results from a 'stable' set of shards. The results are from a view that is
+     * less likely to be updated soon.
      * </P>
      */
     String STABLE_TRUE = "true";
@@ -74,7 +75,7 @@ public interface SettableViewParameters {
      * Constant for the value "false" for use with
      * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#update(String)}
      * <P>
-     * false: the view in question should not be updated prior to responding to the user
+     * false: Return results before updating the view.
      * </P>
      */
     String UPDATE_FALSE = "false";
@@ -83,7 +84,7 @@ public interface SettableViewParameters {
      * Constant for the value "true" for use with
      * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#update(String)}
      * <P>
-     * true: the view in question should be updated prior to responding to the user
+     * true: Return results after updating the view.
      * </P>
      */
     String UPDATE_TRUE = "true";
@@ -92,7 +93,8 @@ public interface SettableViewParameters {
      * Constant for the value "lazy" for use with
      * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#update(String)}
      * <P>
-     * lazy: the view in question should be updated, but after responding to the user
+     * lazy: Return the view results without waiting for an update, but update them immediately
+     * after the request.
      * </P>
      */
     String UPDATE_LAZY = "lazy";
