@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright (c) 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -45,12 +45,46 @@ public interface SettableViewParameters {
     String STALE_OK = "ok";
     /**
      * Constant for the value "update_after" for use with
-     * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#stale(String)}
+     * {@link com.cloudant.client.api.views.SettableViewParameters.Common#stale(String)}
      * <P>
      * update_after: Allow stale views, but update them immediately after the request.
      * </P>
      */
     String STALE_UPDATE_AFTER = "update_after";
+
+    /**
+     * Constant for the value "false" for use with
+     * {@link com.cloudant.client.api.views.SettableViewParameters.Common#update(String)}
+     * <P>
+     * false: Return results before updating the view.
+     * </P>
+     *
+     * @since 2.13.0
+     */
+    String UPDATE_FALSE = Boolean.FALSE.toString();
+
+    /**
+     * Constant for the value "true" for use with
+     * {@link com.cloudant.client.api.views.SettableViewParameters.Common#update(String)}
+     * <P>
+     * true: Return results after updating the view.
+     * </P>
+     *
+     * @since 2.13.0
+     */
+    String UPDATE_TRUE = Boolean.TRUE.toString();
+
+    /**
+     * Constant for the value "lazy" for use with
+     * {@link com.cloudant.client.api.views.SettableViewParameters.Common#update(String)}
+     * <P>
+     * lazy: Return the view results without waiting for an update, but update them immediately
+     * after the request.
+     * </P>
+     *
+     * @since 2.13.0
+     */
+    String UPDATE_LAZY = "lazy";
 
     /**
      * Setters for parameters that are common to all view requests.
@@ -125,6 +159,17 @@ public interface SettableViewParameters {
         RB keys(K... keys);
 
         /**
+         * <p>
+         * Determine whether the view should be returned from a "stable" set of shards.
+         * </p>
+         *
+         * @param stable string indicating stable view behaviour
+         * @return the builder to compose additional parameters or build the request
+         * @since 2.13.0
+         */
+        RB stable(boolean stable);
+
+        /**
          * Allow the results from a stale view to be used. This makes the request return
          * immediately, even if the view has not been completely built yet.
          * <P>If this parameter is not given, a response is returned only after the view has been
@@ -141,6 +186,7 @@ public interface SettableViewParameters {
          * @param stale string indicating stale view behaviour
          * @return the builder to compose additional parameters or build the request
          * @since 2.0.0
+         * @deprecated use {@link #stable(boolean)} and {@link #update(String)} instead
          */
         RB stale(String stale);
 
@@ -164,6 +210,27 @@ public interface SettableViewParameters {
          * @since 2.0.0
          */
         RB startKeyDocId(String startkey_docid);
+
+        /**
+         * <p>
+         * Determine whether the view in question should be updated prior to or after responding
+         * to the user.
+         * </p>
+         * <p>
+         * See:
+         * </p>
+         * <ul>
+         * <li>{@link SettableViewParameters#UPDATE_FALSE}</li>
+         * <li>{@link SettableViewParameters#UPDATE_TRUE}</li>
+         * <li>{@link SettableViewParameters#UPDATE_LAZY}</li>
+         * </ul>
+         *
+         * @param update string indicating update view behaviour
+         * @return the builder to compose additional parameters or build the request
+         * @since 2.13.0
+         */
+
+        RB update(String update);
     }
 
     /**

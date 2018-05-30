@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright (c) 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -106,6 +106,12 @@ public abstract class CommonViewRequestBuilder<K, V, RB extends RequestBuilder<R
     }
 
     @Override
+    public RB stable(boolean stable) {
+        viewQueryParameters.setStable(stable);
+        return returnThis();
+    }
+
+    @Override
     public RB stale(String stale) {
         viewQueryParameters.setStale(stale);
         return returnThis();
@@ -140,4 +146,11 @@ public abstract class CommonViewRequestBuilder<K, V, RB extends RequestBuilder<R
         viewQueryParameters.setRowsPerPage(rowsPerPage);
         return returnThis();
     }
+
+    @Override
+    public RB update(String update) {
+        viewQueryParameters.setUpdate(update);
+        return returnThis();
+    }
+
 }
