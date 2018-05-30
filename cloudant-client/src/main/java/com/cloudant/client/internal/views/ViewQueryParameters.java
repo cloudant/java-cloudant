@@ -80,7 +80,7 @@ public class ViewQueryParameters<K, V> extends ParameterAnnotationProcessor impl
     public Long skip = null;
 
     @Parameter(type = Parameter.Type.QUERY_PARAMETER)
-    public boolean stable = false;
+    public Boolean stable = null;
 
     @Parameter(type = Parameter.Type.QUERY_PARAMETER)
     public String stale = null;
@@ -242,7 +242,7 @@ public class ViewQueryParameters<K, V> extends ParameterAnnotationProcessor impl
     }
 
     public boolean getStable() {
-        return stable;
+        return stable == null ? false : stable;
     }
 
     public void setStable(boolean stable) {
