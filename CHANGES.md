@@ -7,7 +7,7 @@
 - [NEW] Add `ComplexKey.addHighSentinel()` to allow matching of all values as part of a complex key
   range.
 - [NEW] Support IAM authentication in replication documents.
-- [NEW] Add support `stable` and `update` parameters in views.
+- [NEW] Add support for `stable` and `update` parameters in views.
 - [IMPROVED] Added support for IAM API key in the client builder `bluemix` method.
 - [IMPROVED] When making view requests (including `_all_docs`), set `keys` in the `POST` body rather
   than in `GET` query parameters. This is because a large number of keys could previously exceed the
@@ -16,6 +16,7 @@
   by `Database.bulk()`.
 - [FIXED] Issues retrieving deleted documents using an `AllDocsRequest`.
 - [DEPRECATED] OAuth authentication API `targetOauth` on the `Replication` class.
+- [DEPRECATED] `stale` parameter in views.
 
 # 2.12.0 (2018-02-08)
 - [NEW] Index creation APIs and builders including support for text and partial indexes.
