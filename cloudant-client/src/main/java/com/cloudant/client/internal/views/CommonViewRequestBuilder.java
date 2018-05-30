@@ -106,7 +106,7 @@ public abstract class CommonViewRequestBuilder<K, V, RB extends RequestBuilder<R
     }
 
     @Override
-    public RB stable(String stable) {
+    public RB stable(boolean stable) {
         viewQueryParameters.setStable(stable);
         return returnThis();
     }

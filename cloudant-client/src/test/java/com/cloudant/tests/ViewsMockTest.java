@@ -59,17 +59,17 @@ public class ViewsMockTest extends TestWithMockedServer {
         CloudantClient client = CloudantClientHelper.newMockWebServerClientBuilder(server)
                 .build();
         Database database = client.database("notarealdb", false);
-        for (String s : new String[]{
-                SettableViewParameters.STABLE_FALSE,
-                SettableViewParameters.STABLE_TRUE}) {
+        for (Boolean b : new Boolean[]{
+                false,
+                true}) {
             UnpaginatedRequestBuilder<String, Integer> viewBuilder = database.getViewRequestBuilder
                     ("testDDoc", "testView").newRequest(Key.Type.STRING, Integer.class);
             MockResponse mockResponse = new MockResponse().setResponseCode(200).setBody
                     ("{\"rows\":[{\"key\":null,\"value\":10}]}");
             server.enqueue(mockResponse);
-            viewBuilder.stable(s).build().getSingleValue();
+            viewBuilder.stable(b).build().getSingleValue();
             HttpUrl url = server.takeRequest(1, TimeUnit.SECONDS).getRequestUrl();
-            Assert.assertEquals(s, url.queryParameter("stable"));
+            Assert.assertEquals(Boolean.toString(b), url.queryParameter("stable"));
             Assert.assertEquals("/notarealdb/_design/testDDoc/_view/testView", url.encodedPath());
         }
     }

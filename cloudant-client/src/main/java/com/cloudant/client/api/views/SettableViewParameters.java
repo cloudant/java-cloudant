@@ -54,31 +54,14 @@ public interface SettableViewParameters {
 
     /**
      * Constant for the value "false" for use with
-     * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#stable(String)}
-     * <P>
-     * false: Do not prefer view results from a 'stable' set of shards.
-     * </P>
-     */
-    String STABLE_FALSE = "false";
-
-    /**
-     * Constant for the value "true" for use with
-     * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#stable(String)}
-     * <P>
-     * true: Prefer view results from a 'stable' set of shards. The results are from a view that is
-     * less likely to be updated soon.
-     * </P>
-     */
-    String STABLE_TRUE = "true";
-
-    /**
-     * Constant for the value "false" for use with
      * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#update(String)}
      * <P>
      * false: Return results before updating the view.
      * </P>
+     *
+     * @since 2.13.0
      */
-    String UPDATE_FALSE = "false";
+    String UPDATE_FALSE = Boolean.FALSE.toString();
 
     /**
      * Constant for the value "true" for use with
@@ -86,8 +69,10 @@ public interface SettableViewParameters {
      * <P>
      * true: Return results after updating the view.
      * </P>
+     *
+     * @since 2.13.0
      */
-    String UPDATE_TRUE = "true";
+    String UPDATE_TRUE = Boolean.TRUE.toString();
 
     /**
      * Constant for the value "lazy" for use with
@@ -96,6 +81,8 @@ public interface SettableViewParameters {
      * lazy: Return the view results without waiting for an update, but update them immediately
      * after the request.
      * </P>
+     *
+     * @since 2.13.0
      */
     String UPDATE_LAZY = "lazy";
 
@@ -175,18 +162,11 @@ public interface SettableViewParameters {
          * <p>
          * Determine whether the view should be returned from a "stable" set of shards.
          * </p>
-         * <p>
-         * See:
-         * </p>
-         * <ul>
-         * <li>{@link SettableViewParameters#STABLE_FALSE}</li>
-         * <li>{@link SettableViewParameters#STABLE_TRUE}</li>
-         * </ul>
          *
          * @param stable string indicating stable view behaviour
          * @return the builder to compose additional parameters or build the request
          */
-        RB stable(String stable);
+        RB stable(boolean stable);
 
         /**
          * Allow the results from a stale view to be used. This makes the request return
@@ -205,6 +185,7 @@ public interface SettableViewParameters {
          * @param stale string indicating stale view behaviour
          * @return the builder to compose additional parameters or build the request
          * @since 2.0.0
+         * @deprecated use {@link #stable(boolean)} and {@link #update(String)} instead
          */
         RB stale(String stale);
 
