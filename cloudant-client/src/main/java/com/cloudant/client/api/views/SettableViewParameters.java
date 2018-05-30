@@ -45,7 +45,7 @@ public interface SettableViewParameters {
     String STALE_OK = "ok";
     /**
      * Constant for the value "update_after" for use with
-     * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#stale(String)}
+     * {@link com.cloudant.client.api.views.SettableViewParameters.Common#stale(String)}
      * <P>
      * update_after: Allow stale views, but update them immediately after the request.
      * </P>
@@ -54,7 +54,7 @@ public interface SettableViewParameters {
 
     /**
      * Constant for the value "false" for use with
-     * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#update(String)}
+     * {@link com.cloudant.client.api.views.SettableViewParameters.Common#update(String)}
      * <P>
      * false: Return results before updating the view.
      * </P>
@@ -65,7 +65,7 @@ public interface SettableViewParameters {
 
     /**
      * Constant for the value "true" for use with
-     * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#update(String)}
+     * {@link com.cloudant.client.api.views.SettableViewParameters.Common#update(String)}
      * <P>
      * true: Return results after updating the view.
      * </P>
@@ -76,7 +76,7 @@ public interface SettableViewParameters {
 
     /**
      * Constant for the value "lazy" for use with
-     * {@link com.cloudant.client.internal.views.CommonViewRequestBuilder#update(String)}
+     * {@link com.cloudant.client.api.views.SettableViewParameters.Common#update(String)}
      * <P>
      * lazy: Return the view results without waiting for an update, but update them immediately
      * after the request.
