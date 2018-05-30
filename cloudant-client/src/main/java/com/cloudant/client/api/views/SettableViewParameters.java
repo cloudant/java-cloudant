@@ -165,6 +165,7 @@ public interface SettableViewParameters {
          *
          * @param stable string indicating stable view behaviour
          * @return the builder to compose additional parameters or build the request
+         * @since 2.13.0
          */
         RB stable(boolean stable);
 
@@ -226,6 +227,7 @@ public interface SettableViewParameters {
          *
          * @param update string indicating update view behaviour
          * @return the builder to compose additional parameters or build the request
+         * @since 2.13.0
          */
 
         RB update(String update);
