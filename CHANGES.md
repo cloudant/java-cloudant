@@ -11,10 +11,12 @@
 - [FIXED] Issues retrieving deleted documents using an `AllDocsRequest`.
 - [FIXED] An issue where `getReason()` returned an incorrect value for `Response` objects returned
   by `Database.bulk()`.
-- [BREAKING CHANGE] Added `_deleted` field to `Document`. This will break (de)serialisation for
-  classes which sub-class `Document` and themselves declare a a field which implicitly or explicitly
-  has the serialised name of `_deleted`. The suggested work-around is to remove this field from
-  classes which sub-class `Document`. For more details, see the javadoc for `Document`.
+- [FIXED] Added missing `_deleted` field to `Document` model class.
+- [BREAKING CHANGE] The fix which adds `_deleted` to `Document` model class will break
+  (de)serialisation for classes which sub-class `Document` and themselves declare a field which
+  implicitly or explicitly has the serialised name of `_deleted`. The suggested work-around is to
+  remove this field from classes which sub-class `Document`. For more details, see the javadoc for
+  `Document`.
 - [DEPRECATED] OAuth authentication API `targetOauth` on the `Replication` class.
 - [DEPRECATED] `stale` parameter in views.
 - [IMPROVED] Added support for IAM API key in the client builder `bluemix` method.
