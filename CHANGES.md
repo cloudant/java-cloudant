@@ -8,15 +8,19 @@
   range.
 - [NEW] Support IAM authentication in replication documents.
 - [NEW] Add support for `stable` and `update` parameters in views.
+- [FIXED] Issues retrieving deleted documents using an `AllDocsRequest`.
+- [FIXED] An issue where `getReason()` returned an incorrect value for `Response` objects returned
+  by `Database.bulk()`.
+- [BREAKING CHANGE] Added `_deleted` field to `Document`. This will break (de)serialisation for
+  classes which sub-class `Document` and themselves declare a a field which implicitly or explicitly
+  has the serialised name of `_deleted`. The suggested work-around is to remove this field from
+  classes which sub-class `Document`. For more details, see the javadoc for `Document`.
+- [DEPRECATED] OAuth authentication API `targetOauth` on the `Replication` class.
+- [DEPRECATED] `stale` parameter in views.
 - [IMPROVED] Added support for IAM API key in the client builder `bluemix` method.
 - [IMPROVED] When making view requests (including `_all_docs`), set `keys` in the `POST` body rather
   than in `GET` query parameters. This is because a large number of keys could previously exceed the
   maximum URL length, causing errors.
-- [FIXED] An issue where `getReason()` returned an incorrect value for `Response` objects returned
-  by `Database.bulk()`.
-- [FIXED] Issues retrieving deleted documents using an `AllDocsRequest`.
-- [DEPRECATED] OAuth authentication API `targetOauth` on the `Replication` class.
-- [DEPRECATED] `stale` parameter in views.
 
 # 2.12.0 (2018-02-08)
 - [NEW] Index creation APIs and builders including support for text and partial indexes.
