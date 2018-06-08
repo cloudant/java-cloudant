@@ -21,9 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Convenient base class for CouchDB documents, defines the basic
- * <code>id</code>, <code>revision</code> properties, and attachments.
- *
+ * Base class for serialisation and deserialisation of Cloudant Documents.
  * @author Ahmed Yehia
  * @since 0.0.2
  */

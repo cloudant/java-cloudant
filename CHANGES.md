@@ -1,4 +1,4 @@
-# Unreleased
+# 2.13.0 (2018-06-06)
 - [NEW] Add `CloudantClient.metaInformation()` to get meta information from the welcome page.
 - [NEW] Add methods for interacting with the replicator's `_scheduler` endpoint:
   - `CloudantClient.schedulerJobs()`,
@@ -8,15 +8,21 @@
   range.
 - [NEW] Support IAM authentication in replication documents.
 - [NEW] Add support for `stable` and `update` parameters in views.
+- [FIXED] Issues retrieving deleted documents using an `AllDocsRequest`.
+- [FIXED] An issue where `getReason()` returned an incorrect value for `Response` objects returned
+  by `Database.bulk()`.
+- [FIXED] Added missing `_deleted` field to `Document` model class.
+- [BREAKING CHANGE] The fix which adds `_deleted` to `Document` model class will break
+  (de)serialisation for classes which sub-class `Document` and themselves declare a field which
+  implicitly or explicitly has the serialised name of `_deleted`. The suggested work-around is to
+  remove this field from classes which sub-class `Document`. For more details, see the javadoc for
+  `Document`.
+- [DEPRECATED] OAuth authentication API `targetOauth` on the `Replication` class.
+- [DEPRECATED] `stale` parameter in views.
 - [IMPROVED] Added support for IAM API key in the client builder `bluemix` method.
 - [IMPROVED] When making view requests (including `_all_docs`), set `keys` in the `POST` body rather
   than in `GET` query parameters. This is because a large number of keys could previously exceed the
   maximum URL length, causing errors.
-- [FIXED] An issue where `getReason()` returned an incorrect value for `Response` objects returned
-  by `Database.bulk()`.
-- [FIXED] Issues retrieving deleted documents using an `AllDocsRequest`.
-- [DEPRECATED] OAuth authentication API `targetOauth` on the `Replication` class.
-- [DEPRECATED] `stale` parameter in views.
 
 # 2.12.0 (2018-02-08)
 - [NEW] Index creation APIs and builders including support for text and partial indexes.
