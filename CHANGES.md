@@ -1,6 +1,6 @@
 # 2.13.0 (2018-06-06)
 - [NEW] Add `CloudantClient.metaInformation()` to get meta information from the welcome page.
-- [NEW] Add methods for interacting with the replicator's `_scheduler` endpoint:
+- [NEW] Add methods for interacting with the replicator `_scheduler` endpoint:
   - `CloudantClient.schedulerJobs()`,
   - `CloudantClient.schedulerDocs()`,
   - `CloudantClient.schedulerDoc(docId)`.
