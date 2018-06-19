@@ -1,6 +1,35 @@
-Please include the following information in your ticket.
+Please [read these guidelines](http://ibm.biz/cdt-issue-guide) before opening an issue.
 
-- CloudantClient (java-cloudant) version(s) that are affected by this issue.
-- Java version (including vendor and platform).
-- If you're using the optional okhttp dependency.
-- A small code sample that demonstrates the issue.
+<!-- Issues will be CLOSED IMMEDIATELY if the following template is not completed. -->
+
+## Bug Description
+
+### 1. Steps to reproduce and a small code sample that demonstrates the issue
+<!--
+EXAMPLE:
+1. Initialize client
+2. List DBs
+
+cc = new CloudantClient(...)
+dbNames = cc.allDbs()
+-->
+
+### 2. What you expected to happen
+<!--
+Expected to get a list of all databases
+-->
+
+### 3. What actually happened
+<!--
+Got a 400 bad request
+-->
+
+## Environment details
+<!--
+- Version(s) that are affected by this issue.
+    > 2.0.2
+- Java version including vendor and platform
+    >1.8.0_151 OpenJDK macOS
+- Using the optional okhttp dependency.
+    >Yes|No
+-->
