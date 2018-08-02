@@ -99,9 +99,6 @@ stage('Publish') {
     if (env.BRANCH_NAME == "master") {
         node {
             unstash name: 'built'
-            // read the version name and determine if it is a release build
-            version = readFile('VERSION').trim()
-            isReleaseVersion = !version.toUpperCase(Locale.ENGLISH).contains("SNAPSHOT")
 
             // Upload using the ossrh creds (upload destination logic is in build.gradle)
             withCredentials([usernamePassword(credentialsId: 'ossrh-creds', passwordVariable: 'OSSRH_PASSWORD', usernameVariable: 'OSSRH_USER'), usernamePassword(credentialsId: 'signing-creds', passwordVariable: 'KEY_PASSWORD', usernameVariable: 'KEY_ID'), file(credentialsId: 'signing-key', variable: 'SIGNING_FILE')]) {
