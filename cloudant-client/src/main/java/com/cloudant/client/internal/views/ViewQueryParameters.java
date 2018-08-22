@@ -324,6 +324,8 @@ public class ViewQueryParameters<K, V> extends ParameterAnnotationProcessor impl
 
     JsonElement asJson() {
         Map<String, Object> parameters = processParameters(Parameter.Type.QUERY_PARAMETER);
+        // Add the body parameters too
+        parameters.putAll(processParameters(Parameter.Type.BODY_PARAMETER));
         return gson.toJsonTree(parameters);
     }
 

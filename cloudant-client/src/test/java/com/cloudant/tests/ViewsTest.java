@@ -54,8 +54,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.function.Executable;
 
-import okhttp3.mockwebserver.MockWebServer;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1024,14 +1022,20 @@ public class ViewsTest extends TestWithDbPerTest {
                 .keys("key-1").add()
                 .keys("key-2").add()
                 .keys("key-3").add()
+                .keys("key-1","key-3").add()
                 .build();
         int i = 1;
         List<ViewResponse<String, Object>> responses = multi.getViewResponses();
-        assertEquals(3, responses.size(), "There should be 3 responses for 3 requests");
+        assertEquals(4, responses.size(), "There should be 4 responses for 4 requests");
         for (ViewResponse<String, Object> response : responses) {
-            assertEquals(1, response.getRows().size(), "There should be 1 row in each response");
-            assertEquals("key-" + i, response.getKeys().get(0), "The returned key should be key-"
-                    + i);
+            if (i <= 3) {
+                assertEquals(1, response.getRows().size(), "There should be 1 row in each response");
+                assertEquals("key-" + i, response.getKeys().get(0), "The returned key should be key-"
+                        + i);
+            } else {
+                assertEquals(2, response.getRows().size(), "There should be 2 rows in the response");
+                assertEquals(Arrays.asList("key-1", "key-3"), response.getKeys(), "The returned keys should match");
+            }
             i++;
         }
     }

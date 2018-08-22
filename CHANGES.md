@@ -1,3 +1,6 @@
+# Unreleased
+- [FIXED] Regression that prevented `keys` being included as part of a `ViewMultipleRequest`.
+
 # 2.13.0 (2018-06-06)
 - [NEW] Add `CloudantClient.metaInformation()` to get meta information from the welcome page.
 - [NEW] Add methods for interacting with the replicator `_scheduler` endpoint:
