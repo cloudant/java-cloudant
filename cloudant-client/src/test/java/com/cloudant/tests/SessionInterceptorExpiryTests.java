@@ -51,6 +51,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -160,17 +161,19 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
 
     private void queueResponses(boolean okUsable,
                                 String sessionPath,
-                                Long expiry,
+                                Long cookieLifetimeSeconds,
                                 String cookieValue) {
         // Queue up the session response
         String cookieString;
         if (sessionPath.equals("/_session")) {
-            cookieString = MockWebServerResources.authSessionCookie(cookieValue, expiry);
+            cookieString = MockWebServerResources.authSessionCookie(cookieValue,
+                    cookieLifetimeSeconds);
         } else {
             // Queue up a token response for IAM
             mockIamServer.enqueue(new MockResponse().setResponseCode(200)
                     .setBody(MockWebServerResources.IAM_TOKEN));
-            cookieString = MockWebServerResources.iamSessionCookie(cookieValue, expiry);
+            cookieString = MockWebServerResources.iamSessionCookie(cookieValue,
+                    cookieLifetimeSeconds);
         }
         MockResponse cookieResponse = new MockResponse()
                 .setResponseCode(200)
@@ -184,14 +187,22 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
 
     private void executeTest(boolean okUsable,
                              String sessionPath,
-                             Long expiryTime,
+                             Long cookieLifetimeSeconds,
                              String cookieValue) throws Exception {
-        queueResponses(okUsable, sessionPath, expiryTime, cookieValue);
+
+        // Setup the connection
         HttpConnection conn = Http.GET(mockWebServer.url("/").url());
         conn.connectionFactory = (isOkUsable) ? new OkHttpClientHttpUrlConnectionFactory() :
                 new DefaultHttpUrlConnectionFactory();
         conn.requestInterceptors.add(rqInterceptor);
         conn.responseInterceptors.add(rpInterceptor);
+
+        // Queue the mock responses
+        // We do this as late as possible so the cookie lifetime is set from the system time just
+        // before it is used.
+        queueResponses(okUsable, sessionPath, cookieLifetimeSeconds, cookieValue);
+
+        // Now execute the request
         conn = conn.execute();
 
         // Consume response stream and assert ok: true
@@ -241,14 +252,29 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
     @TestTemplate
     public void testNewCookieRequestMadeAfterExpiry(boolean okUsable, String sessionPath) throws
             Exception {
-        // Make a GET request and get a cookie valid for 2 seconds
-        executeTest(okUsable, sessionPath, System.currentTimeMillis() + 2000,
+
+        // Cookie lifetime in seconds
+        // As per https://tools.ietf.org/html/rfc6265#section-5.1.1 cookie-date uses an hms time
+        // This means the granularity of an expires time is 1 second. Assuming a system time of
+        // hh:mm:00.998, a cookie lifetime of 1 second gives hh:mm:01.998, but if this is truncated
+        // to hh:mm:01 then the actual lifetime of the cookie is a mere 2 ms.
+        // Further the calculation of expiry is subject to similar 1 second granularity truncations.
+        // As such the two rounding effects each could cost up to ~1 second of time. In practice
+        // this means that a lifetime of less than 3 seconds, whilst desirable for a shorter test
+        // could result in an impractical amount of time for the two requests
+        // (_session and subsequent GET) to take place before the cookie expires.
+        // Effectively we need to allow at least 1 second for each possible truncation, plus 1
+        // second for the test to take place.
+        long cookieLifetime = 3L; // TLDR >= 3
+
+        // Make a GET request and get a cookie valid for the lifetime declared above
+        executeTest(okUsable, sessionPath, cookieLifetime,
                 MockWebServerResources.EXPECTED_OK_COOKIE);
 
-        // Sleep 2 seconds and make another request
-        // Note 1 second appears to be insufficient probably due to rounding to the nearest second
-        // in cookie expiry times.
-        Thread.sleep(2000);
+        // Sleep for the cookie lifetime, we don't need to add any extra time because the execution
+        // time of the first request and its preceding session request will have elapsed extra time
+        // already.
+        TimeUnit.SECONDS.sleep(cookieLifetime);
 
         // Since the Cookie is expired it should follow the same sequence of POST /_session GET /
         // If the expired Cookie was retrieved it would only do GET / and the test would fail.

@@ -15,7 +15,6 @@
 package com.cloudant.tests.util;
 
 import static com.cloudant.tests.HttpTest.takeN;
-import static com.cloudant.tests.util.MockWebServerResources.IAM_API_KEY;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -28,7 +27,6 @@ import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 
 import java.io.FileInputStream;
-import java.nio.charset.Charset;
 import java.security.KeyStore;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -87,15 +85,15 @@ public class MockWebServerResources {
     }
 
     // helper for asserts etc
-    public static String authSessionCookie(String value, Long expiry) {
-        return setCookie(AUTH_COOKIE_NAME, value, expiry);
+    public static String authSessionCookie(String value, Long cookieLifetime) {
+        return setCookie(AUTH_COOKIE_NAME, value, cookieLifetime);
     }
 
-    public static String iamSessionCookie(String value, Long expiry) {
-        return setCookie(IAM_COOKIE_NAME, value, expiry);
+    public static String iamSessionCookie(String value, Long cookieLifetime) {
+        return setCookie(IAM_COOKIE_NAME, value, cookieLifetime);
     }
 
-    private static String setCookie(String name, String value, Long expiry) {
+    private static String setCookie(String name, String value, Long cookieLifetime) {
         Cookie.Builder cookieBuilder = new Cookie.Builder()
                 // Explicitly declare the localhost domain to workaround
                 // https://bugs.openjdk.java.net/browse/JDK-7169142
@@ -104,11 +102,13 @@ public class MockWebServerResources {
                 .path("/")
                 .name(name)
                 .value(value);
-        if (expiry != null && expiry > 0) {
-            cookieBuilder.expiresAt(expiry);
+        // Couch uses Expires not Max-age on its cookies, so that's what we use to test
+        if (cookieLifetime != null && cookieLifetime > 0) {
+            cookieBuilder.expiresAt(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(cookieLifetime));
         }
-
-        return cookieBuilder.build().toString();
+        String setCookie = cookieBuilder.build().toString();
+        System.err.println("Cookie" + setCookie);
+        return setCookie;
     }
 
     public static final String MOCK_COOKIE_RESPONSE_BODY =
