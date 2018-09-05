@@ -11,7 +11,7 @@ This is the official Cloudant library for Java.
 * [Related Documentation](#related-documentation)
 * [Development](#development)
     * [Contributing](CONTRIBUTING.md)
-    * [Test Suite](CONTRIBUTING.md#running-the-tests)
+    * [Test Suite](CONTRIBUTING.md#testing)
     * [Using in Other Projects](#using-in-other-projects)
     * [License](#license)
     * [Issues](#issues)
