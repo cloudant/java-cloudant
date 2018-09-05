@@ -1,4 +1,4 @@
-# Unreleased
+# 2.13.1 (2018-09-05)
 - [FIXED] Regression that prevented `keys` being included as part of a `ViewMultipleRequest`.
 
 # 2.13.0 (2018-06-06)
