@@ -92,7 +92,7 @@ task noDBTest(type: Test) {
 }
 
 task cloudantTest(type: Test) {
-    // Run unit tests that do not need a running database
+    // Run all the tests that work for both Cloudant Local and Cloudant service
     useJUnitPlatform {
         includeEngines 'junit-jupiter'
         excludeTags 'RequiresCloudantService'
@@ -100,7 +100,8 @@ task cloudantTest(type: Test) {
 }
 
 task cloudantServiceTest(type: Test) {
-    // Run unit tests that do not need a running database
+    // Run the unit tests and general DB tests and the DB tests that specifically require the
+    // Cloudant service
     useJUnitPlatform {
         includeEngines 'junit-jupiter'
         excludeTags 'RequiresCloudantLocal', 'RequiresCouch'
