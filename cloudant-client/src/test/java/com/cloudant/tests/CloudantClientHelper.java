@@ -57,8 +57,8 @@ public abstract class CloudantClientHelper {
                     COUCH_USERNAME = userInfo.substring(0, userInfo.indexOf(":"));
                     COUCH_PASSWORD = userInfo.substring(userInfo.indexOf(":") + 1);
                 } else {
-                    COUCH_USERNAME = null;
-                    COUCH_PASSWORD = null;
+                    COUCH_USERNAME = System.getProperty("test.couch.username");
+                    COUCH_PASSWORD = System.getProperty("test.couch.password");
                 }
             } else {
                 COUCH_USERNAME = System.getProperty("test.couch.username");
