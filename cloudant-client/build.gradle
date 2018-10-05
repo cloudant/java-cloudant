@@ -92,7 +92,7 @@ task noDBTest(type: Test) {
 }
 
 task cloudantTest(type: Test) {
-    // Run unit tests that do not need a running database
+    // Run all the tests that work for both Cloudant Local and Cloudant service
     useJUnitPlatform {
         includeEngines 'junit-jupiter'
         excludeTags 'RequiresCloudantService'
@@ -100,10 +100,29 @@ task cloudantTest(type: Test) {
 }
 
 task cloudantServiceTest(type: Test) {
-    // Run unit tests that do not need a running database
+    // Run the unit tests and general DB tests and the DB tests that specifically require the
+    // Cloudant service
     useJUnitPlatform {
         includeEngines 'junit-jupiter'
         excludeTags 'RequiresCloudantLocal', 'RequiresCouch'
+    }
+}
+
+task integrationTest(type: Test) {
+    // Special environment variables for integration tests
+    [SERVER_URL:'test.couch.url',
+     SERVER_USER:'test.couch.username',
+     SERVER_PASSWORD:'test.couch.password',
+     TEST_REPLICATION_SOURCE_URL:'test.replication.source.url'].each { k,v ->
+        def e = System.getenv(k)
+        if (e) {
+            systemProperty v, e
+        }
+    }
+    // Run all tests that need a running DB and those for Cloudant, but not unit tests
+    useJUnitPlatform {
+        includeEngines 'junit-jupiter'
+        includeTags 'RequiresDB', 'RequiresCloudant', 'RequiresCloudantService'
     }
 }
 
