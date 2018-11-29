@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -37,6 +37,8 @@ public class ViewQueryParameters<K, V> extends ParameterAnnotationProcessor impl
     private final Class<V> valueType;
     private final Gson gson;
     private Integer rowsPerPage = null;
+
+    public String partition = null;
 
     /* Query Parameters
     * Note that null is used for unset parameters and in those cases the default will be applied
@@ -184,6 +186,14 @@ public class ViewQueryParameters<K, V> extends ParameterAnnotationProcessor impl
         this.inclusive_end = inclusive_end;
     }
 
+    public String getPartition() {
+        return partition;
+    }
+
+    public void setPartition(String partition_key) {
+        this.partition = partition_key;
+    }
+
     @SuppressWarnings("unchecked")
     public K[] getKeys() {
         if (key != null) {
@@ -318,8 +328,8 @@ public class ViewQueryParameters<K, V> extends ParameterAnnotationProcessor impl
     }
 
     protected DatabaseURIHelper getViewURIBuilder() {
-        return new DatabaseURIHelper(db.getDBUri()).path("_design").path(designDoc).path("_view")
-                .path(viewName);
+        return new DatabaseURIHelper(db.getDBUri()).partition(partition).path("_design")
+                .path(designDoc).path("_view").path(viewName);
     }
 
     JsonElement asJson() {

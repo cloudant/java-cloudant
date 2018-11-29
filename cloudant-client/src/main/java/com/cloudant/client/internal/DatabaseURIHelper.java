@@ -1,7 +1,6 @@
 /**
- * Copyright (C) 2013 Cloudant
- *
  * Copyright (C) 2011 Ahmed Yehia (ahmed.yehia.m@gmail.com)
+ * Copyright © 2013, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -189,6 +188,16 @@ public class DatabaseURIHelper extends URIBaseMethods<DatabaseURIHelper> {
 
     public DatabaseURIHelper query(Params params) {
         this.qParams = params;
+        return returnThis();
+    }
+
+    /**
+     * Set the database partition for the URI (iff partition key is non-null).
+     */
+    public DatabaseURIHelper partition(String partitionKey) {
+        if (partitionKey != null) {
+            this.path("_partition").path(partitionKey);
+        }
         return returnThis();
     }
 

@@ -1,4 +1,5 @@
 # UNRELEASED
+- [NEW] Added partitioned database support.
 - [NEW] Added option for client to authenticate with IAM token server.
 - [FIXED] Updated the default IAM token server URL.
 

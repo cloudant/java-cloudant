@@ -101,7 +101,12 @@ public class DatabaseExtension {
         databaseName = sanitizeDbName(String.format("%s-%s", context.getUniqueId(), uniqueSuffix));
         client = clientResource.get();
         if (!mock) {
-            database = client.database(databaseName, true);
+            if (context.getTags().contains("partitioned")) {
+                client.createPartitionedDB(databaseName);
+                database = client.database(databaseName, false);
+            } else {
+                database = client.database(databaseName, true);
+            }
         } else {
             database = client.database(databaseName, false);
         }

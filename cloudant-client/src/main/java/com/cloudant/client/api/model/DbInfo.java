@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -25,6 +25,24 @@ import com.google.gson.annotations.SerializedName;
  * @author Ganesh K Choudhary
  */
 public class DbInfo {
+
+    /**
+     * Encapsulates database properties.
+     */
+    public static class Props {
+
+        private boolean partitioned = false;
+
+        /**
+         * Get the database partitioned property.
+         *
+         * @return database partition property
+         */
+        public boolean getPartitioned() {
+            return partitioned;
+        }
+    }
+
     @SerializedName("db_name")
     private String dbName;
     @SerializedName("doc_count")
@@ -43,6 +61,7 @@ public class DbInfo {
     private long instanceStartTime;
     @SerializedName("disk_format_version")
     private int diskFormatVersion;
+    private Props props;
 
     public String getDbName() {
         return dbName;
@@ -107,6 +126,15 @@ public class DbInfo {
 
     public int getDiskFormatVersion() {
         return diskFormatVersion;
+    }
+
+    /**
+     * Get the database properties.
+     *
+     * @return database properties
+     */
+    public Props getProps() {
+        return props;
     }
 
     @Override

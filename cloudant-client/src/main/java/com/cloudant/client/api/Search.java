@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2017 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -95,18 +95,19 @@ public class Search {
     private String bookmark;
     private CloudantClient client;
     private DatabaseURIHelper databaseHelper;
+    private final String partitionKey;
 
-
-    Search(CloudantClient client, Database db, String searchIndexId) {
+    Search(CloudantClient client, Database db, String partitionKey, String searchIndexId) {
         assertNotEmpty(searchIndexId, "searchIndexId");
         this.client = client;
+        this.partitionKey = partitionKey;
         String search = searchIndexId;
+        this.databaseHelper = new DatabaseURIHelper(db.getDBUri()).partition(partitionKey);
         if (searchIndexId.contains("/")) {
             String[] v = searchIndexId.split("/");
-            this.databaseHelper = new DatabaseURIHelper(db.getDBUri()).path("_design")
-                .path(v[0]).path("_search").path(v[1]);
+            this.databaseHelper.path("_design").path(v[0]).path("_search").path(v[1]);
         } else {
-            this.databaseHelper = new DatabaseURIHelper(db.getDBUri()).path(search);
+            this.databaseHelper.path(search);
         }
     }
 
