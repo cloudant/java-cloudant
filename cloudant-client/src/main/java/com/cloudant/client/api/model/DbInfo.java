@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2018 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -16,6 +16,7 @@ package com.cloudant.client.api.model;
 
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -33,7 +34,7 @@ public class DbInfo {
     @SerializedName("update_seq")
     private JsonElement updateSeq;
     @SerializedName("purge_seq")
-    private long purgeSeq;
+    private JsonElement purgeSeq;
     @SerializedName("compact_running")
     private boolean compactRunning;
     @SerializedName("disk_size")
@@ -59,8 +60,37 @@ public class DbInfo {
         return updateSeq.toString();
     }
 
+    /**
+     * Use {@link #getStringPurgeSeq()} instead.
+     *
+     * The value 0 is returned if the {@code purged_seq} field cannot be cast as a primitive long.
+     * In later versions of CouchDB (&gt;=2.3.x) {@code purged_seq} is an opaque string.
+     *
+     * @return Number of purge operations on the database.
+     */
+    @Deprecated
     public long getPurgeSeq() {
-        return purgeSeq;
+        try {
+            JsonPrimitive purgeSeqPrim = purgeSeq.getAsJsonPrimitive();
+            return purgeSeqPrim.getAsLong();
+        } catch (IllegalStateException e) {
+            // Suppress exception if the element is of type JsonArray but contains more than a
+            // single element.
+        } catch (NumberFormatException e) {
+            // Suppress exception if the element is not a JsonPrimitive and is not a valid long
+            // value.
+        }
+        // Return 0 when value cannot be cast as a primitive long value.
+        return 0;
+    }
+
+    /**
+     * An opaque string that describes the state of purge operations across the database.
+     *
+     * @return Purge sequence.
+     */
+    public String getStringPurgeSeq() {
+        return purgeSeq.toString();
     }
 
     public boolean isCompactRunning() {

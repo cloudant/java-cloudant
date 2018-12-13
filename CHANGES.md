@@ -1,3 +1,7 @@
+# UNRELEASED
+- [NEW] Add `purge_seq` getter on `DbInfo` class that returns sequence value as `String`.
+- [DEPRECATED] `com.cloudant.client.api.model.DbInfo#getPurgeSeq()`.
+
 # 2.13.1 (2018-09-05)
 - [FIXED] Regression that prevented `keys` being included as part of a `ViewMultipleRequest`.
 
