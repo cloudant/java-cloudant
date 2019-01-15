@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -220,10 +220,14 @@ public class MockWebServerResources {
 
     public static void assertMockIamRequests(MockWebServer mockWebServer, MockWebServer mockIamServer)
         throws Exception {
-        // cloudant mock server
-        // assert that there were 2 calls
-        RecordedRequest[] recordedRequests = takeN(mockWebServer, 2);
+        assertMockIamCloudantRequests(takeN(mockWebServer, 2));
+        assertMockIamServerRequests(takeN(mockIamServer, 1)[0]);
+    }
 
+    public static void assertMockIamCloudantRequests(RecordedRequest[] recordedRequests) throws Exception {
+        // assert that there were 2 calls
+        assertEquals(recordedRequests.length, 2, "There should be exactly 2 session requests");
+        // asserts on Cloudant server
         assertEquals("/_iam_session",
                 recordedRequests[0].getPath(), "The request should have been for /_iam_session");
         assertThat("The request body should contain the IAM token",
@@ -238,16 +242,15 @@ public class MockWebServerResources {
                 anyOf(containsString(iamSession(EXPECTED_OK_COOKIE)),
                         containsString(iamSessionUnquoted(EXPECTED_OK_COOKIE))));
         assertEquals("GET", recordedRequests[1].getMethod(), "The request method should be GET");
+    }
 
-
+    public static void assertMockIamServerRequests(RecordedRequest recordedRequest) throws Exception {
         // asserts on the IAM server
-        // assert that there was 1 call
-        RecordedRequest[] recordedIamRequests = takeN(mockIamServer, 1);
         assertEquals(iamTokenEndpoint,
-                recordedIamRequests[0].getPath(), "The request should have been for " +
+                recordedRequest.getPath(), "The request should have been for " +
                         "/identity/token");
         assertThat("The request body should contain the IAM API key",
-                recordedIamRequests[0].getBody().readUtf8(),
+                recordedRequest.getBody().readUtf8(),
                 containsString("apikey=" + IAM_API_KEY));
     }
 }

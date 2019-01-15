@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -59,6 +59,15 @@ public class IamCookieInterceptor extends CookieInterceptorBase {
             //all JVMs should support UTF-8, so this should not happen
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Get IAM server URL.
+     *
+     * @return IAM server URL
+     */
+    public URL getIamServerUrl() {
+        return iamServerUrl;
     }
 
     // helper to store the bearer into a reference from an http connection response
