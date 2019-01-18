@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -28,6 +28,7 @@ import com.cloudant.http.HttpConnectionRequestInterceptor;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.cloudant.http.internal.interceptors.CookieInterceptor;
 import com.cloudant.http.internal.interceptors.IamCookieInterceptor;
+import com.cloudant.http.internal.interceptors.IamServerBasicAuthInterceptor;
 import com.cloudant.http.internal.interceptors.ProxyAuthInterceptor;
 import com.cloudant.http.internal.interceptors.SSLCustomizerInterceptor;
 import com.cloudant.http.internal.interceptors.TimeoutCustomizationInterceptor;
@@ -168,6 +169,8 @@ public class ClientBuilder {
     private long readTimeout = DEFAULT_READ_TIMEOUT;
     private TimeUnit readTimeoutUnit = TimeUnit.MINUTES;
     private String iamApiKey;
+    private String iamServerClientId;
+    private String iamServerClientSecret;
 
     /**
      * Constructs a new ClientBuilder for building a CloudantClient instance to connect to the
@@ -259,6 +262,11 @@ public class ClientBuilder {
             props.addRequestInterceptors(cookieInterceptor);
             props.addResponseInterceptors(cookieInterceptor);
             logger.config("Added IAM cookie interceptor");
+
+            if (this.iamServerClientId != null && this.iamServerClientSecret != null) {
+                props.addRequestInterceptors(new IamServerBasicAuthInterceptor(
+                        cookieInterceptor.getIamServerUrl(), iamServerClientId, iamServerClientSecret));
+            }
 
         }
         //Create cookie interceptor
@@ -792,6 +800,24 @@ public class ClientBuilder {
      */
     public ClientBuilder iamApiKey(String iamApiKey) {
         this.iamApiKey = iamApiKey;
+        return this;
+    }
+
+    /**
+     * Sets the
+     * <a href="https://console.bluemix.net/docs/services/Cloudant/guides/iam.html#ibm-cloud-identity-and-access-management"
+     * target="_blank">IAM</a> API key for the client connection.
+     *
+     * @param iamApiKey the IAM API key for the session
+     * @param iamServerClientId Client ID used to authenticate with IAM token server
+     * @param iamServerClientSecret Client secret used to authenticate with IAM token server
+     * @return this ClientBuilder object for setting additional options
+     */
+    public ClientBuilder iamApiKey(String iamApiKey, String iamServerClientId,
+                                   String iamServerClientSecret) {
+        this.iamApiKey = iamApiKey;
+        this.iamServerClientId = iamServerClientId;
+        this.iamServerClientSecret = iamServerClientSecret;
         return this;
     }
 

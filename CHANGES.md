@@ -1,3 +1,6 @@
+# UNRELEASED
+- [NEW] Added option for client to authenticate with IAM token server.
+
 # 2.14.0 (2018-12-18)
 - [NEW] Add `purge_seq` getter on `DbInfo` class that returns sequence value as `String`.
 - [DEPRECATED] `com.cloudant.client.api.model.DbInfo#getPurgeSeq()`.

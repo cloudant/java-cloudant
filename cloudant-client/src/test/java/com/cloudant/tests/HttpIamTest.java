@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -22,6 +22,8 @@ import static com.cloudant.tests.util.MockWebServerResources.IAM_TOKEN;
 import static com.cloudant.tests.util.MockWebServerResources.IAM_TOKEN_2;
 import static com.cloudant.tests.util.MockWebServerResources.OK_IAM_COOKIE;
 import static com.cloudant.tests.util.MockWebServerResources.OK_IAM_COOKIE_2;
+import static com.cloudant.tests.util.MockWebServerResources.assertMockIamCloudantRequests;
+import static com.cloudant.tests.util.MockWebServerResources.assertMockIamServerRequests;
 import static com.cloudant.tests.util.MockWebServerResources.hello;
 import static com.cloudant.tests.util.MockWebServerResources.iamSession;
 import static com.cloudant.tests.util.MockWebServerResources.iamSessionUnquoted;
@@ -114,6 +116,34 @@ public class HttpIamTest {
         assertEquals(hello, response, "The expected response should be received");
 
         MockWebServerResources.assertMockIamRequests(mockWebServer, mockIamServer);
+    }
+
+    @Test
+    public void iamTokenWithValidClientIdAndSecretAndCookieSuccessful() throws Exception {
+
+        // Request sequence
+        // _iam_session request to get Cookie
+        // GET request -> 200 with a Set-Cookie
+        mockWebServer.enqueue(OK_IAM_COOKIE);
+        mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody(hello));
+        mockIamServer.enqueue(new MockResponse().setResponseCode(200).setBody(IAM_TOKEN));
+
+        final String mockIAMUser = "iamServerUser";
+        final String mockIAMPass = "iamServerPass";
+        final String mockAuthHeader = "Basic aWFtU2VydmVyVXNlcjppYW1TZXJ2ZXJQYXNz";
+
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .iamApiKey(IAM_API_KEY, mockIAMUser, mockIAMPass)
+                .build();
+
+        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        assertEquals(hello, response, "The expected response should be received");
+
+        assertMockIamCloudantRequests(takeN(mockWebServer, 2));
+
+        RecordedRequest recordedIAMRequest = takeN(mockIamServer, 1)[0];
+        assertMockIamServerRequests(recordedIAMRequest);
+        assertEquals(recordedIAMRequest.getHeader("Authorization"), mockAuthHeader);
     }
 
     /**
