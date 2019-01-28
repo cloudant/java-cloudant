@@ -16,7 +16,7 @@ A list of known findbugs issues that we cannot fix at this time.
 For example because it requires an API change
 -->
 <FindBugsFilter>
-    
+
     <!-- This bug is because com.cloudant.client.api.model.Document extends
      com.cloudant.org.lightcouch.Document. Eventually we may roll them into one class and then this
      exclude can be removed.
@@ -25,7 +25,7 @@ For example because it requires an API change
         <Bug code="Nm" pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS"/>
         <Class name="com.cloudant.client.api.model.Document"/>
     </Match>
-    
+
     <!-- This bug is because addAttachment in com.cloudant.client.api.model.Document does not
      override the addAttachment in com.cloudant.org.lightcouch.Document. This is because of the two
      different Attachment classes. This leads to the confusing situation where there are two
@@ -38,19 +38,6 @@ For example because it requires an API change
         <Class name="com.cloudant.client.api.model.Document"/>
         <Method name="addAttachment"/>
     </Match>
-
-    <!-- Some private fields are flagged as never being written to. This fails to take into account
-    the GSON deserialization which reflectively sets the fields, so these findbugs can be ignored.
-    -->
-    <Match>
-        <Bug code="UwF" pattern="UWF_UNWRITTEN_FIELD"/>
-        <Class name="com.cloudant.client.org.lightcouch.Attachment"/>
-    </Match>
-    <Match>
-        <Bug code="UwF" pattern="UWF_UNWRITTEN_FIELD"/>
-        <Class name="com.cloudant.client.api.model.ChangesResult$Row$Rev"/>
-    </Match>
-
 
     <!-- Returning null instead of a zero length array has special meaning in these cases.
      Firstly, null indicates that no keys have been added to the query so we should not write a
@@ -95,8 +82,17 @@ For example because it requires an API change
         <Method name="readNextRow"/>
     </Match>
 
-    <!-- This bug is because com.cloudant.client.internal.util.CloudFoundryService is populated via
-    GSON. -->
+    <!-- Some private fields are flagged as never being written to. This fails to take into account
+    the GSON deserialization which reflectively sets the fields, so these findbugs can be ignored.
+    -->
+    <Match>
+        <Bug code="UwF" pattern="UWF_UNWRITTEN_FIELD"/>
+        <Class name="com.cloudant.client.org.lightcouch.Attachment"/>
+    </Match>
+    <Match>
+        <Bug code="UwF" pattern="UWF_UNWRITTEN_FIELD"/>
+        <Class name="com.cloudant.client.api.model.ChangesResult$Row$Rev"/>
+    </Match>
     <Match>
         <Bug code="UwF" pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
         <Class name="com.cloudant.client.internal.util.CloudFoundryService"/>
@@ -112,7 +108,6 @@ For example because it requires an API change
         <Class name="com.cloudant.client.internal.util.CloudFoundryService$CloudFoundryServiceCredentials"/>
         <Field name="url"/>
     </Match>
-    <!-- Populated via GSON -->
     <Match>
         <Bug code="UwF" pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
         <Class name="com.cloudant.client.api.scheduler.SchedulerJobsResponse$History"/>
@@ -122,6 +117,16 @@ For example because it requires an API change
         <Bug code="UwF" pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
         <Class name="com.cloudant.client.api.scheduler.SchedulerJobsResponse$History"/>
         <Field name="type"/>
+    </Match>
+    <Match>
+        <Bug code="UwF" pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
+        <Class name="com.cloudant.client.api.model.PartitionInfo$Sizes"/>
+        <Field name="active"/>
+    </Match>
+    <Match>
+        <Bug code="UwF" pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
+        <Class name="com.cloudant.client.api.model.PartitionInfo$Sizes"/>
+        <Field name="external"/>
     </Match>
 
     <!-- This is likely a false positive in Findbugs, the IDE doesn't complain an unchecked cast.

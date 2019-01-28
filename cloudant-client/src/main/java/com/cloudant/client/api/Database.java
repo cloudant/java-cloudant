@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2016, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -1332,6 +1332,21 @@ public class Database {
     public DbInfo info() {
         return client.couchDbClient.get(new DatabaseURIHelper(db.getDBUri()).getDatabaseUri(),
                 DbInfo.class);
+    }
+
+    /**
+     * Get information about a partition in this database.
+     *
+     * @param partitionKey database partition key
+     * @return {@link com.cloudant.client.api.model.PartitionInfo} encapsulating the database partition info.
+     * @throws UnsupportedOperationException if called with {@code null} partition key.
+     */
+    public PartitionInfo partitionInfo(String partitionKey) {
+        if (partitionKey == null) {
+            throw new UnsupportedOperationException("Cannot get partition information for null partition key.");
+        }
+        URI uri = new DatabaseURIHelper(db.getDBUri()).partition(partitionKey).build();
+        return client.couchDbClient.get(uri, PartitionInfo.class);
     }
 
     /**
