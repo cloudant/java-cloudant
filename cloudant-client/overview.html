@@ -23,6 +23,7 @@ There is no need to add a head/title as that is provided by Javadoc.
     <LI><a href="#Authentication">Authentication</a>
         <OL>
             <LI><a href="#Cookie authentication">Cookie authentication</a></LI>
+            <LI><a href="#IAM authentication">IAM authentication</a></LI>
             <LI><a href="#Custom authentication">Custom authentication</a></LI>
         </OL>
     </LI>
@@ -149,7 +150,7 @@ There is no need to add a head/title as that is provided by Javadoc.
     {@link com.cloudant.client.api.ClientBuilder#password(String)}
     options uses
     <a href="https://console.bluemix.net/docs/services/Cloudant/api/authentication.html
-    #cookie-authentication" target="_blank">
+#cookie-authentication" target="_blank">
         cookie authentication</a> for the CloudantClient connection. The supplied credentials are
     used to request a session with the server and the session is renewed automatically if the cookie
     expires. If the credentials become invalid then a new instance of a CloudantClient needs to be
@@ -162,6 +163,27 @@ There is no need to add a head/title as that is provided by Javadoc.
     be added through the use of an additional interceptor such as a
     com.cloudant.http.interceptors.BasicAuthInterceptor. See also
     <a href="#Custom authentication">custom authentication</a>.
+</P>
+
+<h2 id="IAM authentication">IAM authentication</h2>
+
+<P>
+    IBM Cloud Identity & Access Management enables you to securely authenticate users and control
+    access to all cloud resources.
+</P>
+<P>
+    See
+    <a href="https://console.bluemix.net/docs/services/Cloudant/guides/iam.html
+#ibm-cloud-identity-and-access-management" target="_blank">
+        IBM Cloud Identity and Access Management</a> for more information.
+</P>
+<P>
+    The production IAM token service at <i>https://iam.cloud.ibm.com/identity/token</i> is used by
+    default. You can set a <i>com.cloudant.client.iamserver</i> system property to override this.
+</P>
+<P>
+    An example using IAM Authentication is shown in the javadoc for
+    {@link com.cloudant.client.api.ClientBuilder#iamApiKey(String iamApiKey)}.
 </P>
 
 <h2 id="Custom authentication">Custom authentication</h2>
@@ -334,7 +356,7 @@ See the <a href="https://console.bluemix.net/docs/services/Cloudant/api/attachme
     using map-reduce views, <a href="#Cloudant Search">Cloudant Search</a>, and
     <a href="#Cloudant Query">Cloudant Query</a>. The results can be retrieved by the client. It is
     recommend to read the <a href="https://console.bluemix.net/docs/services/Cloudant/api/
-    design_documents.html#design-documents" target="_blank">
+design_documents.html#design-documents" target="_blank">
     Cloudant design document documentation</a> before working with design documents to gain an
     understanding of the available parameters and functions.
 </P>

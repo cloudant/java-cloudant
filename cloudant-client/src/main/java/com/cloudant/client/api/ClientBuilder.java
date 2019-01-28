@@ -794,6 +794,16 @@ public class ClientBuilder {
      * Sets the
      * <a href="https://console.bluemix.net/docs/services/Cloudant/guides/iam.html#ibm-cloud-identity-and-access-management"
      * target="_blank">IAM</a> API key for the client connection.
+     * <P>
+     * Example creating a {@link CloudantClient} using IAM authentication:
+     * </P>
+     * <pre>
+     * {@code
+     * CloudantClient client = ClientBuilder.account("yourCloudantAccount")
+     *      .iamApiKey("yourIamApiKey")
+     *      .build();
+     * }
+     * </pre>
      *
      * @param iamApiKey the IAM API key for the session
      * @return this ClientBuilder object for setting additional options
@@ -806,7 +816,18 @@ public class ClientBuilder {
     /**
      * Sets the
      * <a href="https://console.bluemix.net/docs/services/Cloudant/guides/iam.html#ibm-cloud-identity-and-access-management"
-     * target="_blank">IAM</a> API key for the client connection.
+     * target="_blank">IAM</a> API key for the client connection. Also allows a client ID and secret
+     * to be specified for use when authenticating with the IAM token server.
+     * <P>
+     * Example creating a {@link CloudantClient} using IAM authentication:
+     * </P>
+     * <pre>
+     * {@code
+     * CloudantClient client = ClientBuilder.account("yourCloudantAccount")
+     *      .iamApiKey("yourIamApiKey", "yourClientId", "yourClientSecret")
+     *      .build();
+     * }
+     * </pre>
      *
      * @param iamApiKey the IAM API key for the session
      * @param iamServerClientId Client ID used to authenticate with IAM token server
