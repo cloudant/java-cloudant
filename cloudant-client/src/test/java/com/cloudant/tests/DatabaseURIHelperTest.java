@@ -277,4 +277,20 @@ public class DatabaseURIHelperTest {
         Assertions.assertEquals(expectedQuery.toASCIIString(), actualQuery.toASCIIString());
     }
 
+    @TestTemplate
+    public void buildPartitionedDatabaseDocumentUri(String path) throws Exception {
+        URI expected = new URI(uriBase + "/test/_partition/partitionKey/documentId");
+
+        URI actual = helper(path + "/test").partition("partitionKey").documentId("documentId").build();
+        Assertions.assertEquals(expected, actual);
+    }
+
+    @TestTemplate
+    public void buildPartitionedDatabaseDocumentUriWithNullPartitionKey(String path) throws Exception {
+        URI expected = new URI(uriBase + "/test/documentId");
+
+        URI actual = helper(path + "/test").partition(null).documentId("documentId").build();
+        Assertions.assertEquals(expected, actual);
+    }
+
 }

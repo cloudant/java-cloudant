@@ -50,6 +50,7 @@ There is no need to add a head/title as that is provided by Javadoc.
             <LI><a href="#Cloudant Search">Cloudant Search</a></LI>
         </OL>
     </LI>
+    <LI><a href="#Partitioned Databases">Partitioned Databases</a></LI>
     <LI><a href="#Advanced Configuration">Advanced Configuration</a>
         <OL>
             <LI><a href="#Connection options">Connection options</a></LI>
@@ -470,6 +471,64 @@ library to query a view.
 <P>
     To query this index, use an instance of {@link com.cloudant.client.api.Search} by calling
     {@link com.cloudant.client.api.Database#search}.
+</P>
+
+<h1 id="Partitioned Databases">Partitioned Databases</h1>
+
+<P>
+    Partitioned databases introduce the ability for a user to create logical groups of documents
+    called partitions by providing a partition key with each document. A partitioned database offers
+    significant performance and cost advantages but requires you to specify a logical partitioning
+    of your data. IBM Cloudant strongly recommends using partitioned database where the data model
+    allows for logical partitioning of documents.
+</P>
+
+<P>
+    Creating a new partitioned database (see {@link
+    com.cloudant.client.api.CloudantClient#createPartitionedDB(String)}):
+</P>
+<pre>
+    {@code
+    CloudantClient client = ClientBuilder.account("example")
+                                         .username("exampleUser")
+                                         .password("examplePassword")
+                                         .build();
+
+    client.createPartitionedDB("myPartitionedDb");
+    }
+</pre>
+
+</P>
+    A partitioned database offers both partitioned and global querying. Partitioned querying takes
+    advantage of the data layout within the database cluster to deliver improved and more scalable
+    query performance. In addition, partition queries are often cheaper than global queries.
+</P>
+
+<P>
+    Executing a partition view query (see {@link
+    com.cloudant.client.api.views.SettableViewParameters.Common#partition(String)}:
+</P>
+<pre>
+    {@code
+    Database db = client.database("myPartitionedDb", false);
+
+    ViewRequest<String, String> viewRequest = db.getViewRequestBuilder(ddocId, "myView")
+                                                .newRequest(Key.Type.STRING, String.class)
+                                                .partition("partitionKey-123456")
+                                                .build();
+    }
+</pre>
+
+<P>
+    See {@link com.cloudant.client.api.Database#query(String, String, Class)} and {@link
+    com.cloudant.client.api.Database#search(String, String)} for executing partitioned IBM Cloudant
+    Query and Search queries, respectively.
+</P>
+
+<P>
+    For more information see
+    the <a href="https://console.bluemix.net/docs/services/Cloudant/guides/database_partitioning.html#database-partitioning"
+    target="_blank">IBM Cloud Docs</a>.
 </P>
 
 <h1 id="Advanced Configuration">Advanced Configuration</h1>

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2016, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -27,6 +27,7 @@ import com.cloudant.client.api.model.FindByIndexOptions;
 import com.cloudant.client.api.model.Index;
 import com.cloudant.client.api.model.IndexField;
 import com.cloudant.client.api.model.Params;
+import com.cloudant.client.api.model.PartitionInfo;
 import com.cloudant.client.api.model.Permissions;
 import com.cloudant.client.api.query.QueryResult;
 import com.cloudant.client.api.model.Shard;
@@ -494,14 +495,52 @@ public class Database {
      */
     public <T> QueryResult<T> query(String query, final Class<T> classOfT) {
         URI uri = new DatabaseURIHelper(db.getDBUri()).path("_find").build();
+        return this.query(uri, query, classOfT);
+    }
+
+    /**
+     * Execute a partitioned query using an index and a query selector.
+     *
+     * Only available in partitioned databases. To verify a database is partitioned call
+     * {@link Database#info()} and check that {@link DbInfo.Props#getPartitioned()} returns
+     * {@code true}.
+     *
+     * <p>Example usage:</p>
+     * <pre>
+     * {@code
+     * // Query database partition 'Coppola'.
+     * QueryResult<Movie> movies = db.query("Coppola", new QueryBuilder(and(
+     *   gt("Movie_year", 1960),
+     *   eq("Person_name", "Al Pacino"))).
+     *   fields("Movie_name", "Movie_year").
+     *   build(), Movie.class);
+     * }
+     * </pre>
+     *
+     * @param partitionKey Database partition to query.
+     * @param query        String representation of a JSON object describing criteria used to
+     *                     select documents.
+     * @param classOfT     The class of Java objects to be returned in the {@code docs} field of
+     *                     result.
+     * @param <T>          The type of the Java object to be returned in the {@code docs} field of
+     *                     result.
+     * @return             A {@link QueryResult} object, containing the documents matching the query
+     *                     in the {@code docs} field.
+     * @see com.cloudant.client.api.Database#query(String, Class)
+     */
+    public <T> QueryResult<T> query(String partitionKey, String query, final Class<T> classOfT) {
+        URI uri = new DatabaseURIHelper(db.getDBUri()).partition(partitionKey).path("_find").build();
+        return this.query(uri, query, classOfT);
+    }
+
+    private <T> QueryResult<T> query(URI uri, String query, final Class<T> classOfT) {
         InputStream stream = null;
         try {
             stream = client.couchDbClient.executeToInputStream(createPost(uri, query,
                     "application/json"));
             Reader reader = new InputStreamReader(stream, "UTF-8");
             Type type = TypeToken.getParameterized(QueryResult.class, classOfT).getType();
-            QueryResult<T> result = client.getGson().fromJson(reader, type);
-            return result;
+            return client.getGson().fromJson(reader, type);
         } catch (UnsupportedEncodingException e) {
             // This should never happen as every implementation of the java platform is required
             // to support UTF-8.
@@ -602,7 +641,35 @@ public class Database {
      * target="_blank">Search</a>
      */
     public Search search(String searchIndexId) {
-        return new Search(client, this, searchIndexId);
+        return new Search(client, this, null, searchIndexId);
+    }
+
+    /**
+     * Provides access to partitioned Cloudant <tt>Search</tt> APIs.
+     *
+     * Only available in partitioned databases. To verify a database is partitioned call
+     * {@link Database#info()} and check that {@link DbInfo.Props#getProps()} returns
+     * {@code true}.
+     *
+     * <p>Example usage:</p>
+     * <pre>
+     * {@code
+     *  // Search query over partition 'aves' using design document _id '_design/views101' and
+     *  // search index 'partitioned_animals'.
+     *  List<Bird> birds = db.search("aves", "views101/partitioned_animals")
+     * 	.query("name:puffin", Bird.class);
+     * 	}
+     * </pre>
+     *
+     * @param partitionKey database partition key
+     * @param searchIndexId the design document with the name of the index to search
+     * @return Search object for searching the index
+     * @see <a
+     * href="https://console.bluemix.net/docs/services/Cloudant/api/search.html#search"
+     * target="_blank">Search</a>
+     */
+    public Search search(String partitionKey, String searchIndexId) {
+        return new Search(client, this, partitionKey, searchIndexId);
     }
 
     /**
@@ -646,7 +713,7 @@ public class Database {
                 AllDocsRequestResponse.AllDocsValue>(client, this, "", "", String.class,
                 AllDocsRequestResponse.AllDocsValue.class) {
             protected DatabaseURIHelper getViewURIBuilder() {
-                return new DatabaseURIHelper(db.getDBUri()).path("_all_docs");
+                return new DatabaseURIHelper(db.getDBUri()).partition(partition).path("_all_docs");
             }
         });
     }
@@ -1332,6 +1399,21 @@ public class Database {
     public DbInfo info() {
         return client.couchDbClient.get(new DatabaseURIHelper(db.getDBUri()).getDatabaseUri(),
                 DbInfo.class);
+    }
+
+    /**
+     * Get information about a partition in this database.
+     *
+     * @param partitionKey database partition key
+     * @return {@link com.cloudant.client.api.model.PartitionInfo} encapsulating the database partition info.
+     * @throws UnsupportedOperationException if called with {@code null} partition key.
+     */
+    public PartitionInfo partitionInfo(String partitionKey) {
+        if (partitionKey == null) {
+            throw new UnsupportedOperationException("Cannot get partition information for null partition key.");
+        }
+        URI uri = new DatabaseURIHelper(db.getDBUri()).partition(partitionKey).build();
+        return client.couchDbClient.get(uri, PartitionInfo.class);
     }
 
     /**

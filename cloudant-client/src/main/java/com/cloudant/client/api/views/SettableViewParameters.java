@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -13,6 +13,9 @@
  */
 
 package com.cloudant.client.api.views;
+
+import com.cloudant.client.api.Database;
+import com.cloudant.client.api.model.DbInfo;
 
 /**
  * Describes the parameters that can be set when building view requests.
@@ -231,6 +234,20 @@ public interface SettableViewParameters {
          */
 
         RB update(String update);
+
+        /**
+         * A partition key can be specified when querying data so that results can be constrained
+         * to a specific database partition.
+         *
+         * Only available in partitioned databases. To verify a database is partitioned call
+         * {@link Database#info()} and check that {@link DbInfo.Props#getPartitioned()} returns
+         * {@code true}.
+         *
+         * @param partition database partition key
+         * @return the builder to compose additional parameters or build the request
+         * @since 2.15.0
+         */
+        RB partition(String partition);
     }
 
     /**
