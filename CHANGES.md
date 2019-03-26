@@ -1,3 +1,6 @@
+# UNRELEASED
+- [NEW] Added database partition metadata fields for partitioned index count/limit.
+
 # 2.15.0 (2019-02-12)
 - [NEW] Added option for client to authenticate with IAM token server.
 - [NEW] Added partitioned database support.
