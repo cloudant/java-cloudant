@@ -83,4 +83,57 @@ public class DbInfoMockTests extends TestWithMockedServer {
 
         assertEquals(mockPurgeSeq, db.info().getStringPurgeSeq());
     }
+
+    @Test
+    public void getDbPartitionPartitionedIndexesCount() {
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server).build();
+        Database db = c.database("animaldb", false);
+
+        MockResponse response = new MockResponse()
+                .setResponseCode(200)
+                .setBody("{\"partitioned_indexes\":{\"count\":9}}");
+        server.enqueue(response);
+
+        assertEquals(9, db.info().getPartitionedIndexes().getCount());
+    }
+
+    @Test
+    public void getDbPartitionPartitionedIndexesLimit() {
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server).build();
+        Database db = c.database("animaldb", false);
+
+        MockResponse response = new MockResponse()
+                .setResponseCode(200)
+                .setBody("{\"partitioned_indexes\":{\"limit\":10}}");
+        server.enqueue(response);
+
+        assertEquals(10, db.info().getPartitionedIndexes().getLimit());
+    }
+
+    @Test
+    public void getDbPartitionPartitionedIndexesIndexesSearch() {
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server).build();
+        Database db = c.database("animaldb", false);
+
+        MockResponse response = new MockResponse()
+                .setResponseCode(200)
+                .setBody("{\"partitioned_indexes\":{\"indexes\":{\"search\":3}}}");
+        server.enqueue(response);
+
+        assertEquals(3, db.info().getPartitionedIndexes().getIndexes().getSearch());
+    }
+
+    @Test
+    public void getDbPartitionPartitionedIndexesIndexesView() {
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server).build();
+        Database db = c.database("animaldb", false);
+
+        MockResponse response = new MockResponse()
+                .setResponseCode(200)
+                .setBody("{\"partitioned_indexes\":{\"indexes\":{\"view\":6}}}");
+        server.enqueue(response);
+
+        assertEquals(6, db.info().getPartitionedIndexes().getIndexes().getView());
+    }
+
 }

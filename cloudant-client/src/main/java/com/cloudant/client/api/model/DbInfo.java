@@ -27,6 +27,76 @@ import com.google.gson.annotations.SerializedName;
 public class DbInfo {
 
     /**
+     * Encapsulates partitioned index properties.
+     */
+    public static class PartitionedIndexes {
+
+        /**
+         * Encapsulates index properties.
+         */
+        public static class Indexes {
+
+            private long search;
+            private long view;
+
+
+            /**
+             * Get a count of the partitioned search indexes.
+             *
+             * @return The partitioned search index count.
+             */
+            public long getSearch() {
+                return search;
+            }
+
+
+            /**
+             * Get a count of the partitioned view indexes.
+             *
+             * @return The partitioned view index count.
+             */
+            public long getView() {
+                return view;
+            }
+
+        }
+
+        private long count;
+        private long limit;
+        private Indexes indexes;
+
+        /**
+         * Get a total count of the partitioned indexes.
+         *
+         * @return The total partitioned index count.
+         */
+        public long getCount() {
+            return count;
+        }
+
+        /**
+         * Get the partitioned index limit.
+         *
+         * @return The partitioned index limit.
+         */
+        public long getLimit() {
+            return limit;
+        }
+
+        /**
+         * Get the {@link com.cloudant.client.api.model.DbInfo.PartitionedIndexes.Indexes} object
+         * for this database.
+         *
+         * @return The {@link com.cloudant.client.api.model.DbInfo.PartitionedIndexes.Indexes}
+         * object, containing the count breakdown of partitioned indexes.
+         */
+        public Indexes getIndexes() {
+            return indexes;
+        }
+
+    }
+
+    /**
      * Encapsulates database properties.
      */
     public static class Props {
@@ -62,6 +132,8 @@ public class DbInfo {
     @SerializedName("disk_format_version")
     private int diskFormatVersion;
     private Props props;
+    @SerializedName("partitioned_indexes")
+    private PartitionedIndexes partitionedIndexes;
 
     public String getDbName() {
         return dbName;
@@ -137,15 +209,51 @@ public class DbInfo {
         return props;
     }
 
-    @Override
-    public String toString() {
-        return String
-                .format("CouchDbInfo [dbName=%s, docCount=%s, docDelCount=%s, updateSeq=%s, " +
-                                "purgeSeq=%s, compactRunning=%s, diskSize=%s, instanceStartTime=%s, diskFormatVersion=%s]",
-                        dbName, docCount, docDelCount, updateSeq, purgeSeq,
-                        compactRunning, diskSize, instanceStartTime,
-                        diskFormatVersion);
+    /**
+     * Get the {@link com.cloudant.client.api.model.DbInfo.PartitionedIndexes} object for
+     * this database.
+     *
+     * @return The {@link com.cloudant.client.api.model.DbInfo.PartitionedIndexes} object,
+     * containing metadata about partitioned indexes in this database.
+     */
+    public PartitionedIndexes getPartitionedIndexes() {
+        return partitionedIndexes;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb
+                .append("CouchDbInfo [")
+                .append("dbName=").append(dbName)
+                .append(", docCount=").append(docCount)
+                .append(", docDelCount=").append(docDelCount)
+                .append(", updateSeq=").append(updateSeq)
+                .append(", purgeSeq=").append(purgeSeq)
+                .append(", compactRunning=").append(compactRunning)
+                .append(", diskSize=").append(diskSize)
+                .append(", instanceStartTime=").append(instanceStartTime)
+                .append(", diskFormatVersion=").append(diskFormatVersion);
+
+        if (this.getProps() != null) {
+            sb.append(", props.partitioned=").append(this.getProps().getPartitioned());
+        }
+
+        if (this.getPartitionedIndexes() != null) {
+            sb
+                    .append(", partitionedIndexes.count=")
+                    .append(this.getPartitionedIndexes().getCount())
+                    .append(", partitionedIndexes.limit=")
+                    .append(this.getPartitionedIndexes().getLimit())
+                    .append(", partitionedIndexes.indexes.search=")
+                    .append(this.getPartitionedIndexes().getIndexes().getSearch())
+                    .append(", partitionedIndexes.indexes.view=")
+                    .append(this.getPartitionedIndexes().getIndexes().getView());
+        }
+
+        sb.append("]");
+
+        return sb.toString();
+    }
 
 }

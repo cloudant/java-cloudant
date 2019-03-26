@@ -120,13 +120,17 @@ For example because it requires an API change
     </Match>
     <Match>
         <Bug code="UwF" pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
-        <Class name="com.cloudant.client.api.model.PartitionInfo$Sizes"/>
-        <Field name="active"/>
+        <Class name="com.cloudant.client.api.model.DbInfo$PartitionedIndexes"/>
+
+    </Match>
+    <Match>
+        <Bug code="UwF" pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
+        <Class name="com.cloudant.client.api.model.DbInfo$PartitionedIndexes$Indexes"/>
+
     </Match>
     <Match>
         <Bug code="UwF" pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
         <Class name="com.cloudant.client.api.model.PartitionInfo$Sizes"/>
-        <Field name="external"/>
     </Match>
 
     <!-- This is likely a false positive in Findbugs, the IDE doesn't complain an unchecked cast.
