@@ -159,7 +159,7 @@ public class JsonIndex extends InternalIndex<JsonIndex.Definition, JsonIndex.Fie
          * <p>
          * Obtain a selector from an {@link Operation} or {@link Expression}.
          * </p>
-         * @param selector string representation of a JSON object describing criteria used to add
+         * @param selector {@code Selector} object describing criteria used to add
          *                 documents to index
          * @return the builder for chaining
          * @see Selector
