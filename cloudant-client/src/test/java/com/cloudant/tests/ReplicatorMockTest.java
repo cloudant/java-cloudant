@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 IBM Corp. All rights reserved.
+ * Copyright © 2018, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 
 package com.cloudant.tests;
 
+import static com.cloudant.client.api.query.Expression.eq;
 import static com.cloudant.tests.HttpTest.takeN;
 import static com.cloudant.tests.util.MockWebServerResources.IAM_API_KEY;
 import static com.cloudant.tests.util.MockWebServerResources.IAM_API_KEY_2;
@@ -24,14 +25,12 @@ import static org.junit.Assert.assertEquals;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.model.ReplicatorDocument;
+import com.cloudant.tests.base.TestWithMockedServer;
 import com.cloudant.tests.util.Utils;
 
-import com.cloudant.tests.base.TestWithMockedServer;
 import org.junit.jupiter.api.Test;
 
 import okhttp3.mockwebserver.RecordedRequest;
-
-import java.nio.charset.Charset;
 
 /**
  * Created by samsmith on 08/03/2018.
@@ -231,5 +230,29 @@ public class ReplicatorMockTest extends TestWithMockedServer {
 
         assertThat("The replication document should contain the target IAM API key",
                 body, containsString(authJson + IAM_API_KEY_2));
+    }
+
+    @Test
+    public void createAndSaveReplicatorDocumentWithSimpleSelector() throws Exception {
+        server.enqueue(JSON_OK);
+
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server)
+                .build();
+
+        c.replicator()
+                .replicatorDocId(replicatorDocId)
+                .source(sourceDbUrl)
+                .target(targetDbUrl)
+                .selector(eq("_id", "Schwarzenegger"))
+                .save();
+
+        RecordedRequest[] requests = takeN(server, 1);
+
+        assertEquals(requests[0].getPath(), "/_replicator/" + replicatorDocId);
+
+        String body = requests[0].getBody().readUtf8();
+
+        assertThat("The replication document should contain the selector", body,
+                containsString(",\"selector\":{\"_id\":{\"$eq\":\"Schwarzenegger\"}},"));
     }
 }
