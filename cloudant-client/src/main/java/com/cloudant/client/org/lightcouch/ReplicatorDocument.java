@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright (c) 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -15,6 +15,8 @@
 
 package com.cloudant.client.org.lightcouch;
 
+import com.cloudant.client.api.query.Selector;
+import com.cloudant.client.internal.query.Helpers;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -67,6 +69,7 @@ public class ReplicatorDocument extends Document {
     private UserCtx userCtx;
     @SerializedName("since_seq")
     private Integer sinceSeq;
+    private JsonElement selector;
 
     public String getSource() {
         return getEndpointUrl(source);
@@ -287,6 +290,14 @@ public class ReplicatorDocument extends Document {
 
     public void setTargetIamApiKey(String iamApiKey) {
         target = getDestinationIamJson(this.getTarget(), iamApiKey);
+    }
+
+    public String getSelector() {
+        return selector.getAsString();
+    }
+
+    public void setSelector(Selector selector) {
+        this.selector = Helpers.getJsonObjectFromSelector(selector);
     }
 
     public static class UserCtx {

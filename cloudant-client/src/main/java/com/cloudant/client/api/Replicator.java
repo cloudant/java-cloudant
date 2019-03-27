@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright (c) 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 
 package com.cloudant.client.api;
 
+import com.cloudant.client.api.query.Selector;
 import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.ReplicatorDocument;
 import com.cloudant.client.org.lightcouch.Response;
@@ -42,8 +43,9 @@ import java.util.Map;
  * 	.target("target-db")
  * 	.continuous(true)
  * 	.createTarget(true)
- * 	.replicatorDB("replicator-db-name") // optional, defaults to _replicator
- * 	.replicatorDocId("doc-id")          // optional, defaults to UUID
+ * 	.replicatorDB("replicator-db-name")    // optional, defaults to _replicator
+ * 	.replicatorDocId("doc-id")             // optional, defaults to UUID
+ * 	.selector(eq("_id", "Schwarzenegger")) // optional replication selector
  * 	.save(); // trigger replication
  *
  * // find an existing replicator doc
@@ -236,6 +238,11 @@ public class Replicator {
 
     public Replicator targetIamApiKey(String iamApiKey) {
         this.replicator = replicator.targetIamApiKey(iamApiKey);
+        return this;
+    }
+
+    public Replicator selector(Selector selector) {
+        this.replicator = replicator.selector(selector);
         return this;
     }
 
