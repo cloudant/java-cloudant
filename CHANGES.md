@@ -1,4 +1,4 @@
-# UNRELEASED
+# 2.16.0 (2019-04-01)
 - [NEW] Added database partition metadata fields for partitioned index count/limit.
 - [NEW] Added replication selector support.
 
