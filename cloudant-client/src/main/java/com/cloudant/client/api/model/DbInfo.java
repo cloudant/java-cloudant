@@ -118,7 +118,7 @@ public class DbInfo {
     @SerializedName("doc_count")
     private long docCount;
     @SerializedName("doc_del_count")
-    private String docDelCount;
+    private long docDelCount;
     @SerializedName("update_seq")
     private JsonElement updateSeq;
     @SerializedName("purge_seq")
@@ -143,7 +143,22 @@ public class DbInfo {
         return docCount;
     }
 
+    /**
+     *
+     * @return string form of the number of deleted documents in the database
+     *
+     * @see DbInfo#getDocDelCountLong
+     */
+    @Deprecated
     public String getDocDelCount() {
+        return Long.toString(docDelCount);
+    }
+
+    /**
+     *
+     * @return number of deleted documents in the database
+     */
+    public long getDocDelCountLong() {
         return docDelCount;
     }
 

@@ -1,3 +1,8 @@
+# Unreleased
+- [NEW] Added `com.cloudant.client.api.model.DbInfo#getDocDelCountLong()` to return
+  deleted document count as a `long` instead of a `String`.
+- [DEPRECATED] `com.cloudant.client.api.model.DbInfo#getDocDelCount()`.
+
 # 2.16.0 (2019-04-01)
 - [NEW] Added database partition metadata fields for partitioned index count/limit.
 - [NEW] Added replication selector support.
