@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 IBM Corp. All rights reserved.
+ * Copyright © 2018, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
+import com.cloudant.client.api.model.DbInfo;
 import com.cloudant.tests.base.TestWithMockedServer;
 
 import org.junit.jupiter.api.Test;
@@ -134,6 +135,21 @@ public class DbInfoMockTests extends TestWithMockedServer {
         server.enqueue(response);
 
         assertEquals(6, db.info().getPartitionedIndexes().getIndexes().getView());
+    }
+
+    @Test
+    public void getDbInfoDocDelCount() {
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server).build();
+        Database db = c.database("animaldb", false);
+
+        MockResponse response = new MockResponse()
+                .setResponseCode(200)
+                .setBody("{\"doc_del_count\":7}");
+        server.enqueue(response);
+
+        DbInfo info = db.info();
+        assertEquals("7", info.getDocDelCount());
+        assertEquals(7l, info.getDocDelCountLong());
     }
 
 }
