@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -41,6 +41,7 @@ import com.cloudant.http.internal.interceptors.CookieInterceptor;
 import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.tests.extensions.CloudantClientExtension;
 import com.cloudant.tests.extensions.DatabaseExtension;
+import com.cloudant.tests.extensions.DisabledWithIam;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.extensions.MultiExtension;
 import com.cloudant.tests.util.HttpFactoryParameterizedTest;
@@ -163,6 +164,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      * Basic test that we can write a document body by POSTing to a known database
      */
     @TestTemplate
+    @DisabledWithIam
     public void testWriteToServerOk() throws Exception {
         HttpConnection conn = new HttpConnection("POST", new URL(dbResource.getDbURIWithUserInfo()),
                 "application/json");
@@ -221,6 +223,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
     // be named cookie_test
     //
     @TestTemplate
+    @DisabledWithIam
     @RequiresCloudant
     public void testCookieAuthWithoutRetry() throws IOException {
         CookieInterceptor interceptor = new CookieInterceptor(CloudantClientHelper.COUCH_USERNAME,
@@ -278,6 +281,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      * is expected to hold the newly created document's id and rev.
      */
     @TestTemplate
+    @DisabledWithIam
     @RequiresCloudant
     public void testBasicAuth() throws IOException {
         BasicAuthInterceptor interceptor =

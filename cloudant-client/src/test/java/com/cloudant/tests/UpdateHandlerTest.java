@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright © 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -22,12 +22,14 @@ import com.cloudant.client.api.model.Params;
 import com.cloudant.client.api.model.Response;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.base.TestWithDbPerClass;
+import com.cloudant.tests.extensions.DisabledWithIam;
 import com.cloudant.tests.util.Utils;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 @RequiresDB
+@DisabledWithIam
 public class UpdateHandlerTest extends TestWithDbPerClass {
 
     @BeforeAll

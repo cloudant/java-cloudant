@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -16,6 +16,8 @@ package com.cloudant.tests.extensions;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
+import com.cloudant.client.api.Replication;
+import com.cloudant.client.api.Replicator;
 import com.cloudant.tests.util.Utils;
 
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -133,9 +135,24 @@ public class DatabaseExtension {
      *
      * @return the URI for the DB with creds
      */
-    public String getDbURIWithUserInfo() throws Exception {
+    public String getDbURIWithUserInfo() {
         String info = clientResource.getBaseURIWithUserInfo() + "/" + getDatabaseName();
         return info;
+    }
+
+    public Replication appendReplicationAuth(Replication r) {
+        if (IamAuthCondition.IS_IAM_ENABLED) {
+            r.sourceIamApiKey(IamAuthCondition.IAM_API_KEY);
+            r.targetIamApiKey(IamAuthCondition.IAM_API_KEY);
+        }
+        return r;
+    }
+    public Replicator appendReplicatorAuth(Replicator r) {
+        if (IamAuthCondition.IS_IAM_ENABLED) {
+            r.sourceIamApiKey(IamAuthCondition.IAM_API_KEY);
+            r.targetIamApiKey(IamAuthCondition.IAM_API_KEY);
+        }
+        return r;
     }
 
     public static class PerClass extends DatabaseExtension implements BeforeAllCallback,

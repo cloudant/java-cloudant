@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright © 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -36,10 +36,11 @@ public class ReplicationTest extends TestWithReplication {
 
     @Test
     public void replication() {
-        ReplicationResult result = account.replication()
+        ReplicationResult result = db1Resource.appendReplicationAuth(account.replication()
                 .createTarget(true)
                 .source(db1URI)
                 .target(db2URI)
+        )
                 .trigger();
 
         assertTrue(result.isOk(), "The replication should complete ok");
@@ -53,12 +54,13 @@ public class ReplicationTest extends TestWithReplication {
         Map<String, Object> queryParams = new HashMap<String, Object>();
         queryParams.put("somekey1", "value 1");
 
-        ReplicationResult result = account.replication()
+        ReplicationResult result = db1Resource.appendReplicationAuth(account.replication()
                 .createTarget(true)
                 .source(db1URI)
                 .target(db2URI)
                 .filter("example/example_filter")
                 .queryParams(queryParams)
+        )
                 .trigger();
 
         assertTrue(result.isOk(), "The replication should complete ok");
@@ -72,8 +74,9 @@ public class ReplicationTest extends TestWithReplication {
         db1.save(fooOnDb1);
 
         // trigger a replication
-        ReplicationResult result = account.replication().source(db1URI)
-                .target(db2URI).createTarget(true).trigger();
+        ReplicationResult result =
+                db1Resource.appendReplicationAuth(account.replication().source(db1URI)
+                .target(db2URI).createTarget(true)).trigger();
 
         assertTrue(result.isOk(), "The replication should complete ok");
 
@@ -93,8 +96,9 @@ public class ReplicationTest extends TestWithReplication {
         db2.save(foodb2);
 
         //replicate with DB1 with DB2
-        ReplicationResult result = account.replication().source(db1URI)
-                .target(db2URI).trigger();
+        ReplicationResult result =
+                db1Resource.appendReplicationAuth(account.replication().source(db1URI)
+                .target(db2URI)).trigger();
 
         assertTrue(result.isOk(), "The replication should complete ok");
 

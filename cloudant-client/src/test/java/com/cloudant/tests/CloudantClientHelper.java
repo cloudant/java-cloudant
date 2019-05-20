@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -16,6 +16,7 @@ package com.cloudant.tests;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
+import com.cloudant.tests.extensions.IamAuthCondition;
 
 import okhttp3.mockwebserver.MockWebServer;
 
@@ -32,11 +33,11 @@ public abstract class CloudantClientHelper {
     //some tests need access to the URI with user info (e.g. replication)
     public static final String SERVER_URI_WITH_USER_INFO;
     //some tests need access to the credentials (e.g. auth interceptors, vcap)
-    public static final String COUCH_USERNAME;
-    public static final String COUCH_PASSWORD;
-    public static final String COUCH_HOST;
+    static final String COUCH_USERNAME;
+    static final String COUCH_PASSWORD;
+    static final String COUCH_HOST;
 
-    protected static final CloudantClient CLIENT_INSTANCE;
+    private static final CloudantClient CLIENT_INSTANCE;
 
     private static final String COUCH_PORT;
     private static final String HTTP_PROTOCOL;
@@ -76,7 +77,8 @@ public abstract class CloudantClientHelper {
 
             // Ensure username and password are correctly URL encoded when included in the URI
             SERVER_URI_WITH_USER_INFO = HTTP_PROTOCOL + "://"
-                    + ((COUCH_USERNAME != null) ? URLEncoder.encode(COUCH_USERNAME, "UTF-8") +
+                    + ((!IamAuthCondition.IS_IAM_ENABLED && COUCH_USERNAME != null) ?
+                    URLEncoder.encode(COUCH_USERNAME, "UTF-8") +
                     ":" + URLEncoder.encode(COUCH_PASSWORD, "UTF-8") + "@" : "") + COUCH_HOST + (
                     (COUCH_PORT != null) ? ":" + COUCH_PORT : ""); //port if supplied
         } catch (Throwable t) {
@@ -116,9 +118,14 @@ public abstract class CloudantClientHelper {
     }
 
     public static ClientBuilder getClientBuilder() {
-        return ClientBuilder.url(SERVER_URL)
-                .username(COUCH_USERNAME)
-                .password(COUCH_PASSWORD);
+        ClientBuilder builder = ClientBuilder.url(SERVER_URL);
+        if (IamAuthCondition.IS_IAM_ENABLED) {
+            builder.iamApiKey(IamAuthCondition.IAM_API_KEY);
+        } else {
+            builder.username(COUCH_USERNAME)
+                    .password(COUCH_PASSWORD);
+        }
+        return builder;
     }
 
     static String REP_SOURCE = null;
