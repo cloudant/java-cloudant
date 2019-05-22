@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -31,6 +31,7 @@ import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresCouch;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.base.TestWithDbPerClass;
+import com.cloudant.tests.extensions.DisabledWithIam;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.MockWebServerResources;
 import com.google.gson.GsonBuilder;
@@ -70,10 +71,12 @@ public class DatabaseTest extends TestWithDbPerClass {
         r.source(getReplicationSourceUrl("animaldb"));
         r.createTarget(true);
         r.target(dbResource.getDbURIWithUserInfo());
+        dbResource.appendReplicationAuth(r);
         r.trigger();
     }
 
     @Test
+    @DisabledWithIam
     @RequiresCloudantService
     public void permissions() {
         Map<String, EnumSet<Permissions>> userPerms = db.getPermissions();

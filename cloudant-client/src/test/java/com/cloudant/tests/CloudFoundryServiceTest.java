@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2016, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,18 +14,14 @@
 
 package com.cloudant.tests;
 
+import static com.cloudant.tests.util.MockWebServerResources.IAM_API_KEY;
 import static com.cloudant.tests.util.MockWebServerResources.IAM_TOKEN;
 import static com.cloudant.tests.util.MockWebServerResources.OK_IAM_COOKIE;
-import static com.cloudant.tests.util.MockWebServerResources.IAM_API_KEY;
 import static com.cloudant.tests.util.MockWebServerResources.iamTokenEndpoint;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
-import com.cloudant.http.Http;
-import com.cloudant.http.HttpConnection;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.IamSystemPropertyMock;
 import com.cloudant.tests.util.MockWebServerResources;
@@ -51,6 +47,10 @@ import java.util.Map;
 public class CloudFoundryServiceTest {
 
     public static IamSystemPropertyMock iamSystemPropertyMock;
+
+    private static String TEST_HOST = "https://cloudant.example";
+    private static String TEST_USER = "user";
+    private static String TEST_PASSWORD = "pass";
 
     private String mockServerHostPort;
 
@@ -167,8 +167,7 @@ public class CloudFoundryServiceTest {
             public void execute() throws Throwable {
                 VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
                 vcap.createNewLegacyService("test_bluemix_service_1",
-                        CloudantClientHelper.COUCH_HOST,
-                        CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
+                        TEST_HOST, TEST_USER, TEST_PASSWORD);
                 ClientBuilder.bluemix(vcap.toJson(), "missingService", "test_bluemix_service_1")
                         .build();
             }
@@ -182,8 +181,7 @@ public class CloudFoundryServiceTest {
             public void execute() throws Throwable {
                 VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
                 vcap.createNewLegacyService("test_bluemix_service_1",
-                        CloudantClientHelper.COUCH_HOST,
-                        CloudantClientHelper.COUCH_USERNAME, CloudantClientHelper.COUCH_PASSWORD);
+                        TEST_HOST, TEST_USER, TEST_PASSWORD);
                 ClientBuilder.bluemix(vcap.toJson(), null, "test_bluemix_service_1").build();
             }
         });
@@ -254,7 +252,7 @@ public class CloudFoundryServiceTest {
             public void execute() throws Throwable {
                 VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
                 vcap.createNewLegacyServiceWithEmptyCredentials("test_bluemix_service_1",
-                        CloudantClientHelper.COUCH_HOST);
+                        CloudantClientHelper.SERVER_HOST);
                 ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_1");
             }
         });
@@ -279,7 +277,7 @@ public class CloudFoundryServiceTest {
             public void execute() throws Throwable {
                 VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
                 vcap.createNewServiceWithEmptyIAM("test_bluemix_service_1",
-                        CloudantClientHelper.COUCH_HOST);
+                        CloudantClientHelper.SERVER_HOST);
                 ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_1");
             }
         });
@@ -384,7 +382,7 @@ public class CloudFoundryServiceTest {
                 vcap.createNewLegacyService("test_bluemix_service_2", "foo2.bar", "admin2",
                         "pass2");
                 vcap.createNewLegacyServiceWithEmptyCredentials("test_bluemix_service_3",
-                        CloudantClientHelper.COUCH_HOST);
+                        CloudantClientHelper.SERVER_HOST);
                 ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_3");
             }
         });
@@ -399,7 +397,7 @@ public class CloudFoundryServiceTest {
                 vcap.createNewService("test_bluemix_service_1", "admin1", "apikey1");
                 vcap.createNewService("test_bluemix_service_2", "admin2", "apikey2");
                 vcap.createNewServiceWithEmptyIAM("test_bluemix_service_3",
-                        CloudantClientHelper.COUCH_HOST);
+                        CloudantClientHelper.SERVER_HOST);
                 ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_3");
             }
         });

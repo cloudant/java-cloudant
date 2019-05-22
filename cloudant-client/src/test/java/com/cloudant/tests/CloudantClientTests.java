@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -37,6 +37,7 @@ import com.cloudant.test.main.RequiresCloudant;
 import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.base.TestWithDbPerClass;
+import com.cloudant.tests.extensions.DisabledWithIam;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.MockWebServerResources;
 import com.cloudant.tests.util.Utils;
@@ -88,6 +89,7 @@ public class CloudantClientTests extends TestWithDbPerClass {
     }
 
     @Test
+    @DisabledWithIam
     @RequiresCloudantService
     public void apiKey() {
         ApiKey key = account.generateApiKey();
@@ -491,13 +493,14 @@ public class CloudantClientTests extends TestWithDbPerClass {
      * Test that adding the Basic Authentication interceptor to CloudantClient works.
      */
     @Test
+    @DisabledWithIam
     @RequiresCloudant
     public void testBasicAuth() throws IOException {
         BasicAuthInterceptor interceptor =
-                new BasicAuthInterceptor(CloudantClientHelper.COUCH_USERNAME
-                        + ":" + CloudantClientHelper.COUCH_PASSWORD);
+                new BasicAuthInterceptor(CloudantClientHelper.SERVER_USER
+                        + ":" + CloudantClientHelper.SERVER_PASSWORD);
 
-        CloudantClient client = ClientBuilder.account(CloudantClientHelper.COUCH_USERNAME)
+        CloudantClient client = ClientBuilder.account(CloudantClientHelper.SERVER_USER)
                 .interceptors(interceptor).build();
 
         // Test passes if there are no exceptions

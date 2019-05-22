@@ -27,10 +27,9 @@ def runTests(testEnv, isServiceTests) {
 
         //Set up the environment and run the tests
         withEnv(testEnv) {
-            withCredentials([usernamePassword(credentialsId: env.CREDS_ID, usernameVariable: 'DB_USER', passwordVariable: 'DB_PASSWORD'),
-                string(credentialsId: 'clientlibs-test-iam', variable: 'DB_IAM_API_KEY')]) {
+            withCredentials([(env.CREDS_ID.contains('iam')) ? string(credentialsId: env.CREDS_ID, variable: 'IAM_API_KEY') : usernamePassword(credentialsId: env.CREDS_ID, usernameVariable: 'DB_USER', passwordVariable: 'DB_PASSWORD')]) {
                 try {
-                    sh './gradlew -Dtest.couch.username=$DB_USER -Dtest.couch.password=$DB_PASSWORD -Dtest.couch.host=$DB_HOST -Dtest.couch.port=$DB_PORT -Dtest.couch.http=$DB_HTTP $GRADLE_TARGET'
+                    sh "./gradlew ${(env.DB_USER?.trim()) ? '-Dtest.server.user=$DB_USER -Dtest.server.password=$DB_PASSWORD' : ''} -Dtest.server.host=\$DB_HOST -Dtest.server.port=\$DB_PORT -Dtest.server.protocol=\$DB_HTTP \$GRADLE_TARGET"
                 } finally {
                     junit '**/build/test-results/**/*.xml'
                 }
@@ -51,6 +50,7 @@ stage('Build') {
 stage('QA') {
     // Define the matrix environments
     def CLOUDANT_ENV = ['DB_HTTP=https', 'DB_HOST=clientlibs-test.cloudant.com', 'DB_PORT=443', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=clientlibs-test']
+    def CLOUDANT_IAM_ENV = ['DB_HTTP=https', 'DB_HOST=clientlibs-test.cloudant.com', 'DB_PORT=443', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=clientlibs-test-iam']
     def COUCH1_6_ENV = ['DB_HTTP=http', 'DB_HOST=cloudantsync002.bristol.uk.ibm.com', 'DB_PORT=5984', 'DB_IGNORE_COMPACTION=false', 'CREDS_ID=couchdb']
     def COUCH2_0_ENV = ['DB_HTTP=http', 'DB_HOST=cloudantsync002.bristol.uk.ibm.com', 'DB_PORT=5985', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=couchdb']
     def CLOUDANT_LOCAL_ENV = ['DB_HTTP=http', 'DB_HOST=cloudantsync002.bristol.uk.ibm.com', 'DB_PORT=8081', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=couchdb']
@@ -86,6 +86,9 @@ stage('QA') {
                 },
                 CloudantLocal: {
                     runTests(CLOUDANT_LOCAL_ENV, false)
+                },
+                CloudantIam: {
+                    runTests(CLOUDANT_IAM_ENV, true)
                 }
         )
     }

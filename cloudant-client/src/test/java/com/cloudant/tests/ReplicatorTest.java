@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -50,11 +50,12 @@ public class ReplicatorTest extends TestWithReplication {
 
     @Test
     public void replication() throws Exception {
-        Response response = account.replicator()
+        Response response = db1Resource.appendReplicatorAuth(account.replicator()
                 .replicatorDocId(repDocId)
                 .createTarget(true)
                 .source(db1URI)
                 .target(db2URI)
+        )
                 .save();
 
         // find and remove replicator doc
@@ -68,13 +69,14 @@ public class ReplicatorTest extends TestWithReplication {
         Map<String, Object> queryParams = new HashMap<String, Object>();
         queryParams.put("somekey1", "value 1");
 
-        Response response = account.replicator()
+        Response response = db1Resource.appendReplicatorAuth(account.replicator()
                 .createTarget(true)
                 .replicatorDocId(repDocId)
                 .source(db1URI)
                 .target(db2URI)
                 .filter("example/example_filter")
                 .queryParams(queryParams)
+        )
                 .save();
 
         // find and remove replicator doc
@@ -87,11 +89,12 @@ public class ReplicatorTest extends TestWithReplication {
     public void replicatorDB() throws Exception {
 
         // trigger a replication
-        Response response = account.replicator()
+        Response response = db1Resource.appendReplicatorAuth(account.replicator()
                 .replicatorDocId(repDocId)
                 .source(db1URI)
                 .target(db2URI).continuous(true)
                 .createTarget(true)
+        )
                 .save();
 
         // we need the replication to start before continuing
@@ -116,8 +119,9 @@ public class ReplicatorTest extends TestWithReplication {
         db2.save(foodb2);
 
         //replicate with DB1 with DB2
-        Response response = account.replicator().source(db1URI)
+        Response response = db1Resource.appendReplicatorAuth(account.replicator().source(db1URI)
                 .target(db2URI).replicatorDocId(repDocId)
+        )
                 .save();
 
         // we need the replication to finish before continuing
