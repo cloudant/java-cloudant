@@ -1,4 +1,4 @@
-# Unreleased
+# 2.17.0 (2019-05-23)
 - [NEW] Added `com.cloudant.client.api.model.DbInfo#getDocDelCountLong()` to return
   deleted document count as a `long` instead of a `String`.
 - [DEPRECATED] `com.cloudant.client.api.model.DbInfo#getDocDelCount()`.
