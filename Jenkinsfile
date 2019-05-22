@@ -29,7 +29,7 @@ def runTests(testEnv, isServiceTests) {
         withEnv(testEnv) {
             withCredentials([(env.CREDS_ID.contains('iam')) ? string(credentialsId: env.CREDS_ID, variable: 'IAM_API_KEY') : usernamePassword(credentialsId: env.CREDS_ID, usernameVariable: 'DB_USER', passwordVariable: 'DB_PASSWORD')]) {
                 try {
-                    sh "./gradlew ${(env.DB_USER?.trim()) ? '-Dtest.couch.username=$DB_USER -Dtest.couch.password=$DB_PASSWORD' : ''} -Dtest.couch.host=\$DB_HOST -Dtest.couch.port=\$DB_PORT -Dtest.couch.http=\$DB_HTTP \$GRADLE_TARGET"
+                    sh "./gradlew ${(env.DB_USER?.trim()) ? '-Dtest.server.user=$DB_USER -Dtest.server.password=$DB_PASSWORD' : ''} -Dtest.server.host=\$DB_HOST -Dtest.server.port=\$DB_PORT -Dtest.server.protocol=\$DB_HTTP \$GRADLE_TARGET"
                 } finally {
                     junit '**/build/test-results/**/*.xml'
                 }

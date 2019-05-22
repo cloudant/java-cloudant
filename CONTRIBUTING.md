@@ -112,11 +112,11 @@ CouchDB. To run tests with a remote CouchDB or Cloudant, you need set the
 details of this CouchDB server, including access credentials:
 
 ```
-systemProp.test.couch.username=yourUsername
-systemProp.test.couch.password=yourPassword
-systemProp.test.couch.host=couchdbHost # default localhost
-systemProp.test.couch.port=couchdbPort # default 5984
-systemProp.test.couch.http=[http|https] # default http
+systemProp.test.server.user=yourUsername
+systemProp.test.server.password=yourPassword
+systemProp.test.server.host=couchdborcloudanthost # default localhost
+systemProp.test.server.port=5984 # default 5984
+systemProp.test.server.protocol=[http|https] # default http
 ```
 Alternatively, provide a URL containing all the above information:
 ```

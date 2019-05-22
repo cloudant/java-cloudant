@@ -497,10 +497,10 @@ public class CloudantClientTests extends TestWithDbPerClass {
     @RequiresCloudant
     public void testBasicAuth() throws IOException {
         BasicAuthInterceptor interceptor =
-                new BasicAuthInterceptor(CloudantClientHelper.COUCH_USERNAME
-                        + ":" + CloudantClientHelper.COUCH_PASSWORD);
+                new BasicAuthInterceptor(CloudantClientHelper.SERVER_USER
+                        + ":" + CloudantClientHelper.SERVER_PASSWORD);
 
-        CloudantClient client = ClientBuilder.account(CloudantClientHelper.COUCH_USERNAME)
+        CloudantClient client = ClientBuilder.account(CloudantClientHelper.SERVER_USER)
                 .interceptors(interceptor).build();
 
         // Test passes if there are no exceptions

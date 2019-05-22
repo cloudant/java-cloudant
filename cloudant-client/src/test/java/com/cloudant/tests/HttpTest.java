@@ -226,8 +226,8 @@ public class HttpTest extends HttpFactoryParameterizedTest {
     @DisabledWithIam
     @RequiresCloudant
     public void testCookieAuthWithoutRetry() throws IOException {
-        CookieInterceptor interceptor = new CookieInterceptor(CloudantClientHelper.COUCH_USERNAME,
-                CloudantClientHelper.COUCH_PASSWORD, clientResource.get().getBaseUri().toString());
+        CookieInterceptor interceptor = new CookieInterceptor(CloudantClientHelper.SERVER_USER,
+                CloudantClientHelper.SERVER_PASSWORD, clientResource.get().getBaseUri().toString());
 
         HttpConnection conn = new HttpConnection("POST", dbResource.get().getDBUri().toURL(),
                 "application/json");
@@ -285,8 +285,8 @@ public class HttpTest extends HttpFactoryParameterizedTest {
     @RequiresCloudant
     public void testBasicAuth() throws IOException {
         BasicAuthInterceptor interceptor =
-                new BasicAuthInterceptor(CloudantClientHelper.COUCH_USERNAME
-                        + ":" + CloudantClientHelper.COUCH_PASSWORD);
+                new BasicAuthInterceptor(CloudantClientHelper.SERVER_USER
+                        + ":" + CloudantClientHelper.SERVER_PASSWORD);
 
         HttpConnection conn = new HttpConnection("POST", dbResource.get().getDBUri().toURL(),
                 "application/json");

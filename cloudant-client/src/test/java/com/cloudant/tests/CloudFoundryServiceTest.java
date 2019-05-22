@@ -252,7 +252,7 @@ public class CloudFoundryServiceTest {
             public void execute() throws Throwable {
                 VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
                 vcap.createNewLegacyServiceWithEmptyCredentials("test_bluemix_service_1",
-                        CloudantClientHelper.COUCH_HOST);
+                        CloudantClientHelper.SERVER_HOST);
                 ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_1");
             }
         });
@@ -277,7 +277,7 @@ public class CloudFoundryServiceTest {
             public void execute() throws Throwable {
                 VCAPGenerator vcap = new CloudFoundryServiceTest.VCAPGenerator();
                 vcap.createNewServiceWithEmptyIAM("test_bluemix_service_1",
-                        CloudantClientHelper.COUCH_HOST);
+                        CloudantClientHelper.SERVER_HOST);
                 ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_1");
             }
         });
@@ -382,7 +382,7 @@ public class CloudFoundryServiceTest {
                 vcap.createNewLegacyService("test_bluemix_service_2", "foo2.bar", "admin2",
                         "pass2");
                 vcap.createNewLegacyServiceWithEmptyCredentials("test_bluemix_service_3",
-                        CloudantClientHelper.COUCH_HOST);
+                        CloudantClientHelper.SERVER_HOST);
                 ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_3");
             }
         });
@@ -397,7 +397,7 @@ public class CloudFoundryServiceTest {
                 vcap.createNewService("test_bluemix_service_1", "admin1", "apikey1");
                 vcap.createNewService("test_bluemix_service_2", "admin2", "apikey2");
                 vcap.createNewServiceWithEmptyIAM("test_bluemix_service_3",
-                        CloudantClientHelper.COUCH_HOST);
+                        CloudantClientHelper.SERVER_HOST);
                 ClientBuilder.bluemix(vcap.toJson(), "test_bluemix_service_3");
             }
         });
