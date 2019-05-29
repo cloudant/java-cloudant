@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 IBM Corp. All rights reserved.
+ * Copyright © 2016, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -33,17 +33,12 @@ class ProxyAuthenticator implements Authenticator {
 
     @Override
     public Request authenticate(Route route, Response response) throws IOException {
-        if (route.proxy() != null) {
-            if (creds.equals(response.request().header("Proxy-Authorization"))) {
-                // If the proxy creds have already been tried then give up
-                return null;
-            } else {
-                return response.request().newBuilder().addHeader(ProxyAuthInterceptor
-                        .PROXY_AUTH_HEADER, creds).build();
-            }
-        } else {
-            // Don't interfere with normal Auth, this is just for proxies
+        if (creds.equals(response.request().header("Proxy-Authorization"))) {
+            // If the proxy creds have already been tried then give up
             return null;
+        } else {
+            return response.request().newBuilder().addHeader(ProxyAuthInterceptor
+                    .PROXY_AUTH_HEADER, creds).build();
         }
     }
 }
