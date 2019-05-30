@@ -12,6 +12,10 @@
  * and limitations under the License.
  */
 
+plugins {
+    id "com.github.spotbugs" version "2.0.0" apply false
+}
+
 subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
@@ -175,9 +179,9 @@ subprojects {
     }
 
     // Findbugs
-    apply plugin: 'findbugs'
-    findbugs {
-        toolVersion = "3.0.1"
+    apply plugin: 'com.github.spotbugs'
+    spotbugs {
+        toolVersion = "3.1.12"
         // Report only high severity bugs for now
         reportLevel = "low"
         // The code base is pretty small so use max effort
@@ -185,14 +189,14 @@ subprojects {
         // We don't want to run findbugs on the test code yet
         sourceSets = [sourceSets.main]
         // Exclude a couple of known bugs until we get the chance to fix them
-        if (file("findbugs_excludes.xml").exists()) {
-            excludeFilter = file("findbugs_excludes.xml")
+        if (file("spotbugs_excludes.xml").exists()) {
+            excludeFilter = file("spotbugs_excludes.xml")
         }
     }
 
-    tasks.withType(FindBugs) {
+    tasks.withType(com.github.spotbugs.SpotBugsTask) {
         // Currently only one report type can be used toggle which with a property
-        boolean generateXML = Boolean.getBoolean("findbugs.xml.report")
+        boolean generateXML = Boolean.getBoolean("spotbugs.xml.report")
         reports {
             xml.enabled = generateXML
             html.enabled = !generateXML
