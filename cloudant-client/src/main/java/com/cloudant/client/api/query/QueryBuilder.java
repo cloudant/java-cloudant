@@ -191,7 +191,7 @@ public class QueryBuilder {
      * @return String representation of query.
      */
     public String build() {
-        String fieldsString = this.fields == null ? null : Helpers.quote(this.fields);
+        String fieldsString = this.fields == null ? null : Helpers.quote(this.fields, true);
         String sortString = this.sort == null ? null : quoteSort(this.sort);
         String limitString = this.limit == null ? null : Helpers.quote(this.limit);
         String skipString = this.skip == null ? null : Helpers.quote(this.skip);

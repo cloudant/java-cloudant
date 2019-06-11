@@ -1,5 +1,6 @@
 # Unreleased
 - [UPGRADED] Optional OkHttp dependency to version 3.12.2.
+- [FIXED] Create an array of strings for QueryBuilder.fields() when a single field is provided.
 
 # 2.17.0 (2019-05-23)
 - [NEW] Added `com.cloudant.client.api.model.DbInfo#getDocDelCountLong()` to return
