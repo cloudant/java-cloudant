@@ -251,6 +251,14 @@ public class QueryTests {
                 "{\"$eq\": \"de Vito\"}}, {\"Year\": {\"$eq\": 2001}}]}]}}", qb.build());
     }
 
+    // fields must always be an array of strings, even with a single field provided
+    @Test
+    public void basicSelector1WithField() {
+        QueryBuilder qb = new QueryBuilder(eq("director", "Lars von Trier")).fields("_id");
+        Assertions.assertEquals("{\"selector\": {\"director\": {\"$eq\": \"Lars von Trier\"}}, " +
+                                        "\"fields\": [\"_id\"]}", qb.build());
+    }
+
     // "Selector basics"
     @Test
     public void basicSelector1WithFields() {
