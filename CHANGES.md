@@ -1,6 +1,11 @@
 # Unreleased
-- [UPGRADED] Optional OkHttp dependency to version 3.12.2.
 - [FIXED] Create an array of strings for QueryBuilder.fields() when a single field is provided.
+- [IMPROVED] Return exceptions directly from IAM token request failures instead of logging and
+  deferring the request to the service with no credentials. The exception type is the same, but
+  the message and cause are more clear and a round trip is avoided.
+- [IMPROVED] Prevent multiple session renewal requests happening simultaneously because some auth
+  types apply limits to the number of requests that can be made.
+- [UPGRADED] Optional OkHttp dependency to version 3.12.2.
 
 # 2.17.0 (2019-05-23)
 - [NEW] Added `com.cloudant.client.api.model.DbInfo#getDocDelCountLong()` to return

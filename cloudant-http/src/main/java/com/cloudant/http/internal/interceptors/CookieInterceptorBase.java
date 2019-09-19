@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -22,7 +22,6 @@ import com.cloudant.http.HttpConnectionResponseInterceptor;
 import com.cloudant.http.internal.Utils;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.CookieManager;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -30,31 +29,49 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.UUID;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Created by tomblench on 21/06/2017.
+ * Adds cookie authentication support to http requests.
+ *
+ * It does this by adding the cookie header using request interceptor pipeline
+ * in {@link HttpConnection}.
+ *
+ * If a response has a response code of 401, it will fetch a cookie from
+ * the server using provided credentials and tell {@link HttpConnection} to reply
+ * the request by setting {@link HttpConnectionInterceptorContext#replayRequest} property to true.
+ *
+ * If the request to get the cookie for use in future request fails with a 401 status code
+ * (or any status that indicates client error) a HttpConnectionInterceptorException will be thrown.
  */
-
 public abstract class CookieInterceptorBase implements HttpConnectionRequestInterceptor,
         HttpConnectionResponseInterceptor {
 
-    protected final static Logger logger = Logger.getLogger(CookieInterceptor.class
+    protected final static Logger logger = Logger.getLogger(CookieInterceptorBase.class
             .getCanonicalName());
-    byte[] sessionRequestBody;
+    private final URL sessionRequestUrl;
     private final String sessionRequestMimeType;
+    private final String sessionStateName = "sessionUuid";
     private final CookieManager cookieManager = new CookieManager();
-    final AtomicBoolean shouldAttemptCookieRequest = new AtomicBoolean(true);
-    private final URL sessionURL;
+    private final ReadWriteLock sessionLock = new ReentrantReadWriteLock(true);
+    private volatile UUID sessionId = UUID.randomUUID();
 
-    CookieInterceptorBase(String sessionRequestMimeType, String baseUrl, String endpoint) {
-        this.sessionRequestMimeType = sessionRequestMimeType;
+    /**
+     * @param baseUrl         the server URL to get cookies from
+     * @param endpoint        the server endpoint to get cookies from
+     * @param requestMimeType the MIME Content-Type to use for the session request
+     */
+    protected CookieInterceptorBase(String baseUrl, String endpoint, String requestMimeType) {
         try {
-            baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length()-1): baseUrl;
+            baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
             endpoint = endpoint.startsWith("/") ? endpoint : "/" + endpoint;
-            this.sessionURL = new URL(String.format("%s%s", baseUrl, endpoint));
+            this.sessionRequestUrl = new URL(String.format("%s%s", baseUrl, endpoint));
+            this.sessionRequestMimeType = (requestMimeType != null) ? requestMimeType :
+                    "application/json";
         } catch (MalformedURLException e) {
             // this should be a valid URL since the builder is passing it in
             logger.log(Level.SEVERE, "Failed to create URL for session endpoint", e);
@@ -62,115 +79,62 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
         }
     }
 
-    @Override
-    public HttpConnectionInterceptorContext interceptRequest(HttpConnectionInterceptorContext
-                                                                     context) {
+    /**
+     * Override in sub-classes to provide the session request payload.
+     *
+     * @param context interceptor context
+     * @return the payload bytes
+     */
+    protected abstract byte[] getSessionRequestPayload(HttpConnectionInterceptorContext context);
 
-        HttpURLConnection connection = context.connection.getConnection();
-
-        // First time we will have no cookies
-        if (cookieManager.getCookieStore().getCookies().isEmpty() && shouldAttemptCookieRequest
-                .get()) {
-            if (!requestCookie(context)) {
-                // Requesting a cookie failed, set a flag if we failed so we won't try again
-                shouldAttemptCookieRequest.set(false);
-            }
-        }
-
-        if (shouldAttemptCookieRequest.get()) {
-
-            // Debug logging
-            if (logger.isLoggable(Level.FINEST)) {
-                logger.finest("Attempt to add cookie to request.");
-                logger.finest("Cookies are stored for URIs: " + cookieManager.getCookieStore()
-                        .getURIs());
-            }
-
-            // Apply any saved cookies to the request
-            try {
-                Map<String, List<String>> requestCookieHeaders = cookieManager.get(connection
-                        .getURL().toURI(), connection.getRequestProperties());
-                for (Map.Entry<String, List<String>> requestCookieHeader :
-                        requestCookieHeaders.entrySet()) {
-                    List<String> cookies = requestCookieHeader.getValue();
-                    if (cookies != null && !cookies.isEmpty()) {
-                        connection.setRequestProperty(requestCookieHeader.getKey(),
-                                listToSemicolonSeparatedString(cookies));
-                    } else {
-                        logger.finest("No cookie values to set.");
-                    }
-                }
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Failed to read request properties", e);
-            } catch (URISyntaxException e) {
-                logger.log(Level.SEVERE, "Failed to convert request URL to URI for cookie " +
-                        "retrieval.");
-            }
-        }
-        return context;
-    }
-
-    @Override
-    public HttpConnectionInterceptorContext interceptResponse(HttpConnectionInterceptorContext
-                                                                      context) {
-
-        // Check if this interceptor is valid before attempting any kind of renewal
+    private void requestCookie(HttpConnectionInterceptorContext context) {
+        // Check if the session was already updated on another thread before getting a cookie
+        sessionLock.readLock().lock();
         try {
-            if (shouldAttemptCookieRequest.get()) {
-
-                HttpURLConnection connection = context.connection.getConnection();
-                int statusCode = connection.getResponseCode();
-                if (statusCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
-                    boolean success = requestCookie(context);
-                    if (success) {
-                        context.replayRequest = true;
-                        // Consume the error stream to avoid leaking connections
-                        Utils.consumeAndCloseStream(connection.getErrorStream());
-                        logger.log(Level.FINEST, "Consumed error response");
-                    } else {
-                        context.replayRequest = false; // Don't replay
-                        shouldAttemptCookieRequest.set(false); // Set the flag to stop trying
+            if (sessionId.equals(context.getState(this, sessionStateName, UUID.class))) {
+                // Get a write lock and re-check the state
+                sessionLock.readLock().unlock();
+                sessionLock.writeLock().lock();
+                try {
+                    if (sessionId.equals(context.getState(this, sessionStateName, UUID.class))) {
+                        HttpConnection sessionConn = makeSessionRequest(sessionRequestUrl,
+                                getSessionRequestPayload(context), sessionRequestMimeType, context);
+                        storeCookiesFromResponse(sessionConn.getConnection());
+                        // We renewed a cookie, update the global sessionID and this request's context
+                        sessionId = UUID.randomUUID();
+                        context.setState(this, sessionStateName, sessionId);
                     }
-                } else {
-                    // Store any cookies provided on the response
-                    storeCookiesFromResponse(connection);
+                } finally {
+                    // Downgrade to the read lock
+                    sessionLock.readLock().lock();
+                    sessionLock.writeLock().unlock();
                 }
             }
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Error reading response code or body from request", e);
+        } finally {
+            sessionLock.readLock().unlock();
         }
-        return context;
     }
 
-    // helper for requestCookie
-    interface OnExecuteCallable {
-        boolean call(HttpConnection connection) throws IOException;
-    }
+    HttpConnection makeSessionRequest(URL url, byte[] payload, String contentMimeType,
+                                      HttpConnectionInterceptorContext context) {
 
-    protected boolean requestCookie(HttpConnectionInterceptorContext context,
-                                    URL url,
-                                    byte[] payload,
-                                    String mimeType,
-                                    String accept,
-                                    OnExecuteCallable onResponseOk) {
+        HttpConnection conn = Http.POST(url, contentMimeType);
+        conn.requestProperties.put("accept", "application/json");
+        conn.setRequestBody(payload);
+
+        //when we request the session we need all interceptors except this one
+
+        conn.requestInterceptors.addAll(context.connection.requestInterceptors);
+        conn.requestInterceptors.remove(this);
+        conn.responseInterceptors.addAll(context.connection.responseInterceptors);
+        conn.responseInterceptors.remove(this);
 
         try {
-            HttpConnection conn = Http.POST(url, mimeType);
-            conn.requestProperties.put("accept", accept);
-            conn.setRequestBody(payload);
-
-            //when we request the session we need all interceptors except this one
-
-            conn.requestInterceptors.addAll(context.connection.requestInterceptors);
-            conn.requestInterceptors.remove(this);
-            conn.responseInterceptors.addAll(context.connection.responseInterceptors);
-            conn.responseInterceptors.remove(this);
-
             HttpConnection connection = conn.execute();
             int responseCode = connection.getConnection().getResponseCode();
 
             if (responseCode / 100 == 2) {
-                return onResponseOk.call(connection);
+                return connection;
             } else {
                 // Consume the error stream to avoid leaking connections
                 String error = Utils.collectAndCloseStream(connection.getConnection()
@@ -178,73 +142,97 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
                 // Log the error stream content
                 logger.fine(error);
                 if (responseCode == 401) {
-                    logger.log(Level.SEVERE, "Credentials are incorrect for server {0}, cookie " +
-                            "authentication will not be attempted again by this interceptor " +
-                            "object", url);
+                    throw new HttpConnectionInterceptorException(String.format("Credentials are " +
+                            "incorrect for server %s", url));
                 } else {
                     // catch any other response code
-                    logger.log(Level.SEVERE, "Failed to get cookie from server {0}, response code" +
-                            " {1}, cookie authentication will not be attempted again", new
-                            Object[]{url, responseCode});
+                    throw new HttpConnectionInterceptorException(String.format("HTTP response " +
+                            "error getting session at %s, response code %s", url, responseCode));
                 }
             }
-        }  catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to read cookie response", e);
+        } catch (IOException e) {
+            throw wrapIOException("Failed to read server response from ", conn.getConnection(), e);
         }
+    }
+
+    @Override
+    public HttpConnectionInterceptorContext interceptRequest(HttpConnectionInterceptorContext context) {
+        // Set the sessionId for this request
+        context.setState(this, sessionStateName, sessionId);
+        HttpURLConnection connection = context.connection.getConnection();
+
+        // First time we will have no cookies
+        if (cookieManager.getCookieStore().getCookies().isEmpty()) {
+            requestCookie(context);
+        }
+
+        // Debug logging
+        if (logger.isLoggable(Level.FINEST)) {
+            logger.finest("Attempt to add cookie to request.");
+            logger.finest("Cookies are stored for URIs: " + cookieManager.getCookieStore()
+                    .getURIs());
+        }
+
+        // Apply any saved cookies to the request
+        try {
+            Map<String, List<String>> requestCookieHeaders = cookieManager.get(connection
+                    .getURL().toURI(), connection.getRequestProperties());
+            for (Map.Entry<String, List<String>> requestCookieHeader :
+                    requestCookieHeaders.entrySet()) {
+                List<String> cookies = requestCookieHeader.getValue();
+                if (cookies != null && !cookies.isEmpty()) {
+                    connection.setRequestProperty(requestCookieHeader.getKey(),
+                            listToSemicolonSeparatedString(cookies));
+                } else {
+                    logger.finest("No cookie values to set.");
+                }
+            }
+        } catch (IOException e) {
+            throw wrapIOException("Failed to read stored cookies for", connection, e);
+        } catch (URISyntaxException e) {
+            logger.log(Level.SEVERE, "Failed to convert request URL to URI for cookie " +
+                    "retrieval.");
+        }
+        return context;
+    }
+
+    @Override
+    public HttpConnectionInterceptorContext interceptResponse(HttpConnectionInterceptorContext context) {
+        HttpURLConnection connection = context.connection.getConnection();
+        try {
+            int statusCode = connection.getResponseCode();
+            boolean renew = shouldRenew(connection, statusCode);
+            if (!renew && statusCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                renew = true;
+                Utils.consumeAndCloseStream(connection.getErrorStream());
+            } else {
+                // Store any cookies provided on the response
+                storeCookiesFromResponse(connection);
+            }
+            if (renew) {
+                requestCookie(context);
+                context.replayRequest = true;
+            }
+        } catch (IOException e) {
+            throw wrapIOException("Failed to read HTTP reponse code or body from", connection, e);
+        }
+        return context;
+    }
+
+    protected boolean shouldRenew(HttpURLConnection connection, int statusCode) {
         return false;
     }
 
-    boolean requestCookie(HttpConnectionInterceptorContext context) {
-        return requestCookie(context,
-                sessionURL,
-                sessionRequestBody,
-                sessionRequestMimeType,
-                "application/json",
-                new OnExecuteCallable() {
-                    @Override
-                    public boolean call(HttpConnection connection) throws IOException {
-                        if (sessionHasStarted(connection.responseAsInputStream())) {
-                            return storeCookiesFromResponse(connection.getConnection());
-                        } else {
-                            // If the session did not start, consume the error stream to avoid
-                            // leaking connections.
-                            Utils.consumeAndCloseStream(connection.getConnection().getErrorStream
-                                    ());
-                            return false;
-                        }
-                    }
-                }
-        );
-    }
-
-    private boolean sessionHasStarted(InputStream responseStream) throws IOException {
-        // Get the response body as a string
-        String response = Utils.collectAndCloseStream(responseStream);
-
-        // Only check for ok:true, https://issues.apache.org/jira/browse/COUCHDB-1356
-        // means we cannot check that the name returned is the one we sent.
-
-        // Check the response body for "ok" : true using a regex because we don't want a JSON
-        // library dependency for something so simple in a shared HTTP artifact used in both
-        // java-cloudant and sync-android. Note (?siu) flags used for . to also match line
-        // breaks and for unicode case insensitivity.
-
-        return response.matches("(?s)(?i)(?u).*\\\"ok\\\"\\s*:\\s*true.*");
-    }
-
-    protected boolean storeCookiesFromResponse(HttpURLConnection connection) {
+    private void storeCookiesFromResponse(HttpURLConnection connection) {
 
         // Store any cookies from the response in the CookieManager
         try {
             logger.finest("Storing cookie.");
             cookieManager.put(connection.getURL().toURI(), connection.getHeaderFields());
-            return true;
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to read cookie response header", e);
-            return false;
+            throw wrapIOException("Failed to read cookie response header from", connection, e);
         } catch (URISyntaxException e) {
             logger.log(Level.SEVERE, "Failed to convert request URL to URI for cookie storage.");
-            return false;
         }
     }
 
@@ -259,5 +247,10 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
             }
         }
         return builder.toString();
+    }
+
+    HttpConnectionInterceptorException wrapIOException(String msg, HttpURLConnection conn, IOException e) {
+        String errorMsg = (conn == null) ? msg : msg + " " + conn.getURL().toString();
+        return new HttpConnectionInterceptorException(new IOException(errorMsg, e));
     }
 }

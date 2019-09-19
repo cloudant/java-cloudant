@@ -551,9 +551,10 @@ public class CouchDbClient {
             try {
                 connection = connection.execute();
             } catch (HttpConnectionInterceptorException e) {
-                CouchDbException exception = new CouchDbException(connection.getConnection()
-                        .getResponseMessage(), connection.getConnection().getResponseCode());
+                CouchDbException exception;
                 if (e.deserialize) {
+                    exception = new CouchDbException(connection.getConnection()
+                            .getResponseMessage(), connection.getConnection().getResponseCode());
                     try {
                         JsonObject errorResponse = new Gson().fromJson(e.error, JsonObject
                                 .class);
@@ -563,6 +564,7 @@ public class CouchDbClient {
                         exception.error = e.error;
                     }
                 } else {
+                    exception = new CouchDbException(e.getMessage(), e);
                     exception.error = e.error;
                     exception.reason = e.reason;
                 }

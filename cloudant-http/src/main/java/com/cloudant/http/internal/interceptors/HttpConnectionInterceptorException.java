@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2017 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -26,8 +26,10 @@ public class HttpConnectionInterceptorException extends RuntimeException {
         this.reason = null;
     }
 
-    HttpConnectionInterceptorException(String error) {
-        this(error, null);
+    HttpConnectionInterceptorException(String msg) {
+        super(msg);
+        this.error = null;
+        this.reason = null;
     }
 
     HttpConnectionInterceptorException(String error, String reason) {

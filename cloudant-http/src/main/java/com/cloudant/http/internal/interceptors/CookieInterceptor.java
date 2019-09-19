@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2017 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,7 +14,6 @@
 
 package com.cloudant.http.internal.interceptors;
 
-import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.http.internal.Utils;
 
@@ -27,19 +26,11 @@ import java.util.Locale;
 import java.util.logging.Level;
 
 /**
- * Adds cookie authentication support to http requests.
- *
- * It does this by adding the cookie header for CouchDB
- * using request interceptor pipeline in {@link HttpConnection}.
- *
- * If a response has a response code of 401, it will fetch a cookie from
- * the server using provided credentials and tell {@link HttpConnection} to reply
- * the request by setting {@link HttpConnectionInterceptorContext#replayRequest} property to true.
- *
- * If the request to get the cookie for use in future request fails with a 401 status code
- * (or any status that indicates client error) cookie authentication will not be attempted again.
+ * Extends the CookieInterceptorBase to provide Apache CouchDB _session cookie support.
  */
 public class CookieInterceptor extends CookieInterceptorBase {
+
+    private final byte[] auth;
 
     /**
      * Constructs a cookie interceptor. Credentials should be supplied not URL encoded, this class
@@ -50,92 +41,72 @@ public class CookieInterceptor extends CookieInterceptorBase {
      * @param baseURL  The base URL to use when constructing an `_session` request.
      */
     public CookieInterceptor(String username, String password, String baseURL) {
-        super("application/x-www-form-urlencoded", baseURL, "/_session");
+        // Use form encoding for the user/pass submission
+        super(baseURL, "/_session", "application/x-www-form-urlencoded");
         try {
-            this.sessionRequestBody = String.format("name=%s&password=%s", URLEncoder.encode(username, "UTF-8"), URLEncoder.encode(password, "UTF-8"))
-                    .getBytes("UTF-8"); ;
+            this.auth = String.format("name=%s&password=%s", URLEncoder.encode(username, "UTF-8")
+                    , URLEncoder.encode(password, "UTF-8"))
+                    .getBytes("UTF-8");
+            ;
         } catch (UnsupportedEncodingException e) {
             //all JVMs should support UTF-8, so this should not happen
             throw new RuntimeException(e);
         }
     }
 
-
+    /**
+     * Returns form encoded credentials to pass to _session.
+     *
+     * @param context interceptor context
+     * @return form encoded credentials body payload
+     */
     @Override
-    public HttpConnectionInterceptorContext interceptResponse(HttpConnectionInterceptorContext
-                                                                      context) {
-
-        // Check if this interceptor is valid before attempting any kind of renewal
-        if (shouldAttemptCookieRequest.get()) {
-
-            HttpURLConnection connection = context.connection.getConnection();
-
-            // If we got a 401 or 403 we might need to renew the cookie
-            try {
-                boolean renewCookie = false;
-                int statusCode = connection.getResponseCode();
-
-                if (statusCode == HttpURLConnection.HTTP_FORBIDDEN || statusCode ==
-                        HttpURLConnection.HTTP_UNAUTHORIZED) {
-                    // Get the string value of the error stream
-                    InputStream errorStream = connection.getErrorStream();
-                    String errorString = null;
-                    if (errorStream != null) {
-                        errorString = Utils.collectAndCloseStream(connection
-                                .getErrorStream());
-                        logger.log(Level.FINE, String.format(Locale.ENGLISH, "Intercepted " +
-                                "response %d %s", statusCode, errorString));
-                    }
-                    switch (statusCode) {
-                        case HttpURLConnection.HTTP_FORBIDDEN: //403
-                            // Check if it was an expiry case
-                            // Check using a regex to avoid dependency on a JSON library.
-                            // Note (?siu) flags used for . to also match line breaks and for
-                            // unicode
-                            // case insensitivity.
-                            if (errorString != null && errorString.matches("(?siu)" +
-                                    ".*\\\"error\\\"\\s*:\\s*\\\"credentials_expired\\\".*")) {
-                                // Was expired - set boolean to renew cookie
-                                renewCookie = true;
-                            } else {
-                                // Wasn't a credentials expired, throw exception
-                                HttpConnectionInterceptorException toThrow = new
-                                        HttpConnectionInterceptorException(errorString);
-                                // Set the flag for deserialization
-                                toThrow.deserialize = errorString != null;
-                                throw toThrow;
-                            }
-                            break;
-                        case HttpURLConnection.HTTP_UNAUTHORIZED: //401
-                            // We need to get a new cookie
-                            renewCookie = true;
-                            break;
-                        default:
-                            break;
-                    }
-
-                    if (renewCookie) {
-                        logger.finest("Cookie was invalid. Will attempt to get new cookie.");
-                        boolean success = requestCookie(context);
-                        if (success) {
-                            // New cookie obtained, replay the request
-                            context.replayRequest = true;
-                        } else {
-                            // Didn't successfully renew, maybe creds are invalid
-                            context.replayRequest = false; // Don't replay
-                            shouldAttemptCookieRequest.set(false); // Set the flag to stop trying
-                        }
-                    }
-                } else {
-                    // Store any cookies provided on the response
-                    storeCookiesFromResponse(connection);
-                }
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error reading response code or body from request", e);
-            }
-        }
-        return context;
-
+    protected byte[] getSessionRequestPayload(HttpConnectionInterceptorContext context) {
+        return auth;
     }
 
+    /**
+     * Adds an additional check for HTTP 403 status codes with "credentials expired" messages that
+     * are returned by some Cloudant versions.
+     *
+     * @param connection the connection to interrogate
+     * @param statusCode the HTTP response status code
+     * @return
+     */
+    @Override
+    protected boolean shouldRenew(HttpURLConnection connection, int statusCode) {
+        try {
+            if (statusCode == HttpURLConnection.HTTP_FORBIDDEN) {
+                // Get the string value of the error stream
+                InputStream errorStream = connection.getErrorStream();
+                String errorString = null;
+                if (errorStream != null) {
+                    errorString = Utils.collectAndCloseStream(connection
+                            .getErrorStream());
+                    logger.log(Level.FINE, String.format(Locale.ENGLISH, "Intercepted " +
+                            "response %d %s", statusCode, errorString));
+                }
+                // Check if it was an expiry case
+                // Check using a regex to avoid dependency on a JSON library.
+                // Note (?siu) flags used for . to also match line breaks and for
+                // unicode
+                // case insensitivity.
+                if (errorString != null && errorString.matches("(?siu)" +
+                        ".*\\\"error\\\"\\s*:\\s*\\\"credentials_expired\\\".*")) {
+                    // Was expired - renew cookie
+                    return true;
+                } else {
+                    // Wasn't a credentials expired, throw exception
+                    HttpConnectionInterceptorException toThrow = new
+                            HttpConnectionInterceptorException(errorString, null);
+                    // Set the flag for deserialization
+                    toThrow.deserialize = errorString != null;
+                    throw toThrow;
+                }
+            }
+        } catch (IOException e) {
+            throw wrapIOException("Failed to read HTTP reponse code or body from", connection, e);
+        }
+        return false;
+    }
 }
