@@ -32,7 +32,8 @@ import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
@@ -282,8 +283,8 @@ public class HttpIamTest {
      * - Cookie jar empty, so get IAM token followed by session cookie
      * - GET now proceeds as normal, expected cookie value is sent in header
      * - second GET on cloudant server, re-using session cookie
-     * - third GET on cloudant server, cookie expired, subsequent IAM token fails, no more requests
-     * are made
+     * - third GET on cloudant server, cookie expired, subsequent IAM token fails
+     * - exception is thrown
      *
      * @throws Exception
      */
@@ -317,12 +318,13 @@ public class HttpIamTest {
         // this never gets a response because the token failure stops the playback - this is
         // correct because the underlying stream has now been closed but the exception is a bit
         // unhelpful
-        try {
-            c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-            fail("Should get CouchDbException when trying to get response");
-        } catch (CouchDbException cdbe) {
-            ;
-        }
+        CouchDbException re =
+                assertThrows(CouchDbException.class,
+                        () -> c.executeRequest(Http.GET(c.getBaseUri())).responseAsString(),
+                        "Failure to get a token should throw a CouchDbException.");
+        re.printStackTrace();
+        assertTrue(re.getMessage().startsWith("HTTP response error getting session"), "The " +
+                "exception should have been for a HTTP response error.");
 
         // cloudant mock server
 
@@ -372,7 +374,7 @@ public class HttpIamTest {
      * - GET now proceeds as normal, expected cookie value is sent in header
      * - second GET on cloudant server, re-using session cookie
      * - third GET on cloudant server, cookie expired, get IAM token, subsequent session cookie
-     * request fails, no more requests are made
+     * request fails, CouchDbException
      *
      * @throws Exception
      */
@@ -404,15 +406,10 @@ public class HttpIamTest {
         String response2 = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
         assertEquals(hello, response2, "The expected response should be received");
 
-        // this never gets a response because the token failure stops the playback - this is
-        // correct because the underlying stream has now been closed but the exception is a bit
-        // unhelpful
-        try {
-            c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-            fail("Should get CouchDbException when trying to get response");
-        } catch (CouchDbException cdbe) {
-            ;
-        }
+        assertThrows(CouchDbException.class,
+                () -> c.executeRequest(Http.GET(c.getBaseUri())).responseAsString(), "Should get " +
+                        "a CouchDbException when _iam_session renewal fails.");
+
         // cloudant mock server
 
         // assert that there were 5 calls

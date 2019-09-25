@@ -14,6 +14,9 @@
 package com.cloudant.tests;
 
 import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE;
+import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE_2;
+import static com.cloudant.tests.util.MockWebServerResources.OK_COOKIE;
+import static com.cloudant.tests.util.MockWebServerResources.OK_COOKIE_2;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -262,7 +265,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
     @TestTemplate
     public void testCookieAuthWithPath() throws Exception {
         MockWebServer mockWebServer = new MockWebServer();
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         mockWebServer.enqueue(MockWebServerResources.JSON_OK);
         CloudantClient client = ClientBuilder.url(mockWebServer.url("/pathex").url())
                 .username("user")
@@ -331,7 +334,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         String mockPass = "?&=NotAsStrangeInAPassword";
 
         //expect a cookie request then a GET
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         mockWebServer.enqueue(new MockResponse());
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
@@ -369,7 +372,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         // _session request to get Cookie
         // GET request -> 200 with a Set-Cookie
         // GET replay -> 200
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         mockWebServer.enqueue(new MockResponse().setResponseCode(200).addHeader("Set-Cookie",
                 MockWebServerResources.authSessionCookie(renewalCookieToken, null))
                 .setBody(hello));
@@ -478,7 +481,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      */
     private void basic403Test(String error, String reason, int expectedRequests) throws
             Exception {
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         JsonObject responseBody = new JsonObject();
         responseBody.add("error", new JsonPrimitive(error));
         JsonElement jsonReason;
@@ -493,7 +496,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         }
         mockWebServer.enqueue(new MockResponse().setResponseCode(403).setBody(responseBody
                 .toString()));
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         mockWebServer.enqueue(new MockResponse());
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
@@ -667,10 +670,10 @@ public class HttpTest extends HttpFactoryParameterizedTest {
     @TestTemplate
     public void testCookieRenewOnPost() throws Exception {
 
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         mockWebServer.enqueue(new MockResponse().setResponseCode(403).setBody
                 ("{\"error\":\"credentials_expired\", \"reason\":\"Session expired\"}\r\n"));
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         mockWebServer.enqueue(new MockResponse());
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
@@ -976,7 +979,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      */
     @TestTemplate
     public void cookieAppliedToDifferentURL() throws Exception {
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         mockWebServer.enqueue(new MockResponse().setBody("first"));
         mockWebServer.enqueue(new MockResponse().setBody("second"));
 
@@ -1023,54 +1026,26 @@ public class HttpTest extends HttpFactoryParameterizedTest {
     }
 
     /**
-     * Test that cookie authentication is stopped if the credentials were bad.
+     * Test that cookie authentication throws a CouchDbException if the credentials were bad.
      *
      * @throws Exception
      */
     @TestTemplate
-    public void badCredsDisablesCookie() throws Exception {
-        mockWebServer.setDispatcher(new Dispatcher() {
-            private int counter = 0;
-
-            @Override
-            public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
-                counter++;
-                // Return a 401 for the first _session request, after that return 200 OKs
-                if (counter == 1) {
-                    return new MockResponse().setResponseCode(401);
-                } else {
-                    return new MockResponse().setBody("TEST");
-                }
-            }
-        });
+    public void badCredsCookieThrows() {
+        mockWebServer.enqueue(new MockResponse().setResponseCode(401));
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
                 .username("bad")
                 .password("worse")
                 .build();
 
-        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-        assertEquals("TEST", response, "The expected response body should be received");
+        CouchDbException re =
+                assertThrows(CouchDbException.class,
+                        () -> c.executeRequest(Http.GET(c.getBaseUri())).responseAsString(),
+                        "Bad credentials should throw a CouchDbException.");
 
-        // There should only be two requests: an initial auth failure followed by an ok response.
-        // If the cookie interceptor keeps trying then there will be more _session requests.
-        assertEquals(2, mockWebServer.getRequestCount(), "There should be 2 requests");
-
-        assertEquals("/_session",
-                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(), "The " +
-                        "first request should have been for a cookie");
-        assertEquals("/",
-                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(), "The " +
-                        "second request should have been for /");
-
-        response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-        assertEquals("TEST", response, "The expected response body should be received");
-
-        // Make another request, the cookie interceptor should not try again so there should only be
-        // one more request.
-        assertEquals(3, mockWebServer.getRequestCount(), "There should be 3 requests");
-        assertEquals("/", MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(),
-                "The third request should have been for /");
+        assertTrue(re.getMessage().startsWith("Credentials are incorrect for server"), "The " +
+                "exception should have been for bad creds.");
     }
 
     /**
@@ -1087,7 +1062,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
             public void execute() throws Throwable {
 
                 // Respond with a cookie init to the first request to _session
-                mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+                mockWebServer.enqueue(OK_COOKIE);
                 // Respond to the executeRequest GET of / with a 403 with no body
                 mockWebServer.enqueue(new MockResponse().setResponseCode(403));
                 CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
@@ -1111,11 +1086,11 @@ public class HttpTest extends HttpFactoryParameterizedTest {
     public void noErrorStream401() throws Exception {
 
         // Respond with a cookie init to the first request to _session
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         // Respond to the executeRequest GET of / with a 401 with no body
         mockWebServer.enqueue(new MockResponse().setResponseCode(401));
         // 401 triggers a renewal so respond with a new cookie for renewal request to _session
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         // Finally respond 200 OK with body of "TEST" to the replay of GET to /
         mockWebServer.enqueue(new MockResponse().setBody("TEST"));
 

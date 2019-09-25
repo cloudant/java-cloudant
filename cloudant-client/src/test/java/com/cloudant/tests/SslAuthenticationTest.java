@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -17,7 +17,6 @@ package com.cloudant.tests;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
@@ -41,6 +40,7 @@ import org.junit.jupiter.api.function.Executable;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
@@ -120,7 +120,13 @@ public class SslAuthenticationTest extends HttpFactoryParameterizedTest {
      */
     private static void validateClientAuthenticationException(CouchDbException e) {
         assertNotNull(e, "Expected CouchDbException but got null");
-        Throwable t = e.getCause();
+        Throwable t;
+        t = e.getCause();
+        if (!(t instanceof SSLHandshakeException) && (t instanceof IOException)) {
+            // In the case of a SSLException from the cookie interceptor
+            // we will have an IOException first, get the cause of that to check
+            t = t.getCause();
+        }
         assertTrue(t instanceof SSLHandshakeException, "Expected SSLHandshakeException caused by " +
                 "client certificate check but got " + t.getClass());
     }
@@ -277,12 +283,9 @@ public class SslAuthenticationTest extends HttpFactoryParameterizedTest {
                 .password("password")
                 .build();
 
-        try {
-            dbClient.getAllDbs();
-            fail("The SSL authentication failure should result in a CouchDbException");
-        } catch (CouchDbException e) {
-            validateClientAuthenticationException(e);
-        }
+        CouchDbException e = assertThrows(CouchDbException.class, () -> dbClient.getAllDbs(),
+                "The SSL authentication failure should result in a RuntimeException.");
+        validateClientAuthenticationException(e);
     }
 
 }
