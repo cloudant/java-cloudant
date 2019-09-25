@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.http.Http;
+import com.cloudant.http.interceptors.Replay429Interceptor;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.IamSystemPropertyMock;
 import com.cloudant.tests.util.MockWebServerResources;
@@ -322,7 +323,6 @@ public class HttpIamTest {
                 assertThrows(CouchDbException.class,
                         () -> c.executeRequest(Http.GET(c.getBaseUri())).responseAsString(),
                         "Failure to get a token should throw a CouchDbException.");
-        re.printStackTrace();
         assertTrue(re.getMessage().startsWith("HTTP response error getting session"), "The " +
                 "exception should have been for a HTTP response error.");
 
@@ -458,5 +458,166 @@ public class HttpIamTest {
                         "/identity/token");
     }
 
+    @Test
+    public void iamTokenServer429RetryAndSucceed() throws Exception {
+        // Mock request sequence
+        mockIamServer.enqueue(new MockResponse().setResponseCode(200).setBody(IAM_TOKEN));
+        mockWebServer.enqueue(OK_IAM_COOKIE);
+        // First get request succeeds
+        mockWebServer.enqueue(new MockResponse().setResponseCode(200)
+                .setBody(hello));
 
+        // Second get request has a 401 cookie expired
+        mockWebServer.enqueue(new MockResponse().setResponseCode(401).
+                setBody("{\"error\":\"credentials_expired\"}"));
+        // IAM server 429 on token request
+        mockIamServer.enqueue(new MockResponse().setStatus("HTTP/1.1 429 Too many requests"));
+        // Success on retry
+        mockIamServer.enqueue(new MockResponse().setResponseCode(200).setBody(IAM_TOKEN_2));
+        mockWebServer.enqueue(OK_IAM_COOKIE_2);
+        // Second get request suceeds after renewal
+        mockWebServer.enqueue(new MockResponse().setResponseCode(200)
+                .setBody(hello));
+
+        // Request sequence
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .iamApiKey(IAM_API_KEY)
+                .interceptors(Replay429Interceptor.WITH_DEFAULTS)
+                .build();
+
+        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        assertEquals(hello, response, "The expected response should be received");
+
+        String response2 = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        assertEquals(hello, response2, "The expected response should be received");
+
+        // iam mock server
+
+        // assert that there were 3 calls
+        RecordedRequest[] recordedIamRequests = takeN(mockIamServer, 3);
+        // first time, automatically fetch because cookie jar is empty
+        assertEquals(iamTokenEndpoint,
+                recordedIamRequests[0].getPath(), "The request should have been for " +
+                        "/identity/token");
+        assertThat("The request body should contain the IAM API key",
+                recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
+                containsString("apikey=" + IAM_API_KEY));
+        // second time, 429 response
+        assertEquals(iamTokenEndpoint,
+                recordedIamRequests[1].getPath(), "The request should have been for " +
+                        "/identity/token");
+        // third time, refresh because the cloudant session cookie has expired
+        assertEquals(iamTokenEndpoint,
+                recordedIamRequests[1].getPath(), "The request should have been for " +
+                        "/identity/token");
+
+        // cloudant mock server
+
+        // assert that there were 5 calls
+        RecordedRequest[] recordedRequests = takeN(mockWebServer, 5);
+
+        assertEquals("/_iam_session",
+                recordedRequests[0].getPath(), "The request should have been for /_iam_session");
+        assertThat("The request body should contain the IAM token",
+                recordedRequests[0].getBody().readString(Charset.forName("UTF-8")),
+                containsString(IAM_TOKEN));
+        // first request
+        assertEquals("/",
+                recordedRequests[1].getPath(), "The request should have been for /");
+        // The cookie may or may not have the session id quoted, so check both
+        assertThat("The Cookie header should contain the expected session value",
+                recordedRequests[1].getHeader("Cookie"),
+                anyOf(containsString(iamSession(EXPECTED_OK_COOKIE)),
+                        containsString(iamSessionUnquoted(EXPECTED_OK_COOKIE))));
+        // second request (rejected for cookie expiry)
+        assertEquals("/",
+                recordedRequests[2].getPath(), "The request should have been for /");
+        // with new valid token get a new session
+        assertEquals("/_iam_session",
+                recordedRequests[3].getPath(), "The request should have been for /_iam_session");
+        assertThat("The request body should contain the IAM token",
+                recordedRequests[3].getBody().readString(Charset.forName("UTF-8")),
+                containsString(IAM_TOKEN_2));
+        assertEquals("/",
+                recordedRequests[2].getPath(), "The request should have been for /");
+    }
+
+    @Test
+    public void iamTokenServer429RetryAndFail() throws Exception {
+        // Mock request sequence
+        mockIamServer.enqueue(new MockResponse().setResponseCode(200).setBody(IAM_TOKEN));
+        mockWebServer.enqueue(OK_IAM_COOKIE);
+        // First get request succeeds
+        mockWebServer.enqueue(new MockResponse().setResponseCode(200)
+                .setBody(hello));
+
+        // Second get request has a 401 cookie expired
+        mockWebServer.enqueue(new MockResponse().setResponseCode(401).
+                setBody("{\"error\":\"credentials_expired\"}"));
+        // IAM server 429 on subsequent token requests
+        mockIamServer.enqueue(new MockResponse().setStatus("HTTP/1.1 429 Too many requests"));
+        mockIamServer.enqueue(new MockResponse().setStatus("HTTP/1.1 429 Too many requests"));
+        mockIamServer.enqueue(new MockResponse().setStatus("HTTP/1.1 429 Too many requests"));
+        mockIamServer.enqueue(new MockResponse().setStatus("HTTP/1.1 429 Too many requests"));
+        // Request will fail
+
+        // Request sequence
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .iamApiKey(IAM_API_KEY)
+                .interceptors(Replay429Interceptor.WITH_DEFAULTS)
+                .build();
+
+        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
+        assertEquals(hello, response, "The expected response should be received");
+
+        CouchDbException re =
+                assertThrows(CouchDbException.class,
+                        () -> c.executeRequest(Http.GET(c.getBaseUri())).responseAsString(),
+                        "Failure to get a token should throw a CouchDbException.");
+        assertTrue(re.getMessage().startsWith("HTTP response error getting session"), "The " +
+                "exception should have been for a HTTP response error.");
+        assertTrue(re.getMessage().contains("response code 429"), "The exception should report a " +
+                "429 response code");
+
+        // iam mock server
+
+        // assert that there were 5 calls
+        RecordedRequest[] recordedIamRequests = takeN(mockIamServer, 5);
+        // first time, automatically fetch because cookie jar is empty
+        assertEquals(iamTokenEndpoint,
+                recordedIamRequests[0].getPath(), "The request should have been for " +
+                        "/identity/token");
+        assertThat("The request body should contain the IAM API key",
+                recordedIamRequests[0].getBody().readString(Charset.forName("UTF-8")),
+                containsString("apikey=" + IAM_API_KEY));
+        // 4 more times all 429 responses
+        for (int i = 1; i <= 4; i++) {
+            assertEquals(iamTokenEndpoint,
+                    recordedIamRequests[i].getPath(), "The request[" + i + "] should have been " +
+                            "for " +
+                            "/identity/token");
+        }
+
+        // cloudant mock server
+
+        // assert that there were 3 calls
+        RecordedRequest[] recordedRequests = takeN(mockWebServer, 3);
+
+        assertEquals("/_iam_session",
+                recordedRequests[0].getPath(), "The request should have been for /_iam_session");
+        assertThat("The request body should contain the IAM token",
+                recordedRequests[0].getBody().readString(Charset.forName("UTF-8")),
+                containsString(IAM_TOKEN));
+        // first request
+        assertEquals("/",
+                recordedRequests[1].getPath(), "The request should have been for /");
+        // The cookie may or may not have the session id quoted, so check both
+        assertThat("The Cookie header should contain the expected session value",
+                recordedRequests[1].getHeader("Cookie"),
+                anyOf(containsString(iamSession(EXPECTED_OK_COOKIE)),
+                        containsString(iamSessionUnquoted(EXPECTED_OK_COOKIE))));
+        // Second request gives a 401 that starts token renewal
+        // Retry of that request never reaches the server
+        assertEquals("/", recordedRequests[1].getPath(), "The request should have been for /");
+    }
 }

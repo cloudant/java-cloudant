@@ -86,10 +86,16 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -1101,6 +1107,100 @@ public class HttpTest extends HttpFactoryParameterizedTest {
 
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
         assertEquals("TEST", response, "The expected response body should be received");
+    }
+
+    /**
+     * This test checks that only a single session renewal request is made on expiry.
+     * Flow:
+     * - First request to _all_dbs
+     *   - sends a _session request and gets OK_COOKIE
+     *   - _all_dbs returns ["a"]
+     * - Multi-threaded requests to root endpoint
+     *   - Any that occur before session renewal get a 401 unauthorized and try to renew the session
+     *   - a _session request will return OK_COOKIE_2 but can only be invoked once for test purposes
+     *   - any requests after session renewal will get an OK response
+     *
+     * @throws Exception
+     */
+    @TestTemplate
+    public void singleSessionRequestOnExpiry() throws Exception {
+        final AtomicInteger sessionCounter = new AtomicInteger();
+        mockWebServer.setDispatcher(new Dispatcher() {
+
+            // Use 444 response for error cases as we know this will get an exception without retries
+            private final MockResponse FAIL = new MockResponse().setStatus("HTTP/1.1 444 session locking fail");
+
+            @Override
+            public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+                if (request.getPath().endsWith("_session")) {
+                    int session = sessionCounter.incrementAndGet();
+                    switch (session) {
+                        case 1:
+                            return OK_COOKIE;
+                        case 2:
+                            return OK_COOKIE_2;
+                        default:
+                            return FAIL;
+                    }
+                } else if (request.getPath().endsWith("_all_dbs")) {
+                    return new MockResponse().setBody("[\"a\"]");
+                } else {
+                    String cookie = request.getHeader("COOKIE");
+                    if (cookie.contains(EXPECTED_OK_COOKIE)) {
+                        // Request in first session
+                        return new MockResponse().setResponseCode(401);
+                    } else if (cookie.contains(EXPECTED_OK_COOKIE_2)) {
+                        // Request in second session, return OK
+                        return new MockResponse();
+                    } else {
+                        return FAIL;
+                    }
+                }
+            }
+        });
+
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .username("a")
+                .password("b")
+                .build();
+
+        // Do a single request to start the first session
+        c.getAllDbs();
+
+        // Now run lots of requests simultaneously
+        int threads = 25;
+        int requests = 1250;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threads);
+
+        List<ServerInfoCallable> tasks = new ArrayList<ServerInfoCallable>(requests);
+        for (int i = 0; i < requests; i++) {
+            tasks.add(new ServerInfoCallable(c));
+        }
+        List<Future<Throwable>> results = executorService.invokeAll(tasks);
+        for (Future<Throwable> result : results) {
+            assertNull(result.get(), "There should be no exceptions.");
+        }
+        assertEquals(2, sessionCounter.get(), "There should only be 2 session requests");
+    }
+
+    private final class ServerInfoCallable implements Callable<Throwable> {
+
+        private final CloudantClient c;
+
+        ServerInfoCallable(CloudantClient c) {
+            this.c = c;
+        }
+
+        @Override
+        public Throwable call() {
+            try {
+                c.metaInformation();
+            } catch (Throwable t) {
+                return t;
+            }
+            return null;
+        }
     }
 
     /**
