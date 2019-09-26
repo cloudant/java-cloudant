@@ -15,7 +15,7 @@
 dependencies {
     compile group: 'commons-io', name: 'commons-io', version: '2.4'
     //needed to compile, but optional for consumers of java-cloudant
-    compile(group: 'com.squareup.okhttp3', name: 'okhttp-urlconnection', version: '3.12.2') {
+    compile(group: 'com.squareup.okhttp3', name: 'okhttp-urlconnection', version: '3.12.5') {
         ext.optional = true
     }
 }
