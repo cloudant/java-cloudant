@@ -14,6 +14,7 @@
 
 package com.cloudant.tests;
 
+import static com.cloudant.http.internal.interceptors.IamCookieInterceptor.IAM_TOKEN_SERVER_URL_PROPERTY_KEY;
 import static com.cloudant.tests.util.MockWebServerResources.IAM_API_KEY;
 import static com.cloudant.tests.util.MockWebServerResources.IAM_TOKEN;
 import static com.cloudant.tests.util.MockWebServerResources.OK_IAM_COOKIE;
@@ -23,12 +24,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.tests.extensions.MockWebServerExtension;
-import com.cloudant.tests.util.IamSystemPropertyMock;
 import com.cloudant.tests.util.MockWebServerResources;
 import com.google.gson.GsonBuilder;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -46,8 +46,6 @@ import java.util.Map;
 
 public class CloudFoundryServiceTest {
 
-    public static IamSystemPropertyMock iamSystemPropertyMock;
-
     private static String TEST_HOST = "https://cloudant.example";
     private static String TEST_USER = "user";
     private static String TEST_PASSWORD = "pass";
@@ -63,14 +61,6 @@ public class CloudFoundryServiceTest {
     public MockWebServer server;
     public MockWebServer mockIamServer;
 
-    /**
-     * Before running this test class setup the property mock.
-     */
-    @BeforeAll
-    public static void setupIamSystemPropertyMock() {
-        iamSystemPropertyMock = new IamSystemPropertyMock();
-    }
-
     @BeforeEach
     public void beforeEach() {
         server = mockWebServerExt.get();
@@ -78,8 +68,14 @@ public class CloudFoundryServiceTest {
         mockServerHostPort = String.format("%s:%s/", server.getHostName(), server.getPort());
         //setup mock IAM server
         mockIamServer = mockIamServerExt.get();
-        iamSystemPropertyMock.setMockIamTokenEndpointUrl(mockIamServer.url(iamTokenEndpoint)
+        // Override the default IAM token server with our test mock server
+        System.setProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY, mockIamServer.url(iamTokenEndpoint)
                 .toString());
+    }
+
+    @AfterEach
+    public void clearIAMMock() {
+        System.clearProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY);
     }
 
     private static class VCAPGenerator {

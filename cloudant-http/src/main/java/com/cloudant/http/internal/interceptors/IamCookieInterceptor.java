@@ -29,6 +29,7 @@ import java.util.Locale;
  */
 public class IamCookieInterceptor extends CookieInterceptorBase {
 
+    public static final String IAM_TOKEN_SERVER_URL_PROPERTY_KEY = "com.cloudant.client.iamserver";
     public final URL iamServerUrl;
     private final byte[] tokenRequestPayload;
 
@@ -37,7 +38,7 @@ public class IamCookieInterceptor extends CookieInterceptorBase {
 
         // Read iamServer from system property, or set default
         try {
-            this.iamServerUrl = new URL(System.getProperty("com.cloudant.client.iamserver",
+            this.iamServerUrl = new URL(System.getProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY,
                     "https://iam.cloud.ibm.com/identity/token"));
         } catch (MalformedURLException mue) {
             throw new RuntimeException("IAM server property was not a valid URL", mue);

@@ -14,6 +14,7 @@
 
 package com.cloudant.tests;
 
+import static com.cloudant.http.internal.interceptors.IamCookieInterceptor.IAM_TOKEN_SERVER_URL_PROPERTY_KEY;
 import static com.cloudant.tests.HttpTest.takeN;
 import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE;
 import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE_2;
@@ -40,10 +41,9 @@ import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.http.Http;
 import com.cloudant.http.interceptors.Replay429Interceptor;
 import com.cloudant.tests.extensions.MockWebServerExtension;
-import com.cloudant.tests.util.IamSystemPropertyMock;
 import com.cloudant.tests.util.MockWebServerResources;
 
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -60,8 +60,6 @@ import java.nio.charset.Charset;
 
 public class HttpIamTest {
 
-    public static IamSystemPropertyMock iamSystemPropertyMock;
-
     @RegisterExtension
     public MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
 
@@ -72,22 +70,20 @@ public class HttpIamTest {
     public MockWebServer mockIamServer;
 
     /**
-     * Before running this test class setup the property mock.
-     */
-    @BeforeAll
-    public static void setupIamSystemPropertyMock() {
-        iamSystemPropertyMock = new IamSystemPropertyMock();
-    }
-
-    /**
      * Before each test set the value of the endpoint in the property mock
      */
     @BeforeEach
     public void setIAMMockEndpoint() {
         mockWebServer = mockWebServerExt.get();
         mockIamServer = mockIamServerExt.get();
-        iamSystemPropertyMock.setMockIamTokenEndpointUrl(mockIamServer.url(iamTokenEndpoint)
+        // Override the default IAM token server with our test mock server
+        System.setProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY, mockIamServer.url(iamTokenEndpoint)
                 .toString());
+    }
+
+    @AfterEach
+    public void clearIAMMock() {
+        System.clearProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY);
     }
 
     /**
