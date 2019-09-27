@@ -14,6 +14,9 @@
 package com.cloudant.tests;
 
 import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE;
+import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE_2;
+import static com.cloudant.tests.util.MockWebServerResources.OK_COOKIE;
+import static com.cloudant.tests.util.MockWebServerResources.OK_COOKIE_2;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -83,10 +86,16 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -262,7 +271,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
     @TestTemplate
     public void testCookieAuthWithPath() throws Exception {
         MockWebServer mockWebServer = new MockWebServer();
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         mockWebServer.enqueue(MockWebServerResources.JSON_OK);
         CloudantClient client = ClientBuilder.url(mockWebServer.url("/pathex").url())
                 .username("user")
@@ -331,7 +340,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         String mockPass = "?&=NotAsStrangeInAPassword";
 
         //expect a cookie request then a GET
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         mockWebServer.enqueue(new MockResponse());
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
@@ -369,7 +378,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         // _session request to get Cookie
         // GET request -> 200 with a Set-Cookie
         // GET replay -> 200
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         mockWebServer.enqueue(new MockResponse().setResponseCode(200).addHeader("Set-Cookie",
                 MockWebServerResources.authSessionCookie(renewalCookieToken, null))
                 .setBody(hello));
@@ -478,7 +487,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      */
     private void basic403Test(String error, String reason, int expectedRequests) throws
             Exception {
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         JsonObject responseBody = new JsonObject();
         responseBody.add("error", new JsonPrimitive(error));
         JsonElement jsonReason;
@@ -493,7 +502,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         }
         mockWebServer.enqueue(new MockResponse().setResponseCode(403).setBody(responseBody
                 .toString()));
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         mockWebServer.enqueue(new MockResponse());
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
@@ -667,10 +676,10 @@ public class HttpTest extends HttpFactoryParameterizedTest {
     @TestTemplate
     public void testCookieRenewOnPost() throws Exception {
 
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         mockWebServer.enqueue(new MockResponse().setResponseCode(403).setBody
                 ("{\"error\":\"credentials_expired\", \"reason\":\"Session expired\"}\r\n"));
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         mockWebServer.enqueue(new MockResponse());
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
@@ -976,7 +985,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
      */
     @TestTemplate
     public void cookieAppliedToDifferentURL() throws Exception {
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         mockWebServer.enqueue(new MockResponse().setBody("first"));
         mockWebServer.enqueue(new MockResponse().setBody("second"));
 
@@ -1023,54 +1032,26 @@ public class HttpTest extends HttpFactoryParameterizedTest {
     }
 
     /**
-     * Test that cookie authentication is stopped if the credentials were bad.
+     * Test that cookie authentication throws a CouchDbException if the credentials were bad.
      *
      * @throws Exception
      */
     @TestTemplate
-    public void badCredsDisablesCookie() throws Exception {
-        mockWebServer.setDispatcher(new Dispatcher() {
-            private int counter = 0;
-
-            @Override
-            public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
-                counter++;
-                // Return a 401 for the first _session request, after that return 200 OKs
-                if (counter == 1) {
-                    return new MockResponse().setResponseCode(401);
-                } else {
-                    return new MockResponse().setBody("TEST");
-                }
-            }
-        });
+    public void badCredsCookieThrows() {
+        mockWebServer.enqueue(new MockResponse().setResponseCode(401));
 
         CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
                 .username("bad")
                 .password("worse")
                 .build();
 
-        String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-        assertEquals("TEST", response, "The expected response body should be received");
+        CouchDbException re =
+                assertThrows(CouchDbException.class,
+                        () -> c.executeRequest(Http.GET(c.getBaseUri())).responseAsString(),
+                        "Bad credentials should throw a CouchDbException.");
 
-        // There should only be two requests: an initial auth failure followed by an ok response.
-        // If the cookie interceptor keeps trying then there will be more _session requests.
-        assertEquals(2, mockWebServer.getRequestCount(), "There should be 2 requests");
-
-        assertEquals("/_session",
-                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(), "The " +
-                        "first request should have been for a cookie");
-        assertEquals("/",
-                MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(), "The " +
-                        "second request should have been for /");
-
-        response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
-        assertEquals("TEST", response, "The expected response body should be received");
-
-        // Make another request, the cookie interceptor should not try again so there should only be
-        // one more request.
-        assertEquals(3, mockWebServer.getRequestCount(), "There should be 3 requests");
-        assertEquals("/", MockWebServerResources.takeRequestWithTimeout(mockWebServer).getPath(),
-                "The third request should have been for /");
+        assertTrue(re.getMessage().startsWith("Credentials are incorrect for server"), "The " +
+                "exception should have been for bad creds.");
     }
 
     /**
@@ -1087,7 +1068,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
             public void execute() throws Throwable {
 
                 // Respond with a cookie init to the first request to _session
-                mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+                mockWebServer.enqueue(OK_COOKIE);
                 // Respond to the executeRequest GET of / with a 403 with no body
                 mockWebServer.enqueue(new MockResponse().setResponseCode(403));
                 CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
@@ -1111,11 +1092,11 @@ public class HttpTest extends HttpFactoryParameterizedTest {
     public void noErrorStream401() throws Exception {
 
         // Respond with a cookie init to the first request to _session
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         // Respond to the executeRequest GET of / with a 401 with no body
         mockWebServer.enqueue(new MockResponse().setResponseCode(401));
         // 401 triggers a renewal so respond with a new cookie for renewal request to _session
-        mockWebServer.enqueue(MockWebServerResources.OK_COOKIE);
+        mockWebServer.enqueue(OK_COOKIE);
         // Finally respond 200 OK with body of "TEST" to the replay of GET to /
         mockWebServer.enqueue(new MockResponse().setBody("TEST"));
 
@@ -1126,6 +1107,100 @@ public class HttpTest extends HttpFactoryParameterizedTest {
 
         String response = c.executeRequest(Http.GET(c.getBaseUri())).responseAsString();
         assertEquals("TEST", response, "The expected response body should be received");
+    }
+
+    /**
+     * This test checks that only a single session renewal request is made on expiry.
+     * Flow:
+     * - First request to _all_dbs
+     *   - sends a _session request and gets OK_COOKIE
+     *   - _all_dbs returns ["a"]
+     * - Multi-threaded requests to root endpoint
+     *   - Any that occur before session renewal get a 401 unauthorized and try to renew the session
+     *   - a _session request will return OK_COOKIE_2 but can only be invoked once for test purposes
+     *   - any requests after session renewal will get an OK response
+     *
+     * @throws Exception
+     */
+    @TestTemplate
+    public void singleSessionRequestOnExpiry() throws Exception {
+        final AtomicInteger sessionCounter = new AtomicInteger();
+        mockWebServer.setDispatcher(new Dispatcher() {
+
+            // Use 444 response for error cases as we know this will get an exception without retries
+            private final MockResponse FAIL = new MockResponse().setStatus("HTTP/1.1 444 session locking fail");
+
+            @Override
+            public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+                if (request.getPath().endsWith("_session")) {
+                    int session = sessionCounter.incrementAndGet();
+                    switch (session) {
+                        case 1:
+                            return OK_COOKIE;
+                        case 2:
+                            return OK_COOKIE_2;
+                        default:
+                            return FAIL;
+                    }
+                } else if (request.getPath().endsWith("_all_dbs")) {
+                    return new MockResponse().setBody("[\"a\"]");
+                } else {
+                    String cookie = request.getHeader("COOKIE");
+                    if (cookie.contains(EXPECTED_OK_COOKIE)) {
+                        // Request in first session
+                        return new MockResponse().setResponseCode(401);
+                    } else if (cookie.contains(EXPECTED_OK_COOKIE_2)) {
+                        // Request in second session, return OK
+                        return new MockResponse();
+                    } else {
+                        return FAIL;
+                    }
+                }
+            }
+        });
+
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .username("a")
+                .password("b")
+                .build();
+
+        // Do a single request to start the first session
+        c.getAllDbs();
+
+        // Now run lots of requests simultaneously
+        int threads = 25;
+        int requests = 1250;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threads);
+
+        List<ServerInfoCallable> tasks = new ArrayList<ServerInfoCallable>(requests);
+        for (int i = 0; i < requests; i++) {
+            tasks.add(new ServerInfoCallable(c));
+        }
+        List<Future<Throwable>> results = executorService.invokeAll(tasks);
+        for (Future<Throwable> result : results) {
+            assertNull(result.get(), "There should be no exceptions.");
+        }
+        assertEquals(2, sessionCounter.get(), "There should only be 2 session requests");
+    }
+
+    private final class ServerInfoCallable implements Callable<Throwable> {
+
+        private final CloudantClient c;
+
+        ServerInfoCallable(CloudantClient c) {
+            this.c = c;
+        }
+
+        @Override
+        public Throwable call() {
+            try {
+                c.metaInformation();
+            } catch (Throwable t) {
+                return t;
+            }
+            return null;
+        }
     }
 
     /**

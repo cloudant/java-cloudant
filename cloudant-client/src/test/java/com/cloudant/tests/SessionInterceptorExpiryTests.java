@@ -14,6 +14,8 @@
 
 package com.cloudant.tests;
 
+import static com.cloudant.http.internal.interceptors.IamCookieInterceptor.IAM_TOKEN_SERVER_URL_PROPERTY_KEY;
+import static com.cloudant.tests.util.MockWebServerResources.iamTokenEndpoint;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -30,10 +32,9 @@ import com.cloudant.http.internal.interceptors.IamCookieInterceptor;
 import com.cloudant.http.internal.ok.OkHttpClientHttpUrlConnectionFactory;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.HttpFactoryParameterizedTest;
-import com.cloudant.tests.util.IamSystemPropertyMock;
 import com.cloudant.tests.util.MockWebServerResources;
 
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -115,8 +116,6 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
         }
     }
 
-    public static IamSystemPropertyMock iamSystemPropertyMock;
-
     @RegisterExtension
     public MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
     public MockWebServer mockWebServer;
@@ -126,14 +125,6 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
 
     private HttpConnectionRequestInterceptor rqInterceptor;
     private HttpConnectionResponseInterceptor rpInterceptor;
-
-    /**
-     * Before running this test class setup the property mock.
-     */
-    @BeforeAll
-    public static void setupIamSystemPropertyMock() {
-        iamSystemPropertyMock = new IamSystemPropertyMock();
-    }
 
     @BeforeEach
     public void setupSessionInterceptor(boolean okUsable, String sessionPath) {
@@ -148,7 +139,8 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
             rpInterceptor = ci;
         } else if (sessionPath.equals("/_iam_session")) {
             // Set the endpoint value before each test
-            iamSystemPropertyMock.setMockIamTokenEndpointUrl(mockIamServer.url("/identity/token")
+            // Override the default IAM token server with our test mock server
+            System.setProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY, mockIamServer.url(iamTokenEndpoint)
                     .toString());
             IamCookieInterceptor ici = new IamCookieInterceptor("apikey", baseUrl);
             rqInterceptor = ici;
@@ -156,7 +148,11 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
         } else {
             fail("Invalid sessionPath " + sessionPath);
         }
+    }
 
+    @AfterEach
+    public void clearIAMMock() {
+        System.clearProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY);
     }
 
     private void queueResponses(boolean okUsable,

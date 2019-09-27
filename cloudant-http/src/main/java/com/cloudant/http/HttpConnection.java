@@ -1,4 +1,4 @@
-//  Copyright © 2015, 2017 IBM Corp. All rights reserved.
+//  Copyright © 2015, 2019 IBM Corp. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 //  except in compliance with the License. You may obtain a copy of the License at
@@ -287,7 +287,11 @@ public class HttpConnection {
                     .interceptorStates);
 
             for (HttpConnectionRequestInterceptor requestInterceptor : requestInterceptors) {
-                currentContext = requestInterceptor.interceptRequest(currentContext);
+                try {
+                    currentContext = requestInterceptor.interceptRequest(currentContext);
+                } catch (HttpConnectionInterceptorException e) {
+                    throw convertAndThrowInterceptorException(e);
+                }
             }
 
             //set request properties after interceptors, in case the interceptors have added
@@ -340,15 +344,7 @@ public class HttpConnection {
                 try {
                     currentContext = responseInterceptor.interceptResponse(currentContext);
                 } catch (HttpConnectionInterceptorException e) {
-                    // Sadly the current interceptor API doesn't allow an IOException to be thrown
-                    // so to avoid swallowing them the interceptors need to wrap them in the runtime
-                    // HttpConnectionInterceptorException and we can then unwrap them here.
-                    Throwable cause = e.getCause();
-                    if (cause != null && cause instanceof IOException) {
-                        throw (IOException) cause;
-                    } else {
-                        throw e;
-                    }
+                    throw convertAndThrowInterceptorException(e);
                 }
             }
 
@@ -368,6 +364,18 @@ public class HttpConnection {
         }
         // return ourselves to allow method chaining
         return this;
+    }
+
+    private HttpConnectionInterceptorException convertAndThrowInterceptorException(HttpConnectionInterceptorException e) throws IOException {
+        // Sadly the current interceptor API doesn't allow an IOException to be thrown
+        // so to avoid swallowing them the interceptors need to wrap them in the runtime
+        // HttpConnectionInterceptorException and we can then unwrap them here.
+        Throwable cause = e.getCause();
+        if (cause instanceof IOException) {
+            throw (IOException) cause;
+        } else {
+            return e;
+        }
     }
 
     /**
