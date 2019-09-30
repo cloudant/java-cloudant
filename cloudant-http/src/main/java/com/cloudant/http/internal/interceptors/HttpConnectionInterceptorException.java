@@ -19,6 +19,7 @@ public class HttpConnectionInterceptorException extends RuntimeException {
     public boolean deserialize = false;
     public final String error;
     public final String reason;
+    public int statusCode;
 
     public HttpConnectionInterceptorException(Throwable cause) {
         this.initCause(cause);

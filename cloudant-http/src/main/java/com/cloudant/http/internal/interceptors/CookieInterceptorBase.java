@@ -141,14 +141,17 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
                         .getErrorStream());
                 // Log the error stream content
                 logger.fine(error);
+                HttpConnectionInterceptorException e;
                 if (responseCode == 401) {
-                    throw new HttpConnectionInterceptorException(String.format("Credentials are " +
+                     e = new HttpConnectionInterceptorException(String.format("Credentials are " +
                             "incorrect for server %s", url));
                 } else {
                     // catch any other response code
-                    throw new HttpConnectionInterceptorException(String.format("HTTP response " +
-                            "error getting session at %s, response code %s", url, responseCode));
+                    e = new HttpConnectionInterceptorException(String.format("HTTP response " +
+                            "error getting session at %s.", url));
                 }
+                e.statusCode = responseCode;
+                throw e;
             }
         } catch (IOException e) {
             throw wrapIOException("Failed to read server response from ", conn.getConnection(), e);

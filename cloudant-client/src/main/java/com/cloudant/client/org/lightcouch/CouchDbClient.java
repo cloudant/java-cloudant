@@ -564,7 +564,7 @@ public class CouchDbClient {
                         exception.error = e.error;
                     }
                 } else {
-                    exception = new CouchDbException(e.getMessage(), e);
+                    exception = new CouchDbException(e.getMessage(), e, e.statusCode);
                     exception.error = e.error;
                     exception.reason = e.reason;
                 }
