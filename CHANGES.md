@@ -5,6 +5,8 @@
   the message and cause are more clear and a round trip is avoided.
 - [IMPROVED] Prevent multiple session renewal requests happening simultaneously because some auth
   types apply limits to the number of requests that can be made.
+- [IMPROVED] Documented that for some database versions a call to get continuous changes may block
+  when there are no changes available immediately.
 - [UPGRADED] Optional OkHttp dependency to version 3.12.5.
 
 # 2.17.0 (2019-05-23)

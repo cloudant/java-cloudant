@@ -101,7 +101,12 @@ public class Changes {
      * This method will connect to the changes feed; any configuration options applied after calling
      * it will be ignored.
      * </P>
-     *
+     *<P>
+     * Note that in some versions of Apache CouchDB and Cloudant the HTTP response headers will be
+     * delayed until the first change or heartbeat is sent
+     * (see https://github.com/apache/couchdb/issues/985). As such this method may block for up to
+     * the heartbeat duration if there are no changes to be received from the database immediately.
+     *</P>
      * @return this Changes instance connected to a continuous feed, use
      * {@link #hasNext()} and {@link #next()} to iterate the changes.
      */
