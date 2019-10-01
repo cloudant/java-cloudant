@@ -1,5 +1,6 @@
 # Unreleased
 - [FIXED] Create an array of strings for QueryBuilder.fields() when a single field is provided.
+- [FIXED] Potential NPE creating exception messages.
 - [IMPROVED] Return exceptions directly from IAM token request failures instead of logging and
   deferring the request to the service with no credentials. The exception type is the same, but
   the message and cause are more clear and a round trip is avoided.

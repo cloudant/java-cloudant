@@ -77,7 +77,7 @@ public class CouchDbException extends RuntimeException {
     public String getMessage() {
         String msg = super.getMessage();
         // trim trailing full stop
-        msg = (msg.endsWith(".")) ? msg.substring(0, msg.length() - 1) : msg;
+        msg = (msg != null && msg.endsWith(".")) ? msg.substring(0, msg.length() - 1) : msg;
 
         // include the status code, URL, error and reason (if available)
         return ((getStatusCode() > 0) ? getStatusCode() + " " : "") + msg

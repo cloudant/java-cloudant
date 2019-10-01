@@ -319,7 +319,7 @@ public class HttpIamTest {
                 assertThrows(CouchDbException.class,
                         () -> c.executeRequest(Http.GET(c.getBaseUri())).responseAsString(),
                         "Failure to get a token should throw a CouchDbException.");
-        assertTrue(re.getMessage().startsWith("HTTP response error getting session"), "The " +
+        assertTrue(re.getMessage().startsWith("500 HTTP response error getting session"), "The " +
                 "exception should have been for a HTTP response error.");
 
         // cloudant mock server
@@ -570,10 +570,8 @@ public class HttpIamTest {
                 assertThrows(CouchDbException.class,
                         () -> c.executeRequest(Http.GET(c.getBaseUri())).responseAsString(),
                         "Failure to get a token should throw a CouchDbException.");
-        assertTrue(re.getMessage().startsWith("HTTP response error getting session"), "The " +
-                "exception should have been for a HTTP response error.");
-        assertTrue(re.getMessage().contains("response code 429"), "The exception should report a " +
-                "429 response code");
+        assertTrue(re.getMessage().startsWith("429 HTTP response error getting session"), "The " +
+                "exception should have been for a 429 HTTP response error.");
 
         // iam mock server
 

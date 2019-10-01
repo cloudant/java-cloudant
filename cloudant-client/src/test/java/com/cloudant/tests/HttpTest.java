@@ -1050,7 +1050,7 @@ public class HttpTest extends HttpFactoryParameterizedTest {
                         () -> c.executeRequest(Http.GET(c.getBaseUri())).responseAsString(),
                         "Bad credentials should throw a CouchDbException.");
 
-        assertTrue(re.getMessage().startsWith("Credentials are incorrect for server"), "The " +
+        assertTrue(re.getMessage().startsWith("401 Credentials are incorrect for server"), "The " +
                 "exception should have been for bad creds.");
     }
 
