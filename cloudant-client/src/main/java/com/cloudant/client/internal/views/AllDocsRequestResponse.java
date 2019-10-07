@@ -82,6 +82,11 @@ public class AllDocsRequestResponse implements AllDocsRequest, AllDocsResponse {
         return errors;
     }
 
+    @Override
+    public Long getTotalRowCount() {
+        return response.getTotalRowCount();
+    }
+
     /*
          * Object representation of rev field from a JSON object.
          * <P>

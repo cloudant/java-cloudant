@@ -732,6 +732,7 @@ public class ViewsTest extends TestWithDbPerTest {
         assertThat(response.getDocs().get(1).isDeleted(), is(true));
         assertThat(response.getDocs().get(1).getId(), is(response2.getId()));
         assertThat(response.getDocs().get(1).getRevision(), is(removeResponse.getRev()));
+        assertThat(response.getTotalRowCount(), is(8L));
     }
 
     // all docs with given keys, one document deleted:

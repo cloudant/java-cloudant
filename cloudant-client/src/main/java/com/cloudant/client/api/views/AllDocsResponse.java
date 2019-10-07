@@ -93,4 +93,9 @@ public interface AllDocsResponse {
      */
     Map<String, String> getErrors();
 
+    /**
+     * @return the total number of rows in the _all_docs view, before any filtering has taken place
+     * @since 2.19.0
+     */
+    Long getTotalRowCount();
 }
