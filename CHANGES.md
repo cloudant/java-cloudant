@@ -1,3 +1,6 @@
+# Unreleased
+- [NEW] Add getter for total row count to AllDocsResponse
+
 # 2.18.0 (2019-10-02)
 - [FIXED] Create an array of strings for QueryBuilder.fields() when a single field is provided.
 - [FIXED] Potential NPE creating exception messages.
