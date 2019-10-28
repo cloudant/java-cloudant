@@ -51,9 +51,9 @@ stage('QA') {
     // Define the matrix environments
     def CLOUDANT_ENV = ['DB_HTTP=https', 'DB_HOST=clientlibs-test.cloudant.com', 'DB_PORT=443', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=clientlibs-test']
     def CLOUDANT_IAM_ENV = ['DB_HTTP=https', 'DB_HOST=clientlibs-test.cloudant.com', 'DB_PORT=443', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=clientlibs-test-iam']
-    def COUCH1_6_ENV = ['DB_HTTP=http', 'DB_HOST=cloudantsync002.bristol.uk.ibm.com', 'DB_PORT=5984', 'DB_IGNORE_COMPACTION=false', 'CREDS_ID=couchdb']
-    def COUCH2_0_ENV = ['DB_HTTP=http', 'DB_HOST=cloudantsync002.bristol.uk.ibm.com', 'DB_PORT=5985', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=couchdb']
-    def CLOUDANT_LOCAL_ENV = ['DB_HTTP=http', 'DB_HOST=cloudantsync002.bristol.uk.ibm.com', 'DB_PORT=8081', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=couchdb']
+    def COUCH1_6_ENV = ['DB_HTTP=http', 'DB_HOST=cloudantsync002.bristol-victoria.uk.ibm.com', 'DB_PORT=5984', 'DB_IGNORE_COMPACTION=false', 'CREDS_ID=couchdb']
+    def COUCH2_0_ENV = ['DB_HTTP=http', 'DB_HOST=cloudantsync002.bristol-victoria.uk.ibm.com', 'DB_PORT=5985', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=couchdb']
+    def CLOUDANT_LOCAL_ENV = ['DB_HTTP=http', 'DB_HOST=cloudantsync002.bristol-victoria.uk.ibm.com', 'DB_PORT=8081', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=couchdb']
 
     // Standard builds do Findbugs and test against Cloudant
     def axes = [
