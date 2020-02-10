@@ -10,5 +10,6 @@ src/test/resources/cloudant-2.properties
 !.idea/codeStyleSettings.xml
 *.iml
 build/
+bin/
 .gradle/
 local.properties
