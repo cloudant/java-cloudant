@@ -284,7 +284,10 @@ public class Key {
                 ComplexKey key = new ComplexKey(json.getAsJsonArray());
                 return key;
             } else {
-                return null;
+                JsonArray jsonArray = new JsonArray();
+                jsonArray.add(json);
+                ComplexKey key = new ComplexKey(jsonArray);
+                return key;
             }
         }
 
