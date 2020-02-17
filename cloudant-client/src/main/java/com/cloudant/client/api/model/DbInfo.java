@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2019 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2020 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -113,6 +113,25 @@ public class DbInfo {
         }
     }
 
+    public static class Sizes {
+
+        private long active = 0;
+        private long external = 0;
+        private long file = 0;
+
+        public long getActive() {
+            return this.active;
+        }
+
+        public long getExternal() {
+            return this.external;
+        }
+
+        public long getFile() {
+            return this.file;
+        }
+    }
+
     @SerializedName("db_name")
     private String dbName;
     @SerializedName("doc_count")
@@ -134,6 +153,8 @@ public class DbInfo {
     private Props props;
     @SerializedName("partitioned_indexes")
     private PartitionedIndexes partitionedIndexes;
+    @SerializedName("sizes")
+    private Sizes sizes;
 
     public String getDbName() {
         return dbName;
@@ -204,6 +225,12 @@ public class DbInfo {
     }
 
     public long getDiskSize() {
+        if (diskSize == 0) {
+            Sizes s = getSizes();
+            if (s != null) {
+                return s.getFile();
+            }
+        }
         return diskSize;
     }
 
@@ -233,6 +260,10 @@ public class DbInfo {
      */
     public PartitionedIndexes getPartitionedIndexes() {
         return partitionedIndexes;
+    }
+
+    public Sizes getSizes() {
+        return sizes;
     }
 
     @Override
@@ -270,5 +301,4 @@ public class DbInfo {
 
         return sb.toString();
     }
-
 }

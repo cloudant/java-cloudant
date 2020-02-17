@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018, 2019 IBM Corp. All rights reserved.
+ * Copyright © 2018, 2020 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -152,4 +152,73 @@ public class DbInfoMockTests extends TestWithMockedServer {
         assertEquals(7l, info.getDocDelCountLong());
     }
 
+    /**
+     * Make sure the fallback caused by disk_size 0, doesn't cause an exception
+     */
+    @Test
+    public void getDbInfoDiskSizeZeroWithoutException() {
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server).build();
+        Database db = c.database("animaldb", false);
+
+        MockResponse response = new MockResponse()
+                .setResponseCode(200)
+                .setBody("{\"disk_size\":0}");
+        server.enqueue(response);
+
+        DbInfo info = db.info();
+        assertEquals(0L, info.getDiskSize(), "The mock disk size should be 0");
+    }
+
+    /**
+     * Make sure disk_size still works
+     */
+    @Test
+    public void getDbInfoDiskSize() {
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server).build();
+        Database db = c.database("animaldb", false);
+
+        MockResponse response = new MockResponse()
+                .setResponseCode(200)
+                .setBody("{\"disk_size\":17}");
+        server.enqueue(response);
+
+        DbInfo info = db.info();
+        assertEquals(17L, info.getDiskSize(), "The mock disk size should be 17");
+    }
+
+    /**
+     * Make sure disk_size using sizes works
+     */
+    @Test
+    public void getDbInfoDiskSizeFromSizes() {
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server).build();
+        Database db = c.database("animaldb", false);
+
+        MockResponse response = new MockResponse()
+                .setResponseCode(200)
+                .setBody("{\"sizes\": {\"active\": 21, \"external\":22, \"file\": 23}}");
+        server.enqueue(response);
+
+        DbInfo info = db.info();
+        assertEquals(23L, info.getDiskSize(), "The mock disk size should be 23");
+    }
+
+    /**
+     * Make sure disk_size using sizes works
+     */
+    @Test
+    public void getDbInfoSizes() {
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(server).build();
+        Database db = c.database("animaldb", false);
+
+        MockResponse response = new MockResponse()
+                .setResponseCode(200)
+                .setBody("{\"sizes\": {\"active\": 21, \"external\":22, \"file\": 23}}");
+        server.enqueue(response);
+
+        DbInfo info = db.info();
+        assertEquals(21L, info.getSizes().getActive(), "The mock active disk size should be 21");
+        assertEquals(22L, info.getSizes().getExternal(), "The mock external disk size should be 22");
+        assertEquals(23L, info.getSizes().getFile(), "The mock file disk size should be 23");
+    }
 }
