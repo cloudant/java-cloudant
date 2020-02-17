@@ -1,5 +1,7 @@
 # Unreleased
 - [NEW] Add getter for total row count to AllDocsResponse
+- [FIXED] `ViewMultipleRequest` updated to preferentially use view `queries` format URL instead of
+  deprecated format.
 
 # 2.18.0 (2019-10-02)
 - [FIXED] Create an array of strings for QueryBuilder.fields() when a single field is provided.
