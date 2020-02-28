@@ -1,5 +1,5 @@
-# Unreleased
-- [NEW] Add getter for total row count to AllDocsResponse
+# 2.19.0 (2020-03-02)
+- [NEW] Add getter for total row count to `AllDocsResponse`
 - [NEW] Added `DbInfo#getSizes()` for access to improved sizes information.
 - [FIXED] Corrected `DbInfo#getDiskSize()` to work with `sizes` object if `disk_size` is unavailable.
 - [FIXED] `ViewMultipleRequest` updated to preferentially use view `queries` format URL instead of
