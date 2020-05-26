@@ -1,3 +1,7 @@
+# Unreleased
+- [FIXED] Connection leak regression introduced in 2.18.0 caused by not closing streams from
+  successful session response bodies.
+
 # 2.19.0 (2020-03-02)
 - [NEW] Add getter for total row count to `AllDocsResponse`
 - [NEW] Added `DbInfo#getSizes()` for access to improved sizes information.
