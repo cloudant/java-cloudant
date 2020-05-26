@@ -87,7 +87,7 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
      */
     protected abstract byte[] getSessionRequestPayload(HttpConnectionInterceptorContext context);
 
-    private void requestCookie(HttpConnectionInterceptorContext context) {
+    private void requestCookie(HttpConnectionInterceptorContext context) throws IOException {
         // Check if the session was already updated on another thread before getting a cookie
         sessionLock.readLock().lock();
         try {
@@ -99,7 +99,14 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
                     if (sessionId.equals(context.getState(this, sessionStateName, UUID.class))) {
                         HttpConnection sessionConn = makeSessionRequest(sessionRequestUrl,
                                 getSessionRequestPayload(context), sessionRequestMimeType, context);
-                        storeCookiesFromResponse(sessionConn.getConnection());
+                        HttpURLConnection sessionUrlConnection = sessionConn.getConnection();
+                        try {
+                            storeCookiesFromResponse(sessionUrlConnection);
+                        } finally {
+                            // We use collect rather than consume as we don't want to log
+                            // a warning, even though we don't actually need the body
+                            Utils.collectAndCloseStream(sessionUrlConnection.getInputStream());
+                        }
                         // We renewed a cookie, update the global sessionID and this request's context
                         sessionId = UUID.randomUUID();
                         context.setState(this, sessionStateName, sessionId);
@@ -163,21 +170,20 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
         // Set the sessionId for this request
         context.setState(this, sessionStateName, sessionId);
         HttpURLConnection connection = context.connection.getConnection();
-
-        // First time we will have no cookies
-        if (cookieManager.getCookieStore().getCookies().isEmpty()) {
-            requestCookie(context);
-        }
-
-        // Debug logging
-        if (logger.isLoggable(Level.FINEST)) {
-            logger.finest("Attempt to add cookie to request.");
-            logger.finest("Cookies are stored for URIs: " + cookieManager.getCookieStore()
-                    .getURIs());
-        }
-
-        // Apply any saved cookies to the request
         try {
+            // First time we will have no cookies
+            if (cookieManager.getCookieStore().getCookies().isEmpty()) {
+                requestCookie(context);
+            }
+
+            // Debug logging
+            if (logger.isLoggable(Level.FINEST)) {
+                logger.finest("Attempt to add cookie to request.");
+                logger.finest("Cookies are stored for URIs: " + cookieManager.getCookieStore()
+                        .getURIs());
+            }
+
+            // Apply any saved cookies to the request
             Map<String, List<String>> requestCookieHeaders = cookieManager.get(connection
                     .getURL().toURI(), connection.getRequestProperties());
             for (Map.Entry<String, List<String>> requestCookieHeader :
@@ -217,7 +223,7 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
                 context.replayRequest = true;
             }
         } catch (IOException e) {
-            throw wrapIOException("Failed to read HTTP reponse code or body from", connection, e);
+            throw wrapIOException("Failed to read HTTP response code or body from", connection, e);
         }
         return context;
     }

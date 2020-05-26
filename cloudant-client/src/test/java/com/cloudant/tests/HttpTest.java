@@ -81,6 +81,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -96,6 +97,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -1254,5 +1256,48 @@ public class HttpTest extends HttpFactoryParameterizedTest {
         return recordedRequests;
     }
 
+    /**
+     * Test that a response stream from a successful _session request is consumed and closed.
+     *
+     * @throws Exception
+     */
+    @TestTemplate
+    public void successfulSessionStreamClose() throws Exception {
+        // Queue a mock response for the _session request
+        mockWebServer.enqueue(OK_COOKIE);
+        // Queue a mock response for an _all_dbs request
+        mockWebServer.enqueue(new MockResponse().setBody("[]"));
 
+        final AtomicReference<InputStream> responseStream = new AtomicReference<InputStream>();
+        CloudantClient c = CloudantClientHelper.newMockWebServerClientBuilder(mockWebServer)
+                .interceptors(new HttpConnectionResponseInterceptor() {
+                    @Override
+                    public HttpConnectionInterceptorContext interceptResponse(HttpConnectionInterceptorContext context) {
+                        try {
+                            // Store the response stream from the session request
+                            if (context.connection.url.toString().contains("_session")) {
+                                HttpURLConnection conn = context.connection.getConnection();
+                                responseStream.set(context.connection.getConnection().getInputStream());
+                            }
+                        } catch (IOException e) {
+                            fail("IOException in test interceptor.");
+                        }
+                        return context;
+                    }
+                })
+                .username("a")
+                .password("b")
+                .build();
+        // Make a request to init the session
+        List<String> dbs = c.getAllDbs();
+        // Get the response stream from the session request
+        InputStream stream = responseStream.get();
+        // Assert that the stream has been consumed
+        assertEquals(0, stream.available(), "There should be no bytes available from the stream.");
+        // Assert that the stream is closed
+        assertThrows(IOException.class,
+                () -> stream.read(),
+                "Reading the stream should throw an IOException because the stream should be " +
+                        "closed.");
+    }
 }
