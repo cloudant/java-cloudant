@@ -78,15 +78,15 @@ stage('QA') {
     // and Cloudant Local
     if (env.BRANCH_NAME == "master") {
         axes.putAll(
-                Couch1_6: {
-                    runTests(COUCH1_6_ENV, false)
-                },
-                Couch2_0: {
-                    runTests(COUCH2_0_ENV, false)
-                },
-                CloudantLocal: {
-                    runTests(CLOUDANT_LOCAL_ENV, false)
-                },
+//                Couch1_6: {
+//                    runTests(COUCH1_6_ENV, false)
+//                },
+//                Couch2_0: {
+//                    runTests(COUCH2_0_ENV, false)
+//                },
+//                CloudantLocal: {
+//                    runTests(CLOUDANT_LOCAL_ENV, false)
+//                },
                 CloudantIam: {
                     runTests(CLOUDANT_IAM_ENV, true)
                 }
