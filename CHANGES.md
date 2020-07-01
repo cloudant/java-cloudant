@@ -1,4 +1,4 @@
-# Unreleased
+# 2.19.1 (2020-06-30)
 - [FIXED] Connection leak regression introduced in 2.18.0 caused by not closing streams from
   successful session response bodies.
 
