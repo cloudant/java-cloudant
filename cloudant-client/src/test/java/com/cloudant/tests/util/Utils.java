@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2020 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -34,6 +34,8 @@ import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.cloudant.http.HttpConnectionInterceptorContext;
 import com.cloudant.http.HttpConnectionResponseInterceptor;
+
+import org.junit.jupiter.api.Assumptions;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -224,5 +226,35 @@ public class Utils {
     public static void assertOKResponse(Response r) throws Exception {
         assertTrue(r.getStatusCode()
                 / 100 == 2, "The response code should be 2XX was " + r.getStatusCode());
+    }
+
+    /**
+     * Utility to ignore tests when running with optional OkHttp dependency and Java 8_252 or newer.
+     * This should be applied to any test that uses the customSSLSocketFactory or
+     * disableSSLAuthentication options.
+     *
+     * These options cannot be used with OkHttp and Java 8_252 or newer
+     * (see https://github.com/square/okhttp/issues/5970.
+     * OkHttp treats 8_252 and newer as equivalent to 9+ because of the availability of ALPN
+     * support. In 9+ reflection cannot be used to infer the TrustManager from the SslSocketFactory
+     * so setting the SslSocketFactory without a TrustManager is prevented. This blocks the route we
+     * currently use to supply custom SslSocketFactory via the deprecated OkHttp OkUrlFactory path
+     * via javax.net.ssl.HttpsURLConnection#setSSLSocketFactory(javax.net.ssl.SSLSocketFactory).
+     *
+     */
+    public static void assumeCustomSslAuthUsable(boolean isOkUsable) {
+        String version = System.getProperty("java.version");
+        boolean java8_252OrHigher = false;
+        // Java 1.8 or lower, 9+ are 9, 10 etc
+        if (version.startsWith("1.")) {
+            if (version.startsWith("1.8.")) {
+                int update = Integer.parseInt(version.split("_")[1]);
+                if (update >= 252) java8_252OrHigher = true;
+            }
+        } else {
+            java8_252OrHigher = true;
+        }
+        Assumptions.assumeFalse(isOkUsable && java8_252OrHigher, "Test uses custom " +
+                "SslSocketFactory, incompatible with OkHttp and Java 8_252 or newer.");
     }
 }

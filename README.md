@@ -30,7 +30,7 @@ Gradle with [optional `okhttp-urlconnection` dependency](#optional-okhttp-depend
 ```groovy
 dependencies {
     compile group: 'com.cloudant', name: 'cloudant-client', version: '2.19.0'
-    compile group: 'com.squareup.okhttp3', name: 'okhttp-urlconnection', version: '3.12.5'
+    compile group: 'com.squareup.okhttp3', name: 'okhttp-urlconnection', version: '3.12.12'
 }
 ```
 
@@ -55,7 +55,7 @@ Maven with [optional `okhttp-urlconnection` dependency](#optional-okhttp-depende
 <dependency>
   <groupId>com.squareup.okhttp3</groupId>
   <artifactId>okhttp-urlconnection</artifactId>
-  <version>3.12.5</version>
+  <version>3.12.12</version>
 </dependency>
 ~~~
 
@@ -67,6 +67,10 @@ HTTP requests to the database are made using `java.net.HttpURLConnection`. Addin
 The main use case that is supported by this optional dependency is configuration of connection pools on a per `CloudantClient` basis
 ([see the javadoc](http://www.javadoc.io/doc/com.cloudant/cloudant-client/) for ClientBuilder.maxConnections). If the OkHttp dependency is
 available at runtime it will be used automatically. Not using OkHttp will result in a smaller application size.
+
+**Note:** The configuration options `ClientBuilder.customSSLSocketFactory` and
+`ClientBuilder.disableSSLAuthentication` are not usable with the combination of the optional OkHttp
+dependency and Java versions of 8u252 or newer.
 
 ## Getting Started
 
