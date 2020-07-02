@@ -68,6 +68,10 @@ The main use case that is supported by this optional dependency is configuration
 ([see the javadoc](http://www.javadoc.io/doc/com.cloudant/cloudant-client/) for ClientBuilder.maxConnections). If the OkHttp dependency is
 available at runtime it will be used automatically. Not using OkHttp will result in a smaller application size.
 
+**Note:** The configuration options `ClientBuilder.customSSLSocketFactory` and
+`ClientBuilder.disableSSLAuthentication` are not usable with the combination of the optional OkHttp
+dependency and Java versions of 8u252 or newer.
+
 ## Getting Started
 
 This section contains a simple example of creating a `com.cloudant.client.api.CloudantClient` instance and interacting with Cloudant.

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016, 2019 IBM Corp. All rights reserved.
+ * Copyright © 2016, 2020 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.tests.extensions.MockWebServerExtension;
+import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 import com.cloudant.tests.util.MockWebServerResources;
 import com.google.gson.GsonBuilder;
 
@@ -63,6 +64,11 @@ public class CloudFoundryServiceTest {
 
     @BeforeEach
     public void beforeEach() {
+        // Default test running uses OkHttp because it is in the classpath
+        // These tests need to use disableSSLAuthentication because the mock server https does not
+        // have a trusted certificate. That option is not valid with OkHttp and Java 8_252 or newer
+        // but we want to run these tests, so use the OkHelperMock to disable OkHttp.
+        new HttpFactoryParameterizedTest.OkHelperMock();
         server = mockWebServerExt.get();
         server.useHttps(MockWebServerResources.getSSLSocketFactory(), false);
         mockServerHostPort = String.format("%s:%s/", server.getHostName(), server.getPort());

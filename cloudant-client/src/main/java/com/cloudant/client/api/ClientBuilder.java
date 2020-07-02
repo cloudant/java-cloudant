@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2019 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2020 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -514,6 +514,9 @@ public class ClientBuilder {
      * The SSL authentication is enabled by default meaning that hostname verification
      * and certificate chain validation is done using the JVM default settings.
      * </P>
+     * <P>
+     * <B>Not supported with Java 8u252 or newer and the optional OkHttp dependency.</B>
+     * </P>
      *
      * @return this ClientBuilder object for setting additional options
      * @throws IllegalStateException if {@link #customSSLSocketFactory(SSLSocketFactory)}
@@ -534,6 +537,9 @@ public class ClientBuilder {
     /**
      * Specifies the custom SSLSocketFactory to use when connecting to Cloudant over a
      * <code>https</code> URL, when SSL authentication is enabled.
+     * <P>
+     * <B>Not supported with Java 8u252 or newer and the optional OkHttp dependency.</B>
+     * </P>
      *
      * @param factory An SSLSocketFactory, or <code>null</code> for the
      *                default SSLSocketFactory of the JRE.

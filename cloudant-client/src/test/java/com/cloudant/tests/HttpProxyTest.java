@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2020 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -23,6 +23,7 @@ import com.cloudant.http.Http;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 import com.cloudant.tests.util.MockWebServerResources;
+import com.cloudant.tests.util.Utils;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -299,6 +300,10 @@ public class HttpProxyTest extends HttpFactoryParameterizedTest {
                                final boolean useSecureProxy,
                                final boolean useHttpsServer,
                                final boolean useProxyAuth) throws Exception {
+
+        // Test uses disableSSLAuthentication because the mock server doesn't have a trusted cert
+        // - need to disable the test for OkHttp and Java 8_252 or newer
+        Utils.assumeCustomSslAuthUsable(okUsable);
 
         //mock a 200 OK
         server.setDispatcher(new Dispatcher() {

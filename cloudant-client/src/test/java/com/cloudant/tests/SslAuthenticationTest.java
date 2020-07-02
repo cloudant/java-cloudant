@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2019 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2020 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import com.cloudant.test.main.RequiresCloudantService;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 import com.cloudant.tests.util.MockWebServerResources;
+import com.cloudant.tests.util.Utils;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
@@ -136,7 +137,8 @@ public class SslAuthenticationTest extends HttpFactoryParameterizedTest {
      */
     @TestTemplate
     public void localSslAuthenticationDisabled() throws Exception {
-
+        // disableSSLAuthentication not usable with OkHttp and 8_252 or newer
+        Utils.assumeCustomSslAuthUsable(isOkUsable);
         // Build a client that connects to the mock server with SSL authentication disabled
         CloudantClient dbClient = CloudantClientHelper.newMockWebServerClientBuilder(server)
                 .disableSSLAuthentication()
@@ -251,7 +253,8 @@ public class SslAuthenticationTest extends HttpFactoryParameterizedTest {
      */
     @TestTemplate
     public void localSSLAuthenticationDisabledWithCookieAuth() throws Exception {
-
+        // disableSSLAuthentication not usable with OkHttp and 8_252 or newer
+        Utils.assumeCustomSslAuthUsable(isOkUsable);
         // Mock up an OK cookie response then an OK response for the getAllDbs()
         server.enqueue(MockWebServerResources.OK_COOKIE);
         server.enqueue(new MockResponse()); //OK 200

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2016, 2020 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -37,7 +37,7 @@ public abstract class HttpFactoryParameterizedTest extends TestWithDbPerClass {
      * A mock OkHelper that always returns false to force use of the JVM HttpURLConnection
      * via the {@link DefaultHttpUrlConnectionFactory}
      */
-    static class OkHelperMock extends MockUp<OkHelper> {
+    public static class OkHelperMock extends MockUp<OkHelper> {
         @Mock
         public static boolean isOkUsable() {
             return false;
