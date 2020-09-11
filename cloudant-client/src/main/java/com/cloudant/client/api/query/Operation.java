@@ -80,7 +80,7 @@ public class Operation implements Selector {
     @Override
     public String toString() {
         // op rhs format ($and etc)
-        return String.format("\"%s\": %s", this.op, quoteCurly(this.rhs));
+        return String.format("\"%s\": %s", this.op, quoteCurly(this.rhs, this.op));
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2018, 2020 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -55,6 +55,15 @@ public class QueryTests {
                 eq("location", "Boston")));
         Assertions.assertEquals("{\"selector\": {\"$and\": [{\"name\": {\"$eq\": \"Paul\"}}, " +
                 "{\"location\": {\"$eq\": \"Boston\"}}]}}", qb.build());
+    }
+
+    // "And selector with only one field"
+    @Test
+    public void basicSelector2WithOneField() {
+        QueryBuilder qb = new QueryBuilder(and(
+                eq("name", "Paul")));
+        Assertions.assertEquals("{\"selector\": " +
+                "{\"$and\": [{\"name\": {\"$eq\": \"Paul\"}}]}}", qb.build());
     }
 
     // "SUBFIELDS"

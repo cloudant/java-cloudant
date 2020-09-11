@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2018, 2020 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -59,8 +59,8 @@ public class Helpers {
         return quoteInternal(os, ", ", "", "", "", "");
     }
 
-    public static String quoteCurly(Object[] os) {
-        if (os.length == 1) {
+    public static String quoteCurly(Object[] os, String op) {
+        if (op.equals("$not")) {
             // the operation "not" only takes one argument, so we don't need to make an array
             return String.format("%s%s%s", "{", quote(os[0]), "}");
         }

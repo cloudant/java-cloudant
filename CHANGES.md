@@ -1,3 +1,7 @@
+# Unreleased
+- [FIXED] Allow $and, $or, and $nor operator selectors
+  to be used with only one expression selector
+
 # 2.19.1 (2020-07-03)
 - [FIXED] Connection leak regression introduced in 2.18.0 caused by not closing streams from
   successful session response bodies.
@@ -296,7 +300,7 @@
 - [FIXED] `NullPointerException` when parsing `{doc: null}` JSON in search or view results.
 - [FIXED] Fixed issue with pagination numbering when using `queryPage` with
   a clustered DB.
-- [FIXED] Fixed issue where `queryPage` could not handle JSON values emitted from views.  
+- [FIXED] Fixed issue where `queryPage` could not handle JSON values emitted from views.
 - [IMPROVED] Various documentation updates.
 - [DEPRECATED] `com.cloudant.client.api.model.Page` setter methods.
 
