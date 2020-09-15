@@ -1,6 +1,6 @@
 # Unreleased
-- [FIXED] Allow $and, $or, and $nor operator selectors
-  to be used with only one expression selector
+- [FIXED] Allow `$and`, `$or`, and `$nor` operator selectors
+  to be used with only one expression selector.
 
 # 2.19.1 (2020-07-03)
 - [FIXED] Connection leak regression introduced in 2.18.0 caused by not closing streams from
