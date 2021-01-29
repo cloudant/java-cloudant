@@ -12,17 +12,17 @@ There are several ways to create a client connection in `cloudant-java-sdk`:
 ## Other differences
 1. Fetching the Database object first before performing additional operations is not required. For example, in the case of updating a document you would first call `getDocument` to fetch and then `putDocument` to update.
 2. Model classes are used instead of POJOs.
-3. Sending and receiving plain objects and streaming are both available. E.g. the `db.find` equivalent `getDocument` is returning with a `Document` object, meanwhile `getDocumentAsStream` is returning with an `InputStream`.
+3. Sending and receiving plain objects and streaming are both available in some cases. E.g. the `db.find` equivalent `getDocument` is returning with a `Document` object, meanwhile `getDocumentAsStream` is returning with an `InputStream`. The `...AsStream` alternatives can be used next to the `postAllDocs`, `postChanges`, `postSearch`, `postFind`, `postPartitionAllDocs`, `postPartitionSearch`, `postPartitionView`, `postPartitionFind`, and the getDocument  methods.
 
 ## Request mapping
 Here's a list of the top 5 most frequently used `java-cloudant` operations and the `cloudant-java-sdk` equivalent API operation documentation link:
 
 | `java-cloudant` method | `cloudant-java-sdk` API method documentation link |
 |-----------------------------|---------------------------------|
-|`db.find()`|[`getDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#getdocument)|
-|`db.getViewRequestBuilder().newRequest().build`|[`postView`](https://cloud.ibm.com/apidocs/cloudant?code=java#postview)|
-|`db.query()`|[`postFind`](https://cloud.ibm.com/apidocs/cloudant?code=java#postfind)|
-|`db.contains()`|[headDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#headdocument)|
+|`db.find()`|[getDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#getdocument), getDocumentAsStream|
+|`db.getViewRequestBuilder().newRequest().build()`|[postView](https://cloud.ibm.com/apidocs/cloudant?code=java#postview), postViewAsStream|
+|`db.query()`|[postFind](https://cloud.ibm.com/apidocs/cloudant?code=java#postfind), postFindAsStream|
+|`db.contains()`|[`headDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#headdocument)|
 |`db.update()`|[`putDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#putdocument)|
 
 [A table](#reference-table) with the whole list of operations is provided at the end of this guide.
@@ -54,16 +54,16 @@ The table below contains a list of `java-cloudant` functions and the `cloudant-j
 |`db.info()`|[getDatabaseInformation](https://cloud.ibm.com/apidocs/cloudant?code=java#getdatabaseinformation)|
 |`db.save()/db.post()`|[postDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#postdocument)|
 |`createDB()/database() with create=true/createPartitionedDb(dbName)`|[putDatabase](https://cloud.ibm.com/apidocs/cloudant?code=java#putdatabase)|
-|`db.getAllDocsRequestBuilder().build()`|[postAllDocs](https://cloud.ibm.com/apidocs/cloudant?code=java#postalldocs)|
+|`db.getAllDocsRequestBuilder().build()`|[postAllDocs, postAllDocsAsStream](https://cloud.ibm.com/apidocs/cloudant?code=java#postalldocs)|
 |`db.bulk()`|[postBulkDocs](https://cloud.ibm.com/apidocs/cloudant?code=java#postbulkdocs)|
-|`db.changes()`|[postChanges](https://cloud.ibm.com/apidocs/cloudant?code=java#postchanges)|
+|`db.changes()`|[postChanges, postChangesAsStream](https://cloud.ibm.com/apidocs/cloudant?code=java#postchanges)|
 |`db.getDesignDocumentManager().remove()`|[deleteDesignDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#deletedesigndocument)|
 |`db.getDesignDocumentManager().get()`|[getDesignDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#getdesigndocument)|
 |`db.getDesignDocumentManager().put()`|[putDesignDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#putdesigndocument)|
-|`db.search()`|[postSearch](https://cloud.ibm.com/apidocs/cloudant?code=java#postsearch)|
-|`db.getViewRequestBuilder().newRequest().build()`|[postView](https://cloud.ibm.com/apidocs/cloudant?code=java#postview)|
+|`db.search()`|[postSearch](https://cloud.ibm.com/apidocs/cloudant?code=java#postsearch), postSearchAsStream|
+|`db.getViewRequestBuilder().newRequest().build()`|[postView](https://cloud.ibm.com/apidocs/cloudant?code=java#postview), postViewAsStream|
 |`db.getDesignDocumentManager().list() with a filter`|[postDesignDocs](https://cloud.ibm.com/apidocs/cloudant?code=java#postdesigndocs)|
-|`db.query()`|[postFind](https://cloud.ibm.com/apidocs/cloudant?code=java#postfind)|
+|`db.query()`|[postFind](https://cloud.ibm.com/apidocs/cloudant?code=java#postfind), postFindAsStream|
 |`db.listIndexes()`|[getIndexesInformation](https://cloud.ibm.com/apidocs/cloudant?code=java#getindexesinformation)|
 |`db.createIndex()`|[postIndex](https://cloud.ibm.com/apidocs/cloudant?code=java#postindex)|
 |`db.deleteIndex()`|[deleteIndex](https://cloud.ibm.com/apidocs/cloudant?code=java#deleteindex)|
@@ -71,16 +71,16 @@ The table below contains a list of `java-cloudant` functions and the `cloudant-j
 |`db.find() with _local path`|[getLocalDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#getlocaldocument)|
 |`db.save() with _local path`|[putLocalDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#putlocaldocument)|
 |`db.partitionInfo()`|[getPartitionInformation](https://cloud.ibm.com/apidocs/cloudant?code=java#getpartitioninformation)|
-|`db.getAllDocsRequestBuilder().partition().build()`|[postPartitionAllDocs](https://cloud.ibm.com/apidocs/cloudant?code=java#postpartitionalldocs)|
-|`db.search()`|[postPartitionSearch](https://cloud.ibm.com/apidocs/cloudant?code=java#postpartitionsearch)|
-|`db.getViewRequestBuilder().newRequest().partition().build()`|[postPartitionView](https://cloud.ibm.com/apidocs/cloudant?code=java#postpartitionview)|
-|`db.query() using partitionKey method arg`|[postPartitionFind](https://cloud.ibm.com/apidocs/cloudant?code=java#postpartitionfind)|
+|`db.getAllDocsRequestBuilder().partition().build()`|[postPartitionAllDocs](https://cloud.ibm.com/apidocs/cloudant?code=java#postpartitionalldocs), postPartitionAllDocsAsStream|
+|`db.search()`|[postPartitionSearch](https://cloud.ibm.com/apidocs/cloudant?code=java#postpartitionsearch), postPartitionSearchAsStream|
+|`db.getViewRequestBuilder().newRequest().partition().build()`|[postPartitionView](https://cloud.ibm.com/apidocs/cloudant?code=java#postpartitionview), postPartitionViewAsStream|
+|`db.query() using partitionKey method arg`|[postPartitionFind](https://cloud.ibm.com/apidocs/cloudant?code=java#postpartitionfind), postPartitionFindAsStream|
 |`db.getPermissions()`|[getSecurity](https://cloud.ibm.com/apidocs/cloudant?code=java#getsecurity)|
 |`db.setPermissions(userNameorApikey, permissions)`|[putSecurity](https://cloud.ibm.com/apidocs/cloudant?code=java#putsecurity)|
 |`db.getShards()`|[getShardsInformation](https://cloud.ibm.com/apidocs/cloudant?code=java#getshardsinformation)|
 |`db.getShard()`|[getDocumentShardsInfo](https://cloud.ibm.com/apidocs/cloudant?code=java#getdocumentshardsinfo)|
 |db.remove()|[deleteDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#deletedocument)|
-|`db.find()`|[getDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#getdocument)|
+|`db.find()`|[getDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#getdocument), getDocumentAsStream|
 |`db.contains()`|[headDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#headdocument)|
 |`db.update()`|[`putDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#putdocument)|
 |`db.removeAttachment()`|[deleteAttachment](https://cloud.ibm.com/apidocs/cloudant?code=java#deleteattachment)|
