@@ -11,8 +11,9 @@ There are several ways to create a client connection in `cloudant-java-sdk`:
 
 ## Other differences
 1. Fetching the Database object first before performing additional operations is not required. For example, in the case of updating a document you would first call `getDocument` to fetch and then `putDocument` to update.
-2. Model classes are used instead of POJOs.
-3. Sending and receiving byte responses is available for some of our operations.  See [the Raw IO section](https://github.com/IBM/cloudant-java-sdk#raw-io) of `cloudant-java-sdk` README for more details.
+1. Model classes are used instead of POJOs.
+1. Sending and receiving byte responses is available for some of our operations.  See [the Raw IO section](https://github.com/IBM/cloudant-java-sdk#raw-io) of `cloudant-java-sdk` README for more details.
+1. There is no pagination support for views.
 
 ## Request mapping
 Here's a list of the top 5 most frequently used `java-cloudant` operations and the `cloudant-java-sdk` equivalent API operation documentation link:
