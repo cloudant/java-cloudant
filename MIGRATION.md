@@ -12,7 +12,7 @@ There are several ways to create a client connection in `cloudant-java-sdk`:
 ## Other differences
 1. Fetching the Database object first before performing additional operations is not required. For example, in the case of updating a document you would first call `getDocument` to fetch and then `putDocument` to update.
 2. Model classes are used instead of POJOs.
-3. Sending and receiving plain objects and streaming are both available in some cases. E.g. the `db.find` equivalent `getDocument` is returning with a `Document` object, meanwhile `getDocumentAsStream` is returning with an `InputStream`. The `...AsStream` alternatives can be used next to the `postAllDocs`, `postChanges`, `postSearch`, `postFind`, `postPartitionAllDocs`, `postPartitionSearch`, `postPartitionView`, `postPartitionFind`, and the getDocument  methods.
+3. Sending and receiving byte responses is available for some of our operations.  See [the Raw IO section](https://github.com/IBM/cloudant-java-sdk#raw-io) of `cloudant-java-sdk` README for more details.
 
 ## Request mapping
 Here's a list of the top 5 most frequently used `java-cloudant` operations and the `cloudant-java-sdk` equivalent API operation documentation link:
