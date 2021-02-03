@@ -11,9 +11,140 @@ There are several ways to create a client connection in `cloudant-java-sdk`:
 
 ## Other differences
 1. Fetching the Database object first before performing additional operations is not required. For example, in the case of updating a document you would first call `getDocument` to fetch and then `putDocument` to update.
-1. Model classes are used instead of POJOs.
+1. Model classes are used instead of POJOs. See examples in the [POJO usage in the `cloudant-java-sdk` library](#pojo-usage-in-the-new-library).
 1. Sending and receiving byte responses is available for operations that accept user-defined documents or return user-defined documents, document projections or map/reduce data. See [the Raw IO section](https://github.com/IBM/cloudant-java-sdk#raw-io) of `cloudant-java-sdk` README for more details.
-1. There is no pagination support for views.
+1. There is no pagination support for views. Examples coming soon.
+
+### POJO usage in the new library
+
+The new library is using models instead of POJOs, but it is still possible to migrate your
+code with the new library.
+
+Suppose that you have the following POJO and a simple read and write implementation with the `com.cloudant:cloudant-client` library you have thee possibilities for the migration.
+
+```java
+public class POJO {
+    private String _id;
+    private String name;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return _id + ": " + name;
+    }
+}
+```
+
+```java
+//... set up the service client and the database
+POJO p = db.find(POJO.class, "example_id");
+System.out.println(p); // the value of the POJO's toString method
+
+p.setName("newName");
+System.out.println(p.getName()); // will be newName
+
+Response response = db.update(p); // the same object is used for the update, it will set the name parameter to newName
+```
+
+#### 1. Use the `Document` model class, storing user properties in the `Map`
+
+```java
+//... set up the service client
+GetDocumentOptions documentOptions =
+                new GetDocumentOptions.Builder()
+                        .db("example_db")
+                        .docId("example_id")
+                        .build();
+
+Document doc = service.getDocument(documentOptions)
+                .execute()
+                .getResult();
+
+System.out.println(doc); // will be a JSON
+
+// Serialize the JSON to a Map
+Map m = YourJsonSerializer.fromJson(doc.toString(), Map.class);
+System.out.println(m); // will be a Map with the same key value pairs as the JSON
+
+m.put("name", "newName");
+System.out.println(m.get("name")); // newName
+
+doc.setProperties(m); // add your modifications to the Document object
+
+PutDocumentOptions putDocumentOptions =
+        new PutDocumentOptions.Builder()
+                .db("products")
+                .docId("small-appliances:1000042")
+                .document(doc)
+                .build();
+
+DocumentResult response = service.putDocument(documentOptions).execute()
+                                .getResult();
+```
+
+#### 2. Convert the `Document` model into a POJO (and vice versa)
+
+```java
+//... set up the service client
+GetDocumentOptions documentOptions =
+                new GetDocumentOptions.Builder()
+                        .db("example_db")
+                        .docId("example_id")
+                        .build();
+
+Document doc = service.getDocument(documentOptions)
+        .execute()
+        .getResult();
+
+System.out.println(doc); // will be a JSON
+
+// Serialize the JSON to POJO
+POJO p = YourJsonSerializer.fromJson(doc.toString(), POJO.class);
+System.out.println(p); // the value of the POJO's toString method
+
+p.setName("newName");
+System.out.println(p.getName()); // will be newName
+
+// Deserialize the POJO back to the Document model
+doc.setProperties(YourJsonSerializer.fromJson(YourJsonSerializer.toJson(p), Map.class)); // add your modifications to the Document object
+
+PutDocumentOptions putDocumentOptions =
+                new PutDocumentOptions.Builder()
+                        .db("example_db")
+                        .docId("example_id")
+                        .document(doc)
+                        .build();
+
+DocumentResult response = service.putDocument(documentOptions).execute()
+                        .getResult();
+```
+
+#### 3. Bypass the `Document` model and use the `AsStream` methods
+
+```java
+//... set up the service client
+GetDocumentOptions documentOptions =
+                new GetDocumentOptions.Builder()
+                        .db("example_db")
+                        .docId("example_id")
+                        .build();
+
+String text = new BufferedReader(
+                new InputStreamReader(
+                        service.getDocumentAsStream(documentOptions).execute()
+                                .getResult(),
+                        StandardCharsets.UTF_8))
+                .lines()
+                .collect(Collectors.joining("\n"));
+...
+```
 
 ## Request mapping
 Here's a list of the top 5 most frequently used `java-cloudant` operations and the `cloudant-java-sdk` equivalent API operation documentation link:
