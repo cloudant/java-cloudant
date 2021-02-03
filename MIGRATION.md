@@ -1,5 +1,5 @@
 # Migrating to the `cloudant-java-sdk` library
-This document is to assist in migrating from the `java-cloudant` (package: `com.cloudant.cloudant-client`) to the newly supported [`cloudant-java-sdk`](https://github.com/IBM/cloudant-java-sdk) (package: `com.ibm.cloud.cloudant`).
+This document is to assist in migrating from the `java-cloudant` (coordinates: `com.cloudant:cloudant-client`) to the newly supported [`cloudant-java-sdk`](https://github.com/IBM/cloudant-java-sdk) (coordinates: `com.ibm.cloud:cloudant`).
 
 ## Initializing the client connection
 There are several ways to create a client connection in `cloudant-java-sdk`:
@@ -12,7 +12,7 @@ There are several ways to create a client connection in `cloudant-java-sdk`:
 ## Other differences
 1. Fetching the Database object first before performing additional operations is not required. For example, in the case of updating a document you would first call `getDocument` to fetch and then `putDocument` to update.
 1. Model classes are used instead of POJOs.
-1. Sending and receiving byte responses is available for some of our operations.  See [the Raw IO section](https://github.com/IBM/cloudant-java-sdk#raw-io) of `cloudant-java-sdk` README for more details.
+1. Sending and receiving byte responses is available for operations that accept user-defined documents or return user-defined documents, document projections or map/reduce data. See [the Raw IO section](https://github.com/IBM/cloudant-java-sdk#raw-io) of `cloudant-java-sdk` README for more details.
 1. There is no pagination support for views.
 
 ## Request mapping
