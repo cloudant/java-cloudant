@@ -70,14 +70,15 @@ Document doc = service.getDocument(documentOptions)
 
 System.out.println(doc); // will be a JSON
 
-// Serialize the JSON to a Map
-Map m = YourJsonSerializer.fromJson(doc.toString(), Map.class);
-System.out.println(m); // will be a Map with the same key value pairs as the JSON
+// Set the JSON properties to the POJO
+POJO p = new POJO();
+p.setName((String) doc.getProperties().get("name"))
+System.out.println(p); // will be a POJO with the same name as the JSON
 
-m.put("name", "new_name");
-System.out.println(m.get("name")); // new_name
+p.setName("new_name");
+System.out.println(p.getName()); // new_name
 
-doc.setProperties(m); // add your modifications to the Document object
+doc.put("name", p.getName()); // add your modifications to the Document object
 
 PutDocumentOptions putDocumentOptions =
         new PutDocumentOptions.Builder()
