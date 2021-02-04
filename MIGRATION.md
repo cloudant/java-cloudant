@@ -85,7 +85,7 @@ PutDocumentOptions putDocumentOptions =
                 .document(doc)
                 .build();
 
-DocumentResult response = service.putDocument(documentOptions).execute()
+DocumentResult response = service.putDocument(putDocumentOptions).execute()
                                 .getResult();
 ```
 
@@ -113,7 +113,7 @@ p.setName("newName");
 System.out.println(p.getName()); // will be newName
 
 // Deserialize the POJO back to the Document model
-doc.setProperties(YourJsonSerializer.fromJson(YourJsonSerializer.toJson(p), Map.class)); // add your modifications to the Document object
+doc.setProperties(YourJsonSerializer.fromJson(YourJsonSerializer.toJson(p), Map.class));
 
 PutDocumentOptions putDocumentOptions =
                 new PutDocumentOptions.Builder()
@@ -122,7 +122,7 @@ PutDocumentOptions putDocumentOptions =
                         .document(doc)
                         .build();
 
-DocumentResult response = service.putDocument(documentOptions).execute()
+DocumentResult response = service.putDocument(putDocumentOptions).execute()
                         .getResult();
 ```
 
@@ -136,14 +136,29 @@ GetDocumentOptions documentOptions =
                         .docId("example_id")
                         .build();
 
-String text = new BufferedReader(
-                new InputStreamReader(
-                        service.getDocumentAsStream(documentOptions).execute()
-                                .getResult(),
-                        StandardCharsets.UTF_8))
-                .lines()
-                .collect(Collectors.joining("\n"));
-...
+POJO p = new POJO()
+try(InputStream is = service.getDocumentAsStream(documentOptions).execute().getResult()){
+    InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8);
+    p = YourSeriliazer.fromJson(isr, Old.POJO.class);
+    System.out.println(p); // the value of the POJO's toString method
+} catch (RuntimeException re){
+    // ...
+}
+p.setName("newName");
+System.out.println(p.getName()); // will be newName
+
+try (InputStream is = new ByteArrayInputStream(YourSeriliazer.toJson(p).getBytes())) {
+    PutDocumentOptions putDocumentOptions =
+            new PutDocumentOptions.Builder()
+                    .db("example_db")
+                    .docId("example_id")
+                    .body(is)
+                    .build();
+    DocumentResult response = service.putDocument(putDocumentOptions).execute()
+            .getResult();
+} catch (IOException e) {
+    // ...
+}
 ```
 
 ## Request mapping
