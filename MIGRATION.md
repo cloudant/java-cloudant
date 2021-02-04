@@ -48,10 +48,10 @@ Cloudant Query to read the object and then updating the document in the database
 POJO p = db.find(POJO.class, "example_id");
 System.out.println(p); // the value of the POJO's toString method
 
-p.setName("newName");
-System.out.println(p.getName()); // will be newName
+p.setName("new_name");
+System.out.println(p.getName()); // will be new_name
 
-Response response = db.update(p); // the same object is used for the update, it will set the name parameter to newName
+Response response = db.update(p); // the same object is used for the update, it will set the name parameter to new_name
 ```
 
 #### 1. Use the `Document` model class, storing user properties in the `Map`
@@ -74,15 +74,15 @@ System.out.println(doc); // will be a JSON
 Map m = YourJsonSerializer.fromJson(doc.toString(), Map.class);
 System.out.println(m); // will be a Map with the same key value pairs as the JSON
 
-m.put("name", "newName");
-System.out.println(m.get("name")); // newName
+m.put("name", "new_name");
+System.out.println(m.get("name")); // new_name
 
 doc.setProperties(m); // add your modifications to the Document object
 
 PutDocumentOptions putDocumentOptions =
         new PutDocumentOptions.Builder()
-                .db("products")
-                .docId("small-appliances:1000042")
+                .db("example_db")
+                .docId("example_id")
                 .document(doc)
                 .build();
 
@@ -110,8 +110,8 @@ System.out.println(doc); // will be a JSON
 POJO p = YourJsonSerializer.fromJson(doc.toString(), POJO.class);
 System.out.println(p); // the value of the POJO's toString method
 
-p.setName("newName");
-System.out.println(p.getName()); // will be newName
+p.setName("new_name");
+System.out.println(p.getName()); // will be new_name
 
 // Deserialize the POJO back to the Document model
 doc.setProperties(YourJsonSerializer.fromJson(YourJsonSerializer.toJson(p), Map.class));
@@ -145,8 +145,8 @@ try(InputStream is = service.getDocumentAsStream(documentOptions).execute().getR
 } catch (RuntimeException re){
     // ...
 }
-p.setName("newName");
-System.out.println(p.getName()); // will be newName
+p.setName("new_name");
+System.out.println(p.getName()); // will be new_name
 
 try (InputStream is = new ByteArrayInputStream(YourSeriliazer.toJson(p).getBytes())) {
     PutDocumentOptions putDocumentOptions =
@@ -167,9 +167,9 @@ Here's a list of the top 5 most frequently used `java-cloudant` operations and t
 
 | `java-cloudant` method | `cloudant-java-sdk` API method documentation link |
 |-----------------------------|---------------------------------|
-|`db.find()`|[getDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#getdocument), getDocumentAsStream|
-|`db.getViewRequestBuilder().newRequest().build()`|[postView](https://cloud.ibm.com/apidocs/cloudant?code=java#postview), postViewAsStream|
-|`db.query()`|[postFind](https://cloud.ibm.com/apidocs/cloudant?code=java#postfind), postFindAsStream|
+|`db.find()`|[`getDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#getdocument), `getDocumentAsStream`|
+|`db.getViewRequestBuilder().newRequest().build()`|[`postView`](https://cloud.ibm.com/apidocs/cloudant?code=java#postview), `postViewAsStream`|
+|`db.query()`|[`postFind`](https://cloud.ibm.com/apidocs/cloudant?code=java#postfind), `postFindAsStream`|
 |`db.contains()`|[`headDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#headdocument)|
 |`db.update()`|[`putDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#putdocument)|
 
@@ -230,7 +230,7 @@ The table below contains a list of `java-cloudant` functions and the `cloudant-j
 |db.remove()|[deleteDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#deletedocument)|
 |`db.find()`|[getDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#getdocument), getDocumentAsStream|
 |`db.contains()`|[headDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#headdocument)|
-|`db.update()`|[`putDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#putdocument)|
+|`db.update()`|[putDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#putdocument)|
 |`db.removeAttachment()`|[deleteAttachment](https://cloud.ibm.com/apidocs/cloudant?code=java#deleteattachment)|
 |`db.getAttachment()`|[getAttachment](https://cloud.ibm.com/apidocs/cloudant?code=java#getattachment)|
 |`db.saveAttachment()`|[putAttachment](https://cloud.ibm.com/apidocs/cloudant?code=java#putattachment)|
