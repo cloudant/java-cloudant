@@ -228,7 +228,7 @@ The table below contains a list of `java-cloudant` functions and the `cloudant-j
 |`db.setPermissions(userNameorApikey, permissions)`|[putSecurity](https://cloud.ibm.com/apidocs/cloudant?code=java#putsecurity)|
 |`db.getShards()`|[getShardsInformation](https://cloud.ibm.com/apidocs/cloudant?code=java#getshardsinformation)|
 |`db.getShard()`|[getDocumentShardsInfo](https://cloud.ibm.com/apidocs/cloudant?code=java#getdocumentshardsinfo)|
-|db.remove()|[deleteDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#deletedocument)|
+|`db.remove()`|[deleteDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#deletedocument)|
 |`db.find()`|[getDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#getdocument), getDocumentAsStream|
 |`db.contains()`|[headDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#headdocument)|
 |`db.update()`|[putDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#putdocument)|
