@@ -17,10 +17,9 @@ There are several ways to create a client connection in `cloudant-java-sdk`:
 
 ### POJO usage in the new library
 
-The new library is using models instead of POJOs, but it is still possible to migrate your
-code with the new library.
+Since the new library supports models, this guide will provide you three ways to migrated your POJOs from `java-cloudant`.
 
-Suppose that you have the following POJO and a simple read and write implementation with the `com.cloudant:cloudant-client` library you have three possibilities for the migration.
+Let's start with a simple POJO:
 
 ```java
 public class POJO {
@@ -41,6 +40,8 @@ public class POJO {
     }
 }
 ```
+The code block below uses the POJO in a simple read and write implementation using
+Cloudant Query to read the object and then updating the document in the database.
 
 ```java
 //... set up the service client and the database
