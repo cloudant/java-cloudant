@@ -58,14 +58,14 @@ Response response = db.update(p); // the same object is used for the update, it 
 ```java
 //set up the service client
 GetDocumentOptions documentOptions =
-                new GetDocumentOptions.Builder()
-                        .db("example_db")
-                        .docId("example_id")
-                        .build();
+        new GetDocumentOptions.Builder()
+                .db("example_db")
+                .docId("example_id")
+                .build();
 
 Document doc = service.getDocument(documentOptions)
-                .execute()
-                .getResult();
+        .execute()
+        .getResult();
 
 System.out.println(doc); // will be a JSON
 
@@ -86,8 +86,10 @@ PutDocumentOptions putDocumentOptions =
                 .document(doc)
                 .build();
 
-DocumentResult response = service.putDocument(putDocumentOptions).execute()
-                                .getResult();
+DocumentResult response =
+        service.putDocument(putDocumentOptions)
+                .execute()
+                .getResult();
 ```
 
 #### 2. Convert the `Document` model into a POJO (and vice versa)
@@ -95,10 +97,10 @@ DocumentResult response = service.putDocument(putDocumentOptions).execute()
 ```java
 //set up the service client
 GetDocumentOptions documentOptions =
-                new GetDocumentOptions.Builder()
-                        .db("example_db")
-                        .docId("example_id")
-                        .build();
+        new GetDocumentOptions.Builder()
+                .db("example_db")
+                .docId("example_id")
+                .build();
 
 Document doc = service.getDocument(documentOptions)
         .execute()
@@ -123,8 +125,10 @@ PutDocumentOptions putDocumentOptions =
                         .document(doc)
                         .build();
 
-DocumentResult response = service.putDocument(putDocumentOptions).execute()
-                        .getResult();
+DocumentResult response =
+        service.putDocument(putDocumentOptions)
+                .execute()
+                .getResult();
 ```
 
 #### 3. Bypass the `Document` model and use the `AsStream` methods
@@ -132,10 +136,10 @@ DocumentResult response = service.putDocument(putDocumentOptions).execute()
 ```java
 //set up the service client
 GetDocumentOptions documentOptions =
-                new GetDocumentOptions.Builder()
-                        .db("example_db")
-                        .docId("example_id")
-                        .build();
+        new GetDocumentOptions.Builder()
+                .db("example_db")
+                .docId("example_id")
+                .build();
 
 Pojo p = new Pojo()
 try(InputStream is = service.getDocumentAsStream(documentOptions).execute().getResult()){
@@ -155,8 +159,11 @@ try (InputStream is = new ByteArrayInputStream(YourSeriliazer.toJson(p).getBytes
                     .docId("example_id")
                     .body(is)
                     .build();
-    DocumentResult response = service.putDocument(putDocumentOptions).execute()
-            .getResult();
+
+    DocumentResult response =
+            service.putDocument(putDocumentOptions)
+                    .execute()
+                    .getResult();
 } catch (IOException e) {
     // ...
 }
