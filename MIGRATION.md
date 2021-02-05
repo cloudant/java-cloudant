@@ -22,8 +22,7 @@ Since the new library supports models, this guide will provide you three ways to
 Let's start with a simple POJO:
 
 ```java
-public class POJO {
-    private String _id;
+public class Pojo {
     private String name;
 
     public String getName() {
@@ -36,7 +35,7 @@ public class POJO {
 
     @Override
     public String toString() {
-        return _id + ": " + name;
+        return name;
     }
 }
 ```
@@ -45,8 +44,8 @@ Cloudant Query to read the object and then updating the document in the database
 
 ```java
 //... set up the service client and the database
-POJO p = db.find(POJO.class, "example_id");
-System.out.println(p); // the value of the POJO's toString method
+Pojo p = db.find(Pojo.class, "example_id");
+System.out.println(p); // the value of the Pojo's toString method
 
 p.setName("new_name");
 System.out.println(p.getName()); // will be new_name
@@ -57,7 +56,7 @@ Response response = db.update(p); // the same object is used for the update, it 
 #### 1. Use the `Document` model class, storing user properties in the `Map`
 
 ```java
-//... set up the service client
+//set up the service client
 GetDocumentOptions documentOptions =
                 new GetDocumentOptions.Builder()
                         .db("example_db")
@@ -70,10 +69,10 @@ Document doc = service.getDocument(documentOptions)
 
 System.out.println(doc); // will be a JSON
 
-// Set the JSON properties to the POJO
-POJO p = new POJO();
-p.setName((String) doc.getProperties().get("name"))
-System.out.println(p); // will be a POJO with the same name as the JSON
+// Set the JSON properties to the Pojo
+Pojo p = new Pojo();
+p.setName((String) doc.getProperties().get("name"));
+System.out.println(p); // will be a Pojo with the same name as the JSON
 
 p.setName("new_name");
 System.out.println(p.getName()); // new_name
@@ -94,7 +93,7 @@ DocumentResult response = service.putDocument(putDocumentOptions).execute()
 #### 2. Convert the `Document` model into a POJO (and vice versa)
 
 ```java
-//... set up the service client
+//set up the service client
 GetDocumentOptions documentOptions =
                 new GetDocumentOptions.Builder()
                         .db("example_db")
@@ -107,14 +106,14 @@ Document doc = service.getDocument(documentOptions)
 
 System.out.println(doc); // will be a JSON
 
-// Serialize the JSON to POJO
-POJO p = YourJsonSerializer.fromJson(doc.toString(), POJO.class);
-System.out.println(p); // the value of the POJO's toString method
+// Serialize the JSON to Pojo
+Pojo p = YourJsonSerializer.fromJson(doc.toString(), Pojo.class);
+System.out.println(p); // the value of the Pojo's toString method
 
 p.setName("new_name");
 System.out.println(p.getName()); // will be new_name
 
-// Deserialize the POJO back to the Document model
+// Deserialize the Pojo back to the Document model
 doc.setProperties(YourJsonSerializer.fromJson(YourJsonSerializer.toJson(p), Map.class));
 
 PutDocumentOptions putDocumentOptions =
@@ -131,18 +130,18 @@ DocumentResult response = service.putDocument(putDocumentOptions).execute()
 #### 3. Bypass the `Document` model and use the `AsStream` methods
 
 ```java
-//... set up the service client
+//set up the service client
 GetDocumentOptions documentOptions =
                 new GetDocumentOptions.Builder()
                         .db("example_db")
                         .docId("example_id")
                         .build();
 
-POJO p = new POJO()
+Pojo p = new Pojo()
 try(InputStream is = service.getDocumentAsStream(documentOptions).execute().getResult()){
     InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8);
-    p = YourSeriliazer.fromJson(isr, Old.POJO.class);
-    System.out.println(p); // the value of the POJO's toString method
+    p = YourSeriliazer.fromJson(isr, Old.Pojo.class);
+    System.out.println(p); // the value of the Pojo's toString method
 } catch (RuntimeException re){
     // ...
 }
