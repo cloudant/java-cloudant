@@ -144,7 +144,7 @@ GetDocumentOptions documentOptions =
 Pojo p = new Pojo()
 try(InputStream is = service.getDocumentAsStream(documentOptions).execute().getResult()){
     InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8);
-    p = YourSeriliazer.fromJson(isr, Old.Pojo.class);
+    p = YourSeriliazer.fromJson(isr, Pojo.class);
     System.out.println(p); // the value of the Pojo's toString method
 } catch (RuntimeException re){
     // ...
