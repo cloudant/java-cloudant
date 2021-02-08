@@ -46,8 +46,9 @@ public class Pojo {
     }
 }
 ```
-The code block below uses the POJO in a simple read and write implementation using
-Cloudant Query to read the object and then updating the document in the database.
+The code block below uses the POJO in a simple update implementation - reading the
+document into an object, performing an update and then writing the updated document in
+the database.
 
 ```java
 //... set up the service client and the database
