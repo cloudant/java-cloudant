@@ -20,7 +20,7 @@ There are several ways to create a client connection in `cloudant-java-sdk`:
   to use POJOs in preference instead of the `Document` model, see examples in the section
   [POJO usage in the `cloudant-java-sdk` library](#pojo-usage-in-the-new-library).
 1. Sending and receiving byte responses is available for operations that accept user-defined documents or return user-defined documents, document projections or map/reduce data. See [the Raw IO section](https://github.com/IBM/cloudant-java-sdk#raw-io) of `cloudant-java-sdk` README or the [Bypass the document model and use the `asStream` methods section](#3-bypass-the-document-model-and-use-the-asstream-methods) for more details.
-1. There is no pagination support for views. Examples coming soon.
+1. There is no built-in pagination support for views. Examples coming soon.
 
 ### POJO usage in the new library
 
