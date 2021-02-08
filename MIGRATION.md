@@ -24,7 +24,7 @@ There are several ways to create a client connection in `cloudant-java-sdk`:
 
 ### POJO usage in the new library
 
-Since the new library supports models, this guide will provide you three ways to migrated your POJOs from `java-cloudant`.
+Since the new library supports models, this guide will demonstrate three ways to migrate your POJOs from `java-cloudant`.
 
 Let's start with a simple POJO:
 
