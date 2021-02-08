@@ -15,7 +15,10 @@ There are several ways to create a client connection in `cloudant-java-sdk`:
   a `Database` object to interact with documents - the database name is included as part of
   document operations. For example, in the case of updating a document you would first call
   `getDocument` to fetch and then `putDocument` to update, there is no need to `getDatabase`.
-1. Model classes are used instead of POJOs. See examples in the [POJO usage in the `cloudant-java-sdk` library](#pojo-usage-in-the-new-library).
+1. In `cloudant-java-sdk` a user-supplied POJO is not required to represent a document.
+  The default document representation is the `Document` model class. It is still possible
+  to use POJOs in preference instead of the `Document` model, see examples in the section
+  [POJO usage in the `cloudant-java-sdk` library](#pojo-usage-in-the-new-library).
 1. Sending and receiving byte responses is available for operations that accept user-defined documents or return user-defined documents, document projections or map/reduce data. See [the Raw IO section](https://github.com/IBM/cloudant-java-sdk#raw-io) of `cloudant-java-sdk` README or the [Bypass the document model and use the `asStream` methods section](#3-bypass-the-document-model-and-use-the-asstream-methods) for more details.
 1. There is no pagination support for views. Examples coming soon.
 
