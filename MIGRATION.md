@@ -151,8 +151,7 @@ GetDocumentOptions documentOptions =
 
 Pojo p = new Pojo()
 try(InputStream is = service.getDocumentAsStream(documentOptions).execute().getResult()){
-    InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8);
-    p = YourSeriliazer.fromJson(isr, Pojo.class);
+    p = YourSeriliazer.fromJson(isr, Old.Pojo.class);
     System.out.println(p); // the value of the Pojo's toString method
 } catch (RuntimeException re){
     // ...
@@ -207,8 +206,9 @@ The table below contains a list of `java-cloudant` functions and the `cloudant-j
 |`getAllDbs()`|[getAllDbs](https://cloud.ibm.com/apidocs/cloudant?code=java#getalldbs)|
 |`getMembership()`|[getMembershipInformation](https://cloud.ibm.com/apidocs/cloudant?code=java#getmembershipinformation)|
 |`replication().trigger()`|[postReplicate](https://cloud.ibm.com/apidocs/cloudant?code=java#postreplicate)|
-|`db.remove() with the replication document _id`|[deleteReplicationDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#deletereplicationdocument)|
-|`db.find() with the replication document _id`|[getReplicationDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#getreplicationdocument)|
+|`replicator().remove()`|[deleteReplicationDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#deletereplicationdocument)|
+|`replicator().find()`|[getReplicationDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#getreplicationdocument)|
+|`replicator().save()`|[putReplicationDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#putreplicationdocument)|
 |`schedulerDocs()`|[getSchedulerDocs](https://cloud.ibm.com/apidocs/cloudant?code=java#getschedulerdocs)|
 |`schedulerDoc()`|[getSchedulerDocument](https://cloud.ibm.com/apidocs/cloudant?code=java#getschedulerdocument)|
 |`schedulerJobs()`|[getSchedulerJobs](https://cloud.ibm.com/apidocs/cloudant?code=java#getschedulerjobs)|
