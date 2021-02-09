@@ -179,6 +179,10 @@ For information about contributing, building, and running tests see the [CONTRIB
 
 The preferred approach for using java-cloudant in other projects is to use the Gradle or Maven dependency as described above.
 
+## Migrating to `cloudant-java-sdk` library
+We have a newly supported Cloudant Java SDK named [cloudant-java-sdk](https://github.com/IBM/cloudant-java-sdk).
+For advice on migrating from this module see [MIGRATION.md](MIGRATION.md).
+
 ### License
 
 Copyright © 2014, 2016 IBM Corp. All rights reserved.
