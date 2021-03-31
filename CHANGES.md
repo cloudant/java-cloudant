@@ -1,6 +1,6 @@
-# Unreleased
-- [FIXED] Allow `$and`, `$or`, and `$nor` operator selectors
-  to be used with only one expression selector.
+# 2.19.2 (2021-04-01)
+- [NEW] Add migration guide to the newly supported cloudant-java-sdk (coordinates: com.ibm.cloud:cloudant).
+- [FIXED] Allow `$and`, `$or`, and `$nor` operator selectors to be used with only one expression selector.
 
 # 2.19.1 (2020-07-03)
 - [FIXED] Connection leak regression introduced in 2.18.0 caused by not closing streams from
