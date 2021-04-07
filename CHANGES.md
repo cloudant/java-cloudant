@@ -1,4 +1,4 @@
-# 2.19.2 (2021-04-01)
+# 2.19.2 (2021-04-07)
 - [NEW] Add migration guide to the newly supported cloudant-java-sdk (coordinates: com.ibm.cloud:cloudant).
 - [FIXED] Allow `$and`, `$or`, and `$nor` operator selectors to be used with only one expression selector.
 
