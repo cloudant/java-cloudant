@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018, 2021 IBM Corp. All rights reserved.
+ * Copyright © 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -13,39 +13,41 @@
  */
 package com.cloudant.tests.extensions;
 
+import static com.cloudant.http.internal.interceptors.IamCookieInterceptor.IAM_TOKEN_SERVER_URL_PROPERTY_KEY;
+import static com.cloudant.tests.util.MockWebServerResources.iamTokenEndpoint;
+
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import okhttp3.mockwebserver.MockWebServer;
 
-public class MockWebServerExtension implements BeforeEachCallback, AfterEachCallback {
+public class MockIamWebServerExtension extends MockWebServerExtension {
 
-    private MockWebServer mockWebServer;
-    private boolean started = false;
-
-    public MockWebServer get() {
-        return this.mockWebServer;
-    }
+    // Immutably store the real token server
+    private final String tokenServer = System.getProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY);
 
     // NB beforeEach/afterEach emulate before and after in the actual mock, because we can't call
     // these directly as they are marked as protected
 
     @Override
     public synchronized void beforeEach(ExtensionContext context) throws Exception {
-        this.mockWebServer = new MockWebServer();
-        if (started) {
-            System.err.println("*** WARNING: MockWebServer already started");
-            return;
-        }
-        this.mockWebServer.start();
-        started = true;
+        super.beforeEach(context);
+        // Override the token server property
+        System.setProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY, this.get().url(iamTokenEndpoint)
+                .toString());
     }
 
     @Override
     public synchronized void afterEach(ExtensionContext context) throws Exception {
-        this.mockWebServer.shutdown();
-        started = false;
+        if (tokenServer != null) {
+          // Restore the original token server
+          System.setProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY, tokenServer);
+        } else {
+          // Clear the temporary token server
+          System.clearProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY);
+        }
+        super.afterEach(context);
     }
 
 }

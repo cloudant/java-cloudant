@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017, 2018 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,7 +14,6 @@
 
 package com.cloudant.tests;
 
-import static com.cloudant.http.internal.interceptors.IamCookieInterceptor.IAM_TOKEN_SERVER_URL_PROPERTY_KEY;
 import static com.cloudant.tests.util.MockWebServerResources.iamTokenEndpoint;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -30,6 +29,7 @@ import com.cloudant.http.internal.DefaultHttpUrlConnectionFactory;
 import com.cloudant.http.internal.interceptors.CookieInterceptor;
 import com.cloudant.http.internal.interceptors.IamCookieInterceptor;
 import com.cloudant.http.internal.ok.OkHttpClientHttpUrlConnectionFactory;
+import com.cloudant.tests.extensions.MockIamWebServerExtension;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 import com.cloudant.tests.util.MockWebServerResources;
@@ -120,7 +120,7 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
     public MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
     public MockWebServer mockWebServer;
     @RegisterExtension
-    public MockWebServerExtension mockIamServerExt = new MockWebServerExtension();
+    public MockWebServerExtension mockIamServerExt = new MockIamWebServerExtension();
     public MockWebServer mockIamServer;
 
     private HttpConnectionRequestInterceptor rqInterceptor;
@@ -139,20 +139,12 @@ public class SessionInterceptorExpiryTests extends HttpFactoryParameterizedTest 
             rpInterceptor = ci;
         } else if (sessionPath.equals("/_iam_session")) {
             // Set the endpoint value before each test
-            // Override the default IAM token server with our test mock server
-            System.setProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY, mockIamServer.url(iamTokenEndpoint)
-                    .toString());
             IamCookieInterceptor ici = new IamCookieInterceptor("apikey", baseUrl);
             rqInterceptor = ici;
             rpInterceptor = ici;
         } else {
             fail("Invalid sessionPath " + sessionPath);
         }
-    }
-
-    @AfterEach
-    public void clearIAMMock() {
-        System.clearProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY);
     }
 
     private void queueResponses(boolean okUsable,
