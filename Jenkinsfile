@@ -27,9 +27,15 @@ def runTests(testEnv, isServiceTests) {
 
         //Set up the environment and run the tests
         withEnv(testEnv) {
-            withCredentials([(env.CREDS_ID.contains('iam')) ? string(credentialsId: env.CREDS_ID, variable: 'IAM_API_KEY') : usernamePassword(credentialsId: env.CREDS_ID, usernameVariable: 'DB_USER', passwordVariable: 'DB_PASSWORD')]) {
+            withCredentials([(env.CREDS_ID.contains('Iam')) ? string(credentialsId: env.CREDS_ID, variable: 'IAM_API_KEY') : usernamePassword(credentialsId: env.CREDS_ID, usernameVariable: 'DB_USER', passwordVariable: 'DB_PASSWORD')]) {
                 try {
-                    sh "./gradlew ${(env.DB_USER?.trim()) ? '-Dtest.server.user=$DB_USER -Dtest.server.password=$DB_PASSWORD' : ''} -Dtest.server.host=\$DB_HOST -Dtest.server.port=\$DB_PORT -Dtest.server.protocol=\$DB_HTTP \$GRADLE_TARGET"
+                    sh "./gradlew \
+                    ${(env.DB_USER?.trim()) ? '-Dtest.server.user=$DB_USER -Dtest.server.password=$DB_PASSWORD' : ''} \
+                    -Dtest.server.host=\$DB_HOST \
+                    -Dtest.server.port=\$DB_PORT \
+                    -Dtest.server.protocol=\$DB_HTTP \
+                    -Dtest.replication.source.url=\$SDKS_TEST_SERVER_URL \
+                    \$GRADLE_TARGET"
                 } finally {
                     junit '**/build/test-results/**/*.xml'
                 }
@@ -49,8 +55,8 @@ stage('Build') {
 
 stage('QA') {
     // Define the matrix environments
-    def CLOUDANT_ENV = ['DB_HTTP=https', 'DB_HOST=clientlibs-test.cloudant.com', 'DB_PORT=443', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=clientlibs-test']
-    def CLOUDANT_IAM_ENV = ['DB_HTTP=https', 'DB_HOST=clientlibs-test.cloudant.com', 'DB_PORT=443', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=clientlibs-test-iam', "TEST_IAM_TOKEN_URL=${SDKS_TEST_IAM_URL}"]
+    def CLOUDANT_ENV = ['DB_HTTP=https', "DB_HOST=${SDKS_TEST_SERVER_HOST}", 'DB_PORT=443', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=testServerLegacy']
+    def CLOUDANT_IAM_ENV = ['DB_HTTP=https', "DB_HOST=${SDKS_TEST_SERVER_HOST}", 'DB_PORT=443', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=testServerIamApiKey', "TEST_IAM_TOKEN_URL=${SDKS_TEST_IAM_URL}"]
     def COUCH1_6_ENV = ['DB_HTTP=http', 'DB_HOST=cloudantsync002.bristol-victoria.uk.ibm.com', 'DB_PORT=5984', 'DB_IGNORE_COMPACTION=false', 'CREDS_ID=couchdb']
     def COUCH2_0_ENV = ['DB_HTTP=http', 'DB_HOST=cloudantsync002.bristol-victoria.uk.ibm.com', 'DB_PORT=5985', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=couchdb']
     def CLOUDANT_LOCAL_ENV = ['DB_HTTP=http', 'DB_HOST=cloudantsync002.bristol-victoria.uk.ibm.com', 'DB_PORT=8081', 'DB_IGNORE_COMPACTION=true', 'CREDS_ID=couchdb']
