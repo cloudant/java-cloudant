@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017, 2019 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,7 +14,6 @@
 
 package com.cloudant.tests;
 
-import static com.cloudant.http.internal.interceptors.IamCookieInterceptor.IAM_TOKEN_SERVER_URL_PROPERTY_KEY;
 import static com.cloudant.tests.HttpTest.takeN;
 import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE;
 import static com.cloudant.tests.util.MockWebServerResources.EXPECTED_OK_COOKIE_2;
@@ -40,6 +39,7 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.http.Http;
 import com.cloudant.http.interceptors.Replay429Interceptor;
+import com.cloudant.tests.extensions.MockIamWebServerExtension;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.MockWebServerResources;
 
@@ -64,7 +64,7 @@ public class HttpIamTest {
     public MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
 
     @RegisterExtension
-    public MockWebServerExtension mockIamServerExt = new MockWebServerExtension();
+    public MockWebServerExtension mockIamServerExt = new MockIamWebServerExtension();
 
     public MockWebServer mockWebServer;
     public MockWebServer mockIamServer;
@@ -76,14 +76,6 @@ public class HttpIamTest {
     public void setIAMMockEndpoint() {
         mockWebServer = mockWebServerExt.get();
         mockIamServer = mockIamServerExt.get();
-        // Override the default IAM token server with our test mock server
-        System.setProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY, mockIamServer.url(iamTokenEndpoint)
-                .toString());
-    }
-
-    @AfterEach
-    public void clearIAMMock() {
-        System.clearProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY);
     }
 
     /**

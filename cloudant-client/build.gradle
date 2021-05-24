@@ -53,6 +53,17 @@ tasks.withType(Test) {
         }
         jvmArgs "-javaagent:${jMockit}"
     }
+    // Special environment variables for integration tests
+    [SERVER_URL:'test.server.url',
+     SERVER_USER:'test.server.user',
+     SERVER_PASSWORD:'test.server.password',
+     TEST_REPLICATION_SOURCE_URL:'test.replication.source.url',
+     TEST_IAM_TOKEN_URL:'com.cloudant.client.iamserver'].each { k,v ->
+        def e = System.getenv(k)
+        if (e) {
+            systemProperty v, e
+        }
+    }
 }
 
 // Run tests which are compatible with all versions of Couch or
@@ -91,16 +102,6 @@ task cloudantServiceTest(type: Test) {
 }
 
 task integrationTest(type: Test) {
-    // Special environment variables for integration tests
-    [SERVER_URL:'test.server.url',
-     SERVER_USER:'test.server.user',
-     SERVER_PASSWORD:'test.server.password',
-     TEST_REPLICATION_SOURCE_URL:'test.replication.source.url'].each { k,v ->
-        def e = System.getenv(k)
-        if (e) {
-            systemProperty v, e
-        }
-    }
     // Run all tests that need a running DB and those for Cloudant, but not unit tests
     useJUnitPlatform {
         includeEngines 'junit-jupiter'

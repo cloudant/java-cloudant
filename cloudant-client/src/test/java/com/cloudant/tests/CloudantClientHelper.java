@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2019 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -36,12 +36,13 @@ public abstract class CloudantClientHelper {
     static final String SERVER_USER;
     static final String SERVER_PASSWORD;
     static final String SERVER_HOST;
+    //some tests need access to the URL
+    static final URL SERVER_URL;
 
     private static final CloudantClient CLIENT_INSTANCE;
 
     private static final String SERVER_PORT;
     private static final String SERVER_PROTOCOL;
-    private static final URL SERVER_URL;
 
     static {
 

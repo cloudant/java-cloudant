@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016, 2020 IBM Corp. All rights reserved.
+ * Copyright © 2016, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,7 +14,6 @@
 
 package com.cloudant.tests;
 
-import static com.cloudant.http.internal.interceptors.IamCookieInterceptor.IAM_TOKEN_SERVER_URL_PROPERTY_KEY;
 import static com.cloudant.tests.util.MockWebServerResources.IAM_API_KEY;
 import static com.cloudant.tests.util.MockWebServerResources.IAM_TOKEN;
 import static com.cloudant.tests.util.MockWebServerResources.OK_IAM_COOKIE;
@@ -23,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
+import com.cloudant.tests.extensions.MockIamWebServerExtension;
 import com.cloudant.tests.extensions.MockWebServerExtension;
 import com.cloudant.tests.util.HttpFactoryParameterizedTest;
 import com.cloudant.tests.util.MockWebServerResources;
@@ -57,7 +57,7 @@ public class CloudFoundryServiceTest {
     public MockWebServerExtension mockWebServerExt = new MockWebServerExtension();
 
     @RegisterExtension
-    public MockWebServerExtension mockIamServerExt = new MockWebServerExtension();
+    public MockWebServerExtension mockIamServerExt = new MockIamWebServerExtension();
 
     public MockWebServer server;
     public MockWebServer mockIamServer;
@@ -74,14 +74,6 @@ public class CloudFoundryServiceTest {
         mockServerHostPort = String.format("%s:%s/", server.getHostName(), server.getPort());
         //setup mock IAM server
         mockIamServer = mockIamServerExt.get();
-        // Override the default IAM token server with our test mock server
-        System.setProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY, mockIamServer.url(iamTokenEndpoint)
-                .toString());
-    }
-
-    @AfterEach
-    public void clearIAMMock() {
-        System.clearProperty(IAM_TOKEN_SERVER_URL_PROPERTY_KEY);
     }
 
     private static class VCAPGenerator {
@@ -98,7 +90,7 @@ public class CloudFoundryServiceTest {
             cloudantServices = new ArrayList<HashMap<String, Object>>();
             vcap.put(serviceName, cloudantServices);
         }
-        
+
         private void addService(String name, String username, String password,
                                 String host, String apikey) {
             HashMap<String, Object> cloudantService = new HashMap<String, Object>();

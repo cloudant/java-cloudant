@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2019 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -500,7 +500,7 @@ public class CloudantClientTests extends TestWithDbPerClass {
                 new BasicAuthInterceptor(CloudantClientHelper.SERVER_USER
                         + ":" + CloudantClientHelper.SERVER_PASSWORD);
 
-        CloudantClient client = ClientBuilder.account(CloudantClientHelper.SERVER_USER)
+        CloudantClient client = ClientBuilder.url(CloudantClientHelper.SERVER_URL)
                 .interceptors(interceptor).build();
 
         // Test passes if there are no exceptions
