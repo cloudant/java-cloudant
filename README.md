@@ -1,3 +1,17 @@
+# DEPRECATED
+
+**This library is now deprecated and will be end-of-life on Dec 31 2021.**
+
+The library remains supported until the end-of-life date,
+but will receive only _critical_ maintenance updates.
+
+Please see the [Migration Guide](./MIGRATION.md) for advice
+about migrating to our replacement library
+[cloudant-java-sdk](https://github.com/IBM/cloudant-java-sdk).
+
+For FAQs and additional information please refer to the
+[Cloudant blog](https://blog.cloudant.com/2021/06/30/Cloudant-SDK-Transition.html).
+
 # Cloudant Java Client
 [![Build Status](https://travis-ci.org/cloudant/java-cloudant.svg?branch=master)](https://travis-ci.org/cloudant/java-cloudant)
 [![Maven Central](https://img.shields.io/maven-central/v/com.cloudant/cloudant-client.svg)](http://search.maven.org/#search|ga|1|g:"com.cloudant"%20AND%20a:"cloudant-client")
@@ -212,4 +226,3 @@ There is no built-in support for caching, encryption or compression at the clien
 * [java-cloudant-cache](https://github.com/cloudant-labs/java-cloudant-cache) can be used to provide caching integrated with the API of java-cloudant.
 
 * [storage-client-library](https://github.com/aruniyengar/storage-client-library) can be used to provide client-side encryption and compression.
-
