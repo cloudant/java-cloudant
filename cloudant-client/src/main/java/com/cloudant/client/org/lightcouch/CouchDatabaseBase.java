@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -15,8 +15,10 @@
 
 package com.cloudant.client.org.lightcouch;
 
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertDocumentTypeId;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNull;
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertValidAttachmentName;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.generateUUID;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.getAsString;
@@ -81,6 +83,7 @@ public abstract class CouchDatabaseBase {
     public <T> T find(Class<T> classType, String id) {
         assertNotEmpty(classType, "Class");
         assertNotEmpty(id, "id");
+        assertDocumentTypeId(id);
         final URI uri = new DatabaseURIHelper(dbUri).documentUri(id);
         return couchDbClient.get(uri, classType);
     }
@@ -98,6 +101,7 @@ public abstract class CouchDatabaseBase {
     public <T> T find(Class<T> classType, String id, Params params) {
         assertNotEmpty(classType, "Class");
         assertNotEmpty(id, "id");
+        assertDocumentTypeId(id);
         final URI uri = new DatabaseURIHelper(dbUri).documentUri(id, params);
         return couchDbClient.get(uri, classType);
     }
@@ -116,6 +120,7 @@ public abstract class CouchDatabaseBase {
         assertNotEmpty(classType, "Class");
         assertNotEmpty(id, "id");
         assertNotEmpty(id, "rev");
+        assertDocumentTypeId(id);
         final URI uri = new DatabaseURIHelper(dbUri).documentUri(id, "rev", rev);
         return couchDbClient.get(uri, classType);
     }
@@ -145,6 +150,7 @@ public abstract class CouchDatabaseBase {
      */
     public InputStream find(String id) {
         assertNotEmpty(id, "id");
+        assertDocumentTypeId(id);
         return couchDbClient.get(new DatabaseURIHelper(dbUri).documentUri(id));
     }
 
@@ -160,6 +166,7 @@ public abstract class CouchDatabaseBase {
     public InputStream find(String id, String rev) {
         assertNotEmpty(id, "id");
         assertNotEmpty(rev, "rev");
+        assertDocumentTypeId(id);
         final URI uri = new DatabaseURIHelper(dbUri).documentUri(id, "rev", rev);
         return couchDbClient.get(uri);
     }
@@ -172,6 +179,7 @@ public abstract class CouchDatabaseBase {
      */
     public boolean contains(String id) {
         assertNotEmpty(id, "id");
+        assertDocumentTypeId(id);
         InputStream response = null;
         try {
             response = couchDbClient.head(new DatabaseURIHelper(dbUri).documentUri(id));
@@ -255,6 +263,7 @@ public abstract class CouchDatabaseBase {
     public Response remove(String id, String rev) {
         assertNotEmpty(id, "id");
         assertNotEmpty(rev, "rev");
+        assertDocumentTypeId(id);
         final URI uri = new DatabaseURIHelper(dbUri).documentUri(id, rev);
         return couchDbClient.delete(uri);
     }
@@ -308,6 +317,8 @@ public abstract class CouchDatabaseBase {
      * @return the attachment in the form of an {@code InputStream}.
      */
     public InputStream getAttachment(String docId, String attachmentName, String revId) {
+        assertDocumentTypeId(docId);
+        assertValidAttachmentName(attachmentName);
         final URI uri = new DatabaseURIHelper(dbUri).attachmentUri(docId, revId, attachmentName);
         return getAttachment(uri);
     }
@@ -362,6 +373,7 @@ public abstract class CouchDatabaseBase {
                                    String docRev) {
         assertNotEmpty(in, "in");
         assertNotEmpty(name, "name");
+        assertValidAttachmentName(name);
         assertNotEmpty(contentType, "ContentType");
         if (docId == null) {
             docId = generateUUID();
@@ -375,6 +387,7 @@ public abstract class CouchDatabaseBase {
                 assertNotEmpty(docRev, "docRev");
             }
         }
+        assertDocumentTypeId(docId);
         final URI uri = new DatabaseURIHelper(dbUri).attachmentUri(docId, docRev, name);
         return couchDbClient.put(uri, in, contentType);
     }
@@ -410,8 +423,10 @@ public abstract class CouchDatabaseBase {
      */
     public Response removeAttachment(String id, String rev, String attachmentName) {
         assertNotEmpty(id, "id");
+        assertDocumentTypeId(id);
         assertNotEmpty(rev, "rev");
         assertNotEmpty(attachmentName, "attachmentName");
+        assertValidAttachmentName(attachmentName);
         final URI uri = new DatabaseURIHelper(dbUri).attachmentUri(id, rev, attachmentName);
         return couchDbClient.delete(uri);
     }

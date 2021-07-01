@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright (c) 2015, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -76,7 +76,7 @@ import java.util.List;
  */
 public class DesignDocumentManager {
 
-    private static final String DESIGN_PREFIX = "_design/";
+    private static final String DESIGN_PREFIX = CouchDbUtil.DESIGN_PREFIX;
 
     private final CloudantClient client;
     private final Database db;
@@ -220,7 +220,7 @@ public class DesignDocumentManager {
      */
     public List<DesignDocument> list() throws IOException {
         return db.getAllDocsRequestBuilder()
-                .startKey("_design/")
+                .startKey(DESIGN_PREFIX)
                 .endKey("_design0")
                 .inclusiveEnd(false)
                 .includeDocs(true)

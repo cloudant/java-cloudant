@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -49,6 +49,10 @@ import java.util.UUID;
  */
 final public class CouchDbUtil {
 
+    public static final String DESIGN_PREFIX = "_design/";
+    public static final String LOCAL_PREFIX = "_local/";
+
+
     private CouchDbUtil() {
         // Utility class
     }
@@ -70,6 +74,36 @@ final public class CouchDbUtil {
     public static void assertNull(Object object, String prefix) throws IllegalArgumentException {
         if (object != null) {
             throw new IllegalArgumentException(format("%s should be null.", prefix));
+        }
+    }
+
+    /*
+     * Throws an IllegalArgument exception if the ID is an _ prefixed name that isn't
+     * either _design or _local.
+     * 
+     * @param id
+     * @throws IllegalArgumentException
+     */
+    public static void assertDocumentTypeId(String id) throws IllegalArgumentException {
+        boolean invalid = false;
+        if (id.startsWith("_")) {
+            if (id.startsWith(DESIGN_PREFIX) && !DESIGN_PREFIX.equals(id)) {
+                invalid = false;
+            } else if (id.startsWith(LOCAL_PREFIX) && !LOCAL_PREFIX.equals(id)) {
+                invalid = false;
+            } else {
+                invalid = true;
+            }
+        
+        }
+        if (invalid) {
+            throw new IllegalArgumentException(format("%s is not a valid document ID.", id));
+        }
+    }
+
+    public static void assertValidAttachmentName(String attachmentName) throws IllegalArgumentException {
+        if (attachmentName.startsWith("_")) {
+            throw new IllegalArgumentException(format("%s is not a valid attachment name.", attachmentName));
         }
     }
 

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright © 2015, 2019 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,6 +14,7 @@
  */
 package com.cloudant.client.org.lightcouch;
 
+import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertDocumentTypeId;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNotEmpty;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.assertNull;
 import static com.cloudant.client.org.lightcouch.internal.CouchDbUtil.close;
@@ -480,6 +481,7 @@ public class CouchDbClient {
             assertNotEmpty(id, "id");
             assertNotEmpty(rev, "rev");
         }
+        assertDocumentTypeId(id);
         URI httpUri = null;
         if (writeQuorum > -1) {
             httpUri = new DatabaseURIHelper(uri).documentUri(id, "w", writeQuorum);

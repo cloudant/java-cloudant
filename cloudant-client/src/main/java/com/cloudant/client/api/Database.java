@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016, 2019 IBM Corp. All rights reserved.
+ * Copyright © 2016, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -47,6 +47,7 @@ import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.cloudant.client.org.lightcouch.Response;
+import com.cloudant.client.org.lightcouch.internal.CouchDbUtil;
 import com.cloudant.http.Http;
 import com.cloudant.http.HttpConnection;
 import com.google.gson.Gson;
@@ -605,8 +606,8 @@ public class Database {
         assertNotEmpty(indexName, "indexName");
         assertNotEmpty(designDocId, "designDocId");
         assertNotNull(type, "type");
-        if (!designDocId.startsWith("_design")) {
-            designDocId = "_design/" + designDocId;
+        if (!designDocId.startsWith(CouchDbUtil.DESIGN_PREFIX)) {
+            designDocId = CouchDbUtil.DESIGN_PREFIX + designDocId;
         }
         URI uri = new DatabaseURIHelper(db.getDBUri()).path("_index").path(designDocId)
                 .path(type).path(indexName).build();
