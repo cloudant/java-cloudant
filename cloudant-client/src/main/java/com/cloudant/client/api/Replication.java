@@ -177,7 +177,7 @@ public class Replication {
      * @param sinceSeq sequence number
      * @return this Replication instance to set more options or trigger the replication
      */
-    public Replication sinceSeq(Integer sinceSeq) {
+    public Replication sinceSeq(String sinceSeq) {
         this.replication = replication.sinceSeq(sinceSeq);
         return this;
     }
