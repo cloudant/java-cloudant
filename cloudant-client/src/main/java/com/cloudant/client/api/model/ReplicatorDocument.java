@@ -227,11 +227,11 @@ public class ReplicatorDocument {
         replicatorDocument.setRetriesPerRequest(retriesPerRequest);
     }
 
-    public Integer getSinceSeq() {
+    public String getSinceSeq() {
         return replicatorDocument.getSinceSeq();
     }
 
-    public void setSinceSeq(Integer sinceSeq) {
+    public void setSinceSeq(String sinceSeq) {
         replicatorDocument.setSinceSeq(sinceSeq);
     }
 

@@ -221,7 +221,7 @@ public class Replicator {
         return this;
     }
 
-    public Replicator sinceSeq(Integer sinceSeq) {
+    public Replicator sinceSeq(String sinceSeq) {
         this.replicator = replicator.sinceSeq(sinceSeq);
         return this;
     }
