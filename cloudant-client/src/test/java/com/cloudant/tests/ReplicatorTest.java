@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2019 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -50,11 +50,13 @@ public class ReplicatorTest extends TestWithReplication {
 
     @Test
     public void replication() throws Exception {
+        String lastSeq = db1Resource.get().changes().getChanges().getLastSeq();
         Response response = db1Resource.appendReplicatorAuth(account.replicator()
                 .replicatorDocId(repDocId)
                 .createTarget(true)
                 .source(db1URI)
                 .target(db2URI)
+                .sinceSeq(lastSeq)
         )
                 .save();
 
@@ -118,9 +120,13 @@ public class ReplicatorTest extends TestWithReplication {
         //save Foo(Y) in DB2
         db2.save(foodb2);
 
+        String seq = db1.changes().getChanges().getResults().get(0).getSeq();
+
         //replicate with DB1 with DB2
         Response response = db1Resource.appendReplicatorAuth(account.replicator().source(db1URI)
-                .target(db2URI).replicatorDocId(repDocId)
+                .target(db2URI)
+                .replicatorDocId(repDocId)
+                .sinceSeq(seq)
         )
                 .save();
 

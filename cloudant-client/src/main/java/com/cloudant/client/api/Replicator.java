@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2019 IBM Corp. All rights reserved.
+ * Copyright (c) 2015, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -222,6 +222,9 @@ public class Replicator {
     }
 
     public Replicator sinceSeq(String sinceSeq) {
+        if (sinceSeq.startsWith("\"") && sinceSeq.endsWith("\"")) {
+            sinceSeq = sinceSeq.substring(1, sinceSeq.length() - 1);
+        }
         this.replicator = replicator.sinceSeq(sinceSeq);
         return this;
     }
