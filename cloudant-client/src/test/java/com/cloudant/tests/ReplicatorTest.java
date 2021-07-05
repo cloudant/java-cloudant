@@ -51,7 +51,7 @@ public class ReplicatorTest extends TestWithReplication {
 
     @Test
     public void replication() throws Exception {
-        JsonElement seq = db1.changes().getChanges().getResults().get(0).getSeq();
+        String seq = db1.changes().getChanges().getResults().get(0).getSeq();
         Response response = db1Resource.appendReplicatorAuth(account.replicator()
                 .replicatorDocId(repDocId)
                 .createTarget(true)
@@ -116,7 +116,7 @@ public class ReplicatorTest extends TestWithReplication {
         Foo foodb1 = new Foo(docId, "titleX");
         Foo foodb2 = new Foo(docId, "titleY");
 
-        JsonElement lastSeq = db1Resource.get().changes().getChanges().getLastSeq();
+        String lastSeq = db1Resource.get().changes().getChanges().getLastSeq();
 
         //save Foo(X) in DB1
         db1.save(foodb1);

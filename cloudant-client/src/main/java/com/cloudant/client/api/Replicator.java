@@ -19,6 +19,7 @@ import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.ReplicatorDocument;
 import com.cloudant.client.org.lightcouch.Response;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -222,8 +223,25 @@ public class Replicator {
         return this;
     }
 
-    public Replicator sinceSeq(JsonElement sinceSeq) {
-        this.replicator = replicator.sinceSeq(sinceSeq);
+    /**
+     * Starts a replication since an update sequence.
+     *
+     * @param sinceSeq sequence number
+     * @return this Replication instance to set more options or trigger the replication
+     */
+    public Replicator sinceSeq(Integer sinceSeq) {
+        this.replicator = replicator.sinceSeq(new JsonParser().parse(sinceSeq.toString()));
+        return this;
+    }
+
+    /**
+     * Starts a replication since an update sequence.
+     *
+     * @param sinceSeq sequence number
+     * @return this Replication instance to set more options or trigger the replication
+     */
+    public Replicator sinceSeq(String sinceSeq) {
+        this.replicator = replicator.sinceSeq(new JsonParser().parse(sinceSeq));
         return this;
     }
 

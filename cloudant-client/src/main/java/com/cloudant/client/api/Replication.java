@@ -17,7 +17,10 @@ package com.cloudant.client.api;
 import com.cloudant.client.org.lightcouch.ReplicationResult;
 import com.cloudant.client.org.lightcouch.ReplicationResult.ReplicationHistory;
 import com.cloudant.client.org.lightcouch.Replicator;
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 
 import java.util.Map;
 
@@ -178,8 +181,19 @@ public class Replication {
      * @param sinceSeq sequence number
      * @return this Replication instance to set more options or trigger the replication
      */
-    public Replication sinceSeq(JsonElement sinceSeq) {
-        this.replication = replication.sinceSeq(sinceSeq);
+    public Replication sinceSeq(Integer sinceSeq) {
+        this.replication = replication.sinceSeq(new JsonParser().parse(sinceSeq.toString()));
+        return this;
+    }
+
+    /**
+     * Starts a replication since an update sequence.
+     *
+     * @param sinceSeq sequence number
+     * @return this Replication instance to set more options or trigger the replication
+     */
+    public Replication sinceSeq(String sinceSeq) {
+        this.replication = replication.sinceSeq(new JsonParser().parse(sinceSeq));
         return this;
     }
 
