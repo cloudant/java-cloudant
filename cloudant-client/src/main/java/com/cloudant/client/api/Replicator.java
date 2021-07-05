@@ -18,6 +18,7 @@ import com.cloudant.client.api.query.Selector;
 import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.ReplicatorDocument;
 import com.cloudant.client.org.lightcouch.Response;
+import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -221,10 +222,7 @@ public class Replicator {
         return this;
     }
 
-    public Replicator sinceSeq(String sinceSeq) {
-        if (sinceSeq.startsWith("\"") && sinceSeq.endsWith("\"")) {
-            sinceSeq = sinceSeq.substring(1, sinceSeq.length() - 1);
-        }
+    public Replicator sinceSeq(JsonElement sinceSeq) {
         this.replicator = replicator.sinceSeq(sinceSeq);
         return this;
     }

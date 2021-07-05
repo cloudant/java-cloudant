@@ -25,6 +25,7 @@ import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.base.TestWithReplication;
 import com.cloudant.tests.util.Utils;
 
+import com.google.gson.JsonElement;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +51,7 @@ public class ReplicatorTest extends TestWithReplication {
 
     @Test
     public void replication() throws Exception {
-        String seq = db1.changes().getChanges().getResults().get(0).getSeq();
+        JsonElement seq = db1.changes().getChanges().getResults().get(0).getSeq();
         Response response = db1Resource.appendReplicatorAuth(account.replicator()
                 .replicatorDocId(repDocId)
                 .createTarget(true)
@@ -115,7 +116,7 @@ public class ReplicatorTest extends TestWithReplication {
         Foo foodb1 = new Foo(docId, "titleX");
         Foo foodb2 = new Foo(docId, "titleY");
 
-        String lastSeq = db1Resource.get().changes().getChanges().getLastSeq();
+        JsonElement lastSeq = db1Resource.get().changes().getChanges().getLastSeq();
 
         //save Foo(X) in DB1
         db1.save(foodb1);

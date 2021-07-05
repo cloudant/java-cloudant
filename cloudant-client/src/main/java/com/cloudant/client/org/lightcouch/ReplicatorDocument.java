@@ -68,7 +68,7 @@ public class ReplicatorDocument extends Document {
     @SerializedName("user_ctx")
     private UserCtx userCtx;
     @SerializedName("since_seq")
-    private String sinceSeq;
+    private JsonElement sinceSeq;
     private JsonElement selector;
 
     public String getSource() {
@@ -268,11 +268,11 @@ public class ReplicatorDocument extends Document {
         this.retriesPerRequest = retriesPerRequest;
     }
 
-    public String getSinceSeq() {
+    public JsonElement getSinceSeq() {
         return sinceSeq;
     }
 
-    public void setSinceSeq(String sinceSeq) {
+    public void setSinceSeq(JsonElement sinceSeq) {
         this.sinceSeq = sinceSeq;
     }
 

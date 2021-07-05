@@ -274,7 +274,7 @@ public class Replicator {
         return this;
     }
 
-    public Replicator sinceSeq(String sinceSeq) {
+    public Replicator sinceSeq(JsonElement sinceSeq) {
         replicatorDoc.setSinceSeq(sinceSeq);
         return this;
     }
