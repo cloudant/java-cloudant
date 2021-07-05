@@ -50,13 +50,13 @@ public class ReplicatorTest extends TestWithReplication {
 
     @Test
     public void replication() throws Exception {
-        String lastSeq = db1Resource.get().changes().getChanges().getLastSeq();
+        String seq = db1.changes().getChanges().getResults().get(0).getSeq();
         Response response = db1Resource.appendReplicatorAuth(account.replicator()
                 .replicatorDocId(repDocId)
                 .createTarget(true)
                 .source(db1URI)
                 .target(db2URI)
-                .sinceSeq(lastSeq)
+                .sinceSeq(seq)
         )
                 .save();
 
@@ -115,18 +115,18 @@ public class ReplicatorTest extends TestWithReplication {
         Foo foodb1 = new Foo(docId, "titleX");
         Foo foodb2 = new Foo(docId, "titleY");
 
+        String lastSeq = db1Resource.get().changes().getChanges().getLastSeq();
+
         //save Foo(X) in DB1
         db1.save(foodb1);
         //save Foo(Y) in DB2
         db2.save(foodb2);
 
-        String seq = db1.changes().getChanges().getResults().get(0).getSeq();
-
         //replicate with DB1 with DB2
         Response response = db1Resource.appendReplicatorAuth(account.replicator().source(db1URI)
                 .target(db2URI)
                 .replicatorDocId(repDocId)
-                .sinceSeq(seq)
+                .sinceSeq(lastSeq)
         )
                 .save();
 
