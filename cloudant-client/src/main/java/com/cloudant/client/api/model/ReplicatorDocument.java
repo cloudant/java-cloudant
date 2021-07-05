@@ -18,6 +18,7 @@ import com.cloudant.client.org.lightcouch.Attachment;
 import com.cloudant.client.org.lightcouch.Replicator;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -232,8 +233,12 @@ public class ReplicatorDocument {
         return replicatorDocument.getSinceSeq();
     }
 
-    public void setSinceSeq(JsonElement sinceSeq) {
-        replicatorDocument.setSinceSeq(sinceSeq);
+    public void setSinceSeq(Integer sinceSeq) {
+        replicatorDocument.setSinceSeq(new JsonParser().parse(sinceSeq.toString()));
+    }
+
+    public void setSinceSeq(String sinceSeq) {
+        replicatorDocument.setSinceSeq(new JsonParser().parse(sinceSeq));
     }
 
     public void setSourceIamApiKey(String iamApiKey) {

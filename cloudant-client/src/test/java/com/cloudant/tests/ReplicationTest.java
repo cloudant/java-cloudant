@@ -101,8 +101,8 @@ public class ReplicationTest extends TestWithReplication {
 
         //replicate with DB1 with DB2
         ReplicationResult result =
-            db1Resource.appendReplicationAuth(account.replication().source(db1URI)
-            .target(db2URI).sinceSeq(lastSeq)).trigger();
+                db1Resource.appendReplicationAuth(account.replication().source(db1URI)
+                .target(db2URI).sinceSeq(lastSeq)).trigger();
 
         assertTrue(result.isOk(), "The replication should complete ok");
 
