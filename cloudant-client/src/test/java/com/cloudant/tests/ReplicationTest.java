@@ -25,7 +25,6 @@ import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.base.TestWithReplication;
 import com.cloudant.tests.util.Utils;
 
-import com.google.gson.JsonElement;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -43,7 +42,7 @@ public class ReplicationTest extends TestWithReplication {
                 .createTarget(true)
                 .source(db1URI)
                 .target(db2URI)
-            .sinceSeq(seq)
+                .sinceSeq(seq)
         )
                 .trigger();
 
@@ -101,11 +100,9 @@ public class ReplicationTest extends TestWithReplication {
         db2.save(foodb2);
 
         //replicate with DB1 with DB2
-        ReplicationResult result = db1Resource.appendReplicationAuth(account.replication()
-            .source(db1URI)
-            .target(db2URI)
-            .sinceSeq(lastSeq)
-        ).trigger();
+        ReplicationResult result =
+            db1Resource.appendReplicationAuth(account.replication().source(db1URI)
+            .target(db2URI).sinceSeq(lastSeq)).trigger();
 
         assertTrue(result.isOk(), "The replication should complete ok");
 

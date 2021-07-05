@@ -25,7 +25,6 @@ import com.cloudant.test.main.RequiresDB;
 import com.cloudant.tests.base.TestWithReplication;
 import com.cloudant.tests.util.Utils;
 
-import com.google.gson.JsonElement;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -125,9 +124,7 @@ public class ReplicatorTest extends TestWithReplication {
 
         //replicate with DB1 with DB2
         Response response = db1Resource.appendReplicatorAuth(account.replicator().source(db1URI)
-                .target(db2URI)
-                .replicatorDocId(repDocId)
-                .sinceSeq(lastSeq)
+                .target(db2URI).replicatorDocId(repDocId).sinceSeq(lastSeq)
         )
                 .save();
 

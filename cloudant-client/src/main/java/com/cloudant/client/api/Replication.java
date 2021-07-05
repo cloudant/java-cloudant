@@ -173,7 +173,7 @@ public class Replication {
     }
 
     /**
-     * Starts a replication since an update sequence.
+     * Create or modify a replication since an update sequence using a replication document.
      *
      * @param sinceSeq sequence number
      * @return this Replication instance to set more options or trigger the replication
@@ -184,9 +184,9 @@ public class Replication {
     }
 
     /**
-     * Starts a replication since an update sequence.
+     * Create or modify a replication since an update sequence using a replication document.
      *
-     * @param sinceSeq sequence number
+     * @param sinceSeq sequence string
      * @return this Replication instance to set more options or trigger the replication
      */
     public Replication sinceSeq(String sinceSeq) {

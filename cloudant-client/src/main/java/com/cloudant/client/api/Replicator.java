@@ -223,7 +223,7 @@ public class Replicator {
     }
 
     /**
-     * Starts a replication since an update sequence.
+     * Create a transient replication since an update sequence.
      *
      * @param sinceSeq sequence number
      * @return this Replication instance to set more options or trigger the replication
@@ -234,9 +234,9 @@ public class Replicator {
     }
 
     /**
-     * Starts a replication since an update sequence.
+     * Create a transient replication since an update sequence.
      *
-     * @param sinceSeq sequence number
+     * @param sinceSeq sequence string
      * @return this Replication instance to set more options or trigger the replication
      */
     public Replicator sinceSeq(String sinceSeq) {
