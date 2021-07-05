@@ -17,10 +17,7 @@ package com.cloudant.client.api;
 import com.cloudant.client.org.lightcouch.ReplicationResult;
 import com.cloudant.client.org.lightcouch.ReplicationResult.ReplicationHistory;
 import com.cloudant.client.org.lightcouch.Replicator;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 
 import java.util.Map;
 

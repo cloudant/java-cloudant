@@ -18,7 +18,6 @@ import com.cloudant.client.api.query.Selector;
 import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.ReplicatorDocument;
 import com.cloudant.client.org.lightcouch.Response;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 import java.util.ArrayList;
