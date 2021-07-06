@@ -229,8 +229,16 @@ public class ReplicatorDocument {
         replicatorDocument.setRetriesPerRequest(retriesPerRequest);
     }
 
-    public JsonElement getSinceSeq() {
-        return replicatorDocument.getSinceSeq();
+    public Integer getSinceSeq() {
+        try {
+            return replicatorDocument.getSinceSeq().getAsInt();
+        } catch (UnsupportedOperationException uoe) {
+            throw new IllegalStateException(uoe);
+        }
+    }
+
+    public String getSinceSeqString() {
+        return replicatorDocument.getSinceSeq().getAsString();
     }
 
     public void setSinceSeq(Integer sinceSeq) {
