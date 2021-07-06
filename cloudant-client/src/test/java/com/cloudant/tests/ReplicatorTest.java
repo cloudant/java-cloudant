@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2021 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -50,13 +50,11 @@ public class ReplicatorTest extends TestWithReplication {
 
     @Test
     public void replication() throws Exception {
-        String seq = db1.changes().getChanges().getResults().get(0).getSeq();
         Response response = db1Resource.appendReplicatorAuth(account.replicator()
                 .replicatorDocId(repDocId)
                 .createTarget(true)
                 .source(db1URI)
                 .target(db2URI)
-                .sinceSeq(seq)
         )
                 .save();
 
@@ -115,8 +113,6 @@ public class ReplicatorTest extends TestWithReplication {
         Foo foodb1 = new Foo(docId, "titleX");
         Foo foodb2 = new Foo(docId, "titleY");
 
-        String lastSeq = db1Resource.get().changes().getChanges().getLastSeq();
-
         //save Foo(X) in DB1
         db1.save(foodb1);
         //save Foo(Y) in DB2
@@ -124,7 +120,7 @@ public class ReplicatorTest extends TestWithReplication {
 
         //replicate with DB1 with DB2
         Response response = db1Resource.appendReplicatorAuth(account.replicator().source(db1URI)
-                .target(db2URI).replicatorDocId(repDocId).sinceSeq(lastSeq)
+                .target(db2URI).replicatorDocId(repDocId)
         )
                 .save();
 
@@ -134,5 +130,42 @@ public class ReplicatorTest extends TestWithReplication {
         //we replicated with a doc with the same ID but different content in each DB, we should get
         //a conflict
         assertConflictsNotZero(db2);
+    }
+
+    @Test
+    public void replicator_since_seq() throws Exception {
+        String seq = db1.changes().getChanges().getResults().get(2).getSeq();
+        Response response = db1Resource.appendReplicatorAuth(account.replicator()
+            .replicatorDocId(repDocId)
+            .createTarget(true)
+            .source(db1URI)
+            .target(db2URI)
+            .sinceSeq(seq)
+        )
+            .save();
+
+        // find and remove replicator doc
+        String state = Utils.waitForReplicatorToComplete(account, response.getId());
+        assertTrue("completed".equalsIgnoreCase(state), "The replicator " +
+            "should reach completed state");
+    }
+
+    @Test
+    public void replicator_last_seq() throws Exception {
+        String lastSeq = db1Resource.get().changes().getChanges().getLastSeq();
+
+        Response response = db1Resource.appendReplicatorAuth(account.replicator()
+            .replicatorDocId(repDocId)
+            .createTarget(true)
+            .source(db1URI)
+            .target(db2URI)
+            .sinceSeq(lastSeq)
+        )
+            .save();
+
+        // find and remove replicator doc
+        String state = Utils.waitForReplicatorToComplete(account, response.getId());
+        assertTrue("completed".equalsIgnoreCase(state), "The replicator " +
+            "should reach completed state");
     }
 }

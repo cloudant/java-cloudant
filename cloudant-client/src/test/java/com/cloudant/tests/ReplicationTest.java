@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright © 2015, 2021 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2019 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -36,13 +36,10 @@ public class ReplicationTest extends TestWithReplication {
 
     @Test
     public void replication() {
-        String seq = db1.changes().getChanges().getResults().get(0).getSeq();
-
         ReplicationResult result = db1Resource.appendReplicationAuth(account.replication()
                 .createTarget(true)
                 .source(db1URI)
                 .target(db2URI)
-                .sinceSeq(seq)
         )
                 .trigger();
 
@@ -93,7 +90,6 @@ public class ReplicationTest extends TestWithReplication {
         Foo foodb1 = new Foo(docId, "titleX");
         Foo foodb2 = new Foo(docId, "titleY");
 
-        String lastSeq = db1Resource.get().changes().getChanges().getLastSeq();
         //save Foo(X) in DB1
         db1.save(foodb1);
         //save Foo(Y) in DB2
@@ -102,12 +98,47 @@ public class ReplicationTest extends TestWithReplication {
         //replicate with DB1 with DB2
         ReplicationResult result =
                 db1Resource.appendReplicationAuth(account.replication().source(db1URI)
-                .target(db2URI).sinceSeq(lastSeq)).trigger();
+                .target(db2URI)).trigger();
 
         assertTrue(result.isOk(), "The replication should complete ok");
 
         //we replicated with a doc with the same ID but different content in each DB, we should get
         //a conflict
         assertConflictsNotZero(db2);
+    }
+
+    @Test
+    public void replication_since_seq() throws Exception {
+        String seq = db1.changes().getChanges().getResults().get(2).getSeq();
+        ReplicationResult result = db1Resource.appendReplicationAuth(account.replication()
+            .createTarget(true)
+            .source(db1URI)
+            .target(db2URI)
+            .sinceSeq(seq)
+        )
+            .trigger();
+
+        assertTrue(result.isOk(), "The replication should complete ok");
+
+        List<ReplicationHistory> histories = result.getHistories();
+        assertThat(histories.size(), not(0));
+    }
+
+    @Test
+    public void replication_last_seq() throws Exception {
+        String lastSeq = db1Resource.get().changes().getChanges().getLastSeq();
+
+        ReplicationResult result = db1Resource.appendReplicationAuth(account.replication()
+            .createTarget(true)
+            .source(db1URI)
+            .target(db2URI)
+            .sinceSeq(lastSeq)
+        )
+            .trigger();
+
+        assertTrue(result.isOk(), "The replication should complete ok");
+
+        List<ReplicationHistory> histories = result.getHistories();
+        assertThat(histories.size(), not(0));
     }
 }
