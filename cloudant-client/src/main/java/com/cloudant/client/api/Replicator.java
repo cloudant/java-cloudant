@@ -226,7 +226,7 @@ public class Replicator {
      * Create a transient replication since an update sequence.
      *
      * @param sinceSeq sequence number
-     * @return this Replication instance to set more options or trigger the replication
+     * @return this Replicator instance to set more options or trigger the replication
      */
     public Replicator sinceSeq(Integer sinceSeq) {
         this.replicator = replicator.sinceSeq(new JsonParser().parse(sinceSeq.toString()));
@@ -237,7 +237,7 @@ public class Replicator {
      * Create a transient replication since an update sequence.
      *
      * @param sinceSeq sequence string
-     * @return this Replication instance to set more options or trigger the replication
+     * @return this Replicator instance to set more options or trigger the replication
      */
     public Replicator sinceSeq(String sinceSeq) {
         this.replicator = replicator.sinceSeq(new JsonParser().parse(sinceSeq));
