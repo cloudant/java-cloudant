@@ -230,11 +230,7 @@ public class ReplicatorDocument {
     }
 
     public Integer getSinceSeq() {
-        try {
-            return replicatorDocument.getSinceSeq().getAsInt();
-        } catch (UnsupportedOperationException uoe) {
-            throw new IllegalStateException(uoe);
-        }
+        return replicatorDocument.getSinceSeq().getAsInt();
     }
 
     public String getSinceSeqString() {
