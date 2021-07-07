@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2019 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -130,5 +130,42 @@ public class ReplicatorTest extends TestWithReplication {
         //we replicated with a doc with the same ID but different content in each DB, we should get
         //a conflict
         assertConflictsNotZero(db2);
+    }
+
+    @Test
+    public void replicator_since_seq() throws Exception {
+        String seq = db1.changes().getChanges().getResults().get(2).getSeq();
+        Response response = db1Resource.appendReplicatorAuth(account.replicator()
+            .replicatorDocId(repDocId)
+            .createTarget(true)
+            .source(db1URI)
+            .target(db2URI)
+            .sinceSeq(seq)
+        )
+            .save();
+
+        // find and remove replicator doc
+        String state = Utils.waitForReplicatorToComplete(account, response.getId());
+        assertTrue("completed".equalsIgnoreCase(state), "The replicator " +
+            "should reach completed state");
+    }
+
+    @Test
+    public void replicator_last_seq() throws Exception {
+        String lastSeq = db1Resource.get().changes().getChanges().getLastSeq();
+
+        Response response = db1Resource.appendReplicatorAuth(account.replicator()
+            .replicatorDocId(repDocId)
+            .createTarget(true)
+            .source(db1URI)
+            .target(db2URI)
+            .sinceSeq(lastSeq)
+        )
+            .save();
+
+        // find and remove replicator doc
+        String state = Utils.waitForReplicatorToComplete(account, response.getId());
+        assertTrue("completed".equalsIgnoreCase(state), "The replicator " +
+            "should reach completed state");
     }
 }

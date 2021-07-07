@@ -1,5 +1,6 @@
 # Unreleased
 - [DEPRECATED] This library is now deprecated and will be EOL on Dec 31 2021.
+- [FIXED] Type of `sinceSeq` can be also a `String` besides an `Integer`.
 
 # 2.19.2 (2021-04-07)
 - [NEW] Add migration guide to the newly supported cloudant-java-sdk (coordinates: com.ibm.cloud:cloudant).

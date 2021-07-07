@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2019 IBM Corp. All rights reserved.
+ * Copyright (c) 2015, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -18,6 +18,7 @@ import com.cloudant.client.api.query.Selector;
 import com.cloudant.client.org.lightcouch.Replication;
 import com.cloudant.client.org.lightcouch.ReplicatorDocument;
 import com.cloudant.client.org.lightcouch.Response;
+import com.google.gson.JsonParser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -221,8 +222,25 @@ public class Replicator {
         return this;
     }
 
+    /**
+     * Create a transient replication since an update sequence.
+     *
+     * @param sinceSeq sequence number
+     * @return this Replicator instance to set more options or trigger the replication
+     */
     public Replicator sinceSeq(Integer sinceSeq) {
-        this.replicator = replicator.sinceSeq(sinceSeq);
+        this.replicator = replicator.sinceSeq(new JsonParser().parse(sinceSeq.toString()));
+        return this;
+    }
+
+    /**
+     * Create a transient replication since an update sequence.
+     *
+     * @param sinceSeq sequence string
+     * @return this Replicator instance to set more options or trigger the replication
+     */
+    public Replicator sinceSeq(String sinceSeq) {
+        this.replicator = replicator.sinceSeq(new JsonParser().parse(sinceSeq));
         return this;
     }
 

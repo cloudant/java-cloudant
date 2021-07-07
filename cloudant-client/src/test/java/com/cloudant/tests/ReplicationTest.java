@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright © 2015, 2019 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -105,5 +105,40 @@ public class ReplicationTest extends TestWithReplication {
         //we replicated with a doc with the same ID but different content in each DB, we should get
         //a conflict
         assertConflictsNotZero(db2);
+    }
+
+    @Test
+    public void replication_since_seq() throws Exception {
+        String seq = db1.changes().getChanges().getResults().get(2).getSeq();
+        ReplicationResult result = db1Resource.appendReplicationAuth(account.replication()
+            .createTarget(true)
+            .source(db1URI)
+            .target(db2URI)
+            .sinceSeq(seq)
+        )
+            .trigger();
+
+        assertTrue(result.isOk(), "The replication should complete ok");
+
+        List<ReplicationHistory> histories = result.getHistories();
+        assertThat(histories.size(), not(0));
+    }
+
+    @Test
+    public void replication_last_seq() throws Exception {
+        String lastSeq = db1Resource.get().changes().getChanges().getLastSeq();
+
+        ReplicationResult result = db1Resource.appendReplicationAuth(account.replication()
+            .createTarget(true)
+            .source(db1URI)
+            .target(db2URI)
+            .sinceSeq(lastSeq)
+        )
+            .trigger();
+
+        assertTrue(result.isOk(), "The replication should complete ok");
+
+        List<ReplicationHistory> histories = result.getHistories();
+        assertThat(histories.size(), not(0));
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 IBM Corp. All rights reserved.
+ * Copyright (c) 2015, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -17,6 +17,7 @@ package com.cloudant.client.api;
 import com.cloudant.client.org.lightcouch.ReplicationResult;
 import com.cloudant.client.org.lightcouch.ReplicationResult.ReplicationHistory;
 import com.cloudant.client.org.lightcouch.Replicator;
+import com.google.gson.JsonParser;
 
 import java.util.Map;
 
@@ -172,13 +173,24 @@ public class Replication {
     }
 
     /**
-     * Starts a replication since an update sequence.
+     * Create or modify a replication since an update sequence using a replication document.
      *
      * @param sinceSeq sequence number
      * @return this Replication instance to set more options or trigger the replication
      */
     public Replication sinceSeq(Integer sinceSeq) {
-        this.replication = replication.sinceSeq(sinceSeq);
+        this.replication = replication.sinceSeq(new JsonParser().parse(sinceSeq.toString()));
+        return this;
+    }
+
+    /**
+     * Create or modify a replication since an update sequence using a replication document.
+     *
+     * @param sinceSeq sequence string
+     * @return this Replication instance to set more options or trigger the replication
+     */
+    public Replication sinceSeq(String sinceSeq) {
+        this.replication = replication.sinceSeq(new JsonParser().parse(sinceSeq));
         return this;
     }
 

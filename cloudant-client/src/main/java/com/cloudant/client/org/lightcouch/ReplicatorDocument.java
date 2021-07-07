@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 lightcouch.org
- * Copyright (c) 2015, 2019 IBM Corp. All rights reserved.
+ * Copyright (c) 2015, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -68,7 +68,7 @@ public class ReplicatorDocument extends Document {
     @SerializedName("user_ctx")
     private UserCtx userCtx;
     @SerializedName("since_seq")
-    private Integer sinceSeq;
+    private JsonElement sinceSeq;
     private JsonElement selector;
 
     public String getSource() {
@@ -268,11 +268,11 @@ public class ReplicatorDocument extends Document {
         this.retriesPerRequest = retriesPerRequest;
     }
 
-    public Integer getSinceSeq() {
+    public JsonElement getSinceSeq() {
         return sinceSeq;
     }
 
-    public void setSinceSeq(Integer sinceSeq) {
+    public void setSinceSeq(JsonElement sinceSeq) {
         this.sinceSeq = sinceSeq;
     }
 
