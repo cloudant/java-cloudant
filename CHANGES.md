@@ -1,6 +1,11 @@
 # Unreleased
 - [DEPRECATED] This library is now deprecated and will be EOL on Dec 31 2021.
 - [FIXED] Type of `sinceSeq` can be also a `String` besides an `Integer`.
+- [IMPROVED] - Document IDs and attachment names are now rejected if they could cause an unexpected
+  Cloudant request. We have seen that some applications pass unsantized document IDs to SDK functions
+  (e.g. direct from user requests). In response to this we have updated many functions to reject
+  obviously invalid paths. However, for complete safety applications must still validate that
+  document IDs and attachment names match expected patterns.
 
 # 2.19.2 (2021-04-07)
 - [NEW] Add migration guide to the newly supported cloudant-java-sdk (coordinates: com.ibm.cloud:cloudant).
