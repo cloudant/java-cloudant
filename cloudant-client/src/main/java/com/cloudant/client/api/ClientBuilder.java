@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2020 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -257,7 +257,7 @@ public class ClientBuilder {
 
             // Create IAM cookie interceptor and set in HttpConnection interceptors
             IamCookieInterceptor cookieInterceptor = new IamCookieInterceptor(this.iamApiKey,
-                    this.url.toString());
+                    this.url.toString(), this.proxyURL);
 
             props.addRequestInterceptors(cookieInterceptor);
             props.addResponseInterceptors(cookieInterceptor);
@@ -274,7 +274,9 @@ public class ClientBuilder {
             //make interceptor if both username and password are not null
 
             //Create cookie interceptor and set in HttpConnection interceptors
-            CookieInterceptor cookieInterceptor = new CookieInterceptor(username, password, this.url.toString());
+            CookieInterceptor cookieInterceptor = new CookieInterceptor(username, password,
+                    this.url.toString(), this.proxyURL);
+
 
             props.addRequestInterceptors(cookieInterceptor);
             props.addResponseInterceptors(cookieInterceptor);

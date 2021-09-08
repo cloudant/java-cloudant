@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017, 2019 IBM Corp. All rights reserved.
+ * Copyright © 2017, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -59,13 +59,15 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
     private final CookieManager cookieManager = new CookieManager();
     private final ReadWriteLock sessionLock = new ReentrantReadWriteLock(true);
     private volatile UUID sessionId = UUID.randomUUID();
+    private final URL proxyURL;
 
     /**
      * @param baseUrl         the server URL to get cookies from
      * @param endpoint        the server endpoint to get cookies from
      * @param requestMimeType the MIME Content-Type to use for the session request
+     * @param proxyURL        the proxy URL
      */
-    protected CookieInterceptorBase(String baseUrl, String endpoint, String requestMimeType) {
+    protected CookieInterceptorBase(String baseUrl, String endpoint, String requestMimeType, URL proxyURL) {
         try {
             baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
             endpoint = endpoint.startsWith("/") ? endpoint : "/" + endpoint;
@@ -77,6 +79,16 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
             logger.log(Level.SEVERE, "Failed to create URL for session endpoint", e);
             throw new RuntimeException(e);
         }
+        this.proxyURL = proxyURL;
+    }
+
+    /**
+     * @param baseUrl         the server URL to get cookies from
+     * @param endpoint        the server endpoint to get cookies from
+     * @param requestMimeType the MIME Content-Type to use for the session request
+     */
+    protected CookieInterceptorBase(String baseUrl, String endpoint, String requestMimeType) {
+        this(baseUrl, endpoint, requestMimeType, null);
     }
 
     /**
@@ -128,6 +140,10 @@ public abstract class CookieInterceptorBase implements HttpConnectionRequestInte
         HttpConnection conn = Http.POST(url, contentMimeType);
         conn.requestProperties.put("accept", "application/json");
         conn.setRequestBody(payload);
+
+        if (proxyURL != null) {
+            conn.connectionFactory.setProxy(this.proxyURL);
+        }
 
         //when we request the session we need all interceptors except this one
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 IBM Corp. All rights reserved.
+ * Copyright © 2019, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -34,7 +34,11 @@ public class IamCookieInterceptor extends CookieInterceptorBase {
     private final byte[] tokenRequestPayload;
 
     public IamCookieInterceptor(String apiKey, String baseUrl) {
-        super(baseUrl, "/_iam_session", null);
+        this(apiKey, baseUrl, null);
+    }
+
+    public IamCookieInterceptor(String apiKey, String baseUrl, URL proxyURL) {
+        super(baseUrl, "/_iam_session", null, proxyURL);
 
         // Read iamServer from system property, or set default
         try {
