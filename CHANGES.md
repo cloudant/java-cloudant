@@ -1,3 +1,6 @@
+# UNRELEASED
+- [FIXED] Enable proxy support for session cookie and IAM authentication.
+
 # 2.20.0 (2021-08-26)
 - [FIXED] Type of `sinceSeq` can be also a `String` besides an `Integer`.
 - [DEPRECATED] This library is now deprecated and will be EOL on Dec 31 2021.

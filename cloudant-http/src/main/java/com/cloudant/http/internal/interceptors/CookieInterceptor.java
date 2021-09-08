@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015, 2019 IBM Corp. All rights reserved.
+ * Copyright © 2015, 2021 IBM Corp. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Locale;
 import java.util.logging.Level;
@@ -41,13 +42,26 @@ public class CookieInterceptor extends CookieInterceptorBase {
      * @param baseURL  The base URL to use when constructing an `_session` request.
      */
     public CookieInterceptor(String username, String password, String baseURL) {
+        this(username, password, baseURL, null);
+    }
+
+    /**
+     * Constructs a cookie interceptor with proxy url.
+     * Credentials should be supplied not URL encoded, this class
+     * will perform the necessary URL encoding.
+     *
+     * @param username The username to use when getting the cookie (not URL encoded)
+     * @param password The password to use when getting the cookie (not URL encoded)
+     * @param baseURL  The base URL to use when constructing an `_session` request.
+     * @param proxyURL The URL of the proxy server
+     */
+    public CookieInterceptor(String username, String password, String baseURL, URL proxyURL) {
         // Use form encoding for the user/pass submission
-        super(baseURL, "/_session", "application/x-www-form-urlencoded");
+        super(baseURL, "/_session", "application/x-www-form-urlencoded", proxyURL);
         try {
             this.auth = String.format("name=%s&password=%s", URLEncoder.encode(username, "UTF-8")
-                    , URLEncoder.encode(password, "UTF-8"))
+                            , URLEncoder.encode(password, "UTF-8"))
                     .getBytes("UTF-8");
-            ;
         } catch (UnsupportedEncodingException e) {
             //all JVMs should support UTF-8, so this should not happen
             throw new RuntimeException(e);
