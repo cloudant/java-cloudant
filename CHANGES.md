@@ -1,4 +1,4 @@
-# UNRELEASED
+# 2.20.1 (2021-09-10)
 - [FIXED] Enable proxy support for session cookie and IAM authentication.
 
 # 2.20.0 (2021-08-26)
