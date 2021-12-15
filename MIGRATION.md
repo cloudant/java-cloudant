@@ -205,10 +205,9 @@ The table below contains a list of `java-cloudant` functions and the `cloudant-j
 |`getActiveTasks()`|[`getActiveTasks`](https://cloud.ibm.com/apidocs/cloudant?code=java#getactivetasks)|
 |`getAllDbs()`|[`getAllDbs`](https://cloud.ibm.com/apidocs/cloudant?code=java#getalldbs)|
 |`getMembership()`|[`getMembershipInformation`](https://cloud.ibm.com/apidocs/cloudant?code=java#getmembershipinformation)|
-|`replication().trigger()`|[`postReplicate`](https://cloud.ibm.com/apidocs/cloudant?code=java#postreplicate)|
 |`replicator().remove()`|[`deleteReplicationDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#deletereplicationdocument)|
 |`replicator().find()`|[`getReplicationDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#getreplicationdocument)|
-|`replicator().save()`|[`putReplicationDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#putreplicationdocument)|
+|`replication().trigger()`/`replicator().save()`|[`putReplicationDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#putreplicationdocument)|
 |`schedulerDocs()`|[`getSchedulerDocs`](https://cloud.ibm.com/apidocs/cloudant?code=java#getschedulerdocs)|
 |`schedulerDoc()`|[`getSchedulerDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#getschedulerdocument)|
 |`schedulerJobs()`|[`getSchedulerJobs`](https://cloud.ibm.com/apidocs/cloudant?code=java#getschedulerjobs)|
@@ -219,7 +218,7 @@ The table below contains a list of `java-cloudant` functions and the `cloudant-j
 |`createDB()/database() with create=true/createPartitionedDb(dbName)`|[`putDatabase`](https://cloud.ibm.com/apidocs/cloudant?code=java#putdatabase)|
 |`db.getAllDocsRequestBuilder().build()`|[`postAllDocs`, `postAllDocsAsStream`](https://cloud.ibm.com/apidocs/cloudant?code=java#postalldocs)|
 |`db.bulk()`|[`postBulkDocs`](https://cloud.ibm.com/apidocs/cloudant?code=java#postbulkdocs)|
-|`db.changes()`|[`postChanges`, `postChangesAsStream`](https://cloud.ibm.com/apidocs/cloudant?code=java#postchanges)|
+|`db.changes()`|[`postChanges`, `postChangesAsStream`](https://cloud.ibm.com/apidocs/cloudant?code=java#postchanges-changes)|
 |`db.getDesignDocumentManager().remove()`|[`deleteDesignDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#deletedesigndocument)|
 |`db.getDesignDocumentManager().get()`|[`getDesignDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#getdesigndocument)|
 |`db.getDesignDocumentManager().put()`|[`putDesignDocument`](https://cloud.ibm.com/apidocs/cloudant?code=java#putdesigndocument)|
