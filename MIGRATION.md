@@ -238,7 +238,7 @@ The table below contains a list of `java-cloudant` functions and the `cloudant-j
 |`db.getAllDocsRequestBuilder().partition().build()`|[`postPartitionAllDocs`, `postPartitionAllDocsAsStream`](https://cloud.ibm.com/apidocs/cloudant?code=java#postpartitionalldocs)|
 |`db.search()`|[`postPartitionSearch`, `postPartitionSearchAsStream`](https://cloud.ibm.com/apidocs/cloudant?code=java#postpartitionsearch)|
 |`db.getViewRequestBuilder().newRequest().partition().build()`|[`postPartitionView`, `postPartitionViewAsStream`](https://cloud.ibm.com/apidocs/cloudant?code=java#postpartitionview)|
-|`db.query() using partitionKey method arg`|[`postPartitionFind`, `postPartitionFindAsStream`](https://cloud.ibm.com/apidocs/cloudant?code=java#postpartitionfind)|
+|`db.query() using partitionKey method arg`|[`postPartitionFind`, `postPartitionFindAsStream`](https://cloud.ibm.com/apidocs/cloudant?code=java#postpartitionfind-partitioned-databases)|
 |`db.getPermissions()`|[`getSecurity`](https://cloud.ibm.com/apidocs/cloudant?code=java#getsecurity)|
 |`db.setPermissions(userNameorApikey, permissions)`|[`putSecurity`](https://cloud.ibm.com/apidocs/cloudant?code=java#putsecurity)|
 |`db.getShards()`|[`getShardsInformation`](https://cloud.ibm.com/apidocs/cloudant?code=java#getshardsinformation)|
