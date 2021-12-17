@@ -21,7 +21,7 @@ There are several ways to create a client connection in `cloudant-java-sdk`:
   [POJO usage in the `cloudant-java-sdk` library](#pojo-usage-in-the-new-library).
 1. Sending and receiving byte responses is available for operations that accept user-defined documents or return user-defined documents, document projections or map/reduce data. See [the Raw IO section](https://github.com/IBM/cloudant-java-sdk#raw-io) of `cloudant-java-sdk` README or the [Bypass the document model and use the `asStream` methods section](#3-bypass-the-document-model-and-use-the-asstream-methods) for more details.
 1. There is no built-in pagination support for views. Examples coming soon.
-1. Replays interceptors are replaced by the [automatic retries](https://github.com/IBM/ibm-cloud-sdk-common/#automatic-retries) feature for failed requests
+1. Replay interceptors are replaced by the [automatic retries](https://github.com/IBM/ibm-cloud-sdk-common/#automatic-retries) feature for failed requests.
 1. Error handling is not transferable from `java-cloudant` to `cloudant-java-sdk`. For more information go to the [Error handling section](https://cloud.ibm.com/apidocs/cloudant?code=java#error-handling) in our API docs.
 
 ### POJO usage in the new library
