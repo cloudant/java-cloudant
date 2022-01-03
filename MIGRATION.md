@@ -23,7 +23,12 @@ There are several ways to create a client connection in `cloudant-java-sdk`:
 1. There is no built-in pagination support for views. Examples coming soon.
 1. Replay interceptors are replaced by the [automatic retries](https://github.com/IBM/ibm-cloud-sdk-common/#automatic-retries) feature for failed requests.
 1. Error handling is not transferable from `java-cloudant` to `cloudant-java-sdk`. For more information go to the [Error handling section](https://cloud.ibm.com/apidocs/cloudant?code=java#error-handling) in our API docs.
-1. Custom HTTP client configurations in `java-cloudant` are not transferable to `cloudant-java-sdk`. For more information go to the [Configuring the HTTP client section(https://githubcom/IBM/ibm-cloud-sdk-common/#configuring-the-http-client) in the IBM Cloud SDK Common README.
+1. Custom HTTP client configurations in `java-cloudant` are not transferable to 
+   `cloudant-java-sdk`. For more information go to the [Configuring the HTTP client section](https://githubcom/IBM/ibm-cloud-sdk-common/#configuring-the-http-client) in the IBM Cloud SDK Common README.
+1. Authentication errors turn out at the time of instantiation of a client, while errors
+   with the server can be found during calling the first operation against it. We suggest to
+   check server errors with [`getServerInformation`](https://cloud.ibm.com/apidocs/cloudant?
+   code=java#getserverinformation) which is the new alternative of `metaInformation()`.
 
 ### POJO usage in the new library
 
